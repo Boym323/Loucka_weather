@@ -68,3 +68,8 @@ Nad skutečnou MariaDB 11.8.6 proběhl `./run.sh light` se **šesti** variantami
 ## Full benchmark šesti backendů – ověřený JSON z produkčního LXC
 
 [Forenzní rozbor 72 scénářů](REAL_LXC_SIX_LANGUAGES_FULL_2026-10-30.md) obsahuje výkon RPS a latenci p95 všech šesti jazyků při c=1/10/50 z **jediného** nahraného JSON souboru. Prokazatelný počet požadavků: 13 032, nula HTTP chyb. **Varování: metadata `isolated_copy=true` nejsou pravdivá** (uživatel potvrdil živou MariaDB); `pool_max=3` a `30d c=50` znamená max. 24 současných požadavků. Nezaměňovat s předešlým `light` nebo s CI fixture. Hodnoty nepředstavují definitivní kapacitní limit a není doložen jejich dopad na WeeWX writer.
+
+
+## Druhý šestijazyčný FULL běh a agregovaná analýza
+
+Původní JSON soubory z LXC byly nyní přečteny a zkontrolovány. [Rozbor dvou skutečně dokončených `full` běhů](REAL_LXC_SIX_LANGUAGES_FULL_TWO_RUNS_2026-10-30.md) zahrnuje **144 scénářů / 26 064 requestů bez HTTP chyby**, průměr RPS a průměr dvou p95 pro každou kombinaci, špičky vzorkované RAM a metodická omezení. Třetí JSON v dodaném archivu chyběl; `pool_max=3`, `isolated_copy=true` přestože šlo o **produkci**, a `30d c=50` odesílá jen 24 requestů. Nepoužívat tento test jako definitivní SLA ani benchmark 50 současných 30denních exportů.
