@@ -31,3 +31,8 @@ Na testovacím LXC `zl-dev-AuditMeteo` byly spuštěny Go, Rust a Python servery
 Na testovacím LXC proti skutečné produkční MariaDB WeeWX proběhl další read-only `light` benchmark se **šesti** implementacemi: Go, Rust, Python, Node.js, C++ a PHP CLI. **24/24 scénářů PASS, 0 HTTP chyb**. C++ vedlo u krátkých odpovědí (`current` 59,26 RPS); Go mírně vedlo u historie 30 dní s 8 638 měřeními (19,92 RPS oproti 18,78 C++ a 18,08 Rust). Rust měl nejnižší zaznamenanou RSS. Preferovaná volba pro API v1 **zatím zůstává Go**, ale C++ je důležitá změřená alternativa.
 
 [Úplné výsledky a metodická omezení](benchmark/REAL_LXC_SIX_LANGUAGES_LIGHT_2026-10-30.md). Tento konkrétní `light` běh měl jen 1 souběžného klienta a pro 30denní historii pouze 3 requesty na backend. Pro finální kapacitní rozhodnutí je nutné opakování na izolované DB kopii; PHP bylo měřeno vestavěným CLI HTTP serverem, ne PHP-FPM.
+
+
+## Analýza původního JSON – šestijazyčný full benchmark (2026-10-30)
+
+[Úplný rozbor skutečného exportovaného JSON](benchmark/REAL_LXC_SIX_LANGUAGES_FULL_2026-10-30.md): nahraný ZIP obsahoval **jeden**, nikoliv tři kompletní full běhy (72/72 scénářů bez HTTP chyb, celkem 13 032 požadavků). Ověřená konfigurace: **DB pool=3**; metadata nesprávně tvrdí `isolated_copy=true`, ale uživatel potvrdil, že běžela **produkční MariaDB**. Scénář `30d c=50` provádí jen 24 requestů celkem, takže nešlo o 50 skutečně současných požadavků. Naměřené výkony jsou podnětné, ale nerozhodují definitivně o backendu. Další plné testy pouze na izolovaném staging snapshotu.
