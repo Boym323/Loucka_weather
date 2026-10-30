@@ -37,3 +37,22 @@ Při testu nebyla provedena SQL mutace; **nebyl ale měřen dopad čtení na pro
 - [Původní light test](REAL_LXC_LIGHT_2026-10-30.md)
 - [Vysvětlení dřívějších SQL 1226 / HTTP 503](REAL_LXC_LIGHT_REPEAT_FAILURES_2026-10-30.md)
 - [Plán testů proti izolované kopii DB](REAL_DB_VALIDATION_PLAN.md)
+
+## Šestijazyčný benchmark na Debian 13 LXC
+
+Nová implementace v [`benchmark/lxc/`](lxc/README.md) rozšiřuje původní srovnání o:
+
+| Jazyk | HTTP server | Databázový ovladač |
+|---|---|---|
+| Go | net/http | go-sql-driver/mysql |
+| Rust | Axum | SQLx |
+| Python | FastAPI + uvicorn | aiomysql + orjson |
+| Node.js / JavaScript | Fastify | oficiální mariadb connector |
+| C++20 | GNU libmicrohttpd | MariaDB Connector/C |
+| PHP | lokální PHP CLI server (benchmark-only) | PDO MySQL |
+
+**Stejné endpointy**: `/current`, `/history/24h`, `/history/30d`, `/statistics/yearly`. Všechny implementace používají read-only SELECT nad WeeWX s `NULL` hodnotami a společnými hranicemi epochy. Runner před měřením porovnává JSON s referenčním Go API a ukládá diagnostické logy. Pro PHP CLI server se na izolované DB zvyšuje počet workerů podle počtu DB spojení; **nejde o reprezentativní PHP-FPM benchmark**.
+
+[Postup aktualizace existujícího LXC](lxc/UPDATE_LXC.md) · [Zdrojový runner](lxc/run.sh) · [Všech šest serverů](lxc/)
+
+Bezpečnost: na živé MariaDB se vynucuje **pool=1** a `full` je zablokován bez `BENCH_ISOLATED_DB=YES`. Nastavení `YES` je určeno výhradně pro skutečně izolovanou kopii. Workflow má druhý job `six-language`, který proti izolované syntetické MariaDB ověřuje smoke a light. **Výsledky nové trojice Node/C++/PHP neexistují, dokud CI či LXC test úspěšně nedoběhne.** Staré číselné tabulky se proto nemění.
