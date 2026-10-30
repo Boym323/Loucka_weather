@@ -18,9 +18,9 @@ Před jakoukoliv úpravou si přečti `README.md`, `FRONTEND_SPEC.md`, `STATISTI
 ## Závazný tříúrovňový model statistik
 - L1: `pocasi-loucka.eu.archive` pro detailní měření a krátkodobé grafy.
 - L2: `pocasi-loucka.eu.archive_day_*` pro stávající denní souhrny a rychlé měsíční/roční agregace.
-- L3: `loucka_weather_stats` je **pouze navržené volitelné schéma** na tomtéž MariaDB serveru, pro validované odvozené klimatologické statistiky, úplnost a rekordy. Není automaticky schváleno jeho vytvoření.
+- L3: `loucka_weather_stats` je **pouze navržené volitelné schéma** na tomtéž MariaDB serveru. **MVP bude využívat pouze L1+L2** podle [WEEWX_DAILY_SUMMARIES_AUDIT.md](WEEWX_DAILY_SUMMARIES_AUDIT.md). Neimplementovat L3 bez měřeného přínosu a schválení.
 - Webové API má pouze SELECT práva na schválené zdroje. **Případný stats worker** má oddělený účet, který smí po schválení zapisovat pouze do schválených vlastních statistických tabulek; žádné zápisy do originálního archivu, WeeWX denních souhrnů nebo rekonstrukční DB.
-- Bez zvláštního schválení **nevytvářej tabulky, DB účty ani migrace, nespouštěj backfill**. V každém PR odděl přípravu migrací od jejího provedení na produkci.
+- Doplňování historie a rebuild souhrnů řeší WeeWX v samostatném procesu, **nejsou úkolem implementace frontendu**. Bez zvláštního schválení **nevytvářej tabulky, DB účty ani migrace, nespouštěj backfill**. V každém PR odděl přípravu migrací od jejího provedení na produkci.
 - Nepředpokládej, že `archive_day_*` jsou očištěné po rekonstrukci; využívej explicitní origin/quality a verzi algoritmu.
 - Při změně zdrojových dat nebo pravidel QC invaliduj dotčené odvozené statistiky, přepočti závislé rekordy; zpracování musí být idempotentní, atomické a testované na DB kopii.
 
