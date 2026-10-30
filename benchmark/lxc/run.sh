@@ -52,7 +52,7 @@ if [[ "$MODE" != probe ]];then
   command -v node >/dev/null || { echo 'Chybi node (Node.js >=20)' >&2;exit 1; }
   command -v npm >/dev/null || { echo 'Chybi npm' >&2;exit 1; }
   command -v php >/dev/null || { echo 'Chybi PHP' >&2;exit 1; }
-  php -m | grep -qi '^pdo_mysql$' || { echo 'Chybi php-mysql / PDO MySQL' >&2;exit 1; }
+  php -r 'exit(in_array("mysql", PDO::getAvailableDrivers(), true) ? 0 : 1);' || { echo 'Chybi php-mysql / PDO MySQL' >&2;exit 1; }
   command -v g++ >/dev/null || { echo 'Chybi g++' >&2;exit 1; }
   pkg-config --exists libmariadb libmicrohttpd || { echo 'Chybi libmariadb-dev/libmicrohttpd-dev' >&2;exit 1; }
   [[ -f /usr/include/nlohmann/json.hpp ]] || { echo 'Chybi nlohmann-json3-dev' >&2;exit 1; }
