@@ -86,3 +86,22 @@ Reálný JSON artefakt `benchmark-results` obsahuje `server_cpu_s` pro každých
 - [Zdrojové implementace Go/Rust/Python, fixture a benchmark runner](benchmark/README.md)
 - [GitHub Actions workflow](.github/workflows/bench-backends.yml)
 - [Konkrétní úspěšný běh a JSON artefakt s úplnými výsledky](https://github.com/Boym323/Loucka_weather/actions/runs/41110187795)
+
+
+## Nezávislé opakování (ověřeno 2026-10-30)
+
+[GitHub Actions run #41110937447](https://github.com/Boym323/Loucka_weather/actions/runs/41110937447) skončil SUCCESS; opět **36/36 scénářů bez HTTP chyb** a stejné odpovědi.
+
+| Jazyk | 30d 10 klientů 1. běh RPS | 2. běh RPS | p95 1. běh ms | p95 2. běh ms |
+|---|---:|---:|---:|---:|
+| Go | 200.1 | 192.9 | 75.92 | 68.71 |
+| Rust | 129.2 | 120.6 | 86.28 | 93.48 |
+| Python | 9.1 | 8.8 | 2569.32 | 1833.79 |
+
+Build časy: první běh Go 11.12 s, Rust 56.36 s; druhý Go 11.97 s, Rust 63.12 s. Reprodukovatelné pořadí u tohoto scénáře neznamená prokázanou výhodu ve všech workloadech. Nepokládat dvě měření na sdílených runners za úplnou statistickou studii.
+
+## Samostatné přímé ověření SQL na produkčním WeeWX (read-only)
+
+S použitím Weather MCP a **explicitního** `pocasi-loucka.eu` byly úspěšně otestovány dotazy: poslední řádek `archive`, propojené denní souhrny `archive_day_outTemp` / `archive_day_rain`, časové okno 30d (8638 řádků při zvoleném timestampu) a roční agregace 2025 (363 dennich souhrnů).
+
+To prokazuje reálnou strukturu a použitelnost SQL, **nikoliv** skutečnou latenci Go/Rust/Python nad produkční databází. Měření transportního času přes MCP zahrnuje externí síť/tool overhead a nesmí se zaměňovat za SQL execution time. Další postup: [REAL_DB_VALIDATION_PLAN.md](REAL_DB_VALIDATION_PLAN.md).
