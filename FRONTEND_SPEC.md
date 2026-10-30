@@ -1,6 +1,7 @@
 # FRONTEND_SPEC – Loučka Weather
 
 Status: **NÁVRH K REVIZI**, ne hotová implementace. Vydání 2026-10-30.
+**Datový režim schválen:** dynamické HTTP API nad **přímo čtenou produkční MariaDB WeeWX**; frontend se k SQL nepřipojuje a nepotřebuje pravidelné statické exporty.
 Zdroj vizuálního směru: tmavé návrhy v předchozí konverzaci; obrázky dosud nejsou uložené v repozitáři. Bez schválených referenčních souborů nelze tvrdit pixelovou shodu.
 
 ## 1. Produktová vize a design
@@ -87,7 +88,15 @@ Aktuální snímek (reálný čas pořízení, stale stav), archiv s datepickere
 - V popisku vždy „Měření“, „Rekonstrukce“, „Model“ nebo „Externí stanice“.
 - Vykreslovat podle skutečných datapointů; náhodné hodnoty jsou povolené pouze v testech a v označeném demo režimu.
 
-## 6. Přístupnost, SEO, výkon
+## 6. Dynamické datové požadavky a chování UI
+- Astro tvoří statickou kostru, hydratované části používají `fetch('/api/v1/current')`, `fetch('/api/v1/history?...')` a další zdokumentované endpointy.
+- Při přepnutí filtru, roku či grafu se odesílá nový parametrizovaný požadavek, nikoli změna statických exportů ani nový build.
+- Parametry uživatele mají omezení (metric allowlist, datum od/do, resolution, počet bodů); backend musí mít timeouty a cache.
+- AbortController pro zrušení starého dotazu po změně filtru; loading/stale/error stavy jasně odlišit od nuly.
+- Pro výpadek API použít poslední známé hodnoty jen s výrazným údajem o stáří, nikoliv živý stav. CSV a graf ukazují data konzistentně ze stejného API.
+- Časově a tematicky rozsáhlé dotazy nesmí způsobovat plný scan při každém požadavku; využít denní souhrny nebo omezené agregace.
+
+## 7. Přístupnost, SEO, výkon
 - WCAG 2.2 AA, klávesnice, alternativy grafů, pozor na barvoslepost a kontrast.
 - Semantické nadpisy, meta title/description po stránkách, OpenGraph, sitemap, canonical.
 - Úvodní stránka funkční s vypnutým klientským JS alespoň jako srozumitelná statická obálka a stav dat.
@@ -95,10 +104,10 @@ Aktuální snímek (reálný čas pořízení, stale stav), archiv s datepickere
 - Limit JS po stránkách stanovit až po prvním buildu; rozlišit SVG ikony, foto, mapu a ECharts chunk.
 - Testovat 390, 768, 1440 px; light/dark; loading/stale/error/missing; long text; screenshot regrese.
 
-## 7. Hotovo znamená
-Vytvořenou stránku lze otevřít bez interních tokenů; reaguje na správné datové kontrakty; ukazuje zdroj, čas i kvalitu; chování na mobilu a při výpadku je otestované; nedochází k přímému SQL z prohlížeče; žádná produkční data nejsou vymyšlena.
+## 8. Hotovo znamená
+Vytvořenou stránku lze otevřít bez interních tokenů; při otevření provádí klientský fetch na `/api/v1/*` a backend čte přímo MariaDB s účtem SELECT; ukazuje zdroj, čas i kvalitu; chování na mobilu a při výpadku je otestované; nedochází k přímému SQL z prohlížeče; žádná produkční data nejsou vymyšlena.
 
-## 8. Otevřené volby
+## 9. Otevřené volby
 - D1: výchozí motiv tmavý vs systémový (doporučení: systémový s tmavým návrhem jako referencí).
 - D2: více rozšířených sekcí v hlavní navigaci vs kompaktní „Více“ (doporučení: kompaktní).
 - D3: živá data přes WeeWX výstup vs lokální GW3000 API (ověřit z konfigurace, nehádat).
