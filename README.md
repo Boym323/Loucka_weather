@@ -8,7 +8,7 @@ Tento repozitář se inicializuje dokumentací; zatím **neobsahuje běžící w
 - Ecowitt GW3000 a stávající WeeWX zůstávají sběrnou vrstvou.
 - Stávající MariaDB s historickými daty zůstává; původní archiv je bez zásahů.
 - Web: Astro + TypeScript; grafy ECharts; statický build mimo produkci.
-- Oddělená read-only datová vrstva (první varianta Python), případně Rust až po benchmarku.
+- Oddělené read-only HTTP API nad MariaDB: podle [auditu backendu](BACKEND_TECHNOLOGY_AUDIT.md) **preferované Go**, alternativy Rust/Python; definitivní volba ještě podléhá potvrzení a kontrolnímu benchmarku.
 - Tři vrstvy statistik: přímé čtení `archive` (L1), existující `archive_day_*` WeeWX (L2), a **teprve po dalším schválení** volitelné vlastní agregace v odděleném schématu `loucka_weather_stats` na stejné MariaDB (L3). Webové API vždy používá účet pouze pro čtení; případný odvozený výpočetní worker bude samostatný.
 - Tři LXC: stávající WeeWX, MariaDB a nový frontend + datová vrstva.
 - Nový web nejprve pouze na stagingu. Produkční Belchertown zůstává dostupný.
