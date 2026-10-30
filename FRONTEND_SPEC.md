@@ -96,6 +96,13 @@ Aktuální snímek (reálný čas pořízení, stale stav), archiv s datepickere
 - Pro výpadek API použít poslední známé hodnoty jen s výrazným údajem o stáří, nikoliv živý stav. CSV a graf ukazují data konzistentně ze stejného API.
 - Časově a tematicky rozsáhlé dotazy nesmí způsobovat plný scan při každém požadavku; využít denní souhrny nebo omezené agregace.
 
+### Přímé a předpočítané statistiky – transparentnost pro návštěvníka
+- Uživatel vždy přistupuje přes stejné HTTP API, nevybírá si SQL tabulky. API podle konkrétního ukazatele použije L1 `archive`, L2 denní WeeWX souhrny nebo po případném schválení L3 vlastní předpočtené statistiky.
+- Na /klimatologie zobrazovat období, jednotku, pokrytí měřením, původ (originál / případná ověřená rekonstrukce), verzi výpočtu a čas posledního přepočtu, pokud je údaj z L3.
+- Odlišovat **průběžný dnešní den** od definitivního uzavřeného období. Zastaralou nebo neúplnou předpočtenou statistiku výslovně označit; nerozlišovat ji pouze změnou barvy.
+- V grafech pro jednotlivé dny a roky zachovat konzistentní definici QC; nespojit dvě provenience do jediné neoznačené křivky.
+- Na změnu vybraného období nemá být potřeba nový Astro build ani nová dávka generovaných souborů; API vrací správný výsledek přímo z DB nebo v ní uloženého odvozeného agregátu.
+
 ## 7. Přístupnost, SEO, výkon
 - WCAG 2.2 AA, klávesnice, alternativy grafů, pozor na barvoslepost a kontrast.
 - Semantické nadpisy, meta title/description po stránkách, OpenGraph, sitemap, canonical.
