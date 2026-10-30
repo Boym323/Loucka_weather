@@ -1,6 +1,6 @@
 # Ověření benchmarku na skutečné databázi Počasí Loučka
 
-**Stav:** plán bezpečného staging ověření; není ještě vykonaný end-to-end benchmark proti skutečné MariaDB. Úvodní read-only SQL kontrola provedena 2026-10-30 přes Weather MCP.
+**Stav k 30. 10. 2026:** end-to-end benchmark **na skutečné produkční MariaDB již proběhl** z testovacího LXC (viz [REAL_LXC_FULL_2026-10-30.md](REAL_LXC_FULL_2026-10-30.md)). Tento soubor je nyní **plánem dodatečného opakování na izolovaném staging snapshotu**, nikoliv tvrzením, že neexistuje reálné měření. Úvodní read-only kontrola přes Weather MCP proběhla také.
 
 ## Co už bylo ověřeno
 - Produkční **MariaDB 11.8.6** se schématem `pocasi-loucka.eu`, `archive` 1 680 135 záznamů při posledním čtení a 6090 řádků `archive_day_outTemp`.
@@ -15,7 +15,7 @@
 - Porovnávané servery mají různé strategie tvorby JSON: Rust `Vec<serde_json::Value>`, Python `dict` přes FastAPI a Go typované struct. To měří konkrétní implementace, nikoliv izolovanou rychlost jazyka.
 - GitHub runner není stejné CPU, IO a síťové prostředí jako plánovaný třetí LXC. Benchmark bude potřeba zopakovat na shodném hostiteli.
 
-## Bezpečný skutečný staging test
+## Další bezpečný test: izolovaný staging snapshot
 
 1. **Získat nezměněný konzistentní snapshot** stávající `pocasi-loucka.eu` (archive + všechny souhrny potřebné pro test) a importovat jej na izolovanou staging MariaDB. Export dělat z produkce pouze SELECT/single-transaction a v době nízké zátěže; neprovádět test s desítkami klientů proti WeeWX writer DB.
 2. Vytvořit pouze pro tuto *kopii* read-only `SELECT` účet; credentials ponechat v lokálním env mimo GitHub a logy. Nikdy neotevírat privátní MariaDB hostovaný ve veřejném CI.
@@ -29,9 +29,9 @@
 10. Z výsledků připravit finální ADR Go vs Rust vs Python a změřený release budget LXC 3.
 
 ## Blokující fakta před provedením
-- Nový staging LXC a hostitel pro benchmark zatím nejsou v tomto repozitáři potvrzené jako dostupné.
+- Testovací LXC `zl-dev-AuditMeteo` je potvrzený z uživatelova výpisu a již na něm fungují tři API procesy. **Oddělená MariaDB se snapshotem produkčního schématu zatím není doložená.**
 - ChatGPT nemá potvrzený spouštěcí přístup ke staging LXC ani databázovému snapshotu; Weather MCP zprostředkuje jen jednotlivé read-only SQL dotazy.
 - Pro veřejně hostovaný GitHub runner není doložen bezpečný síťový přístup k lokální MariaDB.
 - Zde se nezapisují žádná hesla ani interní adresy.
 
-**Závěr:** Koncepční a funkční ověření lze udělat nyní read-only. Definitivní výkonové porovnání na reálné MariaDB bude možné po připravení izolovaného snapshotu a běhového prostředí. Nepovažovat GitHub fixture výsledky za produkční latenci.
+**Závěr:** Reálný test Go/Rust/Python proti živé MariaDB již existuje (36/36 PASS, jeden DB connection/server); jeho výsledky neslouží jako zkouška maximální kapacity ani dopadu na živý WeeWX writer. Pro další **nezávislý kapacitní a stabilitní test** připravit izolovaný snapshot. Nepovažovat GitHub fixture ani jednotný `full` run s poolem=1 za reprezentativní kapacitní SLA.
