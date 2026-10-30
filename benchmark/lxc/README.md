@@ -1,6 +1,6 @@
-# Benchmark Go / Rust / Python pro Počasí Loučka (Debian 13 LXC)
+# Benchmark šesti HTTP backendů pro Počasí Loučka (Debian 13 LXC)
 
-Obsahuje **tři skutečně běžící HTTP servery**: Go + database/sql, Rust + Axum + SQLx, Python + FastAPI + aiomysql + orjson. Všechny používají stejná SQL nad skutečným schématem WeeWX `archive` a `archive_day_outTemp` + `archive_day_rain`. Nejde o simulaci HTTP ani SQL.
+Obsahuje **šest skutečně běžících HTTP serverů**: Go + database/sql, Rust + Axum + SQLx, Python + FastAPI + aiomysql + orjson, Node.js + Fastify, C++20 + libmicrohttpd a PHP CLI + PDO MySQL. Všechny používají stejná SQL nad skutečným schématem WeeWX `archive` a `archive_day_outTemp` + `archive_day_rain`. Nejde o simulaci HTTP ani SQL.
 
 **Zásadní pravidlo:** na produkční MariaDB pouze `probe`, `smoke` a mírný `light`; **`full` pouze proti izolované kopii na samostatném testovacím LXC**. Žádné zápisy do původního archivu a žádné změny WeeWX konfigurace. Nikdy nespouštěj buildy na produkčním LXC, které sbírá počasí nebo hostuje MariaDB.
 
@@ -31,7 +31,7 @@ Skript sám běží **jako běžný neprivilegovaný uživatel**, pouze `install
 ```
 
 - `probe` – jen jednoduché SELECT, kontrola názvu schématu, potřebných tabulek, počtu bodů a **SHOW GRANTS**; odmítne účet s INSERT/UPDATE/DELETE/DDL.
-- `smoke` – sestaví všechny tři servery, spustí je jednotlivě na `127.0.0.1:18121`, ověří JSON a shodu všech čtyř endpointů. Srovnání používá pevný `BENCH_END_TS`, aby se nově zapisovaná data během testu neposunovala.
+- `smoke` – sestaví všech šest serverů, spustí je jednotlivě na `127.0.0.1:18121`, ověří JSON a shodu všech čtyř endpointů. Srovnání používá pevný `BENCH_END_TS`, aby se nově zapisovaná data během testu neposunovala.
 - `light` – 1 souběžný klient, velmi malé počty požadavků: 20 current, 10×24h, 3×30d, 10×yearly na server. Nenahrazuje plný benchmark a ani ten nulovou zátěž nezaručuje.
 
 Rozsah historie 30 dní obvykle obsahuje okolo 8 600 bodů. Roční statistika bere souhrny pro kalendářní rok `BENCH_YEAR` (výchozí 2025), s hranicemi v `Europe/Prague` (správně DST).
@@ -53,7 +53,7 @@ Pokud již máš samostatnou konzistentní kopii MariaDB, nic nedumpuj: vytvoř 
 
 ## 4. Co se měří
 
-Stejný SQL obsah, stejné výsledky a tři maximální databázová připojení na běžící server:
+Stejný SQL obsah a stejné JSON výsledky; proti produkci maximálně **jedno** DB spojení na běžící server (izolovaný snapshot může použít jiný, shodný pool):
 
 | Endpoint | Zdroj | Poznámka |
 |---|---|---|
@@ -62,7 +62,7 @@ Stejný SQL obsah, stejné výsledky a tři maximální databázová připojení
 | `/history/30d` | `archive` | pevné okno 30 dní |
 | `/statistics/yearly` | `archive_day_outTemp` + `archive_day_rain` | jeden dotaz přes rok a standardní lokální hranice |
 
-`full` měří všechny endpointy pro souběžnost 1, 10 a 50 klientů a zapisuje JSON i Markdown do `results/` (RPS, p50/p95/p99, CPU sekundy procesu, špičková vzorkovaná RSS). Všechny tři servery proběhnou postupně; při chybě nebo odlišné odpovědi skončí s nonzero exit statusem. Odpovědi HTTP se nevracejí do veřejného internetu, jen localhost port 18121.
+`full` měří všechny endpointy pro souběžnost 1, 10 a 50 klientů a zapisuje JSON i Markdown do `results/` (RPS, p50/p95/p99, CPU sekundy procesu, špičková vzorkovaná RSS). Všech šest serverů proběhne postupně; při chybě nebo odlišné odpovědi skončí s nonzero exit statusem. Odpovědi HTTP se nevracejí do veřejného internetu, jen localhost port 18121.
 
 ## 5. Metodická omezení
 
@@ -85,3 +85,10 @@ Go (standard net/http), Rust (Axum), Python (FastAPI + orjson), Node.js/TypeScri
 Před prvním spuštěním aktualizace: jako root jednou `sudo ./run.sh install`, už jako meteo-bench `./run.sh smoke` a `./run.sh light`. Pro ověření jen nových serverů můžeš použít `BENCH_LANGUAGES='go,node,cpp,php' ./run.sh smoke`. Režim `full` je nadále blokován, pokud `BENCH_ISOLATED_DB` není `YES`; nepřepisuj flag kvůli produkční MariaDB.
 
 Spuštění vytváří logy v `results/` a report JSON/MD. **Žádná výkonnostní čísla nových tří jazyků zatím nejsou změřena.** Sleduje se RSS HTTP procesu včetně PHP workerů; procesorový čas je zatím pouze rodičovského procesu, u PHP není vhodný pro přímé srovnání.
+
+
+## Výsledky šesti backendů – skutečný LXC test 2026-10-30
+
+Uživatel na `zl-dev-AuditMeteo` spustil `./run.sh light` nad skutečnou MariaDB 11.8.6 (jen SELECT, pool=1, concurrency=1). **Všech 24 scénářů PASS**, žádná HTTP chyba, 4/4 shodné odpovědi u všech šesti serverů. 30denní historie, 8 638 bodů: Go **19,92 RPS**, Rust **18,08**, C++ **18,78**, Node.js **11,00**, PHP CLI **6,40**, Python **5,98**. Malé odpovědi vedlo C++ (např. `current` **59,26 RPS**); nejnižší RAM měl Rust (cca **5,16 MiB** při 30 dnech). **Úplná tabulka všech endpointů, p95, RSS a omezení:** [REAL_LXC_SIX_LANGUAGES_LIGHT_2026-10-30.md](../REAL_LXC_SIX_LANGUAGES_LIGHT_2026-10-30.md).
+
+**Důležité:** `light` má pro 30denní historii jen 3 měřené requesty na backend; p95 i jemné rozdíly nejsou statisticky spolehlivé. PHP CLI je vývojový HTTP server, ne PHP-FPM. Pro `full` stále používat izolovaný DB snapshot. Do `main` tuto větev zatím neslučovat bez dalšího ověření.
