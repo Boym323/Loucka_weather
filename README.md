@@ -41,3 +41,8 @@ Na testovacím LXC proti skutečné produkční MariaDB WeeWX proběhl další r
 ## Dvě skutečná šestijazyčná FULL měření – vyhodnocení původních JSON (2026-10-30)
 
 [Úplná analýza dvou běhů](benchmark/REAL_LXC_SIX_LANGUAGES_FULL_TWO_RUNS_2026-10-30.md) ověřila **144/144 scénářů, 26 064 úspěšných HTTP požadavků, 0 chyb**. Oba běhy měly `pool_max=3` a proběhly proti **živé produkční MariaDB**, ač jejich chybně nastavená metadata uvádějí `isolated_copy=true`. Třetí běh v nahraném ZIP nebyl. Go vedlo u historie 30 dní a c=10 v obou měřeních (24,89/31,34 RPS). C++ vedlo u 24h/c=10; Node.js výrazně kolísal při delší historii a vyšší souběžnosti. `30d c=50` odesílá jen **24 požadavků celkem**: nejde o ověřenou souběžnost 50. Další plné zátěžové testy patří na izolovanou kopii MariaDB.
+
+
+## Tři plné šestijazyčné benchmarky – konečná agregace 2026-10-30
+
+Po doplnění třetího JSON proběhla kontrola **216/216 scénářů**, celkem **39 096 HTTP požadavků bez chyby**. [Agregace všech tří běhů](benchmark/REAL_LXC_SIX_LANGUAGES_FULL_THREE_RUNS_2026-10-30.md) počítá medián RPS/p95 ze tří měření, maximum RAM a variabilitu. Pro `30d c10` Go vedlo ve všech bězích (24,89 / 31,34 / 36,67 RPS; medián 31,34), před C++ (medián 21,80), PHP CLI (19,89), Node.js (17,37), Rust (15,85) a Pythonem (6,05). C++ vedlo u mediánů krátkých odpovědí. **Všechny tři testy běžely proti produkční DB s `pool_max=3`, přestože `isolated_copy=true` v JSON uvádí opak.** Dále `30d c50` není skutečných 50 klientů – jen 24 požadavků celkem. Další full jen na samostatné kopii MariaDB. Go zůstává předběžně doporučené pro API v1.
