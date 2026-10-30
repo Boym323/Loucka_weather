@@ -52,6 +52,7 @@ jobs:
         run: |
           mkdir -p benchmark/bin
           cd benchmark/go
+          go mod tidy
           /usr/bin/time -f 'GO_BUILD_SECONDS %e' go build -o ../bin/bench_go .
       - name: Build Rust HTTP server
         run: |
