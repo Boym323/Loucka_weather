@@ -24,3 +24,10 @@ Rozpracovaná specifikace bude ve větvi `docs/frontend-audit-v1`. Rozhodnutí s
 Na testovacím LXC `zl-dev-AuditMeteo` byly spuštěny Go, Rust a Python servery proti **živé produkční MariaDB WeeWX 11.8.6** s účtem pouze `SELECT`. `./run.sh full`: 36/36 scénářů, 0 HTTP chyb, shodné výsledky endpointů. Pool každého serveru omezen na **1 spojení** kvůli účtovému limitu `max_user_connections=4`. U historie 30 dní / 10 klientů: Go 24,32 RPS, Rust 15,84 RPS, Python 6,81 RPS; Python vycházel lépe u malých odpovědí, Rust měl nejnižší RSS. Číselné výsledky pocházejí z terminálového výpisu, nikoliv ze stažených souborů LXC. Nejde o potvrzení nulového vlivu na WeeWX writer ani maximální výkon při 50 klientských spojeních.
 
 [Úplný report z reálného LXC](benchmark/REAL_LXC_FULL_2026-10-30.md) · [Benchmarkové PR #2](https://github.com/Boym323/Loucka_weather/pull/2)
+
+
+## Rozšířené ověření všech šesti backendů (30. 10. 2026)
+
+Na testovacím LXC proti skutečné produkční MariaDB WeeWX proběhl další read-only `light` benchmark se **šesti** implementacemi: Go, Rust, Python, Node.js, C++ a PHP CLI. **24/24 scénářů PASS, 0 HTTP chyb**. C++ vedlo u krátkých odpovědí (`current` 59,26 RPS); Go mírně vedlo u historie 30 dní s 8 638 měřeními (19,92 RPS oproti 18,78 C++ a 18,08 Rust). Rust měl nejnižší zaznamenanou RSS. Preferovaná volba pro API v1 **zatím zůstává Go**, ale C++ je důležitá změřená alternativa.
+
+[Úplné výsledky a metodická omezení](benchmark/REAL_LXC_SIX_LANGUAGES_LIGHT_2026-10-30.md). Tento konkrétní `light` běh měl jen 1 souběžného klienta a pro 30denní historii pouze 3 requesty na backend. Pro finální kapacitní rozhodnutí je nutné opakování na izolované DB kopii; PHP bylo měřeno vestavěným CLI HTTP serverem, ne PHP-FPM.
