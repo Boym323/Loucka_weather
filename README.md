@@ -36,3 +36,8 @@ Na testovacím LXC proti skutečné produkční MariaDB WeeWX proběhl další r
 ## Analýza původního JSON – šestijazyčný full benchmark (2026-10-30)
 
 [Úplný rozbor skutečného exportovaného JSON](benchmark/REAL_LXC_SIX_LANGUAGES_FULL_2026-10-30.md): nahraný ZIP obsahoval **jeden**, nikoliv tři kompletní full běhy (72/72 scénářů bez HTTP chyb, celkem 13 032 požadavků). Ověřená konfigurace: **DB pool=3**; metadata nesprávně tvrdí `isolated_copy=true`, ale uživatel potvrdil, že běžela **produkční MariaDB**. Scénář `30d c=50` provádí jen 24 requestů celkem, takže nešlo o 50 skutečně současných požadavků. Naměřené výkony jsou podnětné, ale nerozhodují definitivně o backendu. Další plné testy pouze na izolovaném staging snapshotu.
+
+
+## Dvě skutečná šestijazyčná FULL měření – vyhodnocení původních JSON (2026-10-30)
+
+[Úplná analýza dvou běhů](benchmark/REAL_LXC_SIX_LANGUAGES_FULL_TWO_RUNS_2026-10-30.md) ověřila **144/144 scénářů, 26 064 úspěšných HTTP požadavků, 0 chyb**. Oba běhy měly `pool_max=3` a proběhly proti **živé produkční MariaDB**, ač jejich chybně nastavená metadata uvádějí `isolated_copy=true`. Třetí běh v nahraném ZIP nebyl. Go vedlo u historie 30 dní a c=10 v obou měřeních (24,89/31,34 RPS). C++ vedlo u 24h/c=10; Node.js výrazně kolísal při delší historii a vyšší souběžnosti. `30d c=50` odesílá jen **24 požadavků celkem**: nejde o ověřenou souběžnost 50. Další plné zátěžové testy patří na izolovanou kopii MariaDB.
