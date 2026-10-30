@@ -35,10 +35,11 @@ Datum: 2026-10-30. Dokument stanovuje stav návrhu. „Doporučení“ není pot
 - B navíc archiv predikcí, modelové srovnání a vlastní radarový pipeline ihned.
 **Doporučení: A pro MVP, B v další fázi**, po licenčním a provozním auditu.
 
-### Q6 – Výpočetní engine
-- A Python první produkční implementace, Rust případně na výpočetně náročné moduly;
-- B celý engine od začátku v Rustu.
-**Doporučení: A**. Rozhodnutí případně změnit na základě reálného srovnávacího benchmarku.
+### Q6 – Jazyk API nad MariaDB 11.8
+- **A: Go** (`net/http` + `database/sql` + `go-sql-driver/mysql`) – doporučená první volba pro read-only API nad `archive` a `archive_day_*`.
+- **B: Rust** (Axum + SQLx) – výkonná alternativa s přísnější typovou bezpečností, ale vyšší kompilační a vývojovou náročností.
+- **C: Python** (FastAPI + ovladač MariaDB/MySQL) – vhodná alternativa, pokud převáží potřeba vědeckých datových knihoven.
+**Výsledek auditu: doporučit A – Go. Finální volba pro implementaci je ještě k potvrzení.** Nejde o naměřený výkonový benchmark implementací. Podklad: [BACKEND_TECHNOLOGY_AUDIT.md](BACKEND_TECHNOLOGY_AUDIT.md).
 
 ### Q7 – Kdy zprovoznit vlastní předpočtené statistiky L3?
 - **A: Nejprve pouze L1+L2** a změřit výkon/platnost denních souhrnů; L3 vytvořit až pro skutečně potřebné ukazatele.
