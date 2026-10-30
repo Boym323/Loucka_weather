@@ -73,3 +73,8 @@ Nad skutečnou MariaDB 11.8.6 proběhl `./run.sh light` se **šesti** variantami
 ## Druhý šestijazyčný FULL běh a agregovaná analýza
 
 Původní JSON soubory z LXC byly nyní přečteny a zkontrolovány. [Rozbor dvou skutečně dokončených `full` běhů](REAL_LXC_SIX_LANGUAGES_FULL_TWO_RUNS_2026-10-30.md) zahrnuje **144 scénářů / 26 064 requestů bez HTTP chyby**, průměr RPS a průměr dvou p95 pro každou kombinaci, špičky vzorkované RAM a metodická omezení. Třetí JSON v dodaném archivu chyběl; `pool_max=3`, `isolated_copy=true` přestože šlo o **produkci**, a `30d c=50` odesílá jen 24 requestů. Nepoužívat tento test jako definitivní SLA ani benchmark 50 současných 30denních exportů.
+
+
+## Finální souhrn tří šestijazyčných FULL běhů
+
+[Ověřený 3-běhový report](REAL_LXC_SIX_LANGUAGES_FULL_THREE_RUNS_2026-10-30.md) na základě tří původních JSON (205008Z, 210318Z, 211154Z) zahrnuje **216 scénářů / 39 096 HTTP requestů / 0 chyb**, mediány RPS a p95, nejvyšší RSS a porovnání kolísání. U `30d c10`: Go **31,34 RPS medián**, C++ 21,80, PHP CLI 19,89, Node.js 17,37, Rust 15,85, Python 6,05. **Důrazně rozlišovat**: šlo o produkční DB s pool=3, přestože v JSON bylo chybné `isolated_copy=true`; `30d c50` tvoří jen 24 požadavků. Tři běhy nejsou izolovaný kapacitní test ani důkaz bezpečnosti vůči WeeWX writeru.
