@@ -105,3 +105,10 @@ Build časy: první běh Go 11.12 s, Rust 56.36 s; druhý Go 11.97 s, Rust 63.12
 S použitím Weather MCP a **explicitního** `pocasi-loucka.eu` byly úspěšně otestovány dotazy: poslední řádek `archive`, propojené denní souhrny `archive_day_outTemp` / `archive_day_rain`, časové okno 30d (8638 řádků při zvoleném timestampu) a roční agregace 2025 (363 dennich souhrnů).
 
 To prokazuje reálnou strukturu a použitelnost SQL, **nikoliv** skutečnou latenci Go/Rust/Python nad produkční databází. Měření transportního času přes MCP zahrnuje externí síť/tool overhead a nesmí se zaměňovat za SQL execution time. Další postup: [REAL_DB_VALIDATION_PLAN.md](REAL_DB_VALIDATION_PLAN.md).
+
+
+## Následné měření na skutečné WeeWX MariaDB
+
+Tento report popisuje **pouze syntetický GitHub Actions CI benchmark** s MariaDB 11.8.9 a pool=3. Dne 30. 10. 2026 následně proběhl samostatný `./run.sh full` na Debian 13 LXC `zl-dev-AuditMeteo` proti skutečné **produkční MariaDB 11.8.6 / `pocasi-loucka.eu`**. Vzhledem k účtovému limitu `max_user_connections=4` měly všechny tři API servery **pool max=1**, což při souběžnosti 50 silně omezuje interpretaci. Všech 36 scénářů vykázalo nula HTTP chyb.
+
+**Úplné reálné výsledky:** [REAL_LXC_FULL_2026-10-30.md](REAL_LXC_FULL_2026-10-30.md). U 30denního grafu (8 638 řádků) při 10 klientech: Go **24,32 RPS**, Rust **15,84 RPS**, Python **6,81 RPS**. Python byl rychlejší pro malé odpovědi, Rust úspornější na RAM. Syntetická a reálná měření mají rozdílnou databázi, síť a limity poolu; **neprůměrovat** je. Číselné reálné výsledky jsou převzaty z uživatelem poskytnutého terminálového výpisu.
