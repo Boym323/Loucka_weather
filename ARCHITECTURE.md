@@ -11,7 +11,7 @@ Status: **NÁVRH K REVIZI**, 2026-10-30. Nepředstavuje potvrzení skutečné ko
 - GitHub Actions build mimo produkční LXC, testy a podpis/checksum artefaktu, přepnutí release atomicky.
 - **Žádné periodické JSON exporty jako primární zdroj historických dat.** Astro vykreslí statickou obálku, browser volá dynamické API; to přímo dotazuje MariaDB s krátkou volitelnou cache. Žádné rebuildy kvůli změně měření.
 - Externí služby se čtou do lokální cache se zdrojem/TTL.
-- **Tři úrovně statistik:** (1) `archive` pro detailní historii, (2) WeeWX `archive_day_*` pro existující denní souhrny a rychlé agregace, (3) **volitelné vlastní předpočítané odvozené statistiky** v odděleném schématu na *tomtéž* serveru MariaDB. Nesmí vzniknout druhá kopie celého archivu.
+- **Tři úrovně statistik – cílová koncepce:** (1) `archive` pro detailní historii, (2) WeeWX `archive_day_*` pro existující denní souhrny a rychlé agregace, (3) **volitelné vlastní předpočítané odvozené statistiky** v odděleném schématu na *tomtéž* serveru MariaDB. **Pro MVP je po read-only auditu schváleno používat jen L1 + L2.** Žádná kopie celého archivu. Audit: [WEEWX_DAILY_SUMMARIES_AUDIT.md](WEEWX_DAILY_SUMMARIES_AUDIT.md).
 
 ## 2. Fyzické rozdělení
 | Složka | LXC | Úloha |
@@ -73,7 +73,7 @@ HTTP API v LXC 3 používá pouze SELECT; produkční `pocasi-loucka.eu` ani `lo
 #### Aktualizace a přepočty
 1. Poslední archivní měření API čte z `archive`; průběžné denní hodnoty lze číst z WeeWX, ale **nepovažovat nedokončený den za definitivní**.
 2. Po dokončení lokálního dne (Europe/Prague) může oddělený worker idempotentně aktualizovat dotčené odvozené denní/měsíční/roční ukazatele. Ověří zdrojový `archive` vs `archive_day_*` a pravidla pokrytí.
-3. Při **ověřené** historické korekci cíleně označit za neplatné a přepočítat závislé dny/měsíce/roky, roční pořadí a rekordy. Změna v `loucka_reconstruction` **nesmí bez schválené metodiky** samovolně přepsat klimatologii původního archivu.
+3. **Historické opravy jsou mimo současný scope** a jejich přepočet denních souhrnů zajistí samostatný postup ve WeeWX. API musí umět po takovém přepočtu invalidovat cache a znovu načíst L2. Případná budoucí L3 si teprve po schválení řeší vlastní odvozené závislosti; změna v `loucka_reconstruction` nesmí automaticky měnit původní archiv.
 4. Přepočet musí být reprodukovatelný, verzovaný a atomicky publikovaný (transakce/staging + swap), se souběžnými zámky, auditní stopou a rollbackem. Při selhání se nesmí publikovat částečně přepočtený rok.
 5. Úplnost počítat z pokrytí platných intervalů a používat historicky správné jednotky/hranice `(start,end]` a DST; nepočítat pouze počet pětiminutových řádků.
 6. Cache API pro L3 invalidovat podle `calculation_run/source_revision`, případně omezit TTL. API vrací `computed_at`, `source_period`, `data_origin`, `algorithm_version`, `quality`, `coverage`, `is_final`. Neplatná/stará statistika má viditelný stav, nikoliv tichý fallback na chybnou hodnotu.
@@ -149,7 +149,7 @@ Astro vyhovuje především veřejné meteorologické prezentaci s klientskou in
 P0 ověřit zdrojovou konfiguraci, DB schéma, mapování sond, live zdroj, kameru, CHMI licence.
 P1 OpenAPI/JSON contract + read-only databázový HTTP backend + testy DST/jednotek/QC, SQL explain, timeouty a pool.
 P2 Astro homepage/grafy/senzory na stagingu.
-P3 klimatologie: L1/L2, benchmarking; pouze pokud to přinese doloženou výhodu a je schváleno DDL/oprávnění, volitelná L3 pro předpočítané statistiky a řešení provenience rekonstrukcí.
+P3 klimatologie: primárně L1/L2 po ověření souhrnů a přepočtu WeeWX; benchmarking. **L3 pouze pro konkrétní chybějící nebo příliš drahý výpočet**, pokud to prokáže benchmark a schválí se DDL/oprávnění.
 P4 CAP/předpověď/kamera/radar, každé integrační API vlastní fail-closed status.
 P5 benchmark, bezpečnost, dokončení WCAG, produkční cutover po schválení.
 
