@@ -63,3 +63,8 @@ Bezpečnost: na živé MariaDB se vynucuje **pool=1** a `full` je zablokován be
 Nad skutečnou MariaDB 11.8.6 proběhl `./run.sh light` se **šesti** variantami: Go, Rust, Python, Node.js/Fastify, C++20/libmicrohttpd, PHP CLI/PDO. Všech 24 scénářů PASS při pool=1 a 1 souběžném HTTP klientovi. `30d` (8 638 bodů): Go 19,92 RPS, C++ 18,78, Rust 18,08, Node.js 11,00, PHP 6,40, Python 5,98. `current`: nejlepší C++ 59,26 RPS.
 
 [Kompletní reálný šestijazyčný report](REAL_LXC_SIX_LANGUAGES_LIGHT_2026-10-30.md) · [Zdrojové kódy, balíček a instalace na LXC](lxc/README.md). Výsledky nelze porovnávat prostým průměrem se syntetickým CI nebo předchozím full benchmarkem; zejména PHP CLI není PHP-FPM a tři 30denní requesty tvoří nedostatečný vzorek pro p95.
+
+
+## Full benchmark šesti backendů – ověřený JSON z produkčního LXC
+
+[Forenzní rozbor 72 scénářů](REAL_LXC_SIX_LANGUAGES_FULL_2026-10-30.md) obsahuje výkon RPS a latenci p95 všech šesti jazyků při c=1/10/50 z **jediného** nahraného JSON souboru. Prokazatelný počet požadavků: 13 032, nula HTTP chyb. **Varování: metadata `isolated_copy=true` nejsou pravdivá** (uživatel potvrdil živou MariaDB); `pool_max=3` a `30d c=50` znamená max. 24 současných požadavků. Nezaměňovat s předešlým `light` nebo s CI fixture. Hodnoty nepředstavují definitivní kapacitní limit a není doložen jejich dopad na WeeWX writer.
