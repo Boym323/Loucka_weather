@@ -11,30 +11,33 @@ Status: **NÁVRH K REVIZI**, 2026-10-30. Nepředstavuje potvrzení skutečné ko
 - GitHub Actions build mimo produkční LXC, testy a podpis/checksum artefaktu, přepnutí release atomicky.
 - **Žádné periodické JSON exporty jako primární zdroj historických dat.** Astro vykreslí statickou obálku, browser volá dynamické API; to přímo dotazuje MariaDB s krátkou volitelnou cache. Žádné rebuildy kvůli změně měření.
 - Externí služby se čtou do lokální cache se zdrojem/TTL.
+- **Tři úrovně statistik:** (1) `archive` pro detailní historii, (2) WeeWX `archive_day_*` pro existující denní souhrny a rychlé agregace, (3) **volitelné vlastní předpočítané odvozené statistiky** v odděleném schématu na *tomtéž* serveru MariaDB. Nesmí vzniknout druhá kopie celého archivu.
 
 ## 2. Fyzické rozdělení
 | Složka | LXC | Úloha |
 |---|---|---|
 | GW3000 | fyzická brána | příjem senzorů; lokální API dle firmwaru |
 | WeeWX | stávající LXC 1 | sběr, ovladače, zápis archivního záznamu |
-| MariaDB | stávající LXC 2 | originální archiv, denní souhrny a případně oddělené schéma rekonstrukcí |
+| MariaDB | stávající LXC 2 | původní archiv, souhrny WeeWX a samostatné existující rekonstrukční schéma; volitelně po schválení `loucka_weather_stats` |
 | Loučka Weather | nové LXC 3 | Nginx + statický Astro, **Python HTTP API server** (systemd, lokální socket/port), volitelná cache, integrace kamery a externích zdrojů |
 
 **LXC 3** počáteční odhad 2 vCPU/2 GiB RAM, disk 10–20 GiB mimo archiv kamer; tyto hodnoty nejsou benchmark. Pro časosběry oddělené úložiště/quota a retence. LXC 1/2 neresizovat bez měření. Nejprve ověřit skutečné LXC rozmístění, firewall a možnosti záloh.
 
 ### Tok
 `GW3000 -> WeeWX -> MariaDB (zapisuje jen WeeWX)`
-`Astro client -> HTTPS /api/v1/* -> Nginx reverse proxy -> Python API -> MariaDB (SELECT)`
+`Astro client -> HTTPS /api/v1/* -> Nginx reverse proxy -> Python API (SELECT) -> MariaDB: archive / archive_day_* / případné statistické schéma`
+`samostatný, teprve po schválení povolený stats worker -> validované agregace -> MariaDB.loucka_weather_stats (pouze oddělené schema)`
 `WeeWX LOOP nebo GW3000 local (po ověření) -> live adaptér /api/v1/live -> Astro client`
 `Kamera / ČHMÚ / Open-Meteo / další -> jednotlivé fetchery -> cache + metadata -> API/Nginx`
 
-LXC 3 nikdy nemění produkční DB; ostatní opravy řeší samostatný kontrolovaný postup. Web nemá přímý přístup k SQL.
+HTTP API v LXC 3 používá pouze SELECT; produkční `pocasi-loucka.eu` ani `loucka_reconstruction` nemění. Po případném schválení může **jiná procesní identita** (stats worker) zapisovat výhradně vlastní odvozené tabulky na stejném serveru MariaDB. Opravy originálního archivu nadále řeší samostatný kontrolovaný postup. Prohlížeč nemá přímý přístup k SQL.
 
 ## 3. Ochrana zdroje dat a read-only model
 - Dedicated DB účet s minimálními SELECT právy pouze na potřebná schémata/tabulky; žádné GRANT/DDL/DML z webu.
 - `DATABASE()`, host a verze schema kontrolovat při startu. Povinná konfigurace origin/reconstruction/externí; nikdy automatický default.
 - Pevný allowlist SQL dotazů, parametrizace, limity rozsahu, stránkování. Nesmí existovat veřejný obecný SQL endpoint.
-- Jediná cesta nových dat do databáze je stávající WeeWX. Rekonstrukce probíhají v odděleném projektu s vlastní auditní stopou; frontend je jen konzument.
+- WeeWX zůstává jediným writerem původního archivu `pocasi-loucka.eu`. Samostatný, **dosud nenasazený a neautorizovaný** pracovní proces může po odsouhlasení vytvářet/updatovat *jen* odvozené tabulky v `loucka_weather_stats`. To není nový primární zdroj naměřených dat. Rekonstrukce probíhají v odděleném projektu s vlastní auditní stopou; frontend a veřejné API jsou pouze konzumenti.
+- Oddělit DB účty: `weather_web_ro` (pouze potřebné SELECT) a případný `weather_stats_writer` (SELECT podkladů + omezené INSERT/UPDATE do vlastních souhrnů, žádná práva na původní archive, archive_day_* ani loucka_reconstruction). Konkrétní účty/názvy jsou návrh; v této fázi se nevytvářejí.
 - Dva různé zdroje produkce/reconstruction držet v datových kontraktech s `origin` a `quality`.
 - Read-only ověření schématu před nasazením: přesná jména polí, zdrojové jednotky a mapování senzorů.
 
@@ -47,9 +50,39 @@ LXC 3 nikdy nemění produkční DB; ostatní opravy řeší samostatný kontrol
 - Backend používá **omezený connection pool** (výchozí návrh 2–5 připojení, změřit), limit současných dotazů, timeouts/limity výsledků, konzistentní odpovědi 503 při nedostupnosti DB.
 - Účet backendu má `SELECT` pouze na konkrétní tabulky `pocasi-loucka.eu`. WeeWX zůstává jediným běžným writerem původního archivu. Žádné změny schématu DB z webu.
 - Výstupy lze cachovat v RAM s TTL; např. aktuální archiv 15–30 s, 24h graf 30–60 s, historické měsíce hodiny až do změny archivní verze. **Cache není zdrojem pravdy**. Ani restart backendu nesmí vyžadovat přepočet celé historie.
-- Dlouhé klimatologické výpočty nad původním archivem běží nad existujícími `archive_day_*`, pokud jsou metodicky správné; při opravách či náročnějších výpočtech zvlášť batch/ondemand výpočet s limitem (stále ze stávající DB).
+- Pro běžné denní a roční statistiky použít existující `archive_day_*`, jen pokud jsou metodicky a datově správné. Náročné specializované ukazatele, auditovanou klimatologii a rekordy lze **předpočítat** do samostatného schématu. API se na ně dotazuje přímo v MariaDB. U výpočtů pro opravenou historii neoznačovat původní denní souhrny WeeWX za automaticky validní.
 - `EXPLAIN` a zátěžové testy před přidáváním indexů; změna indexů není automaticky povolena. Využívat indexovaná časová okna `dateTime`, ne `YEAR(FROM_UNIXTIME(dateTime))` ve filtru pro všechny řádky.
 - Explicitně stanovit maximální časové okno a maximum bodů; backend pro měsíce/roky poskytuje agregace místo milionů surových bodů.
+
+### Tříúrovňový model statistické vrstvy (schválená koncepce)
+| Vrstva | Tabulky | Použití a aktualizace |
+|---|---|---|
+| L1 – detail | `pocasi-loucka.eu.archive` | Aktuální poslední archivní údaj, detailní grafy, krátká období; přímé SQL SELECT s limity |
+| L2 – denní souhrny WeeWX | `pocasi-loucka.eu.archive_day_*` | Denní min/max, časově vážené průměry, denní srážky a rychlé měsíční/roční agregace; WeeWX aktualizuje podle vlastního mechanismu |
+| L3 – vlastní odvozené agregace **volitelné** | navrhované schéma `loucka_weather_stats` | Klimatologické rekordy, charakteristické dny, validované měsíce/roky, QC/úplnost a rekonstrukce; samostatný worker po schválení oprávnění a migrací |
+
+**Jedna databázová služba, žádná kopie raw archivu.** L3 je nové **schéma na existující MariaDB**, nikoli další MariaDB instance, další LXC nebo automaticky schválená mutace. L1/L2 zůstávají čtené přímo, L3 je optimalizační/analytický index s nezávislým přepočtem.
+
+#### Případná L3 – minimální logické tabulky (názvy a DDL teprve k návrhu)
+- `daily_statistics`, `monthly_statistics`, `yearly_statistics`: `metric_id`, `period_start_utc`, `period_end_utc`, `source_id`, `origin`, `unit`, `value`/`min`/`max` dle definice, `coverage_fraction`, `quality`, `rule_version`.
+- `climate_records`, `climate_normals`: souhrn s doloženou metodikou; žádný nedoložený oficiální normál.
+- `data_completeness`: platné intervaly, chybějící hodiny/dny, senzorové epochy.
+- `calculation_runs`: id výpočtu, vstupní období, fingerprint zdrojů, verze metodiky/QC, stav, chyby, `calculated_at`, důvod přepočtu.
+- Unique key pro `metric_id + period + source + origin + algorithm_version` (přesná schémata až dle návrhu). Uchovávat odkazy na provenance, ne vytvářet skrytou kopii všech raw bodů.
+
+#### Aktualizace a přepočty
+1. Poslední archivní měření API čte z `archive`; průběžné denní hodnoty lze číst z WeeWX, ale **nepovažovat nedokončený den za definitivní**.
+2. Po dokončení lokálního dne (Europe/Prague) může oddělený worker idempotentně aktualizovat dotčené odvozené denní/měsíční/roční ukazatele. Ověří zdrojový `archive` vs `archive_day_*` a pravidla pokrytí.
+3. Při **ověřené** historické korekci cíleně označit za neplatné a přepočítat závislé dny/měsíce/roky, roční pořadí a rekordy. Změna v `loucka_reconstruction` **nesmí bez schválené metodiky** samovolně přepsat klimatologii původního archivu.
+4. Přepočet musí být reprodukovatelný, verzovaný a atomicky publikovaný (transakce/staging + swap), se souběžnými zámky, auditní stopou a rollbackem. Při selhání se nesmí publikovat částečně přepočtený rok.
+5. Úplnost počítat z pokrytí platných intervalů a používat historicky správné jednotky/hranice `(start,end]` a DST; nepočítat pouze počet pětiminutových řádků.
+6. Cache API pro L3 invalidovat podle `calculation_run/source_revision`, případně omezit TTL. API vrací `computed_at`, `source_period`, `data_origin`, `algorithm_version`, `quality`, `coverage`, `is_final`. Neplatná/stará statistika má viditelný stav, nikoliv tichý fallback na chybnou hodnotu.
+
+#### Než budou dovoleny zápisy do L3
+- Read-only ověřit existující schémata a existenci `archive_day_*` pro každou metriku.
+- Navrhnout DDL, indexy a role; změřit náročnost backfillu i dopad na běžící WeeWX writer.
+- Připravit migrace, zálohu, test na kopii databáze, opravný/rollback plán a approval pro vytvoření schématu i zápis.
+- Do odsouhlasení běží pouze **L1 + L2 a RAM cache**, a L3 je zdokumentované budoucí rozšíření.
 
 ### Obnovování / integrace
 | Oblast | Návrh | Zdroj |
@@ -57,7 +90,7 @@ LXC 3 nikdy nemění produkční DB; ostatní opravy řeší samostatný kontrol
 | Aktuální 5min záznam | dotaz na poslední archivní řádek, cache ~15–30 s | `archive` |
 | Skutečná živá měření 10–20 s | po ověření LOOP nebo GW3000 HTTP feed, zvlášť od DB | adaptér; **není** garantováno pětiminutovým SQL |
 | Krátké grafy | HTTP dotaz v omezeném časovém okně, cache ~30–60 s | `archive` |
-| Roční/klimatologické grafy | agregace přímo nad denními souhrny, cache a QC | `archive_day_*` |
+| Roční/klimatologické grafy | primárně denní souhrny; pro náročné validované ukazatele volitelná L3 po jejím nasazení | `archive_day_*`, volitelně `loucka_weather_stats` |
 | Diagnostika | aktuální senzorové metriky a historie z DB | `archive` |
 | Kamera | 30–60s snímek, 5min archiv podle zdroje | image worker/úložiště |
 | CAP, předpověď, radar | provider fetch/TTL/cache | oficiální externí zdroje |
@@ -67,7 +100,7 @@ Veřejný dynamický prefix **`/api/v1/`** (REST/JSON, pouze bezpečné GET pro 
 
 - `GET /api/v1/current` – poslední archivní údaje, čas posledního měření a stale stav.
 - `GET /api/v1/history?metric=outTemp&from=...&to=...&resolution=auto` – vybraná veličina a omezené období, agregace podle délky okna; žádné libovolné SQL nebo nezaručené rozsahy.
-- `GET /api/v1/climate/yearly?metric=outTemp&fromYear=2009&toYear=2026` – denní souhrny/agregace, přesné definice.
+- `GET /api/v1/climate/yearly?metric=outTemp&fromYear=2009&toYear=2026` – agregace z existujících denních tabulek, případně ověřených předpočtených statistik; klient neřeší jejich fyzické umístění.
 - `GET /api/v1/sensors` – diagnostika a stáří měření.
 - `GET /api/v1/status` – veřejný stav posledního načtení dat a konektivity bez citlivých detailů.
 - `GET /api/v1/alerts`, `GET /api/v1/forecast` – externí data z ověřených zdrojů/cache.
@@ -97,7 +130,7 @@ Oficiální publikované produkty a licenčně povolené widgety; nevyužívat s
 - CSP navrhnout podle skutečných zdrojů map/kamer, HSTS až po ověření TLS, security headers, cache, omezení MIME.
 - Integrátory stahují jen z allowlistu, bránit SSRF a interním redirectům, size/time limits.
 - Secrets v env file vlastněném service účtem, žádné v public JSON a repu.
-- Read-only aplikace nikdy neprovádí SQL migrace. Zálohy a restore zkoušky zvlášť.
+- Read-only webová aplikace nikdy neprovádí SQL migrace. Samostatný **budoucí** stats worker smí po schválení zapisovat jen do vlastního statistického schématu. Zálohy a restore zkoušky zvlášť.
 - Monitoring HTTP response, dostupnosti a latence /api/v1/*, stavu DB poolu, délky SQL dotazů, stáří posledního měření, CAP fetch, kamera, CPU/RSS/disk; nemíchat „žádné výstrahy“ s „data nejsou dostupná“.
 
 ## 8. Build/release
@@ -116,7 +149,7 @@ Astro vyhovuje především veřejné meteorologické prezentaci s klientskou in
 P0 ověřit zdrojovou konfiguraci, DB schéma, mapování sond, live zdroj, kameru, CHMI licence.
 P1 OpenAPI/JSON contract + read-only databázový HTTP backend + testy DST/jednotek/QC, SQL explain, timeouty a pool.
 P2 Astro homepage/grafy/senzory na stagingu.
-P3 klimatologie a řešení provenience rekonstrukcí.
+P3 klimatologie: L1/L2, benchmarking; pouze pokud to přinese doloženou výhodu a je schváleno DDL/oprávnění, volitelná L3 pro předpočítané statistiky a řešení provenience rekonstrukcí.
 P4 CAP/předpověď/kamera/radar, každé integrační API vlastní fail-closed status.
 P5 benchmark, bezpečnost, dokončení WCAG, produkční cutover po schválení.
 
