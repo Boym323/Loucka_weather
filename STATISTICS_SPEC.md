@@ -1,11 +1,12 @@
 # STATISTICS_SPEC – meteorologické výpočty a původ dat
 
 Status: **NÁVRH K REVIZI**, vydání 2026-10-30. Žádný výpočet nesmí být vydáván za ověřený, dokud neprojde fixture testy proti datům z archivu.
-**Zvolený režim:** backend počítá odpovědi na klientské požadavky přímo čtením produkční databáze WeeWX; statické JSON exporty nejsou primární datová cesta. Vybrané agregace může backend cacheovat.
+**Zvolený režim:** backend počítá odpovědi na klientské požadavky přímo čtením produkční databáze WeeWX; statické JSON exporty nejsou primární datová cesta. Vybrané agregace může backend cacheovat. **Potvrzený tříúrovňový model:** L1 originální `archive`, L2 již existující denní souhrny WeeWX `archive_day_*`, L3 volitelné vlastní předpočítané analytické tabulky na **stejném** serveru MariaDB, oddělené od měření.
 
 ## 1. Zdroje: rozlišit a pevně určit
 - `pocasi-loucka.eu.archive`: původní produkční WeeWX archiv. Čtení pouze SELECT.
-- `pocasi-loucka.eu.archive_day_*`: existující denní souhrny WeeWX. Mohou obsahovat historické chyby převzaté z původního archivu; nepokládat automaticky za očištěné.
+- `pocasi-loucka.eu.archive_day_*`: existující denní souhrny WeeWX. Mohou obsahovat historické chyby převzaté z původního archivu; nepokládat automaticky za očištěné. Použít jako **L2**, nikoli jako jediný zdroj rekordů bez QC.
+- `loucka_weather_stats`: **navrhované, zatím nevytvořené** schéma L3 pro předpočítané odvozené statistiky (ne druhý archive). Jeho zápisy vyžadují samostatné schválení, separátní práva a test migrací.
 - `loucka_reconstruction.archive`: samostatná rekonstrukční databáze (existence ověřena); neznámou strukturu nebo stav oprav ověřit introspekcí a auditní evidencí. Čtení pouze SELECT v portálu.
 - Další historické zdroje, např. `pocasi-loucka.eu_GW1000`, `old_weewx`, `weewx_WH1080`: **nikdy nevybírat implicitně**. Staré problematické WH1080 hodnoty nelze automaticky použít pro opravu vlhkosti.
 - Okolní stanice (LuhaMet, ILOUKA4, další) jsou podpůrné zdroje, ne náhrada místního měření; ověřit umístění, senzor, jednotky, čas a povolení.
@@ -117,20 +118,65 @@ Počet dnů v ročních agregacích musí rozlišovat „není senzor“ vs „c
 13. Opakovaný stejný HTTP dotaz nad stejným archivním snapshotem: deterministicky stejné hodnoty/metadata; test stability cache a ETag.
 14. Předpočtený WeeWX denní souhrn vs přepočet z očištěných archivních intervalů.
 
-## 11. Akceptační kritéria
+## 11. Zdroje a aktualizace předpočítaných statistik
+
+### Tři vrstvy
+| Vrstva | Fyzická data | Typ dotazu | Zodpovědnost |
+|---|---|---|---|
+| L1 | `pocasi-loucka.eu.archive` | SELECT detailu podle `dateTime` | WeeWX zapisuje; API čte |
+| L2 | `pocasi-loucka.eu.archive_day_*` | SELECT denních souhrnů s agregací přes měsíc/rok | WeeWX spravuje; API validuje a čte |
+| L3 (volitelná) | `loucka_weather_stats.*` | SELECT komplexní klimatologie/rekordů bez scanů historie | oddělený stats worker přepočítává pouze po schválení |
+
+Vlastní předpočtená statistika je **odvozený výsledek**, ne autoritativní nová měřená hodnota. L3 nikdy neshromažďuje druhou úplnou kopii raw archivu. Pokud L2 správně zvládne dotaz s dostatečným výkonem, L3 se pro danou statistiku neimplementuje.
+
+### Kandidátní datový model pro L3 (bez skutečného DDL)
+- `daily_statistics`: validované odvozené denní souhrny s pokrytím.
+- `monthly_statistics`, `yearly_statistics`: měsíční a roční agregace, také prahy charakteristických dní.
+- `climate_normals`: dlouhodobé průměry **vlastní stanice**, nikoliv automaticky oficiální klimatický normál.
+- `climate_records`: pořadí rekordů a timestamp/senzor/zdroj každého maxima či minima.
+- `data_completeness`: procento pokrytí a rozhodnutí, zda je období způsobilé pro daný výpočet.
+- `calculation_runs`: identifikátor/verze vstupních zdrojů a algoritmu, stav/čas přepočtu, rozsah a chybové informace.
+
+Každý řádek odvozených statistik musí mít minimálně logickou identitu `metric_id`, období (UTC začátek/konec včetně lokálního kalendářního kontextu), kanonickou `unit`, `source_id`, `origin`, `quality`, `coverage_fraction`, `algorithm_version`, `calculated_at` a revizi vstupů. Kumulativní čítače, průměry a extrema neukládat jako jednu anonymní `value` bez `aggregation` či metodiky. Konkrétní SQL klíče/indexy nejprve projít v ADR/benchmarku.
+
+### Politika přepočtů
+1. **Aktuální den** není finální. Pro zobrazení lze živě číst L1/L2 s metadata `is_final=false`.
+2. **Po uzavření lokálního dne** výpočetní job (pokud L3 vznikne) dopočítá pouze nové či dotčené dny a jejich měsíční/roční souhrny. Výpočet může být periodicky opakován idempotentně kvůli opožděným archivním záznamům.
+3. **Po potvrzené historické korekci** přepočítat závislé dny, měsíce a roky, pořadí a rekordy. Seznam závislostí musí být verzovaný: změna jednoho dne může změnit celostaniciový rekord.
+4. **Zdrojové revize** (nový záznam, rekonstruovaná oprava, změna QC pravidel, mapování senzoru) musí změnit fingerprint nebo vyvolat explicitní invalidaci. Nesmí automaticky začlenit nedoloženou rekonstrukci do originální statistiky.
+5. Vypočtené výsledky publikovat atomicky až po úspěšném testu konzistence; částečné selhání musí ponechat předchozí validní výsledek a signalizovat `stale` / `failed`.
+6. U každé statistiky zapsat důvod a `calculation_run_id`; opakovaný běh se stejnými vstupy má stejný numerický výsledek.
+7. Práce výpočetního jobu je omezená CPU/IO/časem. Nesmí blokovat WeeWX writer; během bulk backfillu testovat skutečné zatížení DB a nastavit rate limit.
+
+### Práva a oddělení odpovědností
+- Veřejný Python API účet: **SELECT-only** na potřebné objekty L1/L2 a po schválení L3.
+- Oddělený worker (v budoucnu): SELECT zdrojů a **INSERT/UPDATE výhradně na schválené L3 tabulky**; žádný zápis do `pocasi-loucka.eu.archive`, `archive_day_*` ani `loucka_reconstruction`.
+- Schéma L3, DDL, účty i jejich práva zatím **neexistují jako provedené změny**; vyžadují schválení, test na izolované kopii, zálohu a rollback.
+- Použít připravené precomputed výsledky, kdykoli algoritmicky správně odpovídají cílové vrstvě QC; nesrovnávat validovanou rekonstrukci s neopraveným `archive_day_*` bez označení varianty.
+
+### Testy
+- Shoda L2 s L1 na vybraných zdravých datech a vysvětlení rozdílů na chybných obdobích.
+- Opožděný příchod záznamu, opakovaný idempotentní přepočet a změna jednotlivé historické hodnoty.
+- Změna QC verze, časově platného mapování sondy a pravidel srážek.
+- DST 23/25h lokální den, interval `(start,end]`, změna 5/6min archivace.
+- Chyba během zápisu L3: žádné částečné souhrny, auditní stav a bezpečné obnovení.
+- Souběžné dotazy API, zneplatnění cache a dopad backfillu na běžící WeeWX.
+- Zastarávání konečných hodnot včetně jasného `source_revision` a `is_final` v odpovědi API.
+
+## 12. Akceptační kritéria
 - Každá karta, API odpověď a CSV export má původ, jednotku, QC a časové okno.
 - Všechny výpočty mají unit/fixture test; testy na hranicích DST.
 - Kompletní historie se nečte pro každého návštěvníka.
 - Žádná neověřená historická rekonstrukce se nevydává za naměřený fakt.
 - Originální DB se pouze čte; engine není oprávněn opravovat zdrojový archiv.
-- Rebuild denních agregací po validované korekci má explicitní trigger/version a není automatickou SQL mutací zdrojové DB.
+- Přepočet volitelné L3 po validované korekci má explicitní trigger/version a není automatickou SQL mutací původní DB; L2 tabulky WeeWX jsou nezměněné.
 
-## 12. Přímé SQL a API
+## 13. Přímé SQL a API
 - Při příchodu `GET /api/v1/history` backend sestaví pouze parametrizovaný SELECT s povolenou veličinou z registry; nikdy neinterpretuje uživatelský SQL výraz nebo názvy sloupců bez allowlistu.
-- Požadavek s krátkým časovým oknem čte `archive` podle indexu `dateTime`, delší období používá `archive_day_*` nebo správné plánované agregace.
+- Požadavek s krátkým časovým oknem čte L1 `archive` podle indexu `dateTime`, delší období používá existující L2 `archive_day_*` nebo validovanou **volitelnou L3** podle identity algoritmu, zdroje a kvality.
 - Všechna čtení mají timeout a limit výsledků. Backend má omezený connection pool, TTL cache a rozumný limit velikosti odpovědí. Výsledky cache musí reflektovat změny dat (TTL/invalidation při validované korekci).
 - Externí klient nikdy neuvidí DB přístupové údaje; schémata `pocasi-loucka.eu` a `loucka_reconstruction` nejsou zaměnitelná.
 - Při nedostupnosti databáze se nevrací falešná nula; API jasně označí unavailable/stale.
 
-## 13. Technické odkazy
+## 14. Technické odkazy
 https://www.weewx.com/docs/ ; https://weewx.com/docs/latest/devnotes/ ; https://opendata.chmi.cz/meteorology/weather/alerts/cap/
