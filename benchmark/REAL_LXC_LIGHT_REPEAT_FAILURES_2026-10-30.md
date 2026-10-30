@@ -39,4 +39,6 @@ Bez výpisu `measurements[].errors` nelze určit, zda jde o HTTP 503 z `sqlx`, p
 
 ## Stav
 
-**Ověření stability je nyní FAIL / BLOCKED_BY_UNDIAGNOSED_HTTP_ERRORS.** Původní jednorázový úspěšný běh stále platí, ale nedokazuje dlouhodobou spolehlivost. Doporučení Go jako nejvhodnějšího API je předběžné, nikoliv finální provozní rozhodnutí.
+**Historický stav v čase těchto tří chyb:** FAIL; následně **vyřešeno**. Diagnostika z LXC potvrdila `SQL 1226 (42000)`: účet `loucka_audit` překročil `max_user_connections=4`. Omezením poolu Go/Rust/Python z 3 na **1** databázové spojení byly v následujících `smoke`, třech `light` a jednom `full` běhu všechny scénáře bez chyb. Detail výsledného `full` běhu: [REAL_LXC_FULL_2026-10-30.md](REAL_LXC_FULL_2026-10-30.md).
+
+**Původní hypotéza o chybě Rustu nebyla potvrzena**; selhával sdílený limit počtu spojení. Pro běžnou produkci stále platí ochrana DB poolu a potřeba monitoringu. Původní jednorázový úspěšný běh stále platí, ale nedokazuje dlouhodobou spolehlivost. Doporučení Go jako nejvhodnějšího API je předběžné, nikoliv finální provozní rozhodnutí.
