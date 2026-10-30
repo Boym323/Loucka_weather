@@ -56,3 +56,10 @@ Nová implementace v [`benchmark/lxc/`](lxc/README.md) rozšiřuje původní sro
 [Postup aktualizace existujícího LXC](lxc/UPDATE_LXC.md) · [Zdrojový runner](lxc/run.sh) · [Všech šest serverů](lxc/)
 
 Bezpečnost: na živé MariaDB se vynucuje **pool=1** a `full` je zablokován bez `BENCH_ISOLATED_DB=YES`. Nastavení `YES` je určeno výhradně pro skutečně izolovanou kopii. Workflow má druhý job `six-language`, který proti izolované syntetické MariaDB ověřuje smoke a light. **Výsledky nové trojice Node/C++/PHP neexistují, dokud CI či LXC test úspěšně nedoběhne.** Staré číselné tabulky se proto nemění.
+
+
+## Rozšíření LXC benchmarku na šest backendů (2026-10-30)
+
+Nad skutečnou MariaDB 11.8.6 proběhl `./run.sh light` se **šesti** variantami: Go, Rust, Python, Node.js/Fastify, C++20/libmicrohttpd, PHP CLI/PDO. Všech 24 scénářů PASS při pool=1 a 1 souběžném HTTP klientovi. `30d` (8 638 bodů): Go 19,92 RPS, C++ 18,78, Rust 18,08, Node.js 11,00, PHP 6,40, Python 5,98. `current`: nejlepší C++ 59,26 RPS.
+
+[Kompletní reálný šestijazyčný report](REAL_LXC_SIX_LANGUAGES_LIGHT_2026-10-30.md) · [Zdrojové kódy, balíček a instalace na LXC](lxc/README.md). Výsledky nelze porovnávat prostým průměrem se syntetickým CI nebo předchozím full benchmarkem; zejména PHP CLI není PHP-FPM a tři 30denní requesty tvoří nedostatečný vzorek pro p95.
