@@ -15,6 +15,15 @@ Před jakoukoliv úpravou si přečti `README.md`, `FRONTEND_SPEC.md`, `STATISTI
 10. Vždy ověř grafickou podobu v desktopu i mobilu a světle/tmavém motivu.
 11. Pokud zdroj není dostupný, zaznamenej blocker a pokračuj v bezpečné implementaci bez fabrifikace.
 
+## Závazný tříúrovňový model statistik
+- L1: `pocasi-loucka.eu.archive` pro detailní měření a krátkodobé grafy.
+- L2: `pocasi-loucka.eu.archive_day_*` pro stávající denní souhrny a rychlé měsíční/roční agregace.
+- L3: `loucka_weather_stats` je **pouze navržené volitelné schéma** na tomtéž MariaDB serveru, pro validované odvozené klimatologické statistiky, úplnost a rekordy. Není automaticky schváleno jeho vytvoření.
+- Webové API má pouze SELECT práva na schválené zdroje. **Případný stats worker** má oddělený účet, který smí po schválení zapisovat pouze do schválených vlastních statistických tabulek; žádné zápisy do originálního archivu, WeeWX denních souhrnů nebo rekonstrukční DB.
+- Bez zvláštního schválení **nevytvářej tabulky, DB účty ani migrace, nespouštěj backfill**. V každém PR odděl přípravu migrací od jejího provedení na produkci.
+- Nepředpokládej, že `archive_day_*` jsou očištěné po rekonstrukci; využívej explicitní origin/quality a verzi algoritmu.
+- Při změně zdrojových dat nebo pravidel QC invaliduj dotčené odvozené statistiky, přepočti závislé rekordy; zpracování musí být idempotentní, atomické a testované na DB kopii.
+
 ## Co nyní neimplementovat
 - Neslučovat historické databáze automaticky.
 - Nesměšovat `rain` a `rainRate`; ani soilTemp s extraTemp.
