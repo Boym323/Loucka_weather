@@ -6,7 +6,7 @@ Status: **NÁVRH K REVIZI**, 2026-10-30. Nepředstavuje potvrzení skutečné ko
 - Zachovat Ecowitt GW3000, WeeWX a původní MariaDB.
 - Přidat oddělený frontend/data LXC, produkční Belchertown ponechat do převzetí.
 - Web: Astro + TypeScript se statickým exportem, Apache ECharts, Nginx. Žádné nutné běžící Node.js v produkci.
-- Data: **dynamické read-only HTTP API přímo nad stávající MariaDB**, první realizace Python (např. FastAPI). Rust může backend později nahradit po benchmarku.
+- Data: **dynamické read-only HTTP API přímo nad stávající MariaDB**. Po konkrétním read-only auditu je **doporučen Go** (`net/http` + `database/sql` + `go-sql-driver/mysql`); Rust (Axum+SQLx) a Python (FastAPI) zůstávají alternativy, dokud finální volba není potvrzena. Viz [BACKEND_TECHNOLOGY_AUDIT.md](BACKEND_TECHNOLOGY_AUDIT.md).
 - Zdroj SQL se nesmí vybírat implicitně podle defaultního DB MCP.
 - GitHub Actions build mimo produkční LXC, testy a podpis/checksum artefaktu, přepnutí release atomicky.
 - **Žádné periodické JSON exporty jako primární zdroj historických dat.** Astro vykreslí statickou obálku, browser volá dynamické API; to přímo dotazuje MariaDB s krátkou volitelnou cache. Žádné rebuildy kvůli změně měření.
@@ -19,13 +19,13 @@ Status: **NÁVRH K REVIZI**, 2026-10-30. Nepředstavuje potvrzení skutečné ko
 | GW3000 | fyzická brána | příjem senzorů; lokální API dle firmwaru |
 | WeeWX | stávající LXC 1 | sběr, ovladače, zápis archivního záznamu |
 | MariaDB | stávající LXC 2 | původní archiv, souhrny WeeWX a samostatné existující rekonstrukční schéma; volitelně po schválení `loucka_weather_stats` |
-| Loučka Weather | nové LXC 3 | Nginx + statický Astro, **Python HTTP API server** (systemd, lokální socket/port), volitelná cache, integrace kamery a externích zdrojů |
+| Loučka Weather | nové LXC 3 | Nginx + statický Astro, **read-only HTTP API server (preferovaně Go)** pod systemd, lokální socket/port, volitelná cache, kamera a externí zdroje |
 
 **LXC 3** počáteční odhad 2 vCPU/2 GiB RAM, disk 10–20 GiB mimo archiv kamer; tyto hodnoty nejsou benchmark. Pro časosběry oddělené úložiště/quota a retence. LXC 1/2 neresizovat bez měření. Nejprve ověřit skutečné LXC rozmístění, firewall a možnosti záloh.
 
 ### Tok
 `GW3000 -> WeeWX -> MariaDB (zapisuje jen WeeWX)`
-`Astro client -> HTTPS /api/v1/* -> Nginx reverse proxy -> Python API (SELECT) -> MariaDB: archive / archive_day_* / případné statistické schéma`
+`Astro client -> HTTPS /api/v1/* -> Nginx reverse proxy -> HTTP API (preferovaně Go, SELECT) -> MariaDB: archive / archive_day_* / případné statistické schéma`
 `samostatný, teprve po schválení povolený stats worker -> validované agregace -> MariaDB.loucka_weather_stats (pouze oddělené schema)`
 `WeeWX LOOP nebo GW3000 local (po ověření) -> live adaptér /api/v1/live -> Astro client`
 `Kamera / ČHMÚ / Open-Meteo / další -> jednotlivé fetchery -> cache + metadata -> API/Nginx`
@@ -46,7 +46,7 @@ HTTP API v LXC 3 používá pouze SELECT; produkční `pocasi-loucka.eu` ani `lo
 
 ### Provoz služby
 - Astro se staticky sestaví v CI; Nginx servíruje hotové HTML/CSS/JS.
-- Nginx předá `/api/v1/*` na interní Python ASGI aplikaci (např. FastAPI na `127.0.0.1`); backend není vystaven na samostatném veřejném portu.
+- Nginx předá `/api/v1/*` na interní Go HTTP službu (případně Rust/Python podle konečné volby) na `127.0.0.1` nebo Unix socketu; backend není vystaven na samostatném veřejném portu.
 - Backend používá **omezený connection pool** (výchozí návrh 2–5 připojení, změřit), limit současných dotazů, timeouts/limity výsledků, konzistentní odpovědi 503 při nedostupnosti DB.
 - Účet backendu má `SELECT` pouze na konkrétní tabulky `pocasi-loucka.eu`. WeeWX zůstává jediným běžným writerem původního archivu. Žádné změny schématu DB z webu.
 - Výstupy lze cachovat v RAM s TTL; např. aktuální archiv 15–30 s, 24h graf 30–60 s, historické měsíce hodiny až do změny archivní verze. **Cache není zdrojem pravdy**. Ani restart backendu nesmí vyžadovat přepočet celé historie.
@@ -136,14 +136,14 @@ Oficiální publikované produkty a licenčně povolené widgety; nevyužívat s
 ## 8. Build/release
 - CI na GitHub hosted runneru, anebo izolovaném build runneru mimo produkční Proxmox. Pokud self-hosted runner sdílí hostitele, ověřit CPU/RAM/IO izolaci.
 - `npm ci`/Astro typecheck/lint/unit/E2E/build v CI.
-- Python check/lint/test + golden fixtures; na produkci pouze API artefakt / připravené Python prostředí, běh systemd služby bez kompilace frontendu.
+- CI provádí testy zvoleného jazyka API a golden fixtures; pro Go/Rust na produkci pouze předem zkompilovaný binární artefakt pod systemd (žádný build v LXC). Testy frontendu a API odděleně.
 - Release s manifestem a checksum, artifact deploy do `/srv/loucka-weather/releases/<id>`, přepnutí `current` symlinku, smoke test, rollback.
 - Pouze externí cache, kamerové snímky a dočasné pracovní soubory pod `/var/lib/loucka-weather/`, mimo read-only release. Historické měření se čte přímo přes SQL, nepublikuje se jako sada statických exportů.
 - Staging `beta.pocasi-loucka.eu`; produkční Belchertown nechat do schválení.
 - Build budget měřit na konkrétních verzích Astro; nepředpokládat magickou úsporu RAM, produkční LXC se však buildu neúčastní.
 
 ## 9. Srovnání alternativ
-Astro vyhovuje především veřejné meteorologické prezentaci s klientskou interaktivitou a bez runtime Node. SvelteKit/Next.js jsou legitimní alternativa při bohaté aplikaci se sdíleným stavem či vlastním serverovým SSR. PHP lze použít pro backend, ale zavádět ho navíc k Pythonu nedává smysl. Rust zvažovat pouze po benchmarku na identickém datasetu, včetně ceny buildu a údržby. Frontend oddělený od zdroje prostřednictvím `/api/v1/`, aby bylo možné engine vyměnit.
+Astro vyhovuje veřejné meteorologické prezentaci s klientskou interaktivitou a bez Node runtime. Pro API je podle auditu preferován Go (jednoduché nasazení, podporovaný MariaDB ovladač a výborný connection-pool model), Rust je silná alternativa a Python vhodný pro analytické knihovny. Konkrétní výkon zatím nebyl porovnán benchmarkem. Frontend zůstane oddělený přes `/api/v1/`, aby bylo možné engine vyměnit.
 
 ## 10. Fáze a exit kritéria
 P0 ověřit zdrojovou konfiguraci, DB schéma, mapování sond, live zdroj, kameru, CHMI licence.
