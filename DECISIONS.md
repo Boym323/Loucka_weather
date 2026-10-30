@@ -6,7 +6,7 @@ Datum: 2026-10-30. Dokument stanovuje stav návrhu. „Doporučení“ není pot
 - Tři LXC celkem: stávající WeeWX, stávající MariaDB, nový Loučka Weather.
 - Nejprve staging a paralelní provoz se současným Belchertownem.
 - Astro + TypeScript + ECharts pro frontend, Nginx servíruje statický build; bez produkčního buildování Next.js.
-- DB v novém webu pouze read-only; původní data zachovat.
+- **NOVĚ POTVRZENO:** backend webu přímo čte produkční databázi, do které zapisuje WeeWX; žádný pravidelný JSON export jako hlavní datová vrstva. Prohlížeč volá HTTP API, ne SQL. DB pro web je read-only; původní data zachovat.
 - Tmavý vizuální koncept, podpora mobilu, světlý motiv; české popisky.
 - Celý vývoj má být testovatelný a udržovatelný AI, s dokumentací a malými PR.
 
@@ -15,7 +15,7 @@ Datum: 2026-10-30. Dokument stanovuje stav návrhu. „Doporučení“ není pot
 - **A: Pouze originální `pocasi-loucka.eu.archive`** s QC a upozorněními. Plus: zřejmý původ. Minus: známé chyby / mezery zůstanou.
 - **B: Validovaná rekonstrukce `loucka_reconstruction.archive`, kde je doložená, jinak originál (s metadaty)**. Plus: lepší historické statistiky. Minus: nutnost kvalitní provenance a revizí.
 - **C: Oba pohledy se přepínají, výchozí originál**. Plus: transparentní, minus: složitější UI.
-**Doporučení: B s přepínačem „originál / rekonstrukce“ v detailních grafech, ale až po ověření pravidel a provenance.** Do té doby bezpečná varianta A.
+**Výchozí volba po potvrzení přímé práce s WeeWX DB: A (originální `pocasi-loucka.eu`).** Po ověření provenience lze doplnit možnost B nebo C, ale není automaticky schválena. Toto nebrání statickým ani dynamickým statistikám.
 
 ### Q2 – Výchozí motiv?
 - A tmavý pro všechny; B automaticky podle systému (uživatel může ručně vybrat); C světlý.
@@ -59,7 +59,7 @@ Datum: 2026-10-30. Dokument stanovuje stav návrhu. „Doporučení“ není pot
 
 ## Další PR plán
 PR-A: tento dokumentační návrh; bez deploy.
-PR-B: metadata databází, JSON Schemas, golden fixtures, read-only export.
-PR-C: design systém + Astro přehled/graf/senzory.
+PR-B: metadata databází, OpenAPI/JSON Schemas, golden fixtures a **read-only dynamické API** přímo nad `pocasi-loucka.eu`.
+PR-C: design systém + Astro přehled/graf/senzory s reálnými voláními `/api/v1/*`.
 PR-D: staging CI/deploy, měření výkonu.
 PR-E: klimatologie, externí zdroje a kamera po jednotlivých integrovaných PR.
