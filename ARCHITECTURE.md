@@ -6,10 +6,10 @@ Status: **NÁVRH K REVIZI**, 2026-10-30. Nepředstavuje potvrzení skutečné ko
 - Zachovat Ecowitt GW3000, WeeWX a původní MariaDB.
 - Přidat oddělený frontend/data LXC, produkční Belchertown ponechat do převzetí.
 - Web: Astro + TypeScript se statickým exportem, Apache ECharts, Nginx. Žádné nutné běžící Node.js v produkci.
-- Data: read-only engine, první referenční realizace Python; Rust je možnost po naměřeném benchmarku, nikoli počáteční povinnost.
+- Data: **dynamické read-only HTTP API přímo nad stávající MariaDB**, první realizace Python (např. FastAPI). Rust může backend později nahradit po benchmarku.
 - Zdroj SQL se nesmí vybírat implicitně podle defaultního DB MCP.
 - GitHub Actions build mimo produkční LXC, testy a podpis/checksum artefaktu, přepnutí release atomicky.
-- Žádné periodické rebuildy kvůli meteorologickým hodnotám; web načítá pravidelně obnovované datové soubory.
+- **Žádné periodické JSON exporty jako primární zdroj historických dat.** Astro vykreslí statickou obálku, browser volá dynamické API; to přímo dotazuje MariaDB s krátkou volitelnou cache. Žádné rebuildy kvůli změně měření.
 - Externí služby se čtou do lokální cache se zdrojem/TTL.
 
 ## 2. Fyzické rozdělení
@@ -18,15 +18,15 @@ Status: **NÁVRH K REVIZI**, 2026-10-30. Nepředstavuje potvrzení skutečné ko
 | GW3000 | fyzická brána | příjem senzorů; lokální API dle firmwaru |
 | WeeWX | stávající LXC 1 | sběr, ovladače, zápis archivního záznamu |
 | MariaDB | stávající LXC 2 | originální archiv, denní souhrny a případně oddělené schéma rekonstrukcí |
-| Loučka Weather | nové LXC 3 | Python export, časovače, cache, kamera, Nginx + statický Astro |
+| Loučka Weather | nové LXC 3 | Nginx + statický Astro, **Python HTTP API server** (systemd, lokální socket/port), volitelná cache, integrace kamery a externích zdrojů |
 
 **LXC 3** počáteční odhad 2 vCPU/2 GiB RAM, disk 10–20 GiB mimo archiv kamer; tyto hodnoty nejsou benchmark. Pro časosběry oddělené úložiště/quota a retence. LXC 1/2 neresizovat bez měření. Nejprve ověřit skutečné LXC rozmístění, firewall a možnosti záloh.
 
 ### Tok
 `GW3000 -> WeeWX -> MariaDB (zapisuje jen WeeWX)`
-`MariaDB -> read-only Weather Engine -> validované JSON soubory -> Nginx -> Astro client`
-`WeeWX LOOP nebo GW3000 local -> adaptér -> current.json -> client refresh`
-`Kamera / ČHMÚ / Open-Meteo / další -> jednotlivé fetchery -> cache + metadata -> Nginx`
+`Astro client -> HTTPS /api/v1/* -> Nginx reverse proxy -> Python API -> MariaDB (SELECT)`
+`WeeWX LOOP nebo GW3000 local (po ověření) -> live adaptér /api/v1/live -> Astro client`
+`Kamera / ČHMÚ / Open-Meteo / další -> jednotlivé fetchery -> cache + metadata -> API/Nginx`
 
 LXC 3 nikdy nemění produkční DB; ostatní opravy řeší samostatný kontrolovaný postup. Web nemá přímý přístup k SQL.
 
@@ -38,34 +38,46 @@ LXC 3 nikdy nemění produkční DB; ostatní opravy řeší samostatný kontrol
 - Dva různé zdroje produkce/reconstruction držet v datových kontraktech s `origin` a `quality`.
 - Read-only ověření schématu před nasazením: přesná jména polí, zdrojové jednotky a mapování senzorů.
 
-## 4. Refresh a storage – předběžný návrh
-| Produkt | Doporučená frekvence | Mechanismus |
+## 4. Přímé databázové dotazy a cache – závazná změna (2026-10-30)
+**Primární zdroj veřejného webu je přímo původní MariaDB, do které zapisuje WeeWX.** Dynamické požadavky klientů se obsluhují přes malý HTTP backend. API vrací JSON sestavený při požadavku; nepoužívat předgenerovaný JSON jako náhradu přístupu k databázi.
+
+### Provoz služby
+- Astro se staticky sestaví v CI; Nginx servíruje hotové HTML/CSS/JS.
+- Nginx předá `/api/v1/*` na interní Python ASGI aplikaci (např. FastAPI na `127.0.0.1`); backend není vystaven na samostatném veřejném portu.
+- Backend používá **omezený connection pool** (výchozí návrh 2–5 připojení, změřit), limit současných dotazů, timeouts/limity výsledků, konzistentní odpovědi 503 při nedostupnosti DB.
+- Účet backendu má `SELECT` pouze na konkrétní tabulky `pocasi-loucka.eu`. WeeWX zůstává jediným běžným writerem původního archivu. Žádné změny schématu DB z webu.
+- Výstupy lze cachovat v RAM s TTL; např. aktuální archiv 15–30 s, 24h graf 30–60 s, historické měsíce hodiny až do změny archivní verze. **Cache není zdrojem pravdy**. Ani restart backendu nesmí vyžadovat přepočet celé historie.
+- Dlouhé klimatologické výpočty nad původním archivem běží nad existujícími `archive_day_*`, pokud jsou metodicky správné; při opravách či náročnějších výpočtech zvlášť batch/ondemand výpočet s limitem (stále ze stávající DB).
+- `EXPLAIN` a zátěžové testy před přidáváním indexů; změna indexů není automaticky povolena. Využívat indexovaná časová okna `dateTime`, ne `YEAR(FROM_UNIXTIME(dateTime))` ve filtru pro všechny řádky.
+- Explicitně stanovit maximální časové okno a maximum bodů; backend pro měsíce/roky poskytuje agregace místo milionů surových bodů.
+
+### Obnovování / integrace
+| Oblast | Návrh | Zdroj |
 |---|---|---|
-| current.json | 10–20 s podle doloženého LOOP/local zdroje | samostatný lehký adapter |
-| krátké grafy | 5 min podle archivace | incremental export |
-| dlouhé grafy / klimatologie | denně nebo při validované korekci | batch, cache a verzování |
-| sensors/status | 1–5 min podle sensor telemetry | freshness a stav, ne pouhé RSSI |
-| aktuální camera.jpg | 30–60 s dle reálného zdroje | copy/fetch, timestamp |
-| camera archive | každých 5 min, pouze při úspěchu | oddělené úložiště a retence |
-| CAP alerts | např. 5 min s ohledem na provider | ETag/Last-Modified/backoff |
-| radar produkty | jen při změně/aktualizaci zdroje | cache + expirace |
-| modelová předpověď | 30–60 min podle dostupnosti | cache model_id + issue_time |
+| Aktuální 5min záznam | dotaz na poslední archivní řádek, cache ~15–30 s | `archive` |
+| Skutečná živá měření 10–20 s | po ověření LOOP nebo GW3000 HTTP feed, zvlášť od DB | adaptér; **není** garantováno pětiminutovým SQL |
+| Krátké grafy | HTTP dotaz v omezeném časovém okně, cache ~30–60 s | `archive` |
+| Roční/klimatologické grafy | agregace přímo nad denními souhrny, cache a QC | `archive_day_*` |
+| Diagnostika | aktuální senzorové metriky a historie z DB | `archive` |
+| Kamera | 30–60s snímek, 5min archiv podle zdroje | image worker/úložiště |
+| CAP, předpověď, radar | provider fetch/TTL/cache | oficiální externí zdroje |
 
-Procesy exportu a jejich locky: žádné překrývající se plánované přepočty; timeouts, watchdog, backpressure, atomický rename, omezená paralelizace. Selhání cache se nesmí šířit na sběr WeeWX.
+## 5. API kontrakt
+Veřejný dynamický prefix **`/api/v1/`** (REST/JSON, pouze bezpečné GET pro veřejné historické údaje):
 
-## 5. Datové rozhraní
-Statický veřejný prefix `/data/v1/`. Příklad souborů:
-- `current.json` – měření a jejich stáří.
-- `status.json`, `sensors.json` – diagnostika.
-- `series/<metric>/<granularity>/<year-or-window>.json` – krátké/dlouhé časové řady.
-- `climate/<version>/yearly.json`, `monthly.json`, `records.json`.
-- `alerts.json` – CAP s jednoznačným `source_status`.
-- `forecast.json` – model_id a model_issued_at.
-- `camera/index.json` – cesta k veřejně dostupným snímkům a času.
+- `GET /api/v1/current` – poslední archivní údaje, čas posledního měření a stale stav.
+- `GET /api/v1/history?metric=outTemp&from=...&to=...&resolution=auto` – vybraná veličina a omezené období, agregace podle délky okna; žádné libovolné SQL nebo nezaručené rozsahy.
+- `GET /api/v1/climate/yearly?metric=outTemp&fromYear=2009&toYear=2026` – denní souhrny/agregace, přesné definice.
+- `GET /api/v1/sensors` – diagnostika a stáří měření.
+- `GET /api/v1/status` – veřejný stav posledního načtení dat a konektivity bez citlivých detailů.
+- `GET /api/v1/alerts`, `GET /api/v1/forecast` – externí data z ověřených zdrojů/cache.
+- `GET /api/v1/camera` – metadata zveřejněných fotografií a časové řady kamery.
 
-V každém JSON `schema_version`, `generated_at`, `source_updated_at`, `source`, `units`, `quality`, `origin`, `coverage` dle typu. JSON Schema + TypeScript typy generovat z jednoho zdroje; změny kontraktu verziovat. Atomicky publikovat a validovat před vystavením.
+Odpověď zahrne `schema_version`, `observed_at`, `generated_at`, `metric`, `unit`, `source`, `origin`, `quality`, `coverage` tam, kde je to významné. Původní archiv zůstává základem; policy rekonstrukcí se řeší samostatně a nikdy se neslévá neviditelně.
 
-Náhodný cache-busting pouze pro live data; immutable cache jen pro obsahově verzované statické assety. CDN/reverse proxy nesmí cachovat stale alert jako platný bez TTL metadata.
+Zavést OpenAPI/JSON Schema a generovat TypeScript typy; API testy ve fixture DB a read-only integračním prostředí. HTTP `Cache-Control`, ETag nebo Last-Modified pro vhodné GET výsledky, řádné stale/error stavy. Nevystavovat generický query endpoint ani metadata připojení.
+
+V prohlížeči používat klientské `fetch('/api/v1/...')` po otevření stránky / při interakci. Na statickém Astro nespoléhat na build-time `fetch` pro živá data. Není nutné zapínat Astro SSR nebo Node runtime.
 
 ## 6. Konkrétní integrace
 ### Kamera
@@ -86,23 +98,23 @@ Oficiální publikované produkty a licenčně povolené widgety; nevyužívat s
 - Integrátory stahují jen z allowlistu, bránit SSRF a interním redirectům, size/time limits.
 - Secrets v env file vlastněném service účtem, žádné v public JSON a repu.
 - Read-only aplikace nikdy neprovádí SQL migrace. Zálohy a restore zkoušky zvlášť.
-- Monitoring HTTP response, stáří current.json, stáří DB, export job, CAP fetch, kamera, CPU/RSS/disk; nemíchat „žádné výstrahy“ s „data nejsou dostupná“.
+- Monitoring HTTP response, dostupnosti a latence /api/v1/*, stavu DB poolu, délky SQL dotazů, stáří posledního měření, CAP fetch, kamera, CPU/RSS/disk; nemíchat „žádné výstrahy“ s „data nejsou dostupná“.
 
 ## 8. Build/release
 - CI na GitHub hosted runneru, anebo izolovaném build runneru mimo produkční Proxmox. Pokud self-hosted runner sdílí hostitele, ověřit CPU/RAM/IO izolaci.
 - `npm ci`/Astro typecheck/lint/unit/E2E/build v CI.
-- Python check/lint/test + golden fixtures; na produkci pouze wheel/venv z připraveného release, bez kompilace frontendu.
+- Python check/lint/test + golden fixtures; na produkci pouze API artefakt / připravené Python prostředí, běh systemd služby bez kompilace frontendu.
 - Release s manifestem a checksum, artifact deploy do `/srv/loucka-weather/releases/<id>`, přepnutí `current` symlinku, smoke test, rollback.
-- Dynamická data pod `/var/lib/loucka-weather/public-data`, ne uvnitř read-only release. Aplikovat file permissions.
+- Pouze externí cache, kamerové snímky a dočasné pracovní soubory pod `/var/lib/loucka-weather/`, mimo read-only release. Historické měření se čte přímo přes SQL, nepublikuje se jako sada statických exportů.
 - Staging `beta.pocasi-loucka.eu`; produkční Belchertown nechat do schválení.
 - Build budget měřit na konkrétních verzích Astro; nepředpokládat magickou úsporu RAM, produkční LXC se však buildu neúčastní.
 
 ## 9. Srovnání alternativ
-Astro vyhovuje především veřejné meteorologické prezentaci s klientskou interaktivitou a bez runtime Node. SvelteKit/Next.js jsou legitimní alternativa při bohaté aplikaci se sdíleným stavem či vlastním serverovým SSR. PHP lze použít pro backend, ale zavádět ho navíc k Pythonu nedává smysl. Rust zvažovat pouze po benchmarku na identickém datasetu, včetně ceny buildu a údržby. Frontend oddělený od zdroje prostřednictvím `/data/v1/`, aby bylo možné engine vyměnit.
+Astro vyhovuje především veřejné meteorologické prezentaci s klientskou interaktivitou a bez runtime Node. SvelteKit/Next.js jsou legitimní alternativa při bohaté aplikaci se sdíleným stavem či vlastním serverovým SSR. PHP lze použít pro backend, ale zavádět ho navíc k Pythonu nedává smysl. Rust zvažovat pouze po benchmarku na identickém datasetu, včetně ceny buildu a údržby. Frontend oddělený od zdroje prostřednictvím `/api/v1/`, aby bylo možné engine vyměnit.
 
 ## 10. Fáze a exit kritéria
 P0 ověřit zdrojovou konfiguraci, DB schéma, mapování sond, live zdroj, kameru, CHMI licence.
-P1 JSON contract + read-only export + testy DST/jednotek/QC.
+P1 OpenAPI/JSON contract + read-only databázový HTTP backend + testy DST/jednotek/QC, SQL explain, timeouty a pool.
 P2 Astro homepage/grafy/senzory na stagingu.
 P3 klimatologie a řešení provenience rekonstrukcí.
 P4 CAP/předpověď/kamera/radar, každé integrační API vlastní fail-closed status.
