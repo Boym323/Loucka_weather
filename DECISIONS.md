@@ -43,7 +43,7 @@ Datum: 2026-10-30. Dokument stanovuje stav návrhu. „Doporučení“ není pot
 ### Q7 – Kdy zprovoznit vlastní předpočtené statistiky L3?
 - **A: Nejprve pouze L1+L2** a změřit výkon/platnost denních souhrnů; L3 vytvořit až pro skutečně potřebné ukazatele.
 - **B: Ihned vytvořit nové `loucka_weather_stats`** včetně backfillu historie a povolit separátní účet pro výpočty.
-**Doporučení: A**. Schéma L3, migrace, DB role a první zápis vyžadují další výslovné schválení. Samotná volba hybridní architektury toto oprávnění neposkytuje.
+**Rozhodnuto pro první verzi: A – pouze L1 + L2.** Read-only audit potvrdil přínos stávajících WeeWX souhrnů. L3 schéma, migrace, DB role a první zápis vyžadují až samostatné schválení po benchmarku. Podrobnosti: [WEEWX_DAILY_SUMMARIES_AUDIT.md](WEEWX_DAILY_SUMMARIES_AUDIT.md).
 
 ## Překážky / neověřené skutečnosti
 1. Skutečné LXC ID/umístění, CPU a paměť, síťové porty, současný způsob publikace Belchertownu.
@@ -55,7 +55,7 @@ Datum: 2026-10-30. Dokument stanovuje stav návrhu. „Doporučení“ není pot
 7. Licenční podmínky a přístup k radarovým vrstvám, LuhaMet a ILOUKA4.
 8. Jednotlivé vizuální obrázky z předchozí konverzace nebyly přeneseny do repozitáře. Pro přesnější design je třeba přidat schválené reference.
 9. Výkonnostní benchmark Astro CI/staging a test obnovy/rollbacku nebyly provedeny.
-10. Které hodnoty `archive_day_*` jsou správné pro jednotlivá období, zejména před/po historických opravách; náklady L3 backfillu a schválení write-role.
+10. Provést v samostatné etapě přepočet souhrnů ve WeeWX a poté opakovat konzistenční kontrolu. **Doplňování ani historické rekonstrukce nyní nejsou součástí auditního úkolu.** L3 backfill a write-role zatím nejsou potřeba.
 
 ## Podmínka uzavření návrhového auditu
 - Odsouhlasená politika Q1 (rekonstrukce).
@@ -69,4 +69,4 @@ PR-A: tento dokumentační návrh; bez deploy.
 PR-B: metadata databází, OpenAPI/JSON Schemas, golden fixtures a **read-only dynamické API** přímo nad `pocasi-loucka.eu`.
 PR-C: design systém + Astro přehled/graf/senzory s reálnými voláními `/api/v1/*`.
 PR-D: staging CI/deploy, měření výkonu.
-PR-E: klimatologie a ověření L2; **volitelné L3 pouze jako samostatný pozdější PR** s DDL, procesem přepočtu, datovými testy, zálohou, rollbackem a výslovným schválením. Externí zdroje a kamera samostatně.
+PR-E: klimatologie primárně z ověřených L2 souhrnů; **volitelné L3 pouze pokud konkrétní funkce/benchmark prokáže nutnost**, v odděleném pozdějším PR s DDL, testy, zálohou, rollbackem a schválením. Externí zdroje a kamera samostatně.
