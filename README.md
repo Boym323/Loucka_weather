@@ -1,0 +1,20 @@
+# Loučka Weather
+
+Nový meteorologický portál pro https://pocasi-loucka.eu/ – **návrhová fáze**.
+
+Tento repozitář se inicializuje dokumentací; zatím **neobsahuje běžící web** ani automatizované změny produkce.
+
+## Směr projektu
+- Ecowitt GW3000 a stávající WeeWX zůstávají sběrnou vrstvou.
+- Stávající MariaDB s historickými daty zůstává; původní archiv je bez zásahů.
+- Web: Astro + TypeScript; grafy ECharts; statický build mimo produkci.
+- Oddělená read-only datová vrstva (první varianta Python), případně Rust až po benchmarku.
+- Tři LXC: stávající WeeWX, MariaDB a nový frontend + datová vrstva.
+- Nový web nejprve pouze na stagingu. Produkční Belchertown zůstává dostupný.
+
+Rozpracovaná specifikace bude ve větvi `docs/frontend-audit-v1`. Rozhodnutí s otevřenými variantami je třeba odsouhlasit před implementací.
+
+## Zásadní bezpečnostní pravidla
+- Žádné zápisy do produkčních databází ani změny WeeWX bez výslovného schválení.
+- Nevystavovat přihlašovací údaje, interní adresy ani kamerová URL.
+- Nepokládat chybějící měření za 0, nevydávat rekonstruované hodnoty za původní.
