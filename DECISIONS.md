@@ -6,7 +6,8 @@ Datum: 2026-10-30. Dokument stanovuje stav návrhu. „Doporučení“ není pot
 - Tři LXC celkem: stávající WeeWX, stávající MariaDB, nový Loučka Weather.
 - Nejprve staging a paralelní provoz se současným Belchertownem.
 - Astro + TypeScript + ECharts pro frontend, Nginx servíruje statický build; bez produkčního buildování Next.js.
-- **NOVĚ POTVRZENO:** backend webu přímo čte produkční databázi, do které zapisuje WeeWX; žádný pravidelný JSON export jako hlavní datová vrstva. Prohlížeč volá HTTP API, ne SQL. DB pro web je read-only; původní data zachovat.
+- **POTVRZENO:** backend webu přímo čte produkční databázi, do které zapisuje WeeWX; žádný pravidelný JSON export jako hlavní datová vrstva. Prohlížeč volá HTTP API, ne SQL. DB pro web je read-only; původní data zachovat.
+- **POTVRZENO:** tříúrovňová statistická vrstva: L1 originální `archive`, L2 WeeWX `archive_day_*`, L3 volitelné samostatné schéma na **stejné MariaDB** s nákladnými předpočtenými agregacemi. Nevytvářet kopii všech historických měření.
 - Tmavý vizuální koncept, podpora mobilu, světlý motiv; české popisky.
 - Celý vývoj má být testovatelný a udržovatelný AI, s dokumentací a malými PR.
 
@@ -39,6 +40,11 @@ Datum: 2026-10-30. Dokument stanovuje stav návrhu. „Doporučení“ není pot
 - B celý engine od začátku v Rustu.
 **Doporučení: A**. Rozhodnutí případně změnit na základě reálného srovnávacího benchmarku.
 
+### Q7 – Kdy zprovoznit vlastní předpočtené statistiky L3?
+- **A: Nejprve pouze L1+L2** a změřit výkon/platnost denních souhrnů; L3 vytvořit až pro skutečně potřebné ukazatele.
+- **B: Ihned vytvořit nové `loucka_weather_stats`** včetně backfillu historie a povolit separátní účet pro výpočty.
+**Doporučení: A**. Schéma L3, migrace, DB role a první zápis vyžadují další výslovné schválení. Samotná volba hybridní architektury toto oprávnění neposkytuje.
+
 ## Překážky / neověřené skutečnosti
 1. Skutečné LXC ID/umístění, CPU a paměť, síťové porty, současný způsob publikace Belchertownu.
 2. WeeWX verze, ovladač Ecowitt, konkrétní zdroj 10–20s živých dat.
@@ -49,6 +55,7 @@ Datum: 2026-10-30. Dokument stanovuje stav návrhu. „Doporučení“ není pot
 7. Licenční podmínky a přístup k radarovým vrstvám, LuhaMet a ILOUKA4.
 8. Jednotlivé vizuální obrázky z předchozí konverzace nebyly přeneseny do repozitáře. Pro přesnější design je třeba přidat schválené reference.
 9. Výkonnostní benchmark Astro CI/staging a test obnovy/rollbacku nebyly provedeny.
+10. Které hodnoty `archive_day_*` jsou správné pro jednotlivá období, zejména před/po historických opravách; náklady L3 backfillu a schválení write-role.
 
 ## Podmínka uzavření návrhového auditu
 - Odsouhlasená politika Q1 (rekonstrukce).
@@ -62,4 +69,4 @@ PR-A: tento dokumentační návrh; bez deploy.
 PR-B: metadata databází, OpenAPI/JSON Schemas, golden fixtures a **read-only dynamické API** přímo nad `pocasi-loucka.eu`.
 PR-C: design systém + Astro přehled/graf/senzory s reálnými voláními `/api/v1/*`.
 PR-D: staging CI/deploy, měření výkonu.
-PR-E: klimatologie, externí zdroje a kamera po jednotlivých integrovaných PR.
+PR-E: klimatologie a ověření L2; **volitelné L3 pouze jako samostatný pozdější PR** s DDL, procesem přepočtu, datovými testy, zálohou, rollbackem a výslovným schválením. Externí zdroje a kamera samostatně.
