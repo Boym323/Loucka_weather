@@ -118,6 +118,9 @@ Počet dnů v ročních agregacích musí rozlišovat „není senzor“ vs „c
 13. Opakovaný stejný HTTP dotaz nad stejným archivním snapshotem: deterministicky stejné hodnoty/metadata; test stability cache a ETag.
 14. Předpočtený WeeWX denní souhrn vs přepočet z očištěných archivních intervalů.
 
+### Zjištění read-only auditu WeeWX
+Viz [WEEWX_DAILY_SUMMARIES_AUDIT.md](WEEWX_DAILY_SUMMARIES_AUDIT.md). Stávající `archive_day_*` (78 souhrnů) mají vážené průměry, extrémy a časy, souhrny větru a správnou délku 25hodinového dne. Výběrová kontrola souhlasila s `archive` pro průměry a úhrny, denní extrémy mohou navíc zachytit LOOP maxima/minima. **MVP používá L1 a L2 bez nového statistického schématu.** Doplňování historie a přepočet denních souhrnů řeší WeeWX samostatně; tato specifikace nepředepisuje další rekonstrukční workflow.
+
 ## 11. Zdroje a aktualizace předpočítaných statistik
 
 ### Tři vrstvy
@@ -127,7 +130,7 @@ Počet dnů v ročních agregacích musí rozlišovat „není senzor“ vs „c
 | L2 | `pocasi-loucka.eu.archive_day_*` | SELECT denních souhrnů s agregací přes měsíc/rok | WeeWX spravuje; API validuje a čte |
 | L3 (volitelná) | `loucka_weather_stats.*` | SELECT komplexní klimatologie/rekordů bez scanů historie | oddělený stats worker přepočítává pouze po schválení |
 
-Vlastní předpočtená statistika je **odvozený výsledek**, ne autoritativní nová měřená hodnota. L3 nikdy neshromažďuje druhou úplnou kopii raw archivu. Pokud L2 správně zvládne dotaz s dostatečným výkonem, L3 se pro danou statistiku neimplementuje.
+Vlastní předpočtená statistika (pokud někdy vznikne) je **odvozený výsledek**, ne autoritativní nová měřená hodnota. L3 nikdy neshromažďuje druhou úplnou kopii raw archivu. Pokud L2 správně zvládne dotaz s dostatečným výkonem, L3 se pro danou statistiku neimplementuje.
 
 ### Kandidátní datový model pro L3 (bez skutečného DDL)
 - `daily_statistics`: validované odvozené denní souhrny s pokrytím.
