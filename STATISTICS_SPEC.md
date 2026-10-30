@@ -1,6 +1,7 @@
 # STATISTICS_SPEC – meteorologické výpočty a původ dat
 
 Status: **NÁVRH K REVIZI**, vydání 2026-10-30. Žádný výpočet nesmí být vydáván za ověřený, dokud neprojde fixture testy proti datům z archivu.
+**Zvolený režim:** backend počítá odpovědi na klientské požadavky přímo čtením produkční databáze WeeWX; statické JSON exporty nejsou primární datová cesta. Vybrané agregace může backend cacheovat.
 
 ## 1. Zdroje: rozlišit a pevně určit
 - `pocasi-loucka.eu.archive`: původní produkční WeeWX archiv. Čtení pouze SELECT.
@@ -113,16 +114,23 @@ Počet dnů v ročních agregacích musí rozlišovat „není senzor“ vs „c
 10. Záznam s korekcí: původní a výsledná hodnota a lineage.
 11. Neúplný měsíc vs úplný měsíc.
 12. Chybějící RSSI při dostupné vlastní metrice čidla.
-13. Opakovaný export: deterministický hash dat pro stejné vstupy.
+13. Opakovaný stejný HTTP dotaz nad stejným archivním snapshotem: deterministicky stejné hodnoty/metadata; test stability cache a ETag.
 14. Předpočtený WeeWX denní souhrn vs přepočet z očištěných archivních intervalů.
 
 ## 11. Akceptační kritéria
-- Každá karta a export má původ, jednotku, QC a časové okno.
+- Každá karta, API odpověď a CSV export má původ, jednotku, QC a časové okno.
 - Všechny výpočty mají unit/fixture test; testy na hranicích DST.
 - Kompletní historie se nečte pro každého návštěvníka.
 - Žádná neověřená historická rekonstrukce se nevydává za naměřený fakt.
 - Originální DB se pouze čte; engine není oprávněn opravovat zdrojový archiv.
 - Rebuild denních agregací po validované korekci má explicitní trigger/version a není automatickou SQL mutací zdrojové DB.
 
-## 12. Technické odkazy
+## 12. Přímé SQL a API
+- Při příchodu `GET /api/v1/history` backend sestaví pouze parametrizovaný SELECT s povolenou veličinou z registry; nikdy neinterpretuje uživatelský SQL výraz nebo názvy sloupců bez allowlistu.
+- Požadavek s krátkým časovým oknem čte `archive` podle indexu `dateTime`, delší období používá `archive_day_*` nebo správné plánované agregace.
+- Všechna čtení mají timeout a limit výsledků. Backend má omezený connection pool, TTL cache a rozumný limit velikosti odpovědí. Výsledky cache musí reflektovat změny dat (TTL/invalidation při validované korekci).
+- Externí klient nikdy neuvidí DB přístupové údaje; schémata `pocasi-loucka.eu` a `loucka_reconstruction` nejsou zaměnitelná.
+- Při nedostupnosti databáze se nevrací falešná nula; API jasně označí unavailable/stale.
+
+## 13. Technické odkazy
 https://www.weewx.com/docs/ ; https://weewx.com/docs/latest/devnotes/ ; https://opendata.chmi.cz/meteorology/weather/alerts/cap/
