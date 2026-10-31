@@ -29,5 +29,7 @@
       "sourceUsUnits": 16
     }
   },
-  "units": "metricwx"
+  "units": "metricwx",
+  "dataset": "original",
+  "dataRevision": "original-unknown"
 }

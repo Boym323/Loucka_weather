@@ -19,5 +19,9 @@
     "valid": 365,
     "fraction": 1
   },
-  "units": "metricwx"
+  "units": "metricwx",
+  "dataset": "original",
+  "dataRevision": "original-unknown",
+  "extremaObservedAt": null,
+  "extremaSource": "not_applicable"
 }

@@ -35,5 +35,7 @@
     "valid": 1,
     "fraction": 0.5
   },
-  "units": "metricwx"
+  "units": "metricwx",
+  "dataset": "original",
+  "dataRevision": "original-unknown"
 }

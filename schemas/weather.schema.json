@@ -258,7 +258,9 @@
         "stale",
         "archiveIntervalMinutes",
         "readings",
-        "units"
+        "units",
+        "dataset",
+        "dataRevision"
       ],
       "properties": {
         "schemaVersion": {
@@ -608,6 +610,17 @@
             "metric",
             "metricwx"
           ]
+        },
+        "dataset": {
+          "enum": [
+            "original",
+            "approved"
+          ]
+        },
+        "dataRevision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
         }
       },
       "allOf": [
@@ -1630,7 +1643,9 @@
         "points",
         "count",
         "completeness",
-        "units"
+        "units",
+        "dataset",
+        "dataRevision"
       ],
       "properties": {
         "schemaVersion": {
@@ -1746,6 +1761,17 @@
             "metric",
             "metricwx"
           ]
+        },
+        "dataset": {
+          "enum": [
+            "original",
+            "approved"
+          ]
+        },
+        "dataRevision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
         }
       },
       "allOf": [
@@ -5051,7 +5077,11 @@
         "provenance",
         "range",
         "completeness",
-        "units"
+        "units",
+        "dataset",
+        "dataRevision",
+        "extremaObservedAt",
+        "extremaSource"
       ],
       "properties": {
         "schemaVersion": {
@@ -5192,6 +5222,37 @@
             "us",
             "metric",
             "metricwx"
+          ]
+        },
+        "dataset": {
+          "enum": [
+            "original",
+            "approved"
+          ]
+        },
+        "dataRevision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "extremaObservedAt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "Z$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extremaSource": {
+          "enum": [
+            "archive",
+            "loop",
+            "unknown",
+            "not_applicable"
           ]
         }
       },
@@ -8559,6 +8620,982 @@
               }
             ]
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "altimeter"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "mean",
+                  "min",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "appTemp"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "mean",
+                  "min",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "barometer"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "mean",
+                  "min",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "cloudbase"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "mean",
+                  "min",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "dewpoint"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "mean",
+                  "min",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "ET"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "sum",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "extraHumid1"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "mean",
+                  "min",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "extraHumid2"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "mean",
+                  "min",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "extraTemp1"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "mean",
+                  "min",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "extraTemp2"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "mean",
+                  "min",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "heatindex"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "mean",
+                  "min",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "humidex"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": false
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "inDewpoint"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "mean",
+                  "min",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "inHumidity"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "mean",
+                  "min",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "inTemp"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "mean",
+                  "min",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "lightning_distance"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": false
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "lightning_disturber_count"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": false
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "lightning_noise_count"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": false
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "lightning_strike_count"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": false
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "luminosity"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "mean",
+                  "min",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "maxSolarRad"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "outHumidity"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "mean",
+                  "min",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "outTemp"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "mean",
+                  "min",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "pm25_1"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "mean",
+                  "min",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "pressure"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "mean",
+                  "min",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "radiation"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "mean",
+                  "min",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "rain"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "sum",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "rainRate"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "mean",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "soilTemp1"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "mean",
+                  "min",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "soilTemp2"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "mean",
+                  "min",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "soilTemp3"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "mean",
+                  "min",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "soilTemp4"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "mean",
+                  "min",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "soilTemp5"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "mean",
+                  "min",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "soilTemp6"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "mean",
+                  "min",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "UV"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "mean",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "wbgt"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": false
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "windchill"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "mean",
+                  "min",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "windDir"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "vecdir",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "windGust"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "windGustDir"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "dir_at_max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "windrun"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": false
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "windSpeed"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "mean",
+                  "min",
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "outEquiTemp"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": false
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "dayET"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "ET24"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "aggregation": {
+                "enum": [
+                  "max",
+                  "count"
+                ]
+              }
+            }
+          }
         }
       ]
     },
@@ -8590,7 +9627,10 @@
                 "NOT_FOUND",
                 "TOO_MANY_REQUESTS",
                 "UPSTREAM_UNAVAILABLE",
-                "INTERNAL_ERROR"
+                "INTERNAL_ERROR",
+                "INVALID_AGGREGATION",
+                "DATASET_UNAVAILABLE",
+                "LIMIT_EXCEEDED"
               ]
             },
             "message": {

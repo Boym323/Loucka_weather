@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "1",
+  "checkedAt": "2026-10-31T19:00:00Z",
+  "ready": false,
+  "components": {
+    "api": "ok",
+    "archive": "unknown",
+    "live": "unknown",
+    "camera": "disabled"
+  }
+}

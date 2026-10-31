@@ -24,5 +24,8 @@
     "monthly_statistics",
     "yearly_statistics",
     "sensors"
+  ],
+  "availableDatasets": [
+    "original"
   ]
 }
