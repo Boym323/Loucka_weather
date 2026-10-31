@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Loučka Weather API
-  version: 0.1.0-draft
+  version: 0.2.0-draft
   description: |
     Language-neutral DRAFT; no production endpoint currently exists.
     UTC instants, WeeWX interval end (start,end], Europe/Prague for calendar periods.
@@ -9,11 +9,39 @@ info:
     The optional query 'units' selects presentation units; default metricwx (degC, mm, m/s).
     Unknown source systems fail closed; custom sensor units are never guessed. Null is not zero.
     Response 'units' records the selected system; field 'unit' is authoritative.
+    Dataset original is default. Approved reconstructions require independent QC and
+    activation; otherwise HTTP 503 DATASET_UNAVAILABLE.
+    Scientific metric aggregation rules live in schemas/aggregation-policy.json.
+    All endpoints are public read-only and same-origin; no user credentials, no DB writes.
+    Unknown parameters and unsupported metric/aggregation pairs are rejected.
 jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
 servers:
   - url: /
     description: Same-origin reverse proxy
+security: []
 paths:
+  /api/v1/station:
+    get:
+      operationId: getStation
+      summary: Public station metadata, verified fields and available capabilities
+      description: Unknown physical coordinates or altitude remain null; never guess.
+      responses:
+        '200': { $ref: '#/components/responses/Station' }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '429': { $ref: '#/components/responses/TooMany' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+        '500': { $ref: '#/components/responses/Internal' }
+  /api/v1/sensors:
+    get:
+      operationId: getSensors
+      summary: Audited sensor inventory, availability and installation epochs
+      description: Non-null data alone does not establish sensor identity or depth.
+      responses:
+        '200': { $ref: '#/components/responses/Sensors' }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '429': { $ref: '#/components/responses/TooMany' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+        '500': { $ref: '#/components/responses/Internal' }
   /api/v1/current:
     get:
       operationId: getCurrent
@@ -24,8 +52,10 @@ paths:
           required: false
           schema: { type: string, format: date-time }
         - $ref: '#/components/parameters/Units'
+        - $ref: '#/components/parameters/Dataset'
       responses:
         '200': { $ref: '#/components/responses/Current' }
+        '304': { $ref: '#/components/responses/NotModified' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '404': { $ref: '#/components/responses/NotFound' }
         '429': { $ref: '#/components/responses/TooMany' }
@@ -35,9 +65,15 @@ paths:
     get:
       operationId: getHistory
       summary: Bounded time series over (from,to], measured by interval end
+      description: |
+        raw maximum range is 31 days, hourly maximum 2 years, daily entire archive.
+        auto chooses resolution within limit, with explicit gaps and per-metric statistics.
+        No silent truncation: 422 LIMIT_EXCEEDED. Empty history is 200 points=[].
+        Output downsampling policy must preserve extrema and missing intervals.
       parameters:
         - $ref: '#/components/parameters/Metric'
         - $ref: '#/components/parameters/Units'
+        - $ref: '#/components/parameters/Dataset'
         - name: from
           in: query
           required: true
@@ -56,6 +92,7 @@ paths:
           schema: { type: integer, minimum: 1, maximum: 10000, default: 2000 }
       responses:
         '200': { $ref: '#/components/responses/History' }
+        '304': { $ref: '#/components/responses/NotModified' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '422': { $ref: '#/components/responses/InvalidRange' }
         '429': { $ref: '#/components/responses/TooMany' }
@@ -68,6 +105,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/Metric'
         - $ref: '#/components/parameters/Units'
+        - $ref: '#/components/parameters/Dataset'
         - name: year
           in: query
           required: true
@@ -78,11 +116,327 @@ paths:
           schema: { type: string, enum: [mean, min, max, sum, count] }
       responses:
         '200': { $ref: '#/components/responses/Yearly' }
+        '304': { $ref: '#/components/responses/NotModified' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '422': { $ref: '#/components/responses/InvalidRange' }
         '429': { $ref: '#/components/responses/TooMany' }
         '503': { $ref: '#/components/responses/Unavailable' }
         '500': { $ref: '#/components/responses/Internal' }
+  /api/v1/statistics/daily:
+    get:
+      operationId: getDailyStatistics
+      summary: Daily statistics for one local Europe/Prague calendar day
+      parameters:
+        - $ref: '#/components/parameters/Metric'
+        - $ref: '#/components/parameters/Units'
+        - $ref: '#/components/parameters/Dataset'
+        - $ref: '#/components/parameters/Aggregation'
+        - name: date
+          in: query
+          required: true
+          schema: { type: string, pattern: '^\\d{4}-\\d{2}-\\d{2}
+    get:
+      operationId: getHealth
+      summary: Cheap and sanitized liveness, without mandatory SQL
+      responses:
+        '200': { $ref: '#/components/responses/Health' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+components:
+  parameters:
+    Aggregation:
+      name: aggregation
+      in: query
+      required: true
+      description: Metric-specific allowlists in schemas/aggregation-policy.json.
+      schema: { type: string, enum: [mean, min, max, sum, count, vecdir, dir_at_max] }
+    Dataset:
+      name: dataset
+      in: query
+      required: false
+      description: >
+        original reads unmodified WeeWX. approved requires explicit QC publication;
+        absent an approved dataset return 503 DATASET_UNAVAILABLE.
+      schema: { type: string, enum: [original, approved], default: original }
+    Units:
+      name: units
+      in: query
+      required: false
+      description: |
+        Requested output unit system. Input records are independently decoded using
+        their stored WeeWX usUnits code (1,16,17). Omitted means metricwx.
+        Invalid requested units return HTTP 400 BAD_REQUEST.
+        'us' returns °F, mph, inches, inHg; 'metric' °C, km/h, cm, hPa;
+        'metricwx' °C, m/s, mm, hPa. Some physical quantities do not change.
+      schema:
+        type: string
+        enum: [us, metric, metricwx]
+        default: metricwx
+    Metric:
+      name: metric
+      in: query
+      required: true
+      schema:
+        type: string
+        enum: [altimeter, appTemp, barometer, cloudbase, dewpoint, ET, extraHumid1, extraHumid2, extraTemp1, extraTemp2, heatindex, humidex, inDewpoint, inHumidity, inTemp, lightning_distance, lightning_disturber_count, lightning_noise_count, lightning_strike_count, luminosity, maxSolarRad, outHumidity, outTemp, pm25_1, pressure, radiation, rain, rainRate, soilTemp1, soilTemp2, soilTemp3, soilTemp4, soilTemp5, soilTemp6, UV, wbgt, windchill, windDir, windGust, windGustDir, windrun, windSpeed, outEquiTemp, dayET, ET24]
+  responses:
+    NotModified:
+      description: ETag matched; no response body
+    Station:
+      description: Station metadata and capabilities
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/features.schema.json#/$defs/StationResponse'
+    Sensors:
+      description: Sensor catalogue and activation epochs
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/features.schema.json#/$defs/SensorsResponse'
+    PeriodStats:
+      description: Daily or monthly aggregate
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/features.schema.json#/$defs/PeriodStatsResponse'
+    CameraStatus:
+      description: Webcam latest snapshot status
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/features.schema.json#/$defs/CameraStatusResponse'
+    Readiness:
+      description: Sanitized readiness
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/features.schema.json#/$defs/ReadinessResponse'
+    Current:
+      description: Current conditions
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/CurrentResponse'
+    History:
+      description: Time series
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/HistoryResponse'
+    Yearly:
+      description: Annual statistic
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/YearlyResponse'
+    Health:
+      description: Health status
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/HealthResponse'
+    BadRequest:
+      description: Invalid query or unknown metric
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/ErrorResponse'
+    InvalidRange:
+      description: Invalid/unsupported range
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/ErrorResponse'
+    NotFound:
+      description: No observation
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/ErrorResponse'
+    TooMany:
+      description: Rate limit
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/ErrorResponse'
+    Unavailable:
+      description: Upstream unavailable
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/ErrorResponse'
+    Internal:
+      description: Sanitized error
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/ErrorResponse'
+, example: '2026-10-30' }
+      responses:
+        '200': { $ref: '#/components/responses/PeriodStats' }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '422': { $ref: '#/components/responses/InvalidRange' }
+        '429': { $ref: '#/components/responses/TooMany' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+        '500': { $ref: '#/components/responses/Internal' }
+  /api/v1/statistics/monthly:
+    get:
+      operationId: getMonthlyStatistics
+      summary: Monthly statistics for one local Europe/Prague calendar month
+      parameters:
+        - $ref: '#/components/parameters/Metric'
+        - $ref: '#/components/parameters/Units'
+        - $ref: '#/components/parameters/Dataset'
+        - $ref: '#/components/parameters/Aggregation'
+        - name: month
+          in: query
+          required: true
+          schema: { type: string, pattern: '^\\d{4}-\\d{2}
+    get:
+      operationId: getHealth
+      summary: Cheap and sanitized liveness, without mandatory SQL
+      responses:
+        '200': { $ref: '#/components/responses/Health' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+components:
+  parameters:
+    Units:
+      name: units
+      in: query
+      required: false
+      description: |
+        Requested output unit system. Input records are independently decoded using
+        their stored WeeWX usUnits code (1,16,17). Omitted means metricwx.
+        Invalid requested units return HTTP 400 BAD_REQUEST.
+        'us' returns °F, mph, inches, inHg; 'metric' °C, km/h, cm, hPa;
+        'metricwx' °C, m/s, mm, hPa. Some physical quantities do not change.
+      schema:
+        type: string
+        enum: [us, metric, metricwx]
+        default: metricwx
+    Metric:
+      name: metric
+      in: query
+      required: true
+      schema:
+        type: string
+        enum: [altimeter, appTemp, barometer, cloudbase, dewpoint, ET, extraHumid1, extraHumid2, extraTemp1, extraTemp2, heatindex, humidex, inDewpoint, inHumidity, inTemp, lightning_distance, lightning_disturber_count, lightning_noise_count, lightning_strike_count, luminosity, maxSolarRad, outHumidity, outTemp, pm25_1, pressure, radiation, rain, rainRate, soilTemp1, soilTemp2, soilTemp3, soilTemp4, soilTemp5, soilTemp6, UV, wbgt, windchill, windDir, windGust, windGustDir, windrun, windSpeed, outEquiTemp, dayET, ET24]
+  responses:
+    Current:
+      description: Current conditions
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/CurrentResponse'
+    History:
+      description: Time series
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/HistoryResponse'
+    Yearly:
+      description: Annual statistic
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/YearlyResponse'
+    Health:
+      description: Health status
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/HealthResponse'
+    BadRequest:
+      description: Invalid query or unknown metric
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/ErrorResponse'
+    InvalidRange:
+      description: Invalid/unsupported range
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/ErrorResponse'
+    NotFound:
+      description: No observation
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/ErrorResponse'
+    TooMany:
+      description: Rate limit
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/ErrorResponse'
+    Unavailable:
+      description: Upstream unavailable
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/ErrorResponse'
+    Internal:
+      description: Sanitized error
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/ErrorResponse'
+, example: '2026-10' }
+      responses:
+        '200': { $ref: '#/components/responses/PeriodStats' }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '422': { $ref: '#/components/responses/InvalidRange' }
+        '429': { $ref: '#/components/responses/TooMany' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+        '500': { $ref: '#/components/responses/Internal' }
+  /api/v1/live:
+    get:
+      operationId: streamLive
+      summary: One-way SSE stream from shared LOOP source, not per-client SQL
+      description: |
+        text/event-stream UTF-8, event names snapshot, observation, status, reset.
+        JSON data validates as features.schema.json#/$defs/LiveEvent.
+        First event is snapshot/status. Heartbeat comments every 15s, retry 5000ms.
+        Reconnect Last-Event-ID may replay bounded retained events, else reset+snapshot.
+        Event IDs are opaque and process-scoped. Mark stale after 120s without LOOP.
+        Archive fallback MUST be labelled state=archive_fallback. Disable proxy buffering.
+        Per-client queues have bounds and disconnect slow clients.
+      parameters:
+        - $ref: '#/components/parameters/Units'
+        - name: Last-Event-ID
+          in: header
+          required: false
+          schema: { type: string, maxLength: 128 }
+      responses:
+        '200':
+          description: Server-Sent Events (not JSON)
+          content:
+            text/event-stream:
+              schema: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '429': { $ref: '#/components/responses/TooMany' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/v1/camera/status:
+    get:
+      operationId: getCameraStatus
+      summary: Public metadata for sanitized latest webcam image
+      description: Private camera URLs and credentials never leave server-side capture worker.
+      responses:
+        '200': { $ref: '#/components/responses/CameraStatus' }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '429': { $ref: '#/components/responses/TooMany' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+        '500': { $ref: '#/components/responses/Internal' }
+  /api/v1/readyz:
+    get:
+      operationId: getReadiness
+      summary: Sanitized dependency readiness; distinct from cheap healthz
+      responses:
+        '200': { $ref: '#/components/responses/Readiness' }
+        '503': { $ref: '#/components/responses/Unavailable' }
   /api/v1/healthz:
     get:
       operationId: getHealth
