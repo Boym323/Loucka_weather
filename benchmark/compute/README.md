@@ -52,3 +52,12 @@ Program **nejprve přečte celý soubor do RAM**. V měřené části parsuje TS
 Výpočetní výkon syntetické řady neprokazuje meteorologickou správnost u všech reálných extrémů. Před ostrým nasazením je nutná samostatná validace jednotek, výpadků, změn senzorů, korekcí, časových hranic a správnosti denních agregací vůči ověřeným referencím. Délka intervalu v reálných datech musí reprezentovat skutečný úsek měření, nikoli jen fixních 5 minut. Pro `source=R` musí existovat evidovaná provenance. Bez ověření nepřipisuj algoritmu klimatologickou interpretaci (např. roční úhrn při mezerách).
 
 **Běhy nezasahují do produkční databáze; nikdy nespouštěj další `full` HTTP/SQL benchmark na produkci.**
+
+
+## Ověřené reálné LXC měření (2026-10-31)
+
+Na `zl-dev-AuditMeteo` uživatel ověřil **všech šest jazyků** v režimech `smoke`, `light` i `full`. Všechny **72/72 jednotlivých pokusů PARITY PASS** (18 + 18 + 36). Měření je na **syntetických lokálních fixture**, žádná MariaDB ani HTTP.
+
+Při **1 680 000 řádcích** byl medián výpočetního času: **Rust 4,10 s, Go 5,26 s, C++ 9,13 s, Node.js 15,36 s, PHP CLI 19,54 s, Python 37,82 s**. Medián RSS: **Rust 107,23 MiB, C++ 112,32 MiB, Node.js 272,25 MiB, PHP CLI 304,59 MiB, Python 318,69 MiB, Go 422,54 MiB**. Podrobné per-run výsledky, časování a omezení: [REAL_LXC_OFFLINE_RESULTS_2026-10-31.md](REAL_LXC_OFFLINE_RESULTS_2026-10-31.md).
+
+Pro API/vizualizace Go zůstává předběžně doporučeným stackem. Pro dávkový výpočet statistik má aktuálně Rust nejlepší čas i RAM; před zavedením druhého jazyka ověř optimalizace Go a reálný offline dataset ze stagingu. Zdrojové JSON reporty z uživatelova LXC nebyly součástí tohoto commitu.
