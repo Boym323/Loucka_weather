@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "1",
+  "eventId": "boot-1",
+  "eventType": "status",
+  "observedAt": null,
+  "emittedAt": "2026-10-31T19:00:00Z",
+  "units": "metricwx",
+  "state": "unavailable",
+  "readings": {},
+  "reason": "Source not yet verified"
+}

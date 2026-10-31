@@ -1,0 +1,577 @@
+{
+  "policyVersion": "draft-2026-10-31-v2",
+  "status": "proposed, domain review required",
+  "source": "WeeWX 5.x daily summaries and archive semantics",
+  "defaultAggregationProhibited": true,
+  "measuredMetrics": 45,
+  "semantics": {
+    "count": "count of non-null valid observations; NOT lightning strike tally",
+    "mean": "time weighted by verified interval seconds; daily summary wsum/sumtime where available; never average daily averages unweighted",
+    "sum": "additive interval quantities ONLY; null excluded and coverage disclosed",
+    "max": "archive maxima for sample series; daily summary may include LOOP extremes if explicitly requested, source flagged",
+    "min": "archive minima for sample series; daily summary may include LOOP extremes if explicitly requested, source flagged",
+    "vecdir": "vector direction from paired wind speed and direction; null on calm/undefined resultant",
+    "dir_at_max": "direction recorded at the same event as maximum wind gust"
+  },
+  "weeklyOrMore": "roll up verified daily summaries, not naive averages; reject unsupported metric aggregation pairs with 422 INVALID_AGGREGATION",
+  "metrics": {
+    "altimeter": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "appTemp": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "barometer": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "cloudbase": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "dewpoint": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "ET": {
+      "allowed": [
+        "sum",
+        "max",
+        "count"
+      ],
+      "default": "sum",
+      "algorithm": "sum_interval_amounts",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "extraHumid1": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "extraHumid2": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "extraTemp1": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "extraTemp2": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "heatindex": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "humidex": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": false,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": "Custom derived calculation and historical validity need review"
+    },
+    "inDewpoint": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "inHumidity": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "inTemp": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "lightning_distance": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": false,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": "Distance to strike is event-only and source missing; no generic aggregates"
+    },
+    "lightning_disturber_count": {
+      "allowed": [
+        "count"
+      ],
+      "default": "count",
+      "algorithm": "count_valid_records_only",
+      "statsEnabled": false,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": "Lightning sensor counter semantics/reset unverified; not event sums"
+    },
+    "lightning_noise_count": {
+      "allowed": [
+        "count"
+      ],
+      "default": "count",
+      "algorithm": "count_valid_records_only",
+      "statsEnabled": false,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": "Lightning sensor counter semantics/reset unverified; not event sums"
+    },
+    "lightning_strike_count": {
+      "allowed": [
+        "count"
+      ],
+      "default": "count",
+      "algorithm": "count_valid_records_only",
+      "statsEnabled": false,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": "Lightning sensor counter semantics/reset unverified; not event sums"
+    },
+    "luminosity": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "maxSolarRad": {
+      "allowed": [
+        "max",
+        "count"
+      ],
+      "default": "max",
+      "algorithm": "max_not_sum",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "outHumidity": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "outTemp": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "pm25_1": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "pressure": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "radiation": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "rain": {
+      "allowed": [
+        "sum",
+        "max",
+        "count"
+      ],
+      "default": "sum",
+      "algorithm": "sum_interval_amounts",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "rainRate": {
+      "allowed": [
+        "mean",
+        "max",
+        "count"
+      ],
+      "default": "max",
+      "algorithm": "interval_duration_weighted_or_peak",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": "Rain rate is not rain amount; no SUM"
+    },
+    "soilTemp1": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "soilTemp2": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "soilTemp3": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "soilTemp4": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "soilTemp5": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "soilTemp6": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "UV": {
+      "allowed": [
+        "mean",
+        "max",
+        "count"
+      ],
+      "default": "max",
+      "algorithm": "time_weighted_mean_or_max",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "wbgt": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": false,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": "Custom derived calculation and historical validity need review"
+    },
+    "windchill": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "windDir": {
+      "allowed": [
+        "vecdir",
+        "count"
+      ],
+      "default": "vecdir",
+      "algorithm": "speed_weighted_vector_mean_with_vector_components",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": "Never arithmetic mean of degrees; calm resultant vector -> null"
+    },
+    "windGust": {
+      "allowed": [
+        "max",
+        "count"
+      ],
+      "default": "max",
+      "algorithm": "maximum_of_gust_samples",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "windGustDir": {
+      "allowed": [
+        "dir_at_max",
+        "count"
+      ],
+      "default": "dir_at_max",
+      "algorithm": "paired_direction_at_max_gust",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": "Requires gust value/time pairing"
+    },
+    "windrun": {
+      "allowed": [
+        "sum",
+        "count"
+      ],
+      "default": "sum",
+      "algorithm": "sum_interval_distance_if_semantics_verified",
+      "statsEnabled": false,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": "Verify whether windrun is per-interval or cumulative in each sensor epoch"
+    },
+    "windSpeed": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_scalar_speed",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": null
+    },
+    "outEquiTemp": {
+      "allowed": [
+        "mean",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "mean",
+      "algorithm": "time_weighted_mean_min_max",
+      "statsEnabled": false,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": "Custom derived calculation and historical validity need review"
+    },
+    "dayET": {
+      "allowed": [
+        "max",
+        "count"
+      ],
+      "default": "max",
+      "algorithm": "sampled_rolling_or_cumulative_ET_not_additive",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": "Do not sum rolling/day-to-date ET values"
+    },
+    "ET24": {
+      "allowed": [
+        "max",
+        "count"
+      ],
+      "default": "max",
+      "algorithm": "sampled_rolling_or_cumulative_ET_not_additive",
+      "statsEnabled": true,
+      "sourcePriority": "weewx_archive_day_if_verified_else_archive",
+      "note": "Do not sum rolling/day-to-date ET values"
+    }
+  }
+}

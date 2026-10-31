@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "1",
+  "stationId": "loucka",
+  "name": "Počasí Loučka",
+  "timezone": "Europe/Prague",
+  "location": {
+    "latitude": null,
+    "longitude": null,
+    "altitudeMeters": null,
+    "verified": false
+  },
+  "archivalSource": "weewx",
+  "supportedOutputUnits": [
+    "us",
+    "metric",
+    "metricwx"
+  ],
+  "dataRevision": "original-unknown",
+  "updatedAt": "2026-10-31T19:00:00Z",
+  "capabilities": [
+    "current",
+    "history",
+    "daily_statistics",
+    "monthly_statistics",
+    "yearly_statistics",
+    "sensors"
+  ]
+}

@@ -1,0 +1,568 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pocasi-loucka.eu/contracts/features.schema.json",
+  "title": "Loucka Weather API v1 supporting feature schemas (DRAFT)",
+  "$defs": {
+    "StationResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "stationId",
+        "name",
+        "timezone",
+        "location",
+        "archivalSource",
+        "supportedOutputUnits",
+        "dataRevision",
+        "updatedAt",
+        "capabilities"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1"
+        },
+        "stationId": {
+          "const": "loucka"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timezone": {
+          "const": "Europe/Prague"
+        },
+        "location": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "latitude",
+            "longitude",
+            "altitudeMeters",
+            "verified"
+          ],
+          "properties": {
+            "latitude": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": -90,
+              "maximum": 90
+            },
+            "longitude": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": -180,
+              "maximum": 180
+            },
+            "altitudeMeters": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "verified": {
+              "type": "boolean"
+            }
+          }
+        },
+        "archivalSource": {
+          "const": "weewx"
+        },
+        "supportedOutputUnits": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "us",
+              "metric",
+              "metricwx"
+            ]
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true
+        },
+        "dataRevision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$"
+        },
+        "capabilities": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "current",
+              "history",
+              "daily_statistics",
+              "monthly_statistics",
+              "yearly_statistics",
+              "live_sse",
+              "camera_status",
+              "sensors"
+            ]
+          }
+        }
+      }
+    },
+    "Sensor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "metric",
+        "displayName",
+        "status",
+        "enabled",
+        "lastObservedAt",
+        "validFrom",
+        "validTo",
+        "depthCm",
+        "source",
+        "confidence",
+        "note"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "metric": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "status": {
+          "enum": [
+            "active",
+            "unavailable",
+            "not_installed",
+            "retired",
+            "unknown"
+          ]
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "lastObservedAt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "Z$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "validFrom": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "Z$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "validTo": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "Z$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "depthCm": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 2000
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "confidence": {
+          "enum": [
+            "verified",
+            "provisional",
+            "unknown"
+          ]
+        },
+        "note": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 300
+        }
+      }
+    },
+    "SensorsResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "stationId",
+        "updatedAt",
+        "sensors"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1"
+        },
+        "stationId": {
+          "const": "loucka"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$"
+        },
+        "sensors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Sensor"
+          },
+          "maxItems": 200
+        }
+      }
+    },
+    "PeriodStatsResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "period",
+        "localPeriod",
+        "metric",
+        "aggregation",
+        "unit",
+        "units",
+        "value",
+        "quality",
+        "source",
+        "provenance",
+        "dataset",
+        "dataRevision",
+        "intervalStart",
+        "intervalEnd",
+        "completeness",
+        "extremaObservedAt",
+        "extremaSource"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1"
+        },
+        "period": {
+          "enum": [
+            "day",
+            "month"
+          ]
+        },
+        "localPeriod": {
+          "type": "string",
+          "minLength": 7,
+          "maxLength": 10
+        },
+        "metric": {
+          "type": "string"
+        },
+        "aggregation": {
+          "enum": [
+            "mean",
+            "min",
+            "max",
+            "sum",
+            "count",
+            "vecdir",
+            "dir_at_max"
+          ]
+        },
+        "unit": {
+          "type": "string"
+        },
+        "units": {
+          "enum": [
+            "us",
+            "metric",
+            "metricwx"
+          ]
+        },
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "quality": {
+          "enum": [
+            "measured",
+            "reconstructed",
+            "derived",
+            "missing",
+            "suspect"
+          ]
+        },
+        "source": {
+          "enum": [
+            "weewx_archive",
+            "weewx_daily",
+            "reconstruction",
+            "derived"
+          ]
+        },
+        "provenance": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 160
+        },
+        "dataset": {
+          "enum": [
+            "original",
+            "approved"
+          ]
+        },
+        "dataRevision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "intervalStart": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$"
+        },
+        "intervalEnd": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$"
+        },
+        "completeness": {
+          "$ref": "./weather.schema.json#/$defs/Completeness"
+        },
+        "extremaObservedAt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "Z$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extremaSource": {
+          "enum": [
+            "archive",
+            "loop",
+            "unknown",
+            "not_applicable"
+          ]
+        }
+      }
+    },
+    "CameraStatusResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "cameraId",
+        "status",
+        "capturedAt",
+        "publishedAt",
+        "latestUrl",
+        "ageSeconds",
+        "width",
+        "height",
+        "privacyMaskApplied",
+        "updatedAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1"
+        },
+        "cameraId": {
+          "const": "west"
+        },
+        "status": {
+          "enum": [
+            "fresh",
+            "stale",
+            "unavailable",
+            "disabled"
+          ]
+        },
+        "capturedAt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "Z$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "publishedAt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "Z$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "latestUrl": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^/camera/[a-zA-Z0-9._/-]+$"
+        },
+        "ageSeconds": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "width": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "height": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "privacyMaskApplied": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$"
+        }
+      }
+    },
+    "LiveEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "eventId",
+        "eventType",
+        "observedAt",
+        "emittedAt",
+        "units",
+        "state",
+        "readings",
+        "reason"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1"
+        },
+        "eventId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "eventType": {
+          "enum": [
+            "snapshot",
+            "observation",
+            "status",
+            "reset"
+          ]
+        },
+        "observedAt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "Z$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "emittedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$"
+        },
+        "units": {
+          "enum": [
+            "us",
+            "metric",
+            "metricwx"
+          ]
+        },
+        "state": {
+          "enum": [
+            "live",
+            "stale",
+            "archive_fallback",
+            "unavailable"
+          ]
+        },
+        "readings": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {}
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 160
+        }
+      }
+    }
+  }
+}
