@@ -125,7 +125,7 @@ paths:
   /api/v1/statistics/daily:
     get:
       operationId: getDailyStatistics
-      summary: Daily statistics for one local Europe/Prague calendar day
+      summary: Daily statistic for a Europe/Prague calendar day
       parameters:
         - $ref: '#/components/parameters/Metric'
         - $ref: '#/components/parameters/Units'
@@ -134,10 +134,91 @@ paths:
         - name: date
           in: query
           required: true
-          schema: { type: string, pattern: '^\\d{4}-\\d{2}-\\d{2}
+          schema:
+            type: string
+            pattern: '^\\d{4}-\\d{2}-\\d{2}$'
+            example: '2026-10-30'
+      responses:
+        '200': { $ref: '#/components/responses/PeriodStats' }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '422': { $ref: '#/components/responses/InvalidRange' }
+        '429': { $ref: '#/components/responses/TooMany' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+        '500': { $ref: '#/components/responses/Internal' }
+  /api/v1/statistics/monthly:
+    get:
+      operationId: getMonthlyStatistics
+      summary: Monthly statistic for a Europe/Prague calendar month
+      parameters:
+        - $ref: '#/components/parameters/Metric'
+        - $ref: '#/components/parameters/Units'
+        - $ref: '#/components/parameters/Dataset'
+        - $ref: '#/components/parameters/Aggregation'
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^\\d{4}-\\d{2}$'
+            example: '2026-10'
+      responses:
+        '200': { $ref: '#/components/responses/PeriodStats' }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '422': { $ref: '#/components/responses/InvalidRange' }
+        '429': { $ref: '#/components/responses/TooMany' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+        '500': { $ref: '#/components/responses/Internal' }
+  /api/v1/live:
+    get:
+      operationId: streamLive
+      summary: Shared LOOP live data via Server-Sent Events
+      description: |
+        text/event-stream. Types: snapshot, observation, status, reset.
+        Validate data JSON using features.schema.json#/$defs/LiveEvent.
+        First event is snapshot/status; heartbeat comment every 15s.
+        retry 5000ms; bounded replay on Last-Event-ID or reset+snapshot.
+        Event IDs are process-scoped. No MQTT credentials or private URL in browser.
+        State stale after 120s without valid LOOP events; label archive fallback.
+        Disable proxy buffering and disconnect slow stream consumers.
+      parameters:
+        - $ref: '#/components/parameters/Units'
+        - name: Last-Event-ID
+          in: header
+          required: false
+          schema: { type: string, maxLength: 128 }
+      responses:
+        '200':
+          description: SSE (not JSON)
+          content:
+            text/event-stream:
+              schema: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '429': { $ref: '#/components/responses/TooMany' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/v1/camera/status:
+    get:
+      operationId: getCameraStatus
+      summary: Metadata for sanitized server-side webcam snapshot
+      description: Do not expose internal camera stream, token, or credential.
+      responses:
+        '200': { $ref: '#/components/responses/CameraStatus' }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '429': { $ref: '#/components/responses/TooMany' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+        '500': { $ref: '#/components/responses/Internal' }
+  /api/v1/readyz:
+    get:
+      operationId: getReadiness
+      summary: Sanitized dependency readiness separate from cheap liveness
+      responses:
+        '200': { $ref: '#/components/responses/Readiness' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/v1/healthz:
     get:
       operationId: getHealth
-      summary: Cheap and sanitized liveness, without mandatory SQL
+      summary: Cheap service liveness without querying MariaDB
       responses:
         '200': { $ref: '#/components/responses/Health' }
         '503': { $ref: '#/components/responses/Unavailable' }
