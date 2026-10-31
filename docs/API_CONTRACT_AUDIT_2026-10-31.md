@@ -63,3 +63,7 @@ F. Samostatné měření výkonu a funkční smoke před produkčním přepnutí
 **Dnes je hotový návrh specifikace a testovacího rámce, nikoli tři kompatibilní produkční backendy.**
 
 Poznámka k revizi: `outThetaE` záměrně přeřazeno do `public:false`, dokud nebude potvrzeno, zda vlastní výpočet používá Kelvin či °C. CI validátor OpenAPI načítá dokument pomocí `read_from_filename` a absolutní base URI, aby se externí schémata řešila lokálně.
+
+### Kontrola archivních intervalů (SELECT)
+
+Počty z produkčního `archive` k 31. 10. 2026: `interval=5`: 1 678 351, `6`: 2 090, `30`: 3, `75`: 1, `55`: 1, `10`: 1, `40`: 1. To je důkaz, že **není bezpečné vyžadovat přesně pětiminutový interval** a že délku intervalu musíme zohlednit při rekonstrukcích, časově vážených průměrech, úplnosti a downsamplingu.

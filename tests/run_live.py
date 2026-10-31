@@ -27,6 +27,10 @@ def canonical(x):
     if isinstance(x,list):return [canonical(v) for v in x]
     return x
 def compare(a,b,path=""):
+    # JSON numbers may decode as int vs float across languages; bool is not numeric.
+    if isinstance(a,(int,float)) and not isinstance(a,bool) and isinstance(b,(int,float)) and not isinstance(b,bool):
+        if not math.isclose(a,b,rel_tol=1e-6,abs_tol=1e-6):raise AssertionError(path+": numerical mismatch")
+        return
     if type(a)!=type(b):raise AssertionError(path+": type mismatch")
     if isinstance(a,dict):
         if a.keys()!=b.keys():raise AssertionError(path+": keys mismatch")
