@@ -57,6 +57,8 @@ def test_openapi():
         "/api/v1/camera/status","/api/v1/readyz","/api/v1/healthz"
     }
     for x in DOC["components"]["responses"].values():
+        if "content" not in x:
+            continue
         ref=x["content"]["application/json"]["schema"]["$ref"]
         if "weather.schema.json" in ref:
             assert ref.split("/")[-1] in SCHEMA["$defs"]
