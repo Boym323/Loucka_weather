@@ -25,6 +25,8 @@ paths:
       operationId: getStation
       summary: Public station metadata, verified fields and available capabilities
       description: Unknown physical coordinates or altitude remain null; never guess.
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
       responses:
         '200': { $ref: '#/components/responses/Station' }
         '304': { $ref: '#/components/responses/NotModified' }
@@ -36,6 +38,8 @@ paths:
       operationId: getSensors
       summary: Audited sensor inventory, availability and installation epochs
       description: Non-null data alone does not establish sensor identity or depth.
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
       responses:
         '200': { $ref: '#/components/responses/Sensors' }
         '304': { $ref: '#/components/responses/NotModified' }
@@ -47,6 +51,7 @@ paths:
       operationId: getCurrent
       summary: Last known observation at/before asOf
       parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
         - name: asOf
           in: query
           required: false
@@ -71,6 +76,7 @@ paths:
         No silent truncation: 422 LIMIT_EXCEEDED. Empty history is 200 points=[].
         Output downsampling policy must preserve extrema and missing intervals.
       parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
         - $ref: '#/components/parameters/Metric'
         - $ref: '#/components/parameters/Units'
         - $ref: '#/components/parameters/Dataset'
@@ -103,6 +109,7 @@ paths:
       operationId: getYearlyStatistics
       summary: Yearly aggregate based on Europe/Prague calendar
       parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
         - $ref: '#/components/parameters/Metric'
         - $ref: '#/components/parameters/Units'
         - $ref: '#/components/parameters/Dataset'
@@ -127,6 +134,7 @@ paths:
       operationId: getDailyStatistics
       summary: Daily statistic for a Europe/Prague calendar day
       parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
         - $ref: '#/components/parameters/Metric'
         - $ref: '#/components/parameters/Units'
         - $ref: '#/components/parameters/Dataset'
@@ -151,6 +159,7 @@ paths:
       operationId: getMonthlyStatistics
       summary: Monthly statistic for a Europe/Prague calendar month
       parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
         - $ref: '#/components/parameters/Metric'
         - $ref: '#/components/parameters/Units'
         - $ref: '#/components/parameters/Dataset'
@@ -202,6 +211,8 @@ paths:
       operationId: getCameraStatus
       summary: Metadata for sanitized server-side webcam snapshot
       description: Do not expose internal camera stream, token, or credential.
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
       responses:
         '200': { $ref: '#/components/responses/CameraStatus' }
         '304': { $ref: '#/components/responses/NotModified' }
