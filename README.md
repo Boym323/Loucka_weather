@@ -1,5 +1,8 @@
 # Loučka Weather
 
+> **NOVÉ OVĚŘENÉ ARCHITEKTONICKÉ PODKLADY (31. 10. 2026):** [Dokumentace v hlavní větvi main](https://github.com/Boym323/Loucka_weather/blob/main/docs/PROJECT_CONTEXT.md), [ADR Node.js / Go / Rust](https://github.com/Boym323/Loucka_weather/blob/main/docs/ARCHITECTURE_DECISION_2026-10-31.md), [Nginx audit 54 966 requestů](https://github.com/Boym323/Loucka_weather/blob/main/docs/TRAFFIC_AUDIT_2026-10-31.md), [Matomo](https://github.com/Boym323/Loucka_weather/blob/main/docs/MATOMO_AUDIT_2026-10-31.md), [benchmarková syntéza](https://github.com/Boym323/Loucka_weather/blob/main/docs/BENCHMARK_SYNTHESIS_2026-10-31.md). **Předběžně preferován Node.js + Fastify pro API v1**, nikoliv bezpodmínečné Go. Tato benchmarková větev je stále **draft PR #2**. Pro budoucí práci používej `main/docs/` jako zdroj nejnovějšího kontextu.
+
+
 Nový meteorologický portál pro https://pocasi-loucka.eu/ – **návrhová fáze**.
 
 Tento repozitář se inicializuje dokumentací; zatím **neobsahuje běžící web** ani automatizované změny produkce.
