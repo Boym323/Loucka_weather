@@ -20,3 +20,5 @@
 - [Draft PR #2](https://github.com/Boym323/Loucka_weather/pull/2)
 
 **Pravidlo:** Nezveřejňovat raw HTTP logy, IP adresy ani tajné údaje. Neměnit originální meteorologickou databázi. Nespouštět plné zátěžové benchmarky na produkční DB.
+
+- [API v1 – produktový kontrakt, meteorologické výpočty, provoz a otevřená rozhodnutí](API_V1_PRODUCT_CONTRACT.md)

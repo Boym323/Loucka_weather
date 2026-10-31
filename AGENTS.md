@@ -30,3 +30,8 @@
 - Query `units=us|metric|metricwx` vybírá **výstupní** jednotky (default metricwx); zdrojový `usUnits` se tím nemění.
 - Jednotky pro každou veřejnou veličinu jsou v `schemas/metrics.json`; použij společné golden fixtures a testy konverzí před změnou runtime Fastify/Go/Rust.
 - Bez souhlasu nezměň původní WeeWX, SQL schéma, historické měření ani `usUnits` produkční DB. `null` není `0`, nelze slepě převádět teplotní součty.
+
+## Doplněné zadání API v1 (draft PR #4)
+- Povinně čti docs/API_V1_PRODUCT_CONTRACT.md, schemas/aggregation-policy.json a schemas/features.schema.json.
+- Nepovoluj libovolné numerické agregace: kontroluj dvojice metric x aggregation a stav zdrojových senzorů.
+- Dataset original je výchozí. Approved vyžaduje schválený QC proces. Live a kamera mohou být reálně nedostupné.

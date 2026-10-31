@@ -39,3 +39,5 @@ Výkonnostní implementace, kompletní HTTP reporty a compute benchmark jsou st�
 - Před prvním nasazením ověřit bezpečnost, read-only přístup aplikace, správnost numeriky, přechody CET/CEST a HTTP/MQTT zátěž na stagingu.
 
 **Pozor:** README před audity uvádělo jako první kandidát datové vrstvy Python. Tento návrh je v roce 2026 nahrazen **pracovní preferencí Node.js/Fastify** popsanou v [ADR](docs/ARCHITECTURE_DECISION_2026-10-31.md), nikoli hotovým schválením.
+
+Před implementací backendu čtěte [API v1 – produktový kontrakt](docs/API_V1_PRODUCT_CONTRACT.md). API je nadále pouze návrh v draft PR #4.

@@ -12,6 +12,7 @@ sys.path.insert(0, str(ROOT))
 from contracts.unit_conversion import convert, SYSTEMS
 S=json.loads((ROOT/"schemas/weather.schema.json").read_text())
 C=json.loads((ROOT/"schemas/metrics.json").read_text())
+F=json.loads((ROOT/"schemas/features.schema.json").read_text())
 CASES=[
   *[("/api/v1/current",{"asOf":"2026-10-30T20:00:00Z","units":u},"CurrentResponse",200) for u in ("metricwx","metric","us")],
   *[("/api/v1/history",{"metric":metric,"from":"2026-10-29T20:00:00Z","to":"2026-10-30T20:00:00Z","resolution":"raw","limit":"500","units":u},"HistoryResponse",200)
@@ -19,7 +20,12 @@ CASES=[
   *[("/api/v1/statistics/yearly",{"metric":"rain","year":"2025","aggregation":"sum","units":u},"YearlyResponse",200) for u in ("metricwx","metric","us")],
   ("/api/v1/history",{"metric":"_invalid_","from":"2026-10-29T20:00:00Z","to":"2026-10-30T20:00:00Z"},"ErrorResponse",400),
   ("/api/v1/current",{"units":"unsupported"},"ErrorResponse",400),
-  ("/api/v1/healthz",{},"HealthResponse",200)
+  ("/api/v1/healthz",{},"HealthResponse",200),
+  ("/api/v1/station",{},"StationResponse",200),
+  ("/api/v1/sensors",{},"SensorsResponse",200),
+  ("/api/v1/camera/status",{},"CameraStatusResponse",200),
+  ("/api/v1/statistics/daily",{"metric":"rain","aggregation":"sum","date":"2026-10-30","units":"metricwx","dataset":"original"},"PeriodStatsResponse",200),
+  ("/api/v1/statistics/monthly",{"metric":"rain","aggregation":"sum","month":"2026-10","units":"metricwx","dataset":"original"},"PeriodStatsResponse",200)
 ]
 def fetch(base,path,params):
     try:
@@ -59,7 +65,8 @@ def main():
         for name,base in urls.items():
             status,data=fetch(base,path,params)
             if status!=expected:raise AssertionError(f"{name} {path}: HTTP {status} != {expected}")
-            Draft202012Validator({"$defs":S["$defs"],"$ref":"#/$defs/"+schema},format_checker=FormatChecker()).validate(data)
+            schema_library=F if schema in ("StationResponse","SensorsResponse","CameraStatusResponse","ReadinessResponse","PeriodStatsResponse","LiveEvent") else S
+            Draft202012Validator({"$defs":schema_library["$defs"],"$ref":"#/$defs/"+schema},format_checker=FormatChecker()).validate(data)
             if schema=="HistoryResponse":
                 if data["count"]!=len(data["points"]):raise AssertionError(name+": count mismatch")
                 if C["columns"][data["metric"]]["outputUnits"][data["units"]]!=data["unit"]:raise AssertionError(name+": unit mismatch")
