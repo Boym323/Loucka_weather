@@ -1,0 +1,156 @@
+openapi: 3.1.1
+info:
+  title: Loučka Weather API
+  version: 0.1.0-draft
+  description: |
+    Language-neutral DRAFT; no production endpoint currently exists.
+    UTC instants, WeeWX interval end (start,end], Europe/Prague for calendar periods.
+    Canonical units per schemas/metrics.json. Null is not zero.
+jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+servers:
+  - url: /
+    description: Same-origin reverse proxy
+paths:
+  /api/v1/current:
+    get:
+      operationId: getCurrent
+      summary: Last known observation at/before asOf
+      parameters:
+        - name: asOf
+          in: query
+          required: false
+          schema: { type: string, format: date-time }
+      responses:
+        '200': { $ref: '#/components/responses/Current' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/TooMany' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+        '500': { $ref: '#/components/responses/Internal' }
+  /api/v1/history:
+    get:
+      operationId: getHistory
+      summary: Bounded time series over (from,to], measured by interval end
+      parameters:
+        - $ref: '#/components/parameters/Metric'
+        - name: from
+          in: query
+          required: true
+          schema: { type: string, format: date-time }
+        - name: to
+          in: query
+          required: true
+          schema: { type: string, format: date-time }
+        - name: resolution
+          in: query
+          required: false
+          schema: { type: string, enum: [auto, raw, hourly, daily], default: auto }
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 10000, default: 2000 }
+      responses:
+        '200': { $ref: '#/components/responses/History' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '422': { $ref: '#/components/responses/InvalidRange' }
+        '429': { $ref: '#/components/responses/TooMany' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+        '500': { $ref: '#/components/responses/Internal' }
+  /api/v1/statistics/yearly:
+    get:
+      operationId: getYearlyStatistics
+      summary: Yearly aggregate based on Europe/Prague calendar
+      parameters:
+        - $ref: '#/components/parameters/Metric'
+        - name: year
+          in: query
+          required: true
+          schema: { type: integer, minimum: 2009, maximum: 2100 }
+        - name: aggregation
+          in: query
+          required: true
+          schema: { type: string, enum: [mean, min, max, sum, count] }
+      responses:
+        '200': { $ref: '#/components/responses/Yearly' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '422': { $ref: '#/components/responses/InvalidRange' }
+        '429': { $ref: '#/components/responses/TooMany' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+        '500': { $ref: '#/components/responses/Internal' }
+  /api/v1/healthz:
+    get:
+      operationId: getHealth
+      summary: Cheap and sanitized liveness, without mandatory SQL
+      responses:
+        '200': { $ref: '#/components/responses/Health' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+components:
+  parameters:
+    Metric:
+      name: metric
+      in: query
+      required: true
+      schema:
+        type: string
+        enum: [altimeter, appTemp, barometer, cloudbase, dewpoint, ET, extraHumid1, extraHumid2, extraTemp1, extraTemp2, heatindex, humidex, inDewpoint, inHumidity, inTemp, lightning_distance, lightning_disturber_count, lightning_noise_count, lightning_strike_count, luminosity, maxSolarRad, outHumidity, outTemp, pm25_1, pressure, radiation, rain, rainRate, soilTemp1, soilTemp2, soilTemp3, soilTemp4, soilTemp5, soilTemp6, UV, wbgt, windchill, windDir, windGust, windGustDir, windrun, windSpeed, outEquiTemp, dayET, ET24, outThetaE]
+  responses:
+    Current:
+      description: Current conditions
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/CurrentResponse'
+    History:
+      description: Time series
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/HistoryResponse'
+    Yearly:
+      description: Annual statistic
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/YearlyResponse'
+    Health:
+      description: Health status
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/HealthResponse'
+    BadRequest:
+      description: Invalid query or unknown metric
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/ErrorResponse'
+    InvalidRange:
+      description: Invalid/unsupported range
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/ErrorResponse'
+    NotFound:
+      description: No observation
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/ErrorResponse'
+    TooMany:
+      description: Rate limit
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/ErrorResponse'
+    Unavailable:
+      description: Upstream unavailable
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/ErrorResponse'
+    Internal:
+      description: Sanitized error
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/weather.schema.json#/$defs/ErrorResponse'

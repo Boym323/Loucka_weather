@@ -1,0 +1,811 @@
+{
+  "catalogVersion": "0.1.0-draft",
+  "source": "SELECT information_schema.columns from production archive, read-only, 2026-10-31",
+  "database": "pocasi-loucka.eu",
+  "table": "archive",
+  "observedUsUnits": [
+    16
+  ],
+  "columns": {
+    "dateTime": {
+      "sqlType": "int",
+      "nullable": false,
+      "role": "metadata",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "WeeWX archive metadata; dateTime is interval end (start,end]; usUnits 16=METRIC; interval in minutes."
+    },
+    "usUnits": {
+      "sqlType": "int",
+      "nullable": false,
+      "role": "metadata",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "WeeWX archive metadata; dateTime is interval end (start,end]; usUnits 16=METRIC; interval in minutes."
+    },
+    "interval": {
+      "sqlType": "int",
+      "nullable": false,
+      "role": "metadata",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "WeeWX archive metadata; dateTime is interval end (start,end]; usUnits 16=METRIC; interval in minutes."
+    },
+    "altimeter": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "hPa",
+      "sourceUnit": "hPa",
+      "category": "pressure",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "appTemp": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "degC",
+      "sourceUnit": "degC",
+      "category": "temperature",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "barometer": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "hPa",
+      "sourceUnit": "hPa",
+      "category": "pressure",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "batteryStatus1": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "batteryStatus2": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "bgt": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "cloudbase": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "m",
+      "sourceUnit": "m",
+      "category": "cloud",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "dewpoint": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "degC",
+      "sourceUnit": "degC",
+      "category": "temperature",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "ET": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "mm",
+      "sourceUnit": "cm",
+      "category": "precipitation",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "extraHumid1": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "percent",
+      "sourceUnit": "percent",
+      "category": "humidity",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "extraHumid2": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "percent",
+      "sourceUnit": "percent",
+      "category": "humidity",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "extraTemp1": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "degC",
+      "sourceUnit": "degC",
+      "category": "temperature",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "extraTemp2": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "degC",
+      "sourceUnit": "degC",
+      "category": "temperature",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "heatindex": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "degC",
+      "sourceUnit": "degC",
+      "category": "temperature",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "humidex": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "degC",
+      "sourceUnit": "degC",
+      "category": "temperature",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "inDewpoint": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "degC",
+      "sourceUnit": "degC",
+      "category": "temperature",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "inHumidity": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "percent",
+      "sourceUnit": "percent",
+      "category": "humidity",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "inTemp": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "degC",
+      "sourceUnit": "degC",
+      "category": "temperature",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "lightning_Batt": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "lightning_distance": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "km",
+      "sourceUnit": "km",
+      "category": "lightning",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "lightning_disturber_count": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "count",
+      "sourceUnit": "count",
+      "category": "lightning",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "lightning_energy": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "lightning_noise_count": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "count",
+      "sourceUnit": "count",
+      "category": "lightning",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "lightning_strike_count": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "count",
+      "sourceUnit": "count",
+      "category": "lightning",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "luminosity": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "lux",
+      "sourceUnit": "lux",
+      "category": "radiation",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "maxSolarRad": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "W_per_m2",
+      "sourceUnit": "W_per_m2",
+      "category": "radiation",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "outHumidity": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "percent",
+      "sourceUnit": "percent",
+      "category": "humidity",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "outTemp": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "degC",
+      "sourceUnit": "degC",
+      "category": "temperature",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "pb": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "pm25_1": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "ug_per_m3",
+      "sourceUnit": "ug_per_m3",
+      "category": "air_quality",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "pm25_Batt1": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "pressure": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "hPa",
+      "sourceUnit": "hPa",
+      "category": "pressure",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "radiation": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "W_per_m2",
+      "sourceUnit": "W_per_m2",
+      "category": "radiation",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "rain": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "mm",
+      "sourceUnit": "cm",
+      "category": "precipitation",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "rainDur": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "rainRate": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "mm_per_h",
+      "sourceUnit": "cm_per_h",
+      "category": "precipitation",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "soilad1": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "soilMoist1": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "soilMoistBatt1": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "soilTemp1": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "degC",
+      "sourceUnit": "degC",
+      "category": "temperature",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "soilTemp2": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "degC",
+      "sourceUnit": "degC",
+      "category": "temperature",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "soilTemp3": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "degC",
+      "sourceUnit": "degC",
+      "category": "temperature",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "soilTemp4": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "degC",
+      "sourceUnit": "degC",
+      "category": "temperature",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "soilTemp5": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "degC",
+      "sourceUnit": "degC",
+      "category": "temperature",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "soilTemp6": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "degC",
+      "sourceUnit": "degC",
+      "category": "temperature",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "sunshine_time": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "sunshineDur": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "UV": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "UV_index",
+      "sourceUnit": "UV_index",
+      "category": "radiation",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "vpd": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "wbgt": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "degC",
+      "sourceUnit": "degC",
+      "category": "temperature",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "wh26_rssi": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "wh31_ch1_rssi": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "wh31_ch1_sig": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "wh31_ch2_sig": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "wh40_rssi": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "wh41_ch1_rssi": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "wh51_ch1_rssi": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "wh51_ch1_sig": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "wh57_rssi": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "windchill": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "degC",
+      "sourceUnit": "degC",
+      "category": "temperature",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "windDir": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "degree",
+      "sourceUnit": "degree",
+      "category": "wind",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "windGust": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "m_per_s",
+      "sourceUnit": "km_per_h",
+      "category": "wind",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "windGustDir": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "degree",
+      "sourceUnit": "degree",
+      "category": "wind",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "windrun": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "km",
+      "sourceUnit": "km",
+      "category": "wind",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "windSpeed": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "m_per_s",
+      "sourceUnit": "km_per_h",
+      "category": "wind",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "ws80_batt": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "ws80_rssi": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "ws80_sig": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "outEquiTemp": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "degC",
+      "sourceUnit": "degC",
+      "category": "temperature",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "GTS": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "GTSdate": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "dayET": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "mm",
+      "sourceUnit": "cm",
+      "category": "precipitation",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "ET24": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "mm",
+      "sourceUnit": "cm",
+      "category": "precipitation",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    },
+    "yearGDD": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "seasonGDD": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "outHumAbs": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Unit, provenance or sensor semantics unverified; withheld from public API."
+    },
+    "outThetaE": {
+      "sqlType": "double",
+      "nullable": true,
+      "role": "measurement",
+      "apiUnit": "degC",
+      "sourceUnit": "degC",
+      "category": "temperature",
+      "public": true,
+      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+    }
+  }
+}

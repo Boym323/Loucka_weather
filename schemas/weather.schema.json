@@ -1,0 +1,3048 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pocasi-loucka.eu/contracts/weather.schema.json",
+  "title": "Loucka Weather API v1 response schemas (DRAFT)",
+  "$defs": {
+    "Reading": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "unit",
+        "quality",
+        "source",
+        "provenance"
+      ],
+      "properties": {
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "unit": {
+          "type": "string"
+        },
+        "quality": {
+          "enum": [
+            "measured",
+            "reconstructed",
+            "derived",
+            "missing",
+            "suspect"
+          ]
+        },
+        "source": {
+          "enum": [
+            "weewx_archive",
+            "weewx_daily",
+            "reconstruction",
+            "live_feed",
+            "derived"
+          ]
+        },
+        "provenance": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 160
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "quality": {
+                "const": "missing"
+              }
+            },
+            "required": [
+              "quality"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "quality": {
+                "enum": [
+                  "reconstructed",
+                  "derived"
+                ]
+              }
+            },
+            "required": [
+              "quality"
+            ]
+          },
+          "then": {
+            "properties": {
+              "provenance": {
+                "type": "string",
+                "minLength": 3
+              }
+            }
+          }
+        }
+      ]
+    },
+    "HistoryPoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "startTime",
+        "endTime",
+        "value",
+        "quality",
+        "source",
+        "provenance"
+      ],
+      "properties": {
+        "startTime": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$"
+        },
+        "endTime": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$"
+        },
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "quality": {
+          "enum": [
+            "measured",
+            "reconstructed",
+            "derived",
+            "missing",
+            "suspect"
+          ]
+        },
+        "source": {
+          "enum": [
+            "weewx_archive",
+            "weewx_daily",
+            "reconstruction",
+            "live_feed",
+            "derived"
+          ]
+        },
+        "provenance": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 160
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "quality": {
+                "const": "missing"
+              }
+            },
+            "required": [
+              "quality"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "quality": {
+                "enum": [
+                  "reconstructed",
+                  "derived"
+                ]
+              }
+            },
+            "required": [
+              "quality"
+            ]
+          },
+          "then": {
+            "properties": {
+              "provenance": {
+                "type": "string",
+                "minLength": 3
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Completeness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expected",
+        "valid",
+        "fraction"
+      ],
+      "properties": {
+        "expected": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "valid": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fraction": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "CurrentResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "observedAt",
+        "stale",
+        "archiveIntervalMinutes",
+        "readings"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1"
+        },
+        "observedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$"
+        },
+        "stale": {
+          "type": "boolean"
+        },
+        "archiveIntervalMinutes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 1440
+        },
+        "readings": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "altimeter": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "hPa"
+                    }
+                  }
+                }
+              ]
+            },
+            "appTemp": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "degC"
+                    }
+                  }
+                }
+              ]
+            },
+            "barometer": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "hPa"
+                    }
+                  }
+                }
+              ]
+            },
+            "cloudbase": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "m"
+                    }
+                  }
+                }
+              ]
+            },
+            "dewpoint": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "degC"
+                    }
+                  }
+                }
+              ]
+            },
+            "ET": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "mm"
+                    }
+                  }
+                }
+              ]
+            },
+            "extraHumid1": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "percent"
+                    }
+                  }
+                }
+              ]
+            },
+            "extraHumid2": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "percent"
+                    }
+                  }
+                }
+              ]
+            },
+            "extraTemp1": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "degC"
+                    }
+                  }
+                }
+              ]
+            },
+            "extraTemp2": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "degC"
+                    }
+                  }
+                }
+              ]
+            },
+            "heatindex": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "degC"
+                    }
+                  }
+                }
+              ]
+            },
+            "humidex": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "degC"
+                    }
+                  }
+                }
+              ]
+            },
+            "inDewpoint": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "degC"
+                    }
+                  }
+                }
+              ]
+            },
+            "inHumidity": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "percent"
+                    }
+                  }
+                }
+              ]
+            },
+            "inTemp": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "degC"
+                    }
+                  }
+                }
+              ]
+            },
+            "lightning_distance": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "km"
+                    }
+                  }
+                }
+              ]
+            },
+            "lightning_disturber_count": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "count"
+                    }
+                  }
+                }
+              ]
+            },
+            "lightning_noise_count": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "count"
+                    }
+                  }
+                }
+              ]
+            },
+            "lightning_strike_count": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "count"
+                    }
+                  }
+                }
+              ]
+            },
+            "luminosity": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "lux"
+                    }
+                  }
+                }
+              ]
+            },
+            "maxSolarRad": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "W_per_m2"
+                    }
+                  }
+                }
+              ]
+            },
+            "outHumidity": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "percent"
+                    }
+                  }
+                }
+              ]
+            },
+            "outTemp": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "degC"
+                    }
+                  }
+                }
+              ]
+            },
+            "pm25_1": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "ug_per_m3"
+                    }
+                  }
+                }
+              ]
+            },
+            "pressure": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "hPa"
+                    }
+                  }
+                }
+              ]
+            },
+            "radiation": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "W_per_m2"
+                    }
+                  }
+                }
+              ]
+            },
+            "rain": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "mm"
+                    }
+                  }
+                }
+              ]
+            },
+            "rainRate": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "mm_per_h"
+                    }
+                  }
+                }
+              ]
+            },
+            "soilTemp1": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "degC"
+                    }
+                  }
+                }
+              ]
+            },
+            "soilTemp2": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "degC"
+                    }
+                  }
+                }
+              ]
+            },
+            "soilTemp3": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "degC"
+                    }
+                  }
+                }
+              ]
+            },
+            "soilTemp4": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "degC"
+                    }
+                  }
+                }
+              ]
+            },
+            "soilTemp5": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "degC"
+                    }
+                  }
+                }
+              ]
+            },
+            "soilTemp6": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "degC"
+                    }
+                  }
+                }
+              ]
+            },
+            "UV": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "UV_index"
+                    }
+                  }
+                }
+              ]
+            },
+            "wbgt": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "degC"
+                    }
+                  }
+                }
+              ]
+            },
+            "windchill": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "degC"
+                    }
+                  }
+                }
+              ]
+            },
+            "windDir": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "degree"
+                    }
+                  }
+                }
+              ]
+            },
+            "windGust": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "m_per_s"
+                    }
+                  }
+                }
+              ]
+            },
+            "windGustDir": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "degree"
+                    }
+                  }
+                }
+              ]
+            },
+            "windrun": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "km"
+                    }
+                  }
+                }
+              ]
+            },
+            "windSpeed": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "m_per_s"
+                    }
+                  }
+                }
+              ]
+            },
+            "outEquiTemp": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "degC"
+                    }
+                  }
+                }
+              ]
+            },
+            "dayET": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "mm"
+                    }
+                  }
+                }
+              ]
+            },
+            "ET24": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "mm"
+                    }
+                  }
+                }
+              ]
+            },
+            "outThetaE": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Reading"
+                },
+                {
+                  "properties": {
+                    "unit": {
+                      "const": "degC"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "HistoryResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "metric",
+        "unit",
+        "range",
+        "resolution",
+        "points",
+        "count",
+        "completeness"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1"
+        },
+        "metric": {
+          "type": "string",
+          "enum": [
+            "altimeter",
+            "appTemp",
+            "barometer",
+            "cloudbase",
+            "dewpoint",
+            "ET",
+            "extraHumid1",
+            "extraHumid2",
+            "extraTemp1",
+            "extraTemp2",
+            "heatindex",
+            "humidex",
+            "inDewpoint",
+            "inHumidity",
+            "inTemp",
+            "lightning_distance",
+            "lightning_disturber_count",
+            "lightning_noise_count",
+            "lightning_strike_count",
+            "luminosity",
+            "maxSolarRad",
+            "outHumidity",
+            "outTemp",
+            "pm25_1",
+            "pressure",
+            "radiation",
+            "rain",
+            "rainRate",
+            "soilTemp1",
+            "soilTemp2",
+            "soilTemp3",
+            "soilTemp4",
+            "soilTemp5",
+            "soilTemp6",
+            "UV",
+            "wbgt",
+            "windchill",
+            "windDir",
+            "windGust",
+            "windGustDir",
+            "windrun",
+            "windSpeed",
+            "outEquiTemp",
+            "dayET",
+            "ET24",
+            "outThetaE"
+          ]
+        },
+        "unit": {
+          "type": "string"
+        },
+        "range": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "from",
+            "to",
+            "boundary",
+            "calendarTimezone"
+          ],
+          "properties": {
+            "from": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "Z$"
+            },
+            "to": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "Z$"
+            },
+            "boundary": {
+              "const": "(start,end]"
+            },
+            "calendarTimezone": {
+              "const": "Europe/Prague"
+            }
+          }
+        },
+        "resolution": {
+          "enum": [
+            "raw",
+            "hourly",
+            "daily"
+          ]
+        },
+        "points": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/HistoryPoint"
+          },
+          "maxItems": 10000
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "completeness": {
+          "$ref": "#/$defs/Completeness"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "altimeter"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "hPa"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "appTemp"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "barometer"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "hPa"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "cloudbase"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "m"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "dewpoint"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "ET"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "mm"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "extraHumid1"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "percent"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "extraHumid2"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "percent"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "extraTemp1"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "extraTemp2"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "heatindex"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "humidex"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "inDewpoint"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "inHumidity"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "percent"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "inTemp"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "lightning_distance"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "km"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "lightning_disturber_count"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "count"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "lightning_noise_count"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "count"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "lightning_strike_count"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "count"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "luminosity"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "lux"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "maxSolarRad"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "W_per_m2"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "outHumidity"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "percent"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "outTemp"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "pm25_1"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "ug_per_m3"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "pressure"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "hPa"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "radiation"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "W_per_m2"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "rain"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "mm"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "rainRate"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "mm_per_h"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "soilTemp1"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "soilTemp2"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "soilTemp3"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "soilTemp4"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "soilTemp5"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "soilTemp6"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "UV"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "UV_index"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "wbgt"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "windchill"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "windDir"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degree"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "windGust"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "m_per_s"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "windGustDir"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degree"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "windrun"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "km"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "windSpeed"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "m_per_s"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "outEquiTemp"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "dayET"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "mm"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "ET24"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "mm"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "outThetaE"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "YearlyResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "metric",
+        "unit",
+        "year",
+        "aggregation",
+        "value",
+        "quality",
+        "source",
+        "provenance",
+        "range",
+        "completeness"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1"
+        },
+        "metric": {
+          "type": "string",
+          "enum": [
+            "altimeter",
+            "appTemp",
+            "barometer",
+            "cloudbase",
+            "dewpoint",
+            "ET",
+            "extraHumid1",
+            "extraHumid2",
+            "extraTemp1",
+            "extraTemp2",
+            "heatindex",
+            "humidex",
+            "inDewpoint",
+            "inHumidity",
+            "inTemp",
+            "lightning_distance",
+            "lightning_disturber_count",
+            "lightning_noise_count",
+            "lightning_strike_count",
+            "luminosity",
+            "maxSolarRad",
+            "outHumidity",
+            "outTemp",
+            "pm25_1",
+            "pressure",
+            "radiation",
+            "rain",
+            "rainRate",
+            "soilTemp1",
+            "soilTemp2",
+            "soilTemp3",
+            "soilTemp4",
+            "soilTemp5",
+            "soilTemp6",
+            "UV",
+            "wbgt",
+            "windchill",
+            "windDir",
+            "windGust",
+            "windGustDir",
+            "windrun",
+            "windSpeed",
+            "outEquiTemp",
+            "dayET",
+            "ET24",
+            "outThetaE"
+          ]
+        },
+        "unit": {
+          "type": "string"
+        },
+        "year": {
+          "type": "integer",
+          "minimum": 2009,
+          "maximum": 2100
+        },
+        "aggregation": {
+          "enum": [
+            "mean",
+            "min",
+            "max",
+            "sum",
+            "count"
+          ]
+        },
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "quality": {
+          "enum": [
+            "measured",
+            "reconstructed",
+            "derived",
+            "missing",
+            "suspect"
+          ]
+        },
+        "source": {
+          "enum": [
+            "weewx_archive",
+            "weewx_daily",
+            "reconstruction",
+            "live_feed",
+            "derived"
+          ]
+        },
+        "provenance": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 160
+        },
+        "range": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "from",
+            "to",
+            "boundary",
+            "calendarTimezone"
+          ],
+          "properties": {
+            "from": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "Z$"
+            },
+            "to": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "Z$"
+            },
+            "boundary": {
+              "const": "(start,end]"
+            },
+            "calendarTimezone": {
+              "const": "Europe/Prague"
+            }
+          }
+        },
+        "completeness": {
+          "$ref": "#/$defs/Completeness"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "quality": {
+                "const": "missing"
+              }
+            },
+            "required": [
+              "quality"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "quality": {
+                "enum": [
+                  "reconstructed",
+                  "derived"
+                ]
+              }
+            },
+            "required": [
+              "quality"
+            ]
+          },
+          "then": {
+            "properties": {
+              "provenance": {
+                "type": "string",
+                "minLength": 3
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "altimeter"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "hPa"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "appTemp"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "barometer"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "hPa"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "cloudbase"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "m"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "dewpoint"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "ET"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "mm"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "extraHumid1"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "percent"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "extraHumid2"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "percent"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "extraTemp1"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "extraTemp2"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "heatindex"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "humidex"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "inDewpoint"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "inHumidity"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "percent"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "inTemp"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "lightning_distance"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "km"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "lightning_disturber_count"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "count"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "lightning_noise_count"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "count"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "lightning_strike_count"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "count"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "luminosity"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "lux"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "maxSolarRad"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "W_per_m2"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "outHumidity"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "percent"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "outTemp"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "pm25_1"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "ug_per_m3"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "pressure"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "hPa"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "radiation"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "W_per_m2"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "rain"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "mm"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "rainRate"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "mm_per_h"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "soilTemp1"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "soilTemp2"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "soilTemp3"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "soilTemp4"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "soilTemp5"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "soilTemp6"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "UV"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "UV_index"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "wbgt"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "windchill"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "windDir"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degree"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "windGust"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "m_per_s"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "windGustDir"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degree"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "windrun"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "km"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "windSpeed"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "m_per_s"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "outEquiTemp"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "dayET"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "mm"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "ET24"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "mm"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "outThetaE"
+              }
+            },
+            "required": [
+              "metric"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "degC"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ErrorResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "error"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1"
+        },
+        "error": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "code",
+            "message",
+            "requestId"
+          ],
+          "properties": {
+            "code": {
+              "enum": [
+                "BAD_REQUEST",
+                "UNKNOWN_METRIC",
+                "INVALID_RANGE",
+                "NOT_FOUND",
+                "TOO_MANY_REQUESTS",
+                "UPSTREAM_UNAVAILABLE",
+                "INTERNAL_ERROR"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            "requestId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          }
+        }
+      }
+    },
+    "HealthResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "status",
+        "checkedAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1"
+        },
+        "status": {
+          "enum": [
+            "ok",
+            "degraded"
+          ]
+        },
+        "checkedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$"
+        }
+      }
+    }
+  }
+}
