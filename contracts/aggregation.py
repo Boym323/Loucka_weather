@@ -50,7 +50,9 @@ def vector_wind_direction(samples):
         east += speed*seconds*sin(radians(direction))
         north += speed*seconds*cos(radians(direction))
     if hypot(east,north)<1e-9: return None
-    return degrees(atan2(east,north)) % 360
+    angle = degrees(atan2(east,north)) % 360
+    # Floating-point -0 and tiny negative bearings wrap to 360; normalize North to 0.
+    return 0.0 if min(abs(angle),abs(360.0-angle))<1e-9 else angle
 
 def local_day_bounds(day):
     if isinstance(day,str): day=date.fromisoformat(day)
