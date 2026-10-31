@@ -141,3 +141,21 @@ def test_history_contract_does_not_silently_truncate_and_rejects_invalid_rollups
     assert schema.is_valid(case)
     case=copy.deepcopy(history);case["metric"]="lightning_strike_count";case["resolution"]="daily";case["aggregation"]="count";case["unit"]="count"
     assert not schema.is_valid(case)
+
+def test_calendar_patterns_and_conditional_get_headers():
+    import re
+    for path, key, valid, invalid in [
+        ('/api/v1/statistics/daily','date','2026-10-30','2026-10'),
+        ('/api/v1/statistics/monthly','month','2026-10','2026-10-30'),
+    ]:
+        params=O['paths'][path]['get']['parameters']
+        pattern=next(p['schema']['pattern'] for p in params if p.get('name')==key)
+        assert re.fullmatch(pattern, valid)
+        assert re.fullmatch(pattern, invalid) is None
+    for path in ('/api/v1/station','/api/v1/sensors','/api/v1/current',
+                 '/api/v1/history','/api/v1/statistics/daily',
+                 '/api/v1/statistics/monthly','/api/v1/statistics/yearly',
+                 '/api/v1/camera/status'):
+        params=O['paths'][path]['get']['parameters']
+        assert any(p.get('$ref')=='#/components/parameters/IfNoneMatch' for p in params)
+        assert '304' in O['paths'][path]['get']['responses']
