@@ -9,21 +9,25 @@
       "unit": "degC",
       "quality": "measured",
       "source": "weewx_archive",
-      "provenance": null
+      "provenance": null,
+      "sourceUsUnits": 16
     },
     "rain": {
       "value": 0,
       "unit": "mm",
       "quality": "measured",
       "source": "weewx_archive",
-      "provenance": null
+      "provenance": null,
+      "sourceUsUnits": 16
     },
     "radiation": {
       "value": null,
       "unit": "W_per_m2",
       "quality": "missing",
       "source": "weewx_archive",
-      "provenance": null
+      "provenance": null,
+      "sourceUsUnits": 16
     }
-  }
+  },
+  "units": "metricwx"
 }

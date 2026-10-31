@@ -5,7 +5,10 @@ info:
   description: |
     Language-neutral DRAFT; no production endpoint currently exists.
     UTC instants, WeeWX interval end (start,end], Europe/Prague for calendar periods.
-    Canonical units per schemas/metrics.json. Null is not zero.
+    Source records are normalized per-row by WeeWX usUnits (1=US,16=METRIC,17=METRICWX).
+    The optional query 'units' selects presentation units; default metricwx (degC, mm, m/s).
+    Unknown source systems fail closed; custom sensor units are never guessed. Null is not zero.
+    Response 'units' records the selected system; field 'unit' is authoritative.
 jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
 servers:
   - url: /
@@ -20,6 +23,7 @@ paths:
           in: query
           required: false
           schema: { type: string, format: date-time }
+        - $ref: '#/components/parameters/Units'
       responses:
         '200': { $ref: '#/components/responses/Current' }
         '400': { $ref: '#/components/responses/BadRequest' }
@@ -33,6 +37,7 @@ paths:
       summary: Bounded time series over (from,to], measured by interval end
       parameters:
         - $ref: '#/components/parameters/Metric'
+        - $ref: '#/components/parameters/Units'
         - name: from
           in: query
           required: true
@@ -62,6 +67,7 @@ paths:
       summary: Yearly aggregate based on Europe/Prague calendar
       parameters:
         - $ref: '#/components/parameters/Metric'
+        - $ref: '#/components/parameters/Units'
         - name: year
           in: query
           required: true
@@ -86,6 +92,20 @@ paths:
         '503': { $ref: '#/components/responses/Unavailable' }
 components:
   parameters:
+    Units:
+      name: units
+      in: query
+      required: false
+      description: |
+        Requested output unit system. Input records are independently decoded using
+        their stored WeeWX usUnits code (1,16,17). Omitted means metricwx.
+        Invalid requested units return HTTP 400 BAD_REQUEST.
+        'us' returns °F, mph, inches, inHg; 'metric' °C, km/h, cm, hPa;
+        'metricwx' °C, m/s, mm, hPa. Some physical quantities do not change.
+      schema:
+        type: string
+        enum: [us, metric, metricwx]
+        default: metricwx
     Metric:
       name: metric
       in: query

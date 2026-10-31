@@ -45,7 +45,18 @@
       "sourceUnit": "hPa",
       "category": "pressure",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "pressure",
+      "outputUnits": {
+        "us": "inHg",
+        "metric": "hPa",
+        "metricwx": "hPa"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "inHg",
+        "16": "hPa",
+        "17": "hPa"
+      }
     },
     "appTemp": {
       "sqlType": "double",
@@ -55,7 +66,18 @@
       "sourceUnit": "degC",
       "category": "temperature",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "temperature",
+      "outputUnits": {
+        "us": "degF",
+        "metric": "degC",
+        "metricwx": "degC"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "degF",
+        "16": "degC",
+        "17": "degC"
+      }
     },
     "barometer": {
       "sqlType": "double",
@@ -65,7 +87,18 @@
       "sourceUnit": "hPa",
       "category": "pressure",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "pressure",
+      "outputUnits": {
+        "us": "inHg",
+        "metric": "hPa",
+        "metricwx": "hPa"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "inHg",
+        "16": "hPa",
+        "17": "hPa"
+      }
     },
     "batteryStatus1": {
       "sqlType": "double",
@@ -105,7 +138,18 @@
       "sourceUnit": "m",
       "category": "cloud",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "altitude",
+      "outputUnits": {
+        "us": "ft",
+        "metric": "m",
+        "metricwx": "m"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "ft",
+        "16": "m",
+        "17": "m"
+      }
     },
     "dewpoint": {
       "sqlType": "double",
@@ -115,7 +159,18 @@
       "sourceUnit": "degC",
       "category": "temperature",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "temperature",
+      "outputUnits": {
+        "us": "degF",
+        "metric": "degC",
+        "metricwx": "degC"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "degF",
+        "16": "degC",
+        "17": "degC"
+      }
     },
     "ET": {
       "sqlType": "double",
@@ -125,7 +180,18 @@
       "sourceUnit": "cm",
       "category": "precipitation",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "rain",
+      "outputUnits": {
+        "us": "inch",
+        "metric": "cm",
+        "metricwx": "mm"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "inch",
+        "16": "cm",
+        "17": "mm"
+      }
     },
     "extraHumid1": {
       "sqlType": "double",
@@ -135,7 +201,18 @@
       "sourceUnit": "percent",
       "category": "humidity",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "percent",
+      "outputUnits": {
+        "us": "percent",
+        "metric": "percent",
+        "metricwx": "percent"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "percent",
+        "16": "percent",
+        "17": "percent"
+      }
     },
     "extraHumid2": {
       "sqlType": "double",
@@ -145,7 +222,18 @@
       "sourceUnit": "percent",
       "category": "humidity",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "percent",
+      "outputUnits": {
+        "us": "percent",
+        "metric": "percent",
+        "metricwx": "percent"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "percent",
+        "16": "percent",
+        "17": "percent"
+      }
     },
     "extraTemp1": {
       "sqlType": "double",
@@ -155,7 +243,18 @@
       "sourceUnit": "degC",
       "category": "temperature",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "temperature",
+      "outputUnits": {
+        "us": "degF",
+        "metric": "degC",
+        "metricwx": "degC"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "degF",
+        "16": "degC",
+        "17": "degC"
+      }
     },
     "extraTemp2": {
       "sqlType": "double",
@@ -165,7 +264,18 @@
       "sourceUnit": "degC",
       "category": "temperature",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "temperature",
+      "outputUnits": {
+        "us": "degF",
+        "metric": "degC",
+        "metricwx": "degC"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "degF",
+        "16": "degC",
+        "17": "degC"
+      }
     },
     "heatindex": {
       "sqlType": "double",
@@ -175,7 +285,18 @@
       "sourceUnit": "degC",
       "category": "temperature",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "temperature",
+      "outputUnits": {
+        "us": "degF",
+        "metric": "degC",
+        "metricwx": "degC"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "degF",
+        "16": "degC",
+        "17": "degC"
+      }
     },
     "humidex": {
       "sqlType": "double",
@@ -185,7 +306,18 @@
       "sourceUnit": "degC",
       "category": "temperature",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "temperature",
+      "outputUnits": {
+        "us": "degF",
+        "metric": "degC",
+        "metricwx": "degC"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "degF",
+        "16": "degC",
+        "17": "degC"
+      }
     },
     "inDewpoint": {
       "sqlType": "double",
@@ -195,7 +327,18 @@
       "sourceUnit": "degC",
       "category": "temperature",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "temperature",
+      "outputUnits": {
+        "us": "degF",
+        "metric": "degC",
+        "metricwx": "degC"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "degF",
+        "16": "degC",
+        "17": "degC"
+      }
     },
     "inHumidity": {
       "sqlType": "double",
@@ -205,7 +348,18 @@
       "sourceUnit": "percent",
       "category": "humidity",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "percent",
+      "outputUnits": {
+        "us": "percent",
+        "metric": "percent",
+        "metricwx": "percent"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "percent",
+        "16": "percent",
+        "17": "percent"
+      }
     },
     "inTemp": {
       "sqlType": "double",
@@ -215,7 +369,18 @@
       "sourceUnit": "degC",
       "category": "temperature",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "temperature",
+      "outputUnits": {
+        "us": "degF",
+        "metric": "degC",
+        "metricwx": "degC"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "degF",
+        "16": "degC",
+        "17": "degC"
+      }
     },
     "lightning_Batt": {
       "sqlType": "double",
@@ -235,7 +400,18 @@
       "sourceUnit": "km",
       "category": "lightning",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "custom_distance",
+      "outputUnits": {
+        "us": "km",
+        "metric": "km",
+        "metricwx": "km"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "km",
+        "16": "km",
+        "17": "km"
+      }
     },
     "lightning_disturber_count": {
       "sqlType": "double",
@@ -245,7 +421,18 @@
       "sourceUnit": "count",
       "category": "lightning",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "count",
+      "outputUnits": {
+        "us": "count",
+        "metric": "count",
+        "metricwx": "count"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "count",
+        "16": "count",
+        "17": "count"
+      }
     },
     "lightning_energy": {
       "sqlType": "double",
@@ -265,7 +452,18 @@
       "sourceUnit": "count",
       "category": "lightning",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "count",
+      "outputUnits": {
+        "us": "count",
+        "metric": "count",
+        "metricwx": "count"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "count",
+        "16": "count",
+        "17": "count"
+      }
     },
     "lightning_strike_count": {
       "sqlType": "double",
@@ -275,7 +473,18 @@
       "sourceUnit": "count",
       "category": "lightning",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "count",
+      "outputUnits": {
+        "us": "count",
+        "metric": "count",
+        "metricwx": "count"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "count",
+        "16": "count",
+        "17": "count"
+      }
     },
     "luminosity": {
       "sqlType": "double",
@@ -285,7 +494,18 @@
       "sourceUnit": "lux",
       "category": "radiation",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "lux",
+      "outputUnits": {
+        "us": "lux",
+        "metric": "lux",
+        "metricwx": "lux"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "lux",
+        "16": "lux",
+        "17": "lux"
+      }
     },
     "maxSolarRad": {
       "sqlType": "double",
@@ -295,7 +515,18 @@
       "sourceUnit": "W_per_m2",
       "category": "radiation",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "radiation",
+      "outputUnits": {
+        "us": "W_per_m2",
+        "metric": "W_per_m2",
+        "metricwx": "W_per_m2"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "W_per_m2",
+        "16": "W_per_m2",
+        "17": "W_per_m2"
+      }
     },
     "outHumidity": {
       "sqlType": "double",
@@ -305,7 +536,18 @@
       "sourceUnit": "percent",
       "category": "humidity",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "percent",
+      "outputUnits": {
+        "us": "percent",
+        "metric": "percent",
+        "metricwx": "percent"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "percent",
+        "16": "percent",
+        "17": "percent"
+      }
     },
     "outTemp": {
       "sqlType": "double",
@@ -315,7 +557,18 @@
       "sourceUnit": "degC",
       "category": "temperature",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "temperature",
+      "outputUnits": {
+        "us": "degF",
+        "metric": "degC",
+        "metricwx": "degC"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "degF",
+        "16": "degC",
+        "17": "degC"
+      }
     },
     "pb": {
       "sqlType": "double",
@@ -335,7 +588,18 @@
       "sourceUnit": "ug_per_m3",
       "category": "air_quality",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "concentration",
+      "outputUnits": {
+        "us": "ug_per_m3",
+        "metric": "ug_per_m3",
+        "metricwx": "ug_per_m3"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "ug_per_m3",
+        "16": "ug_per_m3",
+        "17": "ug_per_m3"
+      }
     },
     "pm25_Batt1": {
       "sqlType": "double",
@@ -355,7 +619,18 @@
       "sourceUnit": "hPa",
       "category": "pressure",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "pressure",
+      "outputUnits": {
+        "us": "inHg",
+        "metric": "hPa",
+        "metricwx": "hPa"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "inHg",
+        "16": "hPa",
+        "17": "hPa"
+      }
     },
     "radiation": {
       "sqlType": "double",
@@ -365,7 +640,18 @@
       "sourceUnit": "W_per_m2",
       "category": "radiation",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "radiation",
+      "outputUnits": {
+        "us": "W_per_m2",
+        "metric": "W_per_m2",
+        "metricwx": "W_per_m2"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "W_per_m2",
+        "16": "W_per_m2",
+        "17": "W_per_m2"
+      }
     },
     "rain": {
       "sqlType": "double",
@@ -375,7 +661,18 @@
       "sourceUnit": "cm",
       "category": "precipitation",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "rain",
+      "outputUnits": {
+        "us": "inch",
+        "metric": "cm",
+        "metricwx": "mm"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "inch",
+        "16": "cm",
+        "17": "mm"
+      }
     },
     "rainDur": {
       "sqlType": "double",
@@ -395,7 +692,18 @@
       "sourceUnit": "cm_per_h",
       "category": "precipitation",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "rainrate",
+      "outputUnits": {
+        "us": "inch_per_h",
+        "metric": "cm_per_h",
+        "metricwx": "mm_per_h"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "inch_per_h",
+        "16": "cm_per_h",
+        "17": "mm_per_h"
+      }
     },
     "soilad1": {
       "sqlType": "double",
@@ -435,7 +743,18 @@
       "sourceUnit": "degC",
       "category": "temperature",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "temperature",
+      "outputUnits": {
+        "us": "degF",
+        "metric": "degC",
+        "metricwx": "degC"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "degF",
+        "16": "degC",
+        "17": "degC"
+      }
     },
     "soilTemp2": {
       "sqlType": "double",
@@ -445,7 +764,18 @@
       "sourceUnit": "degC",
       "category": "temperature",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "temperature",
+      "outputUnits": {
+        "us": "degF",
+        "metric": "degC",
+        "metricwx": "degC"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "degF",
+        "16": "degC",
+        "17": "degC"
+      }
     },
     "soilTemp3": {
       "sqlType": "double",
@@ -455,7 +785,18 @@
       "sourceUnit": "degC",
       "category": "temperature",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "temperature",
+      "outputUnits": {
+        "us": "degF",
+        "metric": "degC",
+        "metricwx": "degC"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "degF",
+        "16": "degC",
+        "17": "degC"
+      }
     },
     "soilTemp4": {
       "sqlType": "double",
@@ -465,7 +806,18 @@
       "sourceUnit": "degC",
       "category": "temperature",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "temperature",
+      "outputUnits": {
+        "us": "degF",
+        "metric": "degC",
+        "metricwx": "degC"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "degF",
+        "16": "degC",
+        "17": "degC"
+      }
     },
     "soilTemp5": {
       "sqlType": "double",
@@ -475,7 +827,18 @@
       "sourceUnit": "degC",
       "category": "temperature",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "temperature",
+      "outputUnits": {
+        "us": "degF",
+        "metric": "degC",
+        "metricwx": "degC"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "degF",
+        "16": "degC",
+        "17": "degC"
+      }
     },
     "soilTemp6": {
       "sqlType": "double",
@@ -485,7 +848,18 @@
       "sourceUnit": "degC",
       "category": "temperature",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "temperature",
+      "outputUnits": {
+        "us": "degF",
+        "metric": "degC",
+        "metricwx": "degC"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "degF",
+        "16": "degC",
+        "17": "degC"
+      }
     },
     "sunshine_time": {
       "sqlType": "double",
@@ -515,7 +889,18 @@
       "sourceUnit": "UV_index",
       "category": "radiation",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "uv",
+      "outputUnits": {
+        "us": "UV_index",
+        "metric": "UV_index",
+        "metricwx": "UV_index"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "UV_index",
+        "16": "UV_index",
+        "17": "UV_index"
+      }
     },
     "vpd": {
       "sqlType": "double",
@@ -535,7 +920,18 @@
       "sourceUnit": "degC",
       "category": "temperature",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "temperature",
+      "outputUnits": {
+        "us": "degF",
+        "metric": "degC",
+        "metricwx": "degC"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "degF",
+        "16": "degC",
+        "17": "degC"
+      }
     },
     "wh26_rssi": {
       "sqlType": "double",
@@ -635,7 +1031,18 @@
       "sourceUnit": "degC",
       "category": "temperature",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "temperature",
+      "outputUnits": {
+        "us": "degF",
+        "metric": "degC",
+        "metricwx": "degC"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "degF",
+        "16": "degC",
+        "17": "degC"
+      }
     },
     "windDir": {
       "sqlType": "double",
@@ -645,7 +1052,18 @@
       "sourceUnit": "degree",
       "category": "wind",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "direction",
+      "outputUnits": {
+        "us": "degree",
+        "metric": "degree",
+        "metricwx": "degree"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "degree",
+        "16": "degree",
+        "17": "degree"
+      }
     },
     "windGust": {
       "sqlType": "double",
@@ -655,7 +1073,18 @@
       "sourceUnit": "km_per_h",
       "category": "wind",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "speed",
+      "outputUnits": {
+        "us": "mph",
+        "metric": "km_per_h",
+        "metricwx": "m_per_s"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "mph",
+        "16": "km_per_h",
+        "17": "m_per_s"
+      }
     },
     "windGustDir": {
       "sqlType": "double",
@@ -665,7 +1094,18 @@
       "sourceUnit": "degree",
       "category": "wind",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "direction",
+      "outputUnits": {
+        "us": "degree",
+        "metric": "degree",
+        "metricwx": "degree"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "degree",
+        "16": "degree",
+        "17": "degree"
+      }
     },
     "windrun": {
       "sqlType": "double",
@@ -675,7 +1115,18 @@
       "sourceUnit": "km",
       "category": "wind",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "distance",
+      "outputUnits": {
+        "us": "mi",
+        "metric": "km",
+        "metricwx": "km"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "mi",
+        "16": "km",
+        "17": "km"
+      }
     },
     "windSpeed": {
       "sqlType": "double",
@@ -685,7 +1136,18 @@
       "sourceUnit": "km_per_h",
       "category": "wind",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "speed",
+      "outputUnits": {
+        "us": "mph",
+        "metric": "km_per_h",
+        "metricwx": "m_per_s"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "mph",
+        "16": "km_per_h",
+        "17": "m_per_s"
+      }
     },
     "ws80_batt": {
       "sqlType": "double",
@@ -725,7 +1187,18 @@
       "sourceUnit": "degC",
       "category": "temperature",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "temperature",
+      "outputUnits": {
+        "us": "degF",
+        "metric": "degC",
+        "metricwx": "degC"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "degF",
+        "16": "degC",
+        "17": "degC"
+      }
     },
     "GTS": {
       "sqlType": "double",
@@ -755,7 +1228,18 @@
       "sourceUnit": "cm",
       "category": "precipitation",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "rain",
+      "outputUnits": {
+        "us": "inch",
+        "metric": "cm",
+        "metricwx": "mm"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "inch",
+        "16": "cm",
+        "17": "mm"
+      }
     },
     "ET24": {
       "sqlType": "double",
@@ -765,7 +1249,18 @@
       "sourceUnit": "cm",
       "category": "precipitation",
       "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "note": "Proposed canonical output unit; QC and availability remain to be audited.",
+      "unitGroup": "rain",
+      "outputUnits": {
+        "us": "inch",
+        "metric": "cm",
+        "metricwx": "mm"
+      },
+      "sourceUnitsByWeeWX": {
+        "1": "inch",
+        "16": "cm",
+        "17": "mm"
+      }
     },
     "yearGDD": {
       "sqlType": "double",
@@ -806,6 +1301,89 @@
       "category": "unverified",
       "public": false,
       "note": "Equivalent potential temperature; Kelvin versus Celsius representation and custom algorithm not verified. Withhold from public API."
+    }
+  },
+  "unitSystems": {
+    "1": "us",
+    "16": "metric",
+    "17": "metricwx"
+  },
+  "defaultOutputUnits": "metricwx",
+  "groupUnits": {
+    "temperature": {
+      "us": "degF",
+      "metric": "degC",
+      "metricwx": "degC"
+    },
+    "pressure": {
+      "us": "inHg",
+      "metric": "hPa",
+      "metricwx": "hPa"
+    },
+    "rain": {
+      "us": "inch",
+      "metric": "cm",
+      "metricwx": "mm"
+    },
+    "rainrate": {
+      "us": "inch_per_h",
+      "metric": "cm_per_h",
+      "metricwx": "mm_per_h"
+    },
+    "speed": {
+      "us": "mph",
+      "metric": "km_per_h",
+      "metricwx": "m_per_s"
+    },
+    "distance": {
+      "us": "mi",
+      "metric": "km",
+      "metricwx": "km"
+    },
+    "altitude": {
+      "us": "ft",
+      "metric": "m",
+      "metricwx": "m"
+    },
+    "direction": {
+      "us": "degree",
+      "metric": "degree",
+      "metricwx": "degree"
+    },
+    "percent": {
+      "us": "percent",
+      "metric": "percent",
+      "metricwx": "percent"
+    },
+    "radiation": {
+      "us": "W_per_m2",
+      "metric": "W_per_m2",
+      "metricwx": "W_per_m2"
+    },
+    "uv": {
+      "us": "UV_index",
+      "metric": "UV_index",
+      "metricwx": "UV_index"
+    },
+    "concentration": {
+      "us": "ug_per_m3",
+      "metric": "ug_per_m3",
+      "metricwx": "ug_per_m3"
+    },
+    "lux": {
+      "us": "lux",
+      "metric": "lux",
+      "metricwx": "lux"
+    },
+    "count": {
+      "us": "count",
+      "metric": "count",
+      "metricwx": "count"
+    },
+    "custom_distance": {
+      "us": "km",
+      "metric": "km",
+      "metricwx": "km"
     }
   }
 }

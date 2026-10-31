@@ -18,5 +18,6 @@
     "expected": 365,
     "valid": 365,
     "fraction": 1
-  }
+  },
+  "units": "metricwx"
 }
