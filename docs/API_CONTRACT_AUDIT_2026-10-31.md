@@ -14,7 +14,7 @@
 
 1. **`openapi.yaml`:** GET `/api/v1/current`, `/api/v1/history`, `/api/v1/statistics/yearly`, `/api/v1/healthz`; explicitní parametry, rozsahy, response kódy 200/400/404/422/429/500/503 podle endpointu, jednotná chybová struktura a odkazy na externí JSON schémata.
 2. **`schemas/weather.schema.json`:** JSON Schema Draft 2020-12 pro current/history/yearly/health/error, detaily measurement/quality/source/provenance, řetězce časů v UTC se `Z`, explicitní `null`, úplnost, počet bodů a jednotky vázané na název metriky. **Semantické vztahy** typu `count == len(points)` a chronologické pořadí zajišťují navíc testy – samotné JSON Schema nestačí.
-3. **`schemas/metrics.json`:** úplná evidence skutečných aktuálních SQL sloupců `archive` včetně typů a nullability. **46 kandidátních měřených veličin má pro API navržené jednotky**, dalších **31 položek je `public:false`** kvůli neověřené jednotce nebo významu. Metadata `dateTime`, `usUnits`, `interval` se nepředstírají jako samostatné měřené veličiny.
+3. **`schemas/metrics.json`:** úplná evidence skutečných aktuálních SQL sloupců `archive` včetně typů a nullability. **45 kandidátních měřených veličin má pro API navržené jednotky**, dalších **32 položek je `public:false`** kvůli neověřené jednotce nebo významu. Metadata `dateTime`, `usUnits`, `interval` se nepředstírají jako samostatné měřené veličiny.
 4. **`tests/fixtures/*.json`:** pět syntetických vzorových odpovědí včetně `missing` a skutečné nuly.
 5. **`tests/test_contract.py`:** offline validace OpenAPI, schémat a pozitivních/negativních fixture (neplatné jednotky, pole, čas, chyba, `missing` s nenulovou hodnotou).
 6. **`tests/run_live.py`:** striktní black-box test skutečně běžících Fastify/Go/Rust API přes jejich **tři samostatné staging URL**, se stejným izolovaným snapshotem. Vynucuje všechny tři servery a porovnává statusy, JSON schémata, časové řady a numeriku (tolerance 1e-6); pro chybové odpovědi ignoruje jen jedinečný `requestId`.
@@ -61,3 +61,5 @@ E. **Reálná** Fastify/Go/Rust parita PASS nad stejným snapshotem; zdokumentov
 F. Samostatné měření výkonu a funkční smoke před produkčním přepnutím.
 
 **Dnes je hotový návrh specifikace a testovacího rámce, nikoli tři kompatibilní produkční backendy.**
+
+Poznámka k revizi: `outThetaE` záměrně přeřazeno do `public:false`, dokud nebude potvrzeno, zda vlastní výpočet používá Kelvin či °C. CI validátor OpenAPI načítá dokument pomocí `read_from_filename` a absolutní base URI, aby se externí schémata řešila lokálně.

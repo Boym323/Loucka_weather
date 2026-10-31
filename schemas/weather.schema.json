@@ -886,20 +886,6 @@
                   }
                 }
               ]
-            },
-            "outThetaE": {
-              "allOf": [
-                {
-                  "$ref": "#/$defs/Reading"
-                },
-                {
-                  "properties": {
-                    "unit": {
-                      "const": "degC"
-                    }
-                  }
-                }
-              ]
             }
           }
         }
@@ -969,8 +955,7 @@
             "windSpeed",
             "outEquiTemp",
             "dayET",
-            "ET24",
-            "outThetaE"
+            "ET24"
           ]
         },
         "unit": {
@@ -1882,25 +1867,6 @@
               }
             }
           }
-        },
-        {
-          "if": {
-            "properties": {
-              "metric": {
-                "const": "outThetaE"
-              }
-            },
-            "required": [
-              "metric"
-            ]
-          },
-          "then": {
-            "properties": {
-              "unit": {
-                "const": "degC"
-              }
-            }
-          }
         }
       ]
     },
@@ -1971,8 +1937,7 @@
             "windSpeed",
             "outEquiTemp",
             "dayET",
-            "ET24",
-            "outThetaE"
+            "ET24"
           ]
         },
         "unit": {
@@ -2949,25 +2914,6 @@
             "properties": {
               "unit": {
                 "const": "mm"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "metric": {
-                "const": "outThetaE"
-              }
-            },
-            "required": [
-              "metric"
-            ]
-          },
-          "then": {
-            "properties": {
-              "unit": {
-                "const": "degC"
               }
             }
           }

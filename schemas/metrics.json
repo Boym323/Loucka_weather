@@ -801,11 +801,11 @@
       "sqlType": "double",
       "nullable": true,
       "role": "measurement",
-      "apiUnit": "degC",
-      "sourceUnit": "degC",
-      "category": "temperature",
-      "public": true,
-      "note": "Proposed canonical output unit; QC and availability remain to be audited."
+      "apiUnit": null,
+      "sourceUnit": null,
+      "category": "unverified",
+      "public": false,
+      "note": "Equivalent potential temperature; Kelvin versus Celsius representation and custom algorithm not verified. Withhold from public API."
     }
   }
 }

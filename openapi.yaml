@@ -92,7 +92,7 @@ components:
       required: true
       schema:
         type: string
-        enum: [altimeter, appTemp, barometer, cloudbase, dewpoint, ET, extraHumid1, extraHumid2, extraTemp1, extraTemp2, heatindex, humidex, inDewpoint, inHumidity, inTemp, lightning_distance, lightning_disturber_count, lightning_noise_count, lightning_strike_count, luminosity, maxSolarRad, outHumidity, outTemp, pm25_1, pressure, radiation, rain, rainRate, soilTemp1, soilTemp2, soilTemp3, soilTemp4, soilTemp5, soilTemp6, UV, wbgt, windchill, windDir, windGust, windGustDir, windrun, windSpeed, outEquiTemp, dayET, ET24, outThetaE]
+        enum: [altimeter, appTemp, barometer, cloudbase, dewpoint, ET, extraHumid1, extraHumid2, extraTemp1, extraTemp2, heatindex, humidex, inDewpoint, inHumidity, inTemp, lightning_distance, lightning_disturber_count, lightning_noise_count, lightning_strike_count, luminosity, maxSolarRad, outHumidity, outTemp, pm25_1, pressure, radiation, rain, rainRate, soilTemp1, soilTemp2, soilTemp3, soilTemp4, soilTemp5, soilTemp6, UV, wbgt, windchill, windDir, windGust, windGustDir, windrun, windSpeed, outEquiTemp, dayET, ET24]
   responses:
     Current:
       description: Current conditions

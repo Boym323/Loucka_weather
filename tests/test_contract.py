@@ -4,7 +4,8 @@ from pathlib import Path
 import pytest
 import yaml
 from jsonschema import Draft202012Validator, FormatChecker
-from openapi_spec_validator import validate_spec
+from openapi_spec_validator import validate
+from openapi_spec_validator.readers import read_from_filename
 
 ROOT = Path(__file__).resolve().parents[1]
 DOC = yaml.safe_load((ROOT / "openapi.yaml").read_text(encoding="utf-8"))
@@ -45,7 +46,8 @@ def semantics(name, data):
             prev=point["endTime"]
 
 def test_openapi():
-    validate_spec(DOC, base_uri=(ROOT / "openapi.yaml").as_uri())
+    specification, base_uri = read_from_filename(str(ROOT / "openapi.yaml"))
+    validate(specification, base_uri=base_uri)
     assert DOC["openapi"]=="3.1.1"
     assert set(DOC["paths"])=={"/api/v1/current","/api/v1/history","/api/v1/statistics/yearly","/api/v1/healthz"}
     for x in DOC["components"]["responses"].values():
