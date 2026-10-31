@@ -67,3 +67,31 @@ Poznámka k revizi: `outThetaE` záměrně přeřazeno do `public:false`, dokud 
 ### Kontrola archivních intervalů (SELECT)
 
 Počty z produkčního `archive` k 31. 10. 2026: `interval=5`: 1 678 351, `6`: 2 090, `30`: 3, `75`: 1, `55`: 1, `10`: 1, `40`: 1. To je důkaz, že **není bezpečné vyžadovat přesně pětiminutový interval** a že délku intervalu musíme zohlednit při rekonstrukcích, časově vážených průměrech, úplnosti a downsamplingu.
+
+
+## Jednotkové systémy – doplnění kontraktu (31. 10. 2026)
+
+**Všechna původní měření zůstávají read-only.** Podporované zdrojové kódy jsou `usUnits=1` (US), `16` (METRIC) a `17` (METRICWX). Každý archivní řádek se má vyhodnotit podle vlastního `usUnits`, nikoli podle předpokladu, že celé historické období používá jednotky z dnešní databáze. Na běžící WeeWX produkci zůstává ověřená hodnota 16; jiné systémy jsou pokryté návrhem pro budoucí importy, ne potvrzené v produkčních řádcích.
+
+**Způsob výstupu:** volitelný query parametr `units=us|metric|metricwx` na `/api/v1/current`, `/api/v1/history` a `/api/v1/statistics/yearly`. Výchozí `metricwx` dává teploty °C, srážky mm, rychlosti větru m/s a tlak hPa. Odpovědi obsahují povinné `units` a jednotlivá pole mají svůj konkrétní `unit`. Neplatný klientský výběr `units` vrací `400 BAD_REQUEST`. **Zdrojové `usUnits` není veřejný vstupní HTTP parametr** – patří ke každému skutečně načtenému zdrojovému záznamu. Volitelné `sourceUsUnits` je uvedeno u raw měření tam, kde je známo.
+
+| Veličina | US (1) | METRIC (16) | METRICWX (17) |
+|---|---|---|---|
+| Teplota | °F | °C | °C |
+| Tlak | inHg | hPa | hPa |
+| Úhrn srážek | inch | cm | mm |
+| Intenzita srážek | inch/h | cm/h | mm/h |
+| Rychlost větru | mph | km/h | m/s |
+| Windrun | mi | km | km |
+| Základna oblačnosti | ft | m | m |
+| Vlhkost, UV, radiace, směr větru | stejné jednotky | stejné jednotky | stejné jednotky |
+
+Jediný zdroj pravdy pro názvy jednotek a jejich přiřazení každé z 45 povolených veličin: `schemas/metrics.json` (`unitGroup`, `sourceUnitsByWeeWX`, `outputUnits`). Specifika neověřených/custom senzorů se nesmějí odvozovat automaticky z `usUnits`; jsou blokovaná nebo mají explicitní neměnnou skupinu. Konkrétně `lightning_distance` je **prozatím custom km** bez tvrzení, že v US WeeWX přechází na míle; před nasazením nutno ověřit původ hodnot a dostupnost senzoru.
+
+**Referenční normalizace:** `contracts/unit_conversion.py` poskytuje čistou Python implementaci bez databáze pro společné testovací vektory `tests/fixtures/unit-conversions.json`. Zachovává `null`, nulu a i potenciálně podezřelé záporné hodnoty bez tiché změny, odmítá neznámé `usUnits`, neznámé veličiny a nečíselné/NaN/Infinity vstupy. Nejde o runtime Fastify/Go/Rust – stejné pravidlo bude nutné realizovat a testovat v každém backendu.
+
+**Přesnost a agregace:** převody musí být aplikovány na fyzikálně správné jednotky. Teplotu °F↔°C nelze affine převodem jednoduše aplikovat na součet teplot; roční agregační metoda `count` vrací jednotku `count` a nepřevádí hodnotu. Srážkové roční součty se převádějí jako úhrny; směrové/větrné statistiky a METRICWX/US historické změny musí být před produkcí ověřeny proti WeeWX agregátům. Cache klíče musejí zahrnovat `units` a response `Vary` politiku navrhnout podle typu cache, aby si požadavky US a metricwx nevracely cizí jednotky.
+
+**Testování:** offline `tests/test_unit_conversion.py` pokrývá všechny povolené metriky × 3 zdrojové × 3 výstupní systémy, konkrétní zlaté vektory a chybové vstupy; `tests/test_contract.py` kontroluje schémata a parametr `units`. `tests/run_live.py` je připraven porovnávat odpovědi tří různých implementací pro všechny režimy na izolovaném snapshotu, skutečná parity zatím **neproběhla**, protože backendy `/api/v1` nejsou nasazené. Před produkcí přidat scénáře s importem US/METRICWX a validaci časových/meteo agregací.
+
+Ověřené zdroje: [WeeWX standardní jednotky](https://weewx.com/docs/5.0/reference/units/), [WeeWX StdConvert](https://www.weewx.com/docs/5.2/reference/weewx-options/stdconvert/), [WeeWX možnost změny jednotek pro výstup](https://www.weewx.com/docs/customizing.htm).

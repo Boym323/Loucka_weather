@@ -37,7 +37,7 @@ def convert(metric: str, value: float | int | None, source_us_units: int, output
         raise UnitConversionError("Unknown or disabled meteorological metric")
     if type(source_us_units) is not int or source_us_units not in (1, 16, 17):
         raise UnitConversionError("Unsupported WeeWX source usUnits")
-    if output_units not in SYSTEMS:
+    if not isinstance(output_units, str) or output_units not in SYSTEMS:
         raise UnitConversionError("Unsupported requested unit system")
     if value is None:
         return None

@@ -5199,6 +5199,48 @@
         {
           "if": {
             "properties": {
+              "quality": {
+                "const": "missing"
+              }
+            },
+            "required": [
+              "quality"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "quality": {
+                "enum": [
+                  "reconstructed",
+                  "derived"
+                ]
+              }
+            },
+            "required": [
+              "quality"
+            ]
+          },
+          "then": {
+            "properties": {
+              "provenance": {
+                "type": "string",
+                "minLength": 3
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
               "aggregation": {
                 "const": "count"
               }

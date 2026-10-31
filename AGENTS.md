@@ -23,3 +23,10 @@
 - Výsledky nových měření zapisuj do `docs/` včetně data, rozsahu, zdroje, metrik, metodiky, omezení, případných dostupných JSON výstupů a odkazu na relevantní PR.
 - Pokud se objeví rozpor mezi existujícími reporty a měřením, zaznamenej ho výslovně, nic potichu nepřepisuj.
 - Když uživatel žádá postup pro nový chat, odkazuj na `main/docs/PROJECT_CONTEXT.md` a tento `AGENTS.md`, nevyžaduj opakování už zdokumentovaných informací.
+
+
+## Pravidlo pro jednotky nového API v1 (návrh, PR #4)
+- Zdrojové `usUnits` čti **z každého záznamu**; podporuj pouze 1 (US), 16 (METRIC), 17 (METRICWX), neznámé odmítni, nic nehádaj.
+- Query `units=us|metric|metricwx` vybírá **výstupní** jednotky (default metricwx); zdrojový `usUnits` se tím nemění.
+- Jednotky pro každou veřejnou veličinu jsou v `schemas/metrics.json`; použij společné golden fixtures a testy konverzí před změnou runtime Fastify/Go/Rust.
+- Bez souhlasu nezměň původní WeeWX, SQL schéma, historické měření ani `usUnits` produkční DB. `null` není `0`, nelze slepě převádět teplotní součty.

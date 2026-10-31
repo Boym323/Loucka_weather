@@ -7,9 +7,9 @@ from urllib.parse import urlencode
 from urllib.request import urlopen
 from urllib.error import HTTPError
 from jsonschema import Draft202012Validator,FormatChecker
-from contracts.unit_conversion import convert, SYSTEMS
-
 ROOT=Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from contracts.unit_conversion import convert, SYSTEMS
 S=json.loads((ROOT/"schemas/weather.schema.json").read_text())
 C=json.loads((ROOT/"schemas/metrics.json").read_text())
 CASES=[
@@ -20,7 +20,7 @@ CASES=[
   ("/api/v1/history",{"metric":"_invalid_","from":"2026-10-29T20:00:00Z","to":"2026-10-30T20:00:00Z"},"ErrorResponse",400),
   ("/api/v1/current",{"units":"unsupported"},"ErrorResponse",400),
   ("/api/v1/healthz",{},"HealthResponse",200)
-
+]
 def fetch(base,path,params):
     try:
         with urlopen(base.rstrip("/")+path+"?"+urlencode(params),timeout=15) as r:
@@ -85,7 +85,11 @@ def main():
                             predicted=convert(metric,reference["value"],17,mode)
                             compare(predicted,reading["value"],"converted reading/"+metric)
                     elif schema=="HistoryResponse":
+                        if len(original["points"]) != len(data["points"]):
+                            raise AssertionError("History length changed with output units")
                         for reference,pt in zip(original["points"],data["points"]):
+                            for field in ("startTime","endTime","quality","source","sourceUsUnits"):
+                                if reference.get(field)!=pt.get(field):raise AssertionError(field+" changed with output units")
                             predicted=convert(data["metric"],reference["value"],17,mode)
                             compare(predicted,pt["value"],"converted history/"+data["metric"])
                     elif data["aggregation"]!="count":
