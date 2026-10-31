@@ -51,3 +51,8 @@ Po doplnění třetího JSON proběhla kontrola **216/216 scénářů**, celkem 
 ## Offline benchmark přepočtu vlastních meteorologických statistik (2026-10-31)
 
 K původnímu HTTP/SQL benchmarku přibyl [samostatný výpočetní benchmark šesti backendů](benchmark/compute/README.md): **Go, Rust, Python, Node.js, C++20, PHP**. Na normalizovaném lokálním TSV počítá denní/měsíční/roční/celohistorické souhrny, časově váženou teplotu a vlhkost, srážky, vektorový vítr, extrémy a identifikaci rekonstruovaných měření. Kontroluje úplnou numerickou shodu všech jazyků včetně všech dnů a měsíců. **Neobsahuje spojení k MariaDB; všechny výkonnostní běhy jsou offline.** Reálná data lze importovat pouze z **existujícího lokálního CSV/TSV exportu** pomocí normalizátoru (WeeWX US/METRIC/METRICWX, Europe/Prague, intervalové hranice). Syntetické profily: 288 / 10 000 / 105 120 / 1 680 000 záznamů. GitHub Actions provádí parity smoke/light; výkonové výsledky je třeba změřit na cílovém testovacím LXC. Původní rozhodnutí o Go z HTTP testů tím zatím není potvrzeno ani vyvráceno.
+
+
+## Offline benchmark vlastních meteorologických statistik (2026-10-31)
+
+[Šestijazyčné měření na reálném testovacím LXC](benchmark/compute/REAL_LXC_OFFLINE_RESULTS_2026-10-31.md): **72/72 výpočetních pokusů PARITY PASS**, offline syntetická data (žádný DB load). U 1 680 000 řádků **Rust medián 4,10 s a 107,23 MiB RAM**, Go **5,26 s a 422,54 MiB**. Zatímco Go vycházelo vhodně pro HTTP API a historické grafy, Rust je v aktuálních implementacích nejrychlejší a nejúspornější pro celohistorický dávkový přepočet. Rozhodnutí o Rust workeru odložit do porovnání optimalizovaného Go a reálného lokálního exportu WeeWX.
