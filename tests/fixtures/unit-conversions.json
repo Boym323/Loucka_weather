@@ -115,7 +115,7 @@
     },
     {
       "metric": "barometer",
-      "value": 29.9212598425,
+      "value": 29.921255347112,
       "usUnits": 1,
       "units": "metricwx",
       "expected": 1013.25
@@ -125,7 +125,7 @@
       "value": 1013.25,
       "usUnits": 16,
       "units": "us",
-      "expected": 29.9212598425
+      "expected": 29.921255347112
     },
     {
       "metric": "cloudbase",

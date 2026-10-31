@@ -29,3 +29,9 @@ def test_request_ids_are_ignored_but_error_codes_not():
     module.compare(module.canonical(a),module.canonical(b))
     b["error"]["code"]="BAD_REQUEST"
     with pytest.raises(AssertionError):module.compare(module.canonical(a),module.canonical(b))
+
+def test_parameter_matrix_covers_all_three_unit_modes():
+    for route in ("/api/v1/current","/api/v1/history","/api/v1/statistics/yearly"):
+        modes={params["units"] for path,params,_,expected in module.CASES if path==route and expected==200}
+        assert modes=={"us","metric","metricwx"}
+    assert any(params.get("units")=="unsupported" and status==400 for _,params,_,status in module.CASES)
