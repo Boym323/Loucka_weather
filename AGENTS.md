@@ -2,7 +2,8 @@
 
 ## Povinný start pro každého nového agenta
 1. Přečti [docs/PROJECT_CONTEXT.md](docs/PROJECT_CONTEXT.md).
-2. Přečti [docs/ARCHITECTURE_DECISION_2026-10-31.md](docs/ARCHITECTURE_DECISION_2026-10-31.md), [docs/API_ARCHITECTURE_AND_MIGRATION_2026-10-31.md](docs/API_ARCHITECTURE_AND_MIGRATION_2026-10-31.md), [docs/TRAFFIC_AUDIT_2026-10-31.md](docs/TRAFFIC_AUDIT_2026-10-31.md), [docs/MATOMO_AUDIT_2026-10-31.md](docs/MATOMO_AUDIT_2026-10-31.md) a [docs/BENCHMARK_SYNTHESIS_2026-10-31.md](docs/BENCHMARK_SYNTHESIS_2026-10-31.md).
+2. Přečti [docs/API_CONTRACT_AUDIT_2026-10-31.md](docs/API_CONTRACT_AUDIT_2026-10-31.md) a formální návrh [openapi.yaml](openapi.yaml), [schemas/weather.schema.json](schemas/weather.schema.json), [schemas/metrics.json](schemas/metrics.json) (API v1 je zatím jen návrh, benchmarkové servery nejsou kompatibilní).
+3. Přečti [docs/ARCHITECTURE_DECISION_2026-10-31.md](docs/ARCHITECTURE_DECISION_2026-10-31.md), [docs/API_ARCHITECTURE_AND_MIGRATION_2026-10-31.md](docs/API_ARCHITECTURE_AND_MIGRATION_2026-10-31.md), [docs/TRAFFIC_AUDIT_2026-10-31.md](docs/TRAFFIC_AUDIT_2026-10-31.md), [docs/MATOMO_AUDIT_2026-10-31.md](docs/MATOMO_AUDIT_2026-10-31.md) a [docs/BENCHMARK_SYNTHESIS_2026-10-31.md](docs/BENCHMARK_SYNTHESIS_2026-10-31.md).
 3. Strojově čitelná data: [docs/data/observations_2026-10-31.json](docs/data/observations_2026-10-31.json), [docs/data/traffic_daily_2026-09-27_2026-10-31.csv](docs/data/traffic_daily_2026-09-27_2026-10-31.csv).
 4. Benchmark kód je v samostatné větvi `bench/go-rust-python`, návrh [PR #2](https://github.com/Boym323/Loucka_weather/pull/2) **je draft**; nikdy netvrď, že byl merge do main nebo že nový web už běží.
 5. Rozlišuj zdrojově ověřené hodnoty, orientační heuristiky, syntetická měření a návrhy. Nikdy netvrď, že benchmark numeriky použil skutečné meteo archive, ani že plné HTTP benchmarky byly na izolované DB.
