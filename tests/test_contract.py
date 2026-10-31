@@ -50,10 +50,21 @@ def test_openapi():
     specification, base_uri = read_from_filename(str(ROOT / "openapi.yaml"))
     validate(specification, base_uri=base_uri)
     assert DOC["openapi"]=="3.1.1"
-    assert set(DOC["paths"])=={"/api/v1/current","/api/v1/history","/api/v1/statistics/yearly","/api/v1/healthz"}
+    assert set(DOC["paths"])=={
+        "/api/v1/current","/api/v1/history",
+        "/api/v1/statistics/daily","/api/v1/statistics/monthly","/api/v1/statistics/yearly",
+        "/api/v1/station","/api/v1/sensors","/api/v1/live",
+        "/api/v1/camera/status","/api/v1/readyz","/api/v1/healthz"
+    }
     for x in DOC["components"]["responses"].values():
         ref=x["content"]["application/json"]["schema"]["$ref"]
-        assert ref.split("/")[-1] in SCHEMA["$defs"]
+        if "weather.schema.json" in ref:
+            assert ref.split("/")[-1] in SCHEMA["$defs"]
+        elif "features.schema.json" in ref:
+            features=json.loads((ROOT/"schemas/features.schema.json").read_text())
+            assert ref.split("/")[-1] in features["$defs"]
+        else:
+            raise AssertionError(ref)
 
 def test_schema():
     Draft202012Validator.check_schema(SCHEMA)
