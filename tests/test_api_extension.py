@@ -126,3 +126,18 @@ def test_dst_boundaries_are_not_fixed_24h():
     autumn=local_day_bounds("2026-10-25")
     assert spring[1]-spring[0]==timedelta(hours=23)
     assert autumn[1]-autumn[0]==timedelta(hours=25)
+
+def test_history_contract_does_not_silently_truncate_and_rejects_invalid_rollups():
+    history=json.loads((ROOT/"tests/fixtures/history.json").read_text())
+    schema=Draft202012Validator({"$defs":W["$defs"],"$ref":"#/$defs/HistoryResponse"},format_checker=FormatChecker())
+    assert schema.is_valid(history)
+    case=copy.deepcopy(history);case["truncated"]=True
+    assert not schema.is_valid(case)
+    case=copy.deepcopy(history);case["resolution"]="hourly";case["aggregation"]="sample"
+    assert not schema.is_valid(case)
+    case=copy.deepcopy(history);case["metric"]="outTemp";case["resolution"]="hourly";case["aggregation"]="sum"
+    assert not schema.is_valid(case)
+    case=copy.deepcopy(history);case["metric"]="rain";case["resolution"]="hourly";case["aggregation"]="sum";case["unit"]="mm"
+    assert schema.is_valid(case)
+    case=copy.deepcopy(history);case["metric"]="lightning_strike_count";case["resolution"]="daily";case["aggregation"]="count";case["unit"]="count"
+    assert not schema.is_valid(case)

@@ -113,7 +113,7 @@ paths:
         - name: aggregation
           in: query
           required: true
-          schema: { type: string, enum: [mean, min, max, sum, count] }
+          schema: { type: string, enum: [mean, min, max, sum, count, vecdir, dir_at_max] }
       responses:
         '200': { $ref: '#/components/responses/Yearly' }
         '304': { $ref: '#/components/responses/NotModified' }
@@ -238,6 +238,11 @@ components:
         original reads unmodified WeeWX. approved requires explicit QC publication;
         absent an approved dataset return 503 DATASET_UNAVAILABLE.
       schema: { type: string, enum: [original, approved], default: original }
+    IfNoneMatch:
+      name: If-None-Match
+      in: header
+      required: false
+      schema: { type: string, maxLength: 256 }
     Units:
       name: units
       in: query
@@ -336,6 +341,10 @@ components:
             $ref: './schemas/weather.schema.json#/$defs/ErrorResponse'
     TooMany:
       description: Rate limit
+      headers:
+        Retry-After:
+          description: Number of seconds before retry
+          schema: { type: integer, minimum: 1 }
       content:
         application/json:
           schema:

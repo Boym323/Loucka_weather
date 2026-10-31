@@ -4881,11 +4881,14 @@
           ]
         },
         "latestUrl": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "pattern": "^/camera/[a-zA-Z0-9._/-]+$"
+          "anyOf": [
+            {
+              "const": "/camera/latest.webp"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "ageSeconds": {
           "type": [

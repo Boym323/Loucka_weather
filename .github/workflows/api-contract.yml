@@ -1,7 +1,7 @@
 name: OpenAPI contract (offline)
 on:
   push:
-    paths: ['openapi.yaml', 'schemas/**', 'tests/**', '.github/workflows/api-contract.yml']
+    paths: ['openapi.yaml', 'schemas/**', 'contracts/**', 'tests/**', '.github/workflows/api-contract.yml']
   pull_request:
     paths: ['openapi.yaml', 'schemas/**', 'tests/**', '.github/workflows/api-contract.yml']
 jobs:
