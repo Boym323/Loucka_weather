@@ -78,3 +78,8 @@ Původní JSON soubory z LXC byly nyní přečteny a zkontrolovány. [Rozbor dvo
 ## Finální souhrn tří šestijazyčných FULL běhů
 
 [Ověřený 3-běhový report](REAL_LXC_SIX_LANGUAGES_FULL_THREE_RUNS_2026-10-30.md) na základě tří původních JSON (205008Z, 210318Z, 211154Z) zahrnuje **216 scénářů / 39 096 HTTP requestů / 0 chyb**, mediány RPS a p95, nejvyšší RSS a porovnání kolísání. U `30d c10`: Go **31,34 RPS medián**, C++ 21,80, PHP CLI 19,89, Node.js 17,37, Rust 15,85, Python 6,05. **Důrazně rozlišovat**: šlo o produkční DB s pool=3, přestože v JSON bylo chybné `isolated_copy=true`; `30d c50` tvoří jen 24 požadavků. Tři běhy nejsou izolovaný kapacitní test ani důkaz bezpečnosti vůči WeeWX writeru.
+
+
+## Offline výpočet vlastních meteorologických statistik – 6 backendů (2026-10-31)
+
+[Reálný LXC report nad syntetickými lokálními daty](compute/REAL_LXC_OFFLINE_RESULTS_2026-10-31.md): Go, Rust, Python, Node.js, C++ a PHP implementují stejnou denní/měsíční/roční/celkovou agregaci. **72/72 PARITY PASS** na `smoke` (288), `light` (10k) a `full` (105 120 a 1 680 000). U 1,68M záznamů: Rust **4,10 s/107,23 MiB RSS**, Go **5,26 s/422,54 MiB**; C++ **9,13 s/112,32 MiB**; Node.js **15,36 s**, PHP **19,54 s**, Python **37,82 s**. Časy zahrnují parsování již načteného TSV a výpočty, nikoli disk I/O/SQL/HTTP/JSON. **Tyto výsledky se nesmějí vydávat za výkon API ani za validaci nad skutečnými archive WeeWX.**
