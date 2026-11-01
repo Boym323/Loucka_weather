@@ -1,0 +1,35 @@
+name: Astro frontend – typecheck, tests, static build
+
+on:
+  pull_request:
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend-staging.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend-staging.yml"
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install pinned dependencies
+        run: npm install --no-audit --no-fund
+      - name: Type and Astro diagnostics
+        run: npm run check
+      - name: Unit tests
+        run: npm test
+      - name: Build static website
+        run: npm run build

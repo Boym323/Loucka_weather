@@ -1,0 +1,12 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import CurrentPanel from '../features/current/CurrentPanel.astro';
+---
+<BaseLayout title="Aktuální počasí">
+  <div class="page-intro">
+    <span class="eyebrow">Stanice Loučka</span>
+    <h1>Aktuální měření</h1>
+    <p>Údaje archivované WeeWX. Živé sekundové měření doplníme až po ověření skutečného zdroje.</p>
+  </div>
+  <CurrentPanel />
+</BaseLayout>

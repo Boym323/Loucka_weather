@@ -1,0 +1,52 @@
+<section class="section" data-history-panel aria-labelledby="history-title">
+  <div class="section-heading">
+    <div>
+      <span class="eyebrow">Historie</span>
+      <h2 id="history-title">Teplota za posledních 24 hodin</h2>
+    </div>
+    <span class="status-chip" data-history-status role="status">Čeká na API</span>
+  </div>
+  <p class="source-note">Pětiminutový archiv, intervaly WeeWX (start, konec]. Chybějící hodnoty zůstávají prázdné.</p>
+  <div class="table-scroll">
+    <table class="history-table">
+      <thead><tr><th scope="col">Čas měření</th><th scope="col">Teplota</th><th scope="col">Kvalita</th></tr></thead>
+      <tbody data-history-body><tr><td colspan="3">Načítání historických měření…</td></tr></tbody>
+    </table>
+  </div>
+</section>
+<script>
+  import { getHistory24h } from '../../shared/api/client';
+  import { formatValue } from '../../shared/domain/metrics';
+  import { formatTimestamp } from '../../shared/domain/weather';
+  const root = document.querySelector<HTMLElement>('[data-history-panel]');
+  const body = root?.querySelector<HTMLTableSectionElement>('[data-history-body]');
+  const status = root?.querySelector<HTMLElement>('[data-history-status]');
+  const controller = new AbortController();
+  if (body) {
+    void getHistory24h('outTemp', controller.signal).then((result) => {
+      body.replaceChildren();
+      if (status) status.textContent = result.points.length + ' bodů';
+      if (!result.points.length) {
+        const row = body.insertRow();
+        const cell = row.insertCell();
+        cell.colSpan = 3;
+        cell.textContent = 'V daném období nejsou data.';
+      }
+      for (const point of result.points.slice(-288)) {
+        const row = body.insertRow();
+        row.insertCell().textContent = formatTimestamp(point.endTime);
+        row.insertCell().textContent = formatValue(point.value, 1) + (point.value === null ? '' : ' °C');
+        row.insertCell().textContent = point.quality;
+      }
+    }).catch((error: unknown) => {
+      if (controller.signal.aborted) return;
+      if (status) status.textContent = 'Historie není dostupná';
+      body.replaceChildren();
+      const row = body.insertRow();
+      const cell = row.insertCell();
+      cell.colSpan = 3;
+      cell.textContent = 'Nelze načíst historii. ' + (error instanceof Error ? error.message : '');
+    });
+  }
+  document.addEventListener('astro:before-swap', () => controller.abort(), { once: true });
+</script>

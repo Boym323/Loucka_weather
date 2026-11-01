@@ -1,0 +1,16 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import CurrentPanel from '../features/current/CurrentPanel.astro';
+---
+<BaseLayout title="Přehled">
+  <div class="page-intro">
+    <span class="eyebrow">Lokální meteorologická stanice</span>
+    <h1>Počasí Loučka</h1>
+    <p>Přehled aktuálních měření. Žádné demonstrační hodnoty se nevydávají za skutečné počasí.</p>
+  </div>
+  <CurrentPanel />
+  <div class="card-row">
+    <a class="link-card" href="/grafy/"><strong>Historická měření</strong><span>Teplota za posledních 24 hodin →</span></a>
+    <a class="link-card" href="/senzory/"><strong>Stav senzorů</strong><span>Ověřené dostupné informace →</span></a>
+  </div>
+</BaseLayout>

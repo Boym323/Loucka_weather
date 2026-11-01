@@ -1,0 +1,12 @@
+---
+interface Props { id: string; label: string; unit: string; featured?: boolean }
+const { id, label, unit, featured = false } = Astro.props;
+---
+<article class:list={['metric-card', { featured }]} data-metric={id}>
+  <p class="metric-label">{label}</p>
+  <p class="metric-number">
+    <span data-metric-value={id} aria-live={featured ? 'polite' : 'off'}>—</span>
+    <span class="metric-unit">{unit}</span>
+  </p>
+  <p class="metric-note" data-metric-quality={id}>Čeká na měření</p>
+</article>

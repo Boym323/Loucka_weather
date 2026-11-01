@@ -1,0 +1,43 @@
+---
+import '../styles/global.css';
+interface Props { title: string; description?: string }
+const { title, description = 'Meteorologická měření ze stanice Počasí Loučka.' } = Astro.props;
+const navigation = [
+  { href: '/', title: 'Přehled' },
+  { href: '/aktualne/', title: 'Aktuálně' },
+  { href: '/grafy/', title: 'Historie' },
+  { href: '/senzory/', title: 'Senzory' },
+  { href: '/o-stanici/', title: 'O stanici' }
+];
+---
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="color-scheme" content="dark light" />
+    <title>{title} | Počasí Loučka</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#obsah">Přejít k obsahu</a>
+    <header class="site-header">
+      <div class="wrap header-inner">
+        <a class="brand" href="/" aria-label="Počasí Loučka – úvodní stránka">
+          <span class="brand-icon" aria-hidden="true">◉</span><span>POČASÍ <strong>LOUČKA</strong></span>
+        </a>
+        <nav aria-label="Hlavní navigace" class="nav">
+          {navigation.map((item) => <a href={item.href} aria-current={Astro.url.pathname === item.href ? 'page' : undefined}>{item.title}</a>)}
+        </nav>
+      </div>
+    </header>
+    <main id="obsah" class="wrap content">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="wrap footer-inner"><span>Počasí Loučka · vývojová verze</span>
+        <span>Časové pásmo Europe/Prague · údaje podle dostupného API</span>
+      </div>
+    </footer>
+  </body>
+</html>

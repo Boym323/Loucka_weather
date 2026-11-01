@@ -1,0 +1,12 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import HistoryPanel from '../features/history/HistoryPanel.astro';
+---
+<BaseLayout title="Historie">
+  <div class="page-intro">
+    <span class="eyebrow">Meteorologický archiv</span>
+    <h1>Historická měření</h1>
+    <p>První funkční modul čte přes API skutečná měření. Grafy ECharts a agregace doplníme v dalším PR.</p>
+  </div>
+  <HistoryPanel />
+</BaseLayout>
