@@ -1,0 +1,240 @@
+---
+const currentYear=Math.min(2100,new Date().getUTCFullYear());
+const defaultYear=currentYear>2009?currentYear-1:currentYear;
+const years=Array.from({length:currentYear-2008},(_,i)=>currentYear-i);
+const months=['Led','Úno','Bře','Dub','Kvě','Čvn','Čvc','Srp','Zář','Říj','Lis','Pro'];
+---
+<div class="climate-page" data-climate-dashboard data-current-year={currentYear}>
+ <div class="page-intro climate-intro">
+  <span class="eyebrow">Klimatologie · archiv od roku 2009</span>
+  <div class="section-heading"><div><h1>Klimatologie Loučka</h1><p>Roční a měsíční přehled ze skutečných denních souhrnů WeeWX.</p></div>
+   <span class="status-chip" data-climate-status role="status">Ověřuji statistické API</span>
+  </div>
+ </div>
+ <nav class="climate-tabs" aria-label="Kategorie klimatologie">
+  <a class="is-active" href="#prehled">Přehled</a><a href="#teploty">Teploty</a>
+  <a href="#srazky">Srážky</a><a href="#vitr">Vítr</a><a href="#extremy">Extrémy</a>
+  <a href="#slunecni-svit">Sluneční svit</a><a href="#snih">Sníh</a>
+ </nav>
+ <div class="climate-filter section" id="prehled">
+  <div><span class="eyebrow">Historický archiv</span><strong>2009–{currentYear}</strong><span class="source-note">Pouze existující měření, bez doplňování mezer</span></div>
+  <label for="climate-year">Rok</label>
+  <select id="climate-year" data-climate-year>
+   {years.map(year=><option value={year} selected={year===defaultYear}>{year}{year===currentYear?' (probíhající)':''}</option>)}
+  </select>
+  <button type="button" class="chart-tab" data-climate-reload>Načíst statistiky</button>
+ </div>
+ <div class="climate-summary-strip" aria-label="Roční shrnutí">
+  <div class="climate-summary-metric"><span>Průměrná teplota</span><strong data-summary="temperature">—</strong><small>°C · roční průměr WeeWX</small></div>
+  <div class="climate-summary-metric"><span>Roční srážky</span><strong data-summary="rain">—</strong><small>mm · součet intervalových úhrnů</small></div>
+  <div class="climate-summary-metric"><span>Průměrný vítr</span><strong data-summary="wind">—</strong><small>m/s · časově vážený průměr</small></div>
+  <div class="climate-summary-metric"><span>Nejvyšší teplota</span><strong data-summary="max">—</strong><small>°C · denní souhrny, zatím bez QC</small></div>
+ </div>
+ <div class="climate-grid">
+  <section class="section climate-card" aria-labelledby="climate-years-title">
+   <div class="section-heading"><div><span class="eyebrow">Historické porovnání</span><h2 id="climate-years-title">Roční průměry</h2></div><span class="status-chip" data-years-status>Načítám</span></div>
+   <div class="table-scroll climate-table-wrap"><table class="history-table climate-table">
+    <thead><tr><th scope="col">Rok</th><th scope="col">Teplota °C</th><th scope="col">Srážky mm</th><th scope="col">Pokrytí</th></tr></thead>
+    <tbody data-year-table><tr><td colspan="4">Načítám roční souhrny…</td></tr></tbody>
+   </table></div>
+   <p class="source-note">Posledních šest dokončených let. Chybějící údaje zůstávají nevyplněné. Úplnost nemusí být u historických dat známá.</p>
+  </section>
+  <section class="section climate-card" id="teploty" aria-labelledby="climate-temp-title">
+   <div class="section-heading"><div><span class="eyebrow">Měsíční průběh</span><h2 id="climate-temp-title">Průměrné měsíční teploty</h2></div><span class="status-chip" data-chart-status="temperature">Načítám</span></div>
+   <div class="climate-real-chart" data-chart="temperature" role="img" aria-label="Měsíční průměrné teploty ze souhrnů WeeWX"></div>
+   <div class="climate-legend"><span><i class="legend-dot mean"></i>Průměr</span><span><i class="legend-dot min"></i>Denní minimum*</span><span><i class="legend-dot max"></i>Denní maximum*</span></div>
+   <p class="source-note">* Minima a maxima pocházejí z denních souhrnů a nejsou považována za definitivně ověřené rekordy.</p>
+  </section>
+  <section class="section climate-card" id="srazky" aria-labelledby="climate-rain-title">
+   <div class="section-heading"><div><span class="eyebrow">Měsíční úhrny</span><h2 id="climate-rain-title">Srážky</h2></div><span class="status-chip" data-chart-status="rain">Načítám</span></div>
+   <div class="climate-real-chart" data-chart="rain" role="img" aria-label="Měsíční souhrny srážek"></div>
+   <p class="source-note">Úhrny jsou agregace původních dat. Dosud nepotvrzené historické chyby srážkoměru mohou ovlivnit některé hodnoty.</p>
+  </section>
+  <section class="section climate-card" id="vitr" aria-labelledby="climate-wind-title">
+   <div class="section-heading"><div><span class="eyebrow">Měsíční průměr</span><h2 id="climate-wind-title">Větrné podmínky</h2></div><span class="status-chip" data-chart-status="wind">Načítám</span></div>
+   <div class="climate-real-chart" data-chart="wind" role="img" aria-label="Měsíční průměrná rychlost větru"></div>
+   <p class="source-note">Časově vážená měsíční rychlost větru. Směr větru nelze počítat aritmetickým průměrem stupňů.</p>
+  </section>
+  <section class="section climate-card climate-records" id="extremy">
+   <div class="section-heading"><div><span class="eyebrow">Roční extrémy</span><h2>Minima a maxima</h2></div><span class="status-chip" data-extremes-status>Čeká na zdroj</span></div>
+   <div class="climate-extreme-values"><div>Nejnižší denní minimum <strong data-extreme="min">—</strong></div><div>Nejvyšší denní maximum <strong data-extreme="max">—</strong></div></div>
+   <p class="source-note">Orientační hodnoty z původních denních souhrnů WeeWX. Nejde o definitivní rekordy po forenzní kontrole historických měření.</p>
+  </section>
+  <section class="section climate-card" id="slunecni-svit">
+   <div class="section-heading"><h2>Sluneční svit</h2><span class="status-chip">Mapování neověřeno</span></div>
+   <div class="empty-state">Archiv obsahuje sluneční záření ve W/m². Dobu slunečního svitu nelze automaticky považovat za součet záření; pro délku svitu potřebujeme samostatnou ověřenou veličinu.</div>
+  </section>
+  <section class="section climate-card" id="snih">
+   <div class="section-heading"><h2>Sněhová pokrývka</h2><span class="status-chip">Zdroj nedostupný</span></div>
+   <div class="empty-state">Ověřená dlouhodobá měření výšky sněhu nejsou v aktuálním statistickém API dostupná.</div>
+  </section>
+ </div>
+ <p class="source-note climate-footnote">Zdroj: původní denní souhrny WeeWX. Časové hranice: Europe/Prague včetně CET/CEST. Výpočty neodstraňují historické pochybné záznamy.</p>
+</div>
+<script>
+ import {getStationCapabilities,getStatistics,getHistoryInterval} from '../../shared/api/client';
+ import {pragueMidnightIso,qualitySupported,formatDeploymentTime as unused} from '../../shared/domain/statistics';
+ import {formatValue} from '../../shared/domain/metrics';
+ import * as echarts from 'echarts/core';
+ import {BarChart,LineChart} from 'echarts/charts';
+ import {GridComponent,TooltipComponent,LegendComponent} from 'echarts/components';
+ import {SVGRenderer} from 'echarts/renderers';
+ import type {StatisticsResult} from '../../shared/domain/statistics';
+ echarts.use([BarChart,LineChart,GridComponent,TooltipComponent,LegendComponent,SVGRenderer]);
+ const root=document.querySelector<HTMLElement>('[data-climate-dashboard]');
+ if(root){
+  const yearSelect=root.querySelector<HTMLSelectElement>('[data-climate-year]');
+  const overall=root.querySelector<HTMLElement>('[data-climate-status]');
+  const canvas:Record<string,echarts.ECharts>={};
+  const observer=new ResizeObserver(()=>Object.values(canvas).forEach(chart=>chart.resize()));
+  for(const metric of ['temperature','rain','wind']){
+   const el=root.querySelector<HTMLElement>('[data-chart="'+metric+'"]');
+   if(el){canvas[metric]=echarts.init(el,undefined,{renderer:'svg'});observer.observe(el);}
+  }
+  let controller:AbortController|undefined;
+  const months=['Led','Úno','Bře','Dub','Kvě','Čvn','Čvc','Srp','Zář','Říj','Lis','Pro'];
+  const badge=(selector:string,content:string,type:'ok'|'warning'|'error'='ok')=>{
+   const node=root.querySelector<HTMLElement>(selector);
+   if(node){node.textContent=content;node.className='status-chip '+type;}
+  };
+  function setGraph(name:string,values:(number|null)[],color:string,unit:string,low?:(number|null)[],high?:(number|null)[]){
+   const chart=canvas[name];if(!chart)return;
+   const series:any[]=[{name:name==='temperature'?'Průměr':name==='rain'?'Úhrn':'Průměr',
+    type:name==='temperature'?'line':'bar',data:values,
+    itemStyle:{color},lineStyle:{color,width:2.4},areaStyle:name==='temperature'?{color,opacity:.17}:undefined,
+    smooth:false,connectNulls:false,barMaxWidth:24}];
+   if(low){series.push({name:'Minimum dne',type:'line',data:low,lineStyle:{color:'#57b8ed',width:1.4,type:'dashed'},itemStyle:{color:'#57b8ed'},connectNulls:false,symbolSize:3});}
+   if(high){series.push({name:'Maximum dne',type:'line',data:high,lineStyle:{color:'#fc6b7a',width:1.4,type:'dashed'},itemStyle:{color:'#fc6b7a'},connectNulls:false,symbolSize:3});}
+   chart.setOption({animation:false,backgroundColor:'transparent',grid:{left:44,right:10,top:34,bottom:34},
+    tooltip:{trigger:'axis'},legend:{show:!!low,textStyle:{color:'#a3bec9',fontSize:10},top:0},
+    xAxis:{type:'category',data:months,axisLine:{lineStyle:{color:'#3d6070'}},axisLabel:{color:'#a2b7c7',fontSize:10}},
+    yAxis:{type:'value',name:unit,scale:name!=='rain',min:name==='rain'?0:undefined,
+     axisLabel:{color:'#a2b7c7',fontSize:10},splitLine:{lineStyle:{color:'#224353',type:'dashed'}}},
+    series},true);
+   chart.resize();
+  }
+  async function runLimited<T>(jobs:(()=>Promise<T>)[],max=4):Promise<PromiseSettledResult<T>[]>{
+   const results:PromiseSettledResult<T>[] =new Array(jobs.length);
+   let cursor=0;
+   await Promise.all(Array.from({length:Math.min(max,jobs.length)},async()=>{
+    while(cursor<jobs.length){const idx=cursor++;try{results[idx]={status:'fulfilled',value:await jobs[idx]()};}
+     catch(e){results[idx]={status:'rejected',reason:e};}}
+   }));
+   return results;
+  }
+  const pick=(r:PromiseSettledResult<StatisticsResult>|undefined)=>{
+   if(!r||r.status!=='fulfilled')return null;
+   return qualitySupported(r.value)?r.value.value:null;
+  };
+  const display=(selector:string,value:number|null,digits:number,unit:string)=>{
+   const node=root.querySelector<HTMLElement>(selector);
+   if(node)node.textContent=value===null?'—':formatValue(value,digits)+' '+unit;
+  };
+  function monthsFromDaily(points:import('../../shared/domain/weather').HistoryPoint[],key:'minValue'|'maxValue'){
+   const grouped:(number|null)[]=Array(12).fill(null);
+   const monthsSeen=new Set<number>();
+   for(const p of points){
+    const number=p[key];
+    if(number===null||number===undefined||!Number.isFinite(number))continue;
+    // Every daily point belongs to the day at startTime, converted in Prague time.
+    const month=Number(new Intl.DateTimeFormat('en-US',{month:'numeric',timeZone:'Europe/Prague'}).format(new Date(p.startTime)))-1;
+    if(month<0||month>11)continue;
+    const current=grouped[month];
+    grouped[month]=current===null?number:key==='minValue'?Math.min(current,number):Math.max(current,number);
+    monthsSeen.add(month);
+   }
+   return grouped;
+  }
+  async function refresh(){
+   controller?.abort();controller=new AbortController();
+   const {signal}=controller;
+   const year=Number(yearSelect?.value??2025);
+   badge('[data-climate-status]','Načítám statistiky','warning');
+   try{
+    const capabilities=await getStationCapabilities(signal);
+    if(!capabilities.includes('yearly_statistics')||!capabilities.includes('monthly_statistics'))
+     throw new Error('Statistické API ještě není připraveno');
+    const yearString=String(year);
+    const summary=[
+     ()=>getStatistics('yearly','outTemp','mean',yearString,signal),
+     ()=>getStatistics('yearly','rain','sum',yearString,signal),
+     ()=>getStatistics('yearly','windSpeed','mean',yearString,signal),
+     ()=>getStatistics('yearly','outTemp','max',yearString,signal)
+    ];
+    const summaryResults=await runLimited(summary);
+    if(signal.aborted)return;
+    display('[data-summary="temperature"]',pick(summaryResults[0]),1,'°C');
+    display('[data-summary="rain"]',pick(summaryResults[1]),1,'mm');
+    display('[data-summary="wind"]',pick(summaryResults[2]),1,'m/s');
+    display('[data-summary="max"]',pick(summaryResults[3]),1,'°C');
+    if(summaryResults.every(r=>r.status==='rejected'))throw new Error('Denní souhrny nejsou dostupné');
+    badge('[data-climate-status]','Archivní souhrny · '+year,'ok');
+    // Render years around the selected period without downloading the entire 18-year archive.
+    const body=root.querySelector<HTMLTableSectionElement>('[data-year-table]');
+    badge('[data-years-status]','Načítám roky','warning');
+    const end=Math.min(year,Number(root.dataset.currentYear??year)-1);
+    const yrs=Array.from({length:Math.min(6,end-2008)},(_,i)=>end-i);
+    const annual=await runLimited(yrs.flatMap(y=>[
+     ()=>getStatistics('yearly','outTemp','mean',String(y),signal),
+     ()=>getStatistics('yearly','rain','sum',String(y),signal)
+    ]));
+    if(signal.aborted)return;
+    if(body){
+     body.replaceChildren();
+     yrs.forEach((y,i)=>{
+      const tr=body.insertRow();
+      tr.insertCell().textContent=String(y);
+      for(let j=0;j<2;j++){const v=pick(annual[i*2+j]);tr.insertCell().textContent=v===null?'—':formatValue(v,1);}
+      tr.insertCell().textContent='Neurčeno';
+     });
+    }
+    badge('[data-years-status]','Souhrny WeeWX','ok');
+    // Monthly values are queried directly from the API. No client-side unweighted averaging.
+    const jobs=Array.from({length:12},(_,i)=>{
+     const month=yearString+'-'+String(i+1).padStart(2,'0');
+     return [
+      ()=>getStatistics('monthly','outTemp','mean',month,signal),
+      ()=>getStatistics('monthly','rain','sum',month,signal),
+      ()=>getStatistics('monthly','windSpeed','mean',month,signal)
+     ];
+    }).flat();
+    const monthly=await runLimited(jobs);
+    if(signal.aborted)return;
+    const temps=Array.from({length:12},(_,i)=>pick(monthly[i*3]));
+    const rain=Array.from({length:12},(_,i)=>pick(monthly[i*3+1]));
+    const wind=Array.from({length:12},(_,i)=>pick(monthly[i*3+2]));
+    // Daily extrema may exist in original summary tables, but require independent QC.
+    let lows:(number|null)[]|undefined,highs:(number|null)[]|undefined;
+    try{
+     const from=pragueMidnightIso(year+'-01-01'),to=pragueMidnightIso((year+1)+'-01-01');
+     const daily=await getHistoryInterval('outTemp',from,to,'daily',signal);
+     lows=monthsFromDaily(daily.points,'minValue');
+     highs=monthsFromDaily(daily.points,'maxValue');
+     const validLows=lows.filter((v):v is number=>v!==null);
+     const validHighs=highs.filter((v):v is number=>v!==null);
+     display('[data-extreme="min"]',validLows.length?Math.min(...validLows):null,1,'°C');
+     display('[data-extreme="max"]',validHighs.length?Math.max(...validHighs):null,1,'°C');
+     badge('[data-extremes-status]',validHighs.length?'Původní archiv – bez QC':'Bez platných dat',validHighs.length?'warning':'error');
+    }catch{badge('[data-extremes-status]','Nedostupné','warning');}
+    if(signal.aborted)return;
+    setGraph('temperature',temps,'#f6bd51','°C',lows,highs);
+    setGraph('rain',rain,'#4ba9e6','mm');
+    setGraph('wind',wind,'#49dca8','m/s');
+    (['temperature','rain','wind'] as const).forEach((n,j)=>{
+     const list=[temps,rain,wind][j];
+     badge('[data-chart-status="'+n+'"]',list.some(v=>v!==null)?'Archivní souhrny':'Bez měření',list.some(v=>v!==null)?'ok':'warning');
+    });
+   }catch(error){
+    if(signal.aborted)return;
+    badge('[data-climate-status]','Statistiky nedostupné','error');
+    const body=root.querySelector<HTMLTableSectionElement>('[data-year-table]');
+    if(body){body.replaceChildren();const tr=body.insertRow(),td=tr.insertCell();td.colSpan=4;td.textContent=error instanceof Error?error.message:'Statistické API neodpovídá';}
+    for(const name of ['temperature','rain','wind'])badge('[data-chart-status="'+name+'"]','Nedostupné','error');
+   }
+  }
+  root.querySelector<HTMLButtonElement>('[data-climate-reload]')?.addEventListener('click',()=>void refresh());
+  yearSelect?.addEventListener('change',()=>void refresh());
+  document.addEventListener('astro:before-swap',()=>{controller?.abort();observer.disconnect();Object.values(canvas).forEach(c=>c.dispose());},{once:true});
+  void refresh();
+ }
+</script>
