@@ -57,6 +57,20 @@ try{
      continue;
     }
     await page.waitForTimeout(900);
+    if(path==='/klimatologie/'){
+     await page.waitForFunction(()=>{
+      const status=document.querySelector('[data-climate-status]')?.textContent??'';
+      const chart=document.querySelector('[data-chart-status="temperature"]')?.textContent??'';
+      return !status.includes('Načítám') && !status.includes('Ověřuji') &&
+       (status.includes('nedostupné')||(!chart.includes('Načítám') && !chart.includes('Ověřuji')));
+     },null,{timeout:30000}).catch(()=>console.log('Climate chart still pending after 30 seconds'));
+     const info=await page.evaluate(()=>({
+      overall:document.querySelector('[data-climate-status]')?.textContent,
+      temp:document.querySelector('[data-chart-status="temperature"]')?.textContent,
+      annual:document.querySelector('[data-years-status]')?.textContent
+     }));
+     console.log('CLIMATE RUNTIME',size.name,JSON.stringify(info));
+    }
     const state=await page.evaluate(()=>({
      title:document.title,
      brand:!!document.querySelector('.brand'),
