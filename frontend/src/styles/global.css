@@ -682,3 +682,11 @@ h1,h2,h3,p{margin-top:0}h1{font-size:clamp(26px,3vw,42px);line-height:1.2;letter
  .local-warnings{padding:12px}
  .frost-month-bar small{font-size:8px}
 }
+
+.camera-day-browser{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+.camera-day-browser .section-heading h3{margin:0;font-size:14px}
+.camera-day-choice{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:12px}
+.camera-day-choice input{max-width:170px;padding:7px 10px;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;color:var(--text);color-scheme:dark}
+.camera-day-pagination{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:13px}
+.camera-day-pagination[hidden]{display:none}
+@media(max-width:650px){.camera-day-browser .section-heading{align-items:flex-start}.camera-day-choice{width:100%}.camera-day-choice input{flex:1;max-width:none}}
