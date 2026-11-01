@@ -1,0 +1,72 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="Stav stanice a služeb">
+ <div class="page-intro">
+  <span class="eyebrow">Diagnostika · Počasí Loučka</span>
+  <h1>Stav meteostanice a služeb</h1>
+  <p>Kontrola skutečné čerstvosti zdrojů. Archiv, živá GW3000 data, kamera a výstrahy mají nezávislé stavy.</p>
+ </div>
+ <section class="section" data-monitor-dashboard>
+  <div class="section-heading">
+   <h2>Aktuální provozní stav</h2><span class="status-chip" data-monitor-overall role="status">Načítám</span>
+  </div>
+  <p class="source-note" data-monitor-checked>Poslední kontrola se zjišťuje.</p>
+  <div class="monitor-grid">
+   {[
+    {key:'api',name:'Fastify API',desc:'Webové rozhraní a odpověď serveru'},
+    {key:'archive',name:'Archiv WeeWX',desc:'Poslední uložené meteorologické měření'},
+    {key:'gw3000',name:'GW3000 · skutečně živě',desc:'Přímé ověřené HTTP uploady z brány'},
+    {key:'camera',name:'Západní kamera',desc:'Stažené snímky a jejich aktuálnost'},
+    {key:'chmi',name:'ČHMÚ · CAP výstrahy',desc:'Poslední validovaná kontrola výstrah pro ORP 7209'}
+   ].map(item=><article class="monitor-card" data-monitor-card={item.key}>
+    <div class="section-heading"><h3>{item.name}</h3><span class="status-chip" data-monitor-state={item.key}>Zjišťuji</span></div>
+    <p class="source-note">{item.desc}</p>
+    <p class="source-note" data-monitor-detail={item.key}>—</p>
+   </article>)}
+  </div>
+  <p class="source-note">Stav „není zapnuto“ není výpadek. Zastaralá měření nejsou živá. Připravenost databáze je oddělená od dostupnosti kamery a externího ČHMÚ.</p>
+ </section>
+</BaseLayout>
+<script>
+ const root=document.querySelector<HTMLElement>('[data-monitor-dashboard]');
+ const label:Record<string,string>={ok:'Funkční',fresh:'Živě',stale:'Zastaralé',
+  missing:'Nedostupné',disabled:'Není zapnuto'};
+ if(root){
+  const controller=new AbortController();
+  const checked=root.querySelector<HTMLElement>('[data-monitor-checked]');
+  const overall=root.querySelector<HTMLElement>('[data-monitor-overall]');
+  type Component={status:string;ageSeconds?:number|null;lastObservedAt?:string|null;lastReceivedAt?:string|null};
+  type Response={checkedAt:string;status:string;components:Record<string,Component>};
+  function relative(time:string|null|undefined):string{
+   if(!time)return 'Dosud není potvrzeno žádné měření.';
+   return 'Poslední záznam: '+new Intl.DateTimeFormat('cs-CZ',{
+    timeZone:'Europe/Prague',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'
+   }).format(new Date(time));
+  }
+  async function refresh(){
+   try{
+    const response=await fetch('/api/v1/monitor/status',{signal:controller.signal,cache:'no-store'});
+    if(!response.ok)throw Error('Monitoring API');
+    const data=await response.json() as Response;
+    if(controller.signal.aborted)return;
+    if(overall){overall.textContent=data.status==='ok'?'Všechny aktivní zdroje dostupné':'Některé zdroje mají omezení';overall.className='status-chip '+(data.status==='ok'?'ok':'warning');}
+    if(checked)checked.textContent='Kontrolováno '+relative(data.checkedAt);
+    for(const [key,item] of Object.entries(data.components??{})){
+     const chip=root?.querySelector<HTMLElement>('[data-monitor-state="'+key+'"]');
+     const detail=root?.querySelector<HTMLElement>('[data-monitor-detail="'+key+'"]');
+     if(chip){chip.textContent=label[item.status]??'Neznámý stav';chip.className='status-chip '+(['ok','fresh'].includes(item.status)?'ok':['stale','missing'].includes(item.status)?'warning':'');}
+     if(detail)detail.textContent=relative(item.lastObservedAt??item.lastReceivedAt);
+    }
+   }catch{
+    if(controller.signal.aborted)return;
+    if(overall){overall.textContent='Monitoring není dostupný';overall.className='status-chip warning';}
+   }
+  }
+  void refresh();
+  const timer=setInterval(()=>void refresh(),30000);
+  document.addEventListener('astro:before-swap',()=>{
+   controller.abort();clearInterval(timer);
+  },{once:true});
+ }
+</script>
