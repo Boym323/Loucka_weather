@@ -7,8 +7,13 @@ import {readFile,lstat,readdir} from 'node:fs/promises';
 import {join} from 'node:path';
 import type {ArchiveReader} from './store.js';
 
-const cameraDir=process.env.LOUCKA_CAMERA_ARCHIVE_DIR||'/var/lib/loucka-camera';
-const warningsFile=process.env.LOUCKA_ALERTS_FILE||'/var/lib/loucka-alerts/alerts.json';
+/** Override filesystem locations only for isolated Fastify contract tests.
+ * Default runtime locations still come from the staging environment.
+ * No test should need to inspect or mutate live collector state.
+ */
+export type ExtraSourceFiles={cameraDir?:string;warningsFile?:string};
+const defaultCameraDir=process.env.LOUCKA_CAMERA_ARCHIVE_DIR||'/var/lib/loucka-camera';
+const defaultWarningsFile=process.env.LOUCKA_ALERTS_FILE||'/var/lib/loucka-alerts/alerts.json';
 const nowIso=()=>new Date().toISOString();
 const limitFile=async(path:string,max:number)=>{
  const info=await lstat(path);
@@ -21,7 +26,8 @@ const loadJson=async(path:string,max=150000)=>{
 };
 const fileNameOk=(name:string,kind:'frame'|'video')=>kind==='frame'?
  /^\d{8}T\d{6}Z\.jpg$/.test(name):/^\d{4}-\d{2}-\d{2}\.mp4$/.test(name);
-export async function archiveCameraStatus(){
+export async function archiveCameraStatus(sources:ExtraSourceFiles={}){
+ const cameraDir=sources.cameraDir??defaultCameraDir;
  try{
   const data=await loadJson(join(cameraDir,'index.json'),250000);
   const frame=Array.isArray(data.frames)?data.frames[0] as {name?:unknown;fetchedAt?:unknown}:null;
@@ -41,7 +47,9 @@ export async function archiveCameraStatus(){
    privacyMaskApplied:null,updatedAt:nowIso(),timestampMeaning:'unknown'};
  }
 }
-export function registerExtras(app:FastifyInstance,reader:ArchiveReader){
+export function registerExtras(app:FastifyInstance,reader:ArchiveReader,sources:ExtraSourceFiles={}){
+ const cameraDir=sources.cameraDir??defaultCameraDir;
+ const warningsFile=sources.warningsFile??defaultWarningsFile;
  app.get('/api/v1/diagnostics/sensors',async(_req,reply)=>{
   if(!reader.telemetrySnapshot)return reply.code(503).send({schemaVersion:'1',status:'unavailable',readings:[]});
   try{
