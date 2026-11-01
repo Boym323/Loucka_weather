@@ -527,3 +527,19 @@ h1,h2,h3,p{margin-top:0}h1{font-size:clamp(26px,3vw,42px);line-height:1.2;letter
  .climate-filter select{min-width:110px}
  .climate-extreme-values{grid-template-columns:1fr}
 }
+
+
+/* Interactive multi-year historical data explorer. */
+.advanced-history{margin-bottom:13px}
+.history-presets{display:flex;flex-wrap:wrap;gap:6px;margin:9px 0 12px}
+.history-presets [aria-pressed="true"]{background:#38cda0;border-color:#38cda0;color:#03251b;font-weight:750}
+.advanced-history-form{display:grid;grid-template-columns:repeat(2,minmax(110px,.8fr)) repeat(2,minmax(135px,1.2fr)) auto auto;gap:9px;align-items:end;margin:10px 0 14px}
+.advanced-history-form label{display:grid;gap:5px;font-size:11px;color:var(--muted)}
+.advanced-history-form input,.advanced-history-form select{width:100%;min-width:0;color:var(--text);background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:9px 7px;min-height:37px}
+.advanced-history-form button{border:1px solid var(--line);border-radius:6px;padding:9px 11px;min-height:37px;white-space:nowrap}
+.history-apply{background:var(--teal);color:#052a1b;border-color:var(--teal)!important;font-weight:750}
+.history-export{background:var(--panel-2);color:var(--muted)}
+.advanced-history-chart{height:365px;min-width:0}
+.advanced-history .chart-summary{margin:11px 0}
+@media(max-width:1060px){.advanced-history-form{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.advanced-history-form{grid-template-columns:1fr 1fr}.advanced-history-form button{font-size:12px}.advanced-history-chart{height:290px}}
