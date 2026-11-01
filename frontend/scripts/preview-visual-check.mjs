@@ -93,6 +93,27 @@ try{
   const state=await health.json();
   if(state.ready!==true)errors.push('readyz: archive not ready');
  }
+ // Verify the newly published statistics capability from the deployed API.
+ const station=await fetch(base+'/api/v1/station',{signal:AbortSignal.timeout(12000)});
+ if(!station.ok)errors.push('station: HTTP '+station.status);
+ else{
+  const capabilities=(await station.json()).capabilities??[];
+  console.log('API CAPABILITIES',JSON.stringify(capabilities));
+  if(capabilities.includes('yearly_statistics')){
+   const q=new URLSearchParams({
+    metric:'outTemp',aggregation:'mean',year:'2025',units:'metricwx',dataset:'original'
+   });
+   const summary=await fetch(base+'/api/v1/statistics/yearly?'+q,{
+    signal:AbortSignal.timeout(25000)
+   });
+   const data=await summary.json().catch(()=>null);
+   console.log('YEARLY 2025 API',JSON.stringify({status:summary.status,value:data?.value,
+    valid:data?.completeness?.valid,error:data?.error}));
+   if(!summary.ok)errors.push('Yearly statistics advertised but HTTP '+summary.status+
+    ' – verify WeeWX archive_day_outTemp table and SELECT grants');
+  }
+ }
+
 }catch(e){errors.push('Preview health: '+String(e));}
 finally{await browser.close();}
 if(errors.length){
