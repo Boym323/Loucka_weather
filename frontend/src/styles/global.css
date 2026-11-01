@@ -624,3 +624,16 @@ h1,h2,h3,p{margin-top:0}h1{font-size:clamp(26px,3vw,42px);line-height:1.2;letter
  .site-footer{padding-bottom:14px}
  .radar-timeline-label{order:5;min-width:100%;max-width:none}
 }
+
+/* Full map layout with real working radar layer, per reference panel 6. */
+.map-page-layout{display:grid;grid-template-columns:minmax(0,3fr) minmax(240px,1fr);gap:13px;align-items:start}
+.map-page-primary{min-width:0}
+.map-page-sidebar{display:grid;gap:12px}
+.map-layer-panel .section-heading h2{font-size:16px}
+.map-layer-option{display:flex;align-items:center;flex-wrap:wrap;gap:9px;padding:10px 0;border-bottom:1px solid var(--line);font-weight:650;font-size:12px}
+.map-layer-option input{accent-color:var(--teal);width:16px;height:16px}
+.map-layer-option small{margin-left:auto;color:var(--muted);font-size:10px;font-weight:450}
+.map-layer-option.unavailable{opacity:.54;cursor:not-allowed}
+.map-layer-panel .source-note{display:block;margin-top:14px}
+@media(max-width:1020px){.map-page-layout{grid-template-columns:1fr}.map-page-sidebar{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.map-page-sidebar{grid-template-columns:1fr}}
