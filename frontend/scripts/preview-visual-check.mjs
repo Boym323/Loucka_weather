@@ -43,6 +43,13 @@ try{
     if(state.width>state.viewport+3)errors.push(size.name+' '+path+': horizontal overflow '+state.width+'px > '+state.viewport+'px');
     await page.screenshot({path:out+'/'+size.name+'-'+name+'.png',fullPage:true});
     console.log('OK',size.name,path,state.title,'scrollWidth='+state.width);
+    if(path==='/'){
+     const modules=await page.evaluate(()=>({
+      forecast:document.querySelector('[data-forecast-status]')?.textContent?.trim()??'missing',
+      radar:document.querySelector('[data-radar-status]')?.textContent?.trim()??'missing'
+     }));
+     console.log('THIRD-PARTY MODULES',size.name,JSON.stringify(modules));
+    }
    }catch(e){errors.push(size.name+' '+path+': '+String(e));}
   }
   await page.close();
