@@ -1,0 +1,25 @@
+<span class="live-archive-indicator" data-live-archive title="Nová archivní měření jsou detekována přibližně po 15 sekundách">
+ <span class="live-archive-dot" aria-hidden="true"></span>
+ <span data-live-archive-status role="status">Archivní režim</span>
+</span>
+<script>
+ import {getStationCapabilities} from '../api/client';
+ const status=document.querySelector<HTMLElement>('[data-live-archive-status]');
+ const container=document.querySelector<HTMLElement>('[data-live-archive]');
+ const controller=new AbortController();
+ let eventSource:EventSource|undefined;
+ function label(text:string,connected:boolean){
+  if(status)status.textContent=text;
+  container?.classList.toggle('live-connected',connected);
+ }
+ void getStationCapabilities(controller.signal).then(capabilities=>{
+  if(!capabilities.includes('live_sse'))return;
+  eventSource=new EventSource('/api/v1/live?units=metricwx');
+  eventSource.addEventListener('open',()=>label('Sleduji archiv',true));
+  eventSource.addEventListener('error',()=>label('Archivní režim',false));
+  const notify=()=>window.dispatchEvent(new CustomEvent('loucka:archive-updated'));
+  eventSource.addEventListener('archive-updated',notify);
+  eventSource.addEventListener('reset',notify);
+ }).catch(()=>label('Archivní režim',false));
+ document.addEventListener('astro:before-swap',()=>{controller.abort();eventSource?.close();},{once:true});
+</script>
