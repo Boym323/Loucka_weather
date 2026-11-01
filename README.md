@@ -20,6 +20,7 @@ Moderní meteorologický portál pro **https://pocasi-loucka.eu/**. **Stav 31. 1
 | [Kontext pro AI a nové chaty](docs/PROJECT_CONTEXT.md) | Technologie, původ dat, skutečná data, pracovní stav, otevřené úkoly |
 | [ADR – rozhodování Node.js / Go / Rust](docs/ARCHITECTURE_DECISION_2026-10-31.md) | Návrh stacku, výhody/nevýhody, provozní rizika, testy před schválením |
 | [Vyměnitelné API – hranice služeb a migrace](docs/API_ARCHITECTURE_AND_MIGRATION_2026-10-31.md) | Oddělení WeeWX / API / Astro, OpenAPI v1, paritní testy, Fastify → Go/Rust, rollback |
+| [OpenAPI v1 a audit kompatibility](docs/API_CONTRACT_AUDIT_2026-10-31.md) | Návrh OpenAPI 3.1, katalog WeeWX, JSON schémata, offline testy a staging Fastify/Go/Rust |
 | [Nginx provozní audit](docs/TRAFFIC_AUDIT_2026-10-31.md) | **54 966 HTTP požadavků / 5 logů / ~35 dní**, špičky, roboti, chyby, MQTT |
 | [Matomo audit](docs/MATOMO_AUDIT_2026-10-31.md) | Říjen: **216 návštěv**, nejčastější stránky, zařízení, zdroje návštěv |
 | [Šestijazyčné benchmarky](docs/BENCHMARK_SYNTHESIS_2026-10-31.md) | 216 HTTP scénářů / 39 096 requestů; 72 offline výpočetních pokusů |
@@ -43,3 +44,5 @@ Referenční implementace a reporty šestijazyčného benchmarku jsou v [`benchm
 - [Rozhodovací log a původní varianty](DECISIONS.md) – historické závěry doplněné o současný pracovní směr Fastify.
 - [Audit MariaDB a denních souhrnů](WEEWX_DAILY_SUMMARIES_AUDIT.md) a [pravidla statistik](STATISTICS_SPEC.md) – pro první verzi preferovat L1 archive + L2 archive_day_*, bez L3 zápisů.
 - [Původní audit Go backendu](BACKEND_TECHNOLOGY_AUDIT.md) a [komponenty frontendu](FRONTEND_SPEC.md) – metodické podklady, nikoli potvrzené nasazení.
+
+Podrobný [produktový kontrakt API v1](docs/API_V1_PRODUCT_CONTRACT.md) a [pětiminutové archivní aktualizace](docs/ARCHIVE_REFRESH_CONTRACT.md) jsou součástí specifikace. **API dosud není nasazená služba**; offline kontraktové testy nejsou integračním ověřením skutečné implementace.

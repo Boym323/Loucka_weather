@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "1",
+  "period": "day",
+  "localPeriod": "2026-10-30",
+  "metric": "rain",
+  "aggregation": "sum",
+  "unit": "mm",
+  "units": "metricwx",
+  "value": 1.5,
+  "quality": "measured",
+  "source": "weewx_daily",
+  "provenance": null,
+  "dataset": "original",
+  "dataRevision": "original-unknown",
+  "intervalStart": "2026-10-29T23:00:00Z",
+  "intervalEnd": "2026-10-30T23:00:00Z",
+  "completeness": {
+    "expected": null,
+    "valid": 0,
+    "fraction": null
+  },
+  "extremaObservedAt": null,
+  "extremaSource": "not_applicable"
+}

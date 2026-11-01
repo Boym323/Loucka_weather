@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "1",
+  "observedAt": "2026-10-30T20:00:00Z",
+  "stale": false,
+  "archiveIntervalMinutes": 5,
+  "readings": {
+    "outTemp": {
+      "value": 12.4,
+      "unit": "degC",
+      "quality": "measured",
+      "source": "weewx_archive",
+      "provenance": null,
+      "sourceUsUnits": 16
+    },
+    "rain": {
+      "value": 0,
+      "unit": "mm",
+      "quality": "measured",
+      "source": "weewx_archive",
+      "provenance": null,
+      "sourceUsUnits": 16
+    },
+    "radiation": {
+      "value": null,
+      "unit": "W_per_m2",
+      "quality": "missing",
+      "source": "weewx_archive",
+      "provenance": null,
+      "sourceUsUnits": 16
+    }
+  },
+  "units": "metricwx",
+  "dataset": "original",
+  "dataRevision": "original-unknown"
+}

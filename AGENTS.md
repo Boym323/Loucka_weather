@@ -26,3 +26,21 @@
 ## Doplněné odborné podklady
 - K meteo statistice čti `STATISTICS_SPEC.md` a `WEEWX_DAILY_SUMMARIES_AUDIT.md`, k průběhu rozhodnutí `DECISIONS.md`.
 - Audit `BACKEND_TECHNOLOGY_AUDIT.md` z 30.10. historicky navrhoval Go. **Aktuální pracovní preference pro staging zůstává Fastify/TypeScript** podle `docs/ARCHITECTURE_DECISION_2026-10-31.md`; konečný runtime nebyl potvrzen.
+
+## API v1 – pracovní kontrakt (PR #4)
+- Před zahájením implementace API čti `openapi.yaml`, `schemas/weather.schema.json`, `schemas/features.schema.json`, `schemas/metrics.json`, `schemas/aggregation-policy.json` a `docs/API_V1_PRODUCT_CONTRACT.md` (zatím dokumentační kontrakt).
+## Pravidlo pro jednotky nového API v1 (návrh, PR #4)
+- Zdrojové `usUnits` čti **z každého záznamu**; podporuj pouze 1 (US), 16 (METRIC), 17 (METRICWX), neznámé odmítni, nic nehádaj.
+- Query `units=us|metric|metricwx` vybírá **výstupní** jednotky (default metricwx); zdrojový `usUnits` se tím nemění.
+- Jednotky pro každou veřejnou veličinu jsou v `schemas/metrics.json`; použij společné golden fixtures a testy konverzí před změnou runtime Fastify/Go/Rust.
+- Bez souhlasu nezměň původní WeeWX, SQL schéma, historické měření ani `usUnits` produkční DB. `null` není `0`, nelze slepě převádět teplotní součty.
+
+## Doplněné zadání API v1 (draft PR #4)
+- Povinně čti docs/API_V1_PRODUCT_CONTRACT.md, schemas/aggregation-policy.json a schemas/features.schema.json.
+- Nepovoluj libovolné numerické agregace: kontroluj dvojice metric x aggregation a stav zdrojových senzorů.
+- Dataset original je výchozí. Approved vyžaduje schválený QC proces. Live a kamera mohou být reálně nedostupné.
+
+## Automatická obnova archivních dat
+- Povinně čti [docs/ARCHIVE_REFRESH_CONTRACT.md](docs/ARCHIVE_REFRESH_CONTRACT.md) pro `archive-updated`, `summaryStatus`, deduplikaci, backfill, cache a návrat po výpadku.
+- Jeden centrální read-only poller, žádný SQL dotaz per návštěvník, žádný slib přesného času 5min zápisu. Schémata v `schemas/features.schema.json`, referenční model `contracts/archive_refresh.py`, testy `tests/test_archive_refresh.py`.
+- Dokud nejsou prokazatelně aktuální `archive_day_*` souhrny, nepublikuj `summaryStatus=ready` ani jejich údajně čerstvé statistiky.

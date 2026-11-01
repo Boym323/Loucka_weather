@@ -1,0 +1,194 @@
+{
+  "description": "Synthetic numeric golden vectors. Source values are separate hypothetical archive rows; NOT production meteorological data. Tolerance 1e-7 unless specified.",
+  "cases": [
+    {
+      "metric": "outTemp",
+      "value": 32,
+      "usUnits": 1,
+      "units": "metricwx",
+      "expected": 0
+    },
+    {
+      "metric": "outTemp",
+      "value": 68,
+      "usUnits": 1,
+      "units": "metric",
+      "expected": 20
+    },
+    {
+      "metric": "outTemp",
+      "value": -40,
+      "usUnits": 1,
+      "units": "metricwx",
+      "expected": -40
+    },
+    {
+      "metric": "outTemp",
+      "value": 0,
+      "usUnits": 16,
+      "units": "us",
+      "expected": 32
+    },
+    {
+      "metric": "outTemp",
+      "value": 20,
+      "usUnits": 17,
+      "units": "us",
+      "expected": 68
+    },
+    {
+      "metric": "outTemp",
+      "value": 20,
+      "usUnits": 16,
+      "units": "metricwx",
+      "expected": 20
+    },
+    {
+      "metric": "rain",
+      "value": 1,
+      "usUnits": 1,
+      "units": "metricwx",
+      "expected": 25.4
+    },
+    {
+      "metric": "rain",
+      "value": 1,
+      "usUnits": 16,
+      "units": "metricwx",
+      "expected": 10
+    },
+    {
+      "metric": "rain",
+      "value": 10,
+      "usUnits": 17,
+      "units": "metric",
+      "expected": 1
+    },
+    {
+      "metric": "rain",
+      "value": 25.4,
+      "usUnits": 17,
+      "units": "us",
+      "expected": 1
+    },
+    {
+      "metric": "rainRate",
+      "value": 1,
+      "usUnits": 1,
+      "units": "metricwx",
+      "expected": 25.4
+    },
+    {
+      "metric": "rainRate",
+      "value": 1,
+      "usUnits": 16,
+      "units": "metricwx",
+      "expected": 10
+    },
+    {
+      "metric": "windSpeed",
+      "value": 10,
+      "usUnits": 1,
+      "units": "metricwx",
+      "expected": 4.4704
+    },
+    {
+      "metric": "windSpeed",
+      "value": 36,
+      "usUnits": 16,
+      "units": "metricwx",
+      "expected": 10
+    },
+    {
+      "metric": "windGust",
+      "value": 10,
+      "usUnits": 17,
+      "units": "metric",
+      "expected": 36
+    },
+    {
+      "metric": "windSpeed",
+      "value": 10,
+      "usUnits": 17,
+      "units": "us",
+      "expected": 22.369362920544
+    },
+    {
+      "metric": "barometer",
+      "value": 29.921255347112,
+      "usUnits": 1,
+      "units": "metricwx",
+      "expected": 1013.25
+    },
+    {
+      "metric": "pressure",
+      "value": 1013.25,
+      "usUnits": 16,
+      "units": "us",
+      "expected": 29.921255347112
+    },
+    {
+      "metric": "cloudbase",
+      "value": 1000,
+      "usUnits": 1,
+      "units": "metricwx",
+      "expected": 304.8
+    },
+    {
+      "metric": "windrun",
+      "value": 1,
+      "usUnits": 1,
+      "units": "metric",
+      "expected": 1.609344
+    },
+    {
+      "metric": "windrun",
+      "value": 1.609344,
+      "usUnits": 16,
+      "units": "us",
+      "expected": 1
+    },
+    {
+      "metric": "outHumidity",
+      "value": 55,
+      "usUnits": 1,
+      "units": "metricwx",
+      "expected": 55
+    },
+    {
+      "metric": "radiation",
+      "value": 350,
+      "usUnits": 1,
+      "units": "metricwx",
+      "expected": 350
+    },
+    {
+      "metric": "windDir",
+      "value": 270,
+      "usUnits": 1,
+      "units": "metric",
+      "expected": 270
+    },
+    {
+      "metric": "lightning_distance",
+      "value": 5,
+      "usUnits": 1,
+      "units": "metricwx",
+      "expected": 5
+    },
+    {
+      "metric": "rain",
+      "value": 0,
+      "usUnits": 1,
+      "units": "metricwx",
+      "expected": 0
+    },
+    {
+      "metric": "rain",
+      "value": null,
+      "usUnits": 1,
+      "units": "metricwx",
+      "expected": null
+    }
+  ]
+}

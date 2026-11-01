@@ -103,3 +103,8 @@ Výměna **malého čtecího API** může znamenat jednotky pracovních dnů; u 
 - [Pokyny AI/Codex](../AGENTS.md)
 
 **Bez změn produkční DB, WeeWX, konfigurace NPM a běžícího webu. Tento dokument popisuje návrhové hranice a plán, ne hotový API server.**
+
+
+## Důležitá součást verzovaného kontraktu: vstupní a výstupní jednotky
+
+API musí číst skutečné `usUnits` ze zdrojového řádku (US=1, METRIC=16, METRICWX=17); jednotlivé pozorování nesmí předpokládat METRIC jen proto, že současná produkční databáze používá 16. Výstup lze přepnout pomocí `?units=us|metric|metricwx` (výchozí metricwx) bez změny zdrojové DB. V odpovědi musí být `units` i `unit` jednotlivých veličin. Konkrétní mapování a referenční vektory jsou v [auditu API kontraktu](API_CONTRACT_AUDIT_2026-10-31.md), `schemas/metrics.json`, `contracts/unit_conversion.py`, `tests/test_unit_conversion.py`. Tato reference nedokazuje reálné backendové implementace Fastify/Go/Rust.

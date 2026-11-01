@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "1",
+  "stationId": "loucka",
+  "updatedAt": "2026-10-31T19:00:00Z",
+  "sensors": [
+    {
+      "id": "soil-moisture-1",
+      "metric": "soilMoist1",
+      "displayName": "Vlhkost půdy – sonda 1",
+      "status": "unknown",
+      "enabled": false,
+      "lastObservedAt": null,
+      "validFrom": null,
+      "validTo": null,
+      "depthCm": null,
+      "source": "weewx.archive",
+      "confidence": "unknown",
+      "note": "Sensor mapping and calibration not confirmed"
+    }
+  ]
+}

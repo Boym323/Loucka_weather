@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "1",
+  "eventId": "archive-session-001-2",
+  "eventType": "archive-updated",
+  "emittedAt": "2026-10-31T19:05:19Z",
+  "stationId": "loucka",
+  "dataset": "original",
+  "dataRevision": "archive-session-001-2",
+  "changeType": "appended",
+  "affectedEndTimeFrom": "2026-10-31T19:05:00Z",
+  "affectedEndTimeTo": "2026-10-31T19:05:00Z",
+  "latestArchiveAt": "2026-10-31T19:05:00Z",
+  "changedRecords": 1,
+  "summaryStatus": "pending"
+}

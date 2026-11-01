@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "1",
+  "metric": "outTemp",
+  "unit": "degC",
+  "range": {
+    "from": "2026-10-30T19:50:00Z",
+    "to": "2026-10-30T20:00:00Z",
+    "boundary": "(start,end]",
+    "calendarTimezone": "Europe/Prague"
+  },
+  "resolution": "raw",
+  "points": [
+    {
+      "startTime": "2026-10-30T19:50:00Z",
+      "endTime": "2026-10-30T19:55:00Z",
+      "value": 12.3,
+      "quality": "measured",
+      "source": "weewx_archive",
+      "provenance": null,
+      "sourceUsUnits": 16
+    },
+    {
+      "startTime": "2026-10-30T19:55:00Z",
+      "endTime": "2026-10-30T20:00:00Z",
+      "value": null,
+      "quality": "missing",
+      "source": "weewx_archive",
+      "provenance": null,
+      "sourceUsUnits": 16
+    }
+  ],
+  "count": 2,
+  "completeness": {
+    "expected": 2,
+    "valid": 1,
+    "fraction": 0.5
+  },
+  "units": "metricwx",
+  "dataset": "original",
+  "dataRevision": "original-unknown",
+  "aggregation": "sample",
+  "truncated": false,
+  "gapPolicy": "explicit-null"
+}
