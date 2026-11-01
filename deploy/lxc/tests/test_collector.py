@@ -75,7 +75,7 @@ class TestCameraArchive(unittest.TestCase):
             }])
 
     def test_capture_and_unchanged_frame_are_published(self):
-        jpeg = b"\\xff\\xd8\\xff" + b"sample" + b"\\xff\\xd9"
+        jpeg = b"\xff\xd8\xff" + b"sample" + b"\xff\xd9"
         with tempfile.TemporaryDirectory() as temp, patch.object(mod, "CAMERA_DIR", Path(temp)):
             with patch.object(mod, "fetch_bytes", return_value=jpeg), patch.object(mod, "generate_yesterday_video"):
                 mod.capture_camera()
@@ -99,7 +99,7 @@ class TestCameraArchive(unittest.TestCase):
                 self.assertIn("-pattern_type", command)
                 self.assertEqual(command[-2], "mp4")
                 Path(command[-1]).write_bytes(b"0" * 1500)
-            with patch.object(mod.shutil, "which", return_value="/usr/bin/ffmpeg"), \\
+            with patch.object(mod.shutil, "which", return_value="/usr/bin/ffmpeg"), \
                  patch.object(mod.subprocess, "run", side_effect=simulate_ffmpeg):
                 mod.generate_yesterday_video()
             video = Path(temp) / "timelapse" / f"{day.isoformat()}.mp4"
