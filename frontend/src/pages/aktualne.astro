@@ -5,6 +5,7 @@ import WindCompass from '../features/current/WindCompass.astro';
 import OverviewReadings from '../features/current/OverviewReadings.astro';
 import HistoryChart from '../features/history/HistoryChart.astro';
 import SensorChannels from '../features/sensors/SensorChannels.astro';
+import SensorMiniPanel from '../features/sensors/SensorMiniPanel.astro';
 ---
 <BaseLayout title="Aktuální údaje">
  <div class="page-intro actual-intro">
@@ -21,11 +22,7 @@ import SensorChannels from '../features/sensors/SensorChannels.astro';
   </div>
   <aside class="actual-side">
    <OverviewReadings />
-   <section class="section">
-    <div class="section-heading"><h2>Další archivní kanály</h2><a class="panel-link" href="/senzory/">Detail ↗</a></div>
-    <p class="lead">Měření půdních a dalších externích kanálů jsou označena původními názvy WeeWX, dokud nebude potvrzeno jejich fyzické umístění.</p>
-    <a href="/senzory/" class="panel-link">Přejít na přehled kanálů ↗</a>
-   </section>
+   <SensorMiniPanel />
   </aside>
  </div>
  <SensorChannels />

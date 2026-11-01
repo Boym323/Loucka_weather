@@ -1,0 +1,38 @@
+---
+const sensors=[
+ {id:'soilTemp1',label:'Teplota půdy · kanál 1',unit:'°C'},
+ {id:'soilTemp2',label:'Teplota půdy · kanál 2',unit:'°C'},
+ {id:'soilTemp3',label:'Teplota půdy · kanál 3',unit:'°C'},
+ {id:'soilTemp4',label:'Teplota půdy · kanál 4',unit:'°C'},
+ {id:'pm25_1',label:'PM2,5',unit:'µg/m³'},
+ {id:'lightning_distance',label:'Vzdálenost blesku',unit:'km'}
+];
+---
+<section class="section sensor-mini" data-sensor-mini aria-labelledby="mini-sensors-title">
+ <div class="section-heading"><h2 id="mini-sensors-title">Další archivní kanály</h2><a class="panel-link" href="/senzory/">Všechny ↗</a></div>
+ <dl>
+  {sensors.map(item=><div><dt>{item.label}</dt><dd data-mini-reading={item.id}>—</dd></div>)}
+ </dl>
+ <p class="source-note">Neověřené umístění a typ fyzického čidla. Číslování podle archivu WeeWX.</p>
+</section>
+<script>
+ import {getCurrent} from '../../shared/api/client';
+ import {formatValue} from '../../shared/domain/metrics';
+ const root=document.querySelector<HTMLElement>('[data-sensor-mini]');
+ if(root){
+  const controller=new AbortController();
+  const fields=[
+   ['soilTemp1','°C',1],['soilTemp2','°C',1],['soilTemp3','°C',1],
+   ['soilTemp4','°C',1],['pm25_1','µg/m³',1],['lightning_distance','km',0]
+  ] as const;
+  void getCurrent(controller.signal).then(data=>{
+   for(const [id,unit,digits] of fields){
+    const node=root.querySelector<HTMLElement>('[data-mini-reading="'+id+'"]');
+    const v=data.readings[id];
+    if(node&&v&&v.value!==null&&v.quality!=='missing'&&v.quality!=='suspect')
+     node.textContent=formatValue(v.value,digits)+' '+unit;
+   }
+  }).catch(()=>{});
+  document.addEventListener('astro:before-swap',()=>controller.abort(),{once:true});
+ }
+</script>

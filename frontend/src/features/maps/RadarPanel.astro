@@ -99,7 +99,7 @@ const { compact = false } = Astro.props;
   void fetch('https://api.rainviewer.com/public/weather-maps.json',{signal:controller.signal}).then(async response=>{
    if(!response.ok)throw new Error('Nedostupné radarové snímky');
    const data=await response.json() as RV;
-   if(!data.host||!/^https:\/\/[a-z0-9.-]*rainviewer\.com$/.test(data.host))throw new Error('Neznámý radarový hostitel');
+   if(!data.host||!/^https:\/\/(?:[a-z0-9-]+\.)*rainviewer\.com$/.test(data.host))throw new Error('Neznámý radarový hostitel');
    if(!Array.isArray(data.radar?.past))throw new Error('Chybějící snímky');
    frames=data.radar.past.filter(f=>Number.isSafeInteger(f.time)&&/^\/v2\/radar\/[a-f0-9]{8,64}$/.test(f.path)).slice(-12);
    if(!frames.length)throw new Error('Žádné radarové snímky');

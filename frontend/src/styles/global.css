@@ -495,3 +495,11 @@ h1,h2,h3,p{margin-top:0}h1{font-size:clamp(26px,3vw,42px);line-height:1.2;letter
 @media(min-width:961px) and (max-width:1190px){
  .dashboard-top>.sidebar-stack>.dashboard-side-notes{grid-template-columns:1fr}
 }
+
+/* Detail page: actual archival sensor values in the right column. */
+.sensor-mini dl{margin:6px 0 12px}
+.sensor-mini dl>div{display:flex;gap:10px;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--line);padding:8px 0}
+.sensor-mini dt{font-size:12px;color:var(--muted)}
+.sensor-mini dd{margin:0;font-size:13px;font-weight:740;white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
+.sensor-mini h2{font-size:16px}
+@media(max-width:650px){.sensor-mini dt{font-size:11px}.sensor-mini dd{font-size:12px}}
