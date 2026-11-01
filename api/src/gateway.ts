@@ -7,7 +7,8 @@ import type {LiveHub} from './live.js';
 
 export type GatewayReading={value:number;unit:string;quality:'measured';source:'gw3000_live'};
 export type GatewaySnapshot={
- schemaVersion:'1';source:'ecowitt_gw3000_custom';stationType:string;
+ schemaVersion:'1';source:'ecowitt_gw3000_custom'|'ecowitt_gw3000_lan_http';stationType:string;
+ timestampMeaning?:'gateway_polled_at';
  receivedAt:string;observedAt:string;units:'metricwx';
  readings:Record<string,number>;
 };
@@ -21,7 +22,9 @@ export const LIVE_TTL_MS=120000;
 export function validatedSnapshot(value:unknown,nowMs=Date.now()):GatewaySnapshot|null{
  if(!value||typeof value!=='object')return null;
  const data=value as Record<string,unknown>;
- if(data.schemaVersion!=='1'||data.source!=='ecowitt_gw3000_custom'||data.units!=='metricwx'||
+ if(data.schemaVersion!=='1'||
+  (data.source!=='ecowitt_gw3000_custom'&&data.source!=='ecowitt_gw3000_lan_http')||
+  data.units!=='metricwx'||
   typeof data.receivedAt!=='string'||typeof data.observedAt!=='string'||
   typeof data.stationType!=='string'||data.stationType.length>70||
   !data.readings||typeof data.readings!=='object')return null;
@@ -35,8 +38,9 @@ export function validatedSnapshot(value:unknown,nowMs=Date.now()):GatewaySnapsho
   readings[key]=value;
  }
  if(Object.keys(readings).length<3)return null;
- return {schemaVersion:'1',source:'ecowitt_gw3000_custom',units:'metricwx',
-  stationType:data.stationType,receivedAt:data.receivedAt,observedAt:data.observedAt,readings};
+ return {schemaVersion:'1',source:data.source,units:'metricwx',
+  stationType:data.stationType,receivedAt:data.receivedAt,observedAt:data.observedAt,
+  ...(data.source==='ecowitt_gw3000_lan_http'?{timestampMeaning:'gateway_polled_at' as const}:{}),readings};
 }
 export function gatewayReadings(snapshot:GatewaySnapshot):Record<string,GatewayReading>{
  return Object.fromEntries(Object.entries(snapshot.readings).map(([name,value])=>[

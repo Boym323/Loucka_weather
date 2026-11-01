@@ -81,7 +81,7 @@ const quickReadings = [
  // custom upload. Archive-only interval rain is never confused with gateway rain totals.
  const applyLive=(event:Event)=>{
   if(controller.signal.aborted)return;
-  const data=(event as CustomEvent<{state:string;receivedAt:string;observedAt:string;units:string;
+  const data=(event as CustomEvent<{state:string;receivedAt:string;observedAt:string;units:string;timestampMeaning?:string;
    readings:Record<string,{value:number;quality:string;source:string}>}>).detail;
   const received=Date.parse(data?.receivedAt??'');
   if(data?.state!=='live'||data.units!=='metricwx'||!Number.isFinite(received)||
@@ -101,7 +101,7 @@ const quickReadings = [
    if(quality){quality.textContent='Živé měření GW3000';quality.dataset.readingState='measured';}
   }
   if(status){status.textContent='GW3000 · živá měření';status.className='status-chip ok';}
-  if(updated)updated.textContent='GW3000 · naměřeno '+formatTimestamp(data.observedAt)+
+  if(updated)updated.textContent=(data.timestampMeaning==='gateway_polled_at'?'GW3000 · přečteno ':'GW3000 · naměřeno ')+formatTimestamp(data.observedAt)+
    ' · nezahrnuté veličiny z posledního archivu WeeWX';
  };
  const restoreArchive=()=>{

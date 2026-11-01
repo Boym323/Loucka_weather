@@ -1,0 +1,9 @@
+[Unit]
+Description=Počasí Loučka - poll GW3000 read-only LAN API every ~20 seconds
+[Timer]
+OnBootSec=40s
+OnUnitInactiveSec=20s
+AccuracySec=2s
+Unit=loucka-gw3000-http-pull.service
+[Install]
+WantedBy=timers.target

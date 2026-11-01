@@ -11,7 +11,7 @@
  let currentTimer:ReturnType<typeof setInterval>|undefined;
  let hadLive=false;
  type Observation={state?:string;observedAt?:string;receivedAt?:string;units?:string;
-   source?:string;readings?:Record<string,{value:number;quality:string;unit:string;source:string}>};
+   source?:string;timestampMeaning?:string;readings?:Record<string,{value:number;quality:string;unit:string;source:string}>};
  const fresh=(data:Observation)=>{
   const at=Date.parse(data.receivedAt??'');
   return data.state==='live'&&data.source==='gw3000_live'&&data.units==='metricwx'&&

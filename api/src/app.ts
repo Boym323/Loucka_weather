@@ -334,6 +334,7 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
   const gateway=liveHub?.getGateway(now().getTime());
   if(gateway)return {schemaVersion:'1',source:'gw3000_live',state:'live',
    observedAt:gateway.observedAt,receivedAt:gateway.receivedAt,units:'metricwx',
+   timestampMeaning:gateway.timestampMeaning??'device_reported',
    readings:gatewayReadings(gateway)};
   return {schemaVersion:'1',source:'weewx_archive',state:liveHub?.gatewayStatus(now().getTime())??'disabled',
    observedAt:null,receivedAt:liveHub?.gatewayLastReceivedAt??null,units:'metricwx',

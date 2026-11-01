@@ -34,7 +34,7 @@ export class LiveHub{
   const event:EventMessage={schemaVersion:'1',eventId:`${this.session}-gw3000-${++this.sequence}`,
    eventType:'observation',emittedAt:new Date().toISOString(),
    observedAt:snapshot.observedAt,receivedAt:snapshot.receivedAt,state:'live',
-   units:'metricwx',source:'gw3000_live',readings:gatewayReadings(snapshot)};
+   units:'metricwx',source:'gw3000_live',timestampMeaning:snapshot.timestampMeaning??'device_reported',readings:gatewayReadings(snapshot)};
   this.history.push(event);if(this.history.length>256)this.history.shift();
   for(const subscriber of this.subscribers)subscriber(event);
  }

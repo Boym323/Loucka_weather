@@ -4,6 +4,13 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ## 2026-11-01
 
+### GW3000 bez změny konfigurace – read-only LAN HTTP
+- Nový samostatný `loucka-gw3000-http-pull.py` používá výhradně oficiální `GET /get_livedata_info?` na přesně určené RFC1918 IPv4 GW3000, bez cloud API, bez zásahu do Customized a bez přepisování WeeWX.
+- Dvacetisekundový opt-in systemd timer, omezená délka odpovědi a 4s timeout, bez přesměrování a bez systémové proxy; zapisuje pouze jeden atomický soubor `/var/lib/loucka-live/latest.json`.
+- Rozpoznává a převádí teplotu, vlhkost, tlak, vítr, UV, W/m² a srážkovou intenzitu, ale neodhaduje chybějící jednotky ani neplete denní srážku s intervalovým úhrnem.
+- Fastify přijímá také zdroj `ecowitt_gw3000_lan_http`, exportuje `timestampMeaning: gateway_polled_at`; frontend správně uvádí čas načtení, nikoli tvrzený čas fyzického měření.
+- Časovač se nesmí spouštět současně s dřívějším Customized POST přijímačem. Přímé ověření vyžaduje skutečnou IP GW3000 a síťový přístup pouze na TCP/80, nikoli změnu nastavení brány.
+
 ### Skutečný LAN přenos Ecowitt GW3000 + monitoring
 - Nový explicitně aktivovaný, neprivilegovaný Python přijímač Ecowitt HTTP POST, s požadovaným LAN IP whitelistem a tajným tokenem v cestě.
 - Převod ověřených veličin z °F/mph/inHg/in/h na METRICWX, validace zdroje, času a fyzikálního rozsahu. Jediný atomický lokální JSON, bez zápisu do MariaDB.
