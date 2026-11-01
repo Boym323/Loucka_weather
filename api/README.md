@@ -19,9 +19,11 @@ Implementované čtecí trasy:
 Zdrojový katalog metrik a jednotek: `../schemas/metrics.json`; `src/metrics.ts` je z něj generovaná kopie. Jednotky se interpretují **u každého řádku** podle původního `usUnits`; `NULL` zůstává `null` a neznámé usUnits se odmítne. Odpovědi `current` a `history` mají ETag / 304, `dataset=approved` je bez schválení nepřístupný (503).
 
 ## Ověření
+Node 24 používá uložený `api/package-lock.json` a CI instaluje přes `npm ci`, nikoli přepočítávání závislostí při každém běhu.
+
 ```bash
 cd api
-npm install
+npm ci
 npm test
 ```
 Jednotkové testy používají injektovaný fake reader; vedle nich CI vytváří **samostatnou syntetickou MariaDB 11.8** a ověřuje skutečné SQL dotazy i SELECT-only přístup. Neprobíhá žádný přístup na produkční databázi. Spustit `npm test` neznamená spustit live test na produkci.
