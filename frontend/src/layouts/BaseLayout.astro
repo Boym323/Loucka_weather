@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import DeploymentInfo from '../shared/ui/DeploymentInfo.astro';
 import LiveSync from '../shared/ui/LiveSync.astro';
+import MobileDock from '../shared/ui/MobileDock.astro';
 interface Props { title: string; description?: string }
 const { title, description = 'Meteorologická měření ze stanice Počasí Loučka.' } = Astro.props;
 const navigation = [
@@ -53,6 +54,7 @@ const active = Astro.url.pathname;
    </div>
   </header>
   <main id="obsah" class="wrap content"><slot /></main>
+  <MobileDock />
   <footer class="site-footer"><div class="wrap footer-inner"><span>© Počasí Loučka · vývojový náhled</span><DeploymentInfo /><a href="/o-stanici/">O projektu a zdrojích dat</a></div></footer>
   <script>
    const switcher=document.querySelector<HTMLButtonElement>('[data-theme-toggle]');
