@@ -19,6 +19,26 @@ git fetch --quiet origin main
 git merge --ff-only origin/main
 sha="$(git rev-parse HEAD)"
 release="$WEB/releases/$sha"
+# Some releases predate deployment.json. They already passed tests and may already
+# be active; reconstruct ONLY their missing metadata, without rebuilding assets
+# or inventing the deployment timestamp. .source-commit is stamped at publication.
+if [[ -d "$release" && ! -f "$release/deployment.json" ]]; then
+  if [[ ! -f "$release/.source-commit" ]] ||
+     [[ "$(cat "$release/.source-commit")" != "$sha" ]]; then
+    echo "ERROR: existing release lacks matching .source-commit; manual inspection needed: $release" >&2
+    exit 1
+  fi
+  source_epoch="$(stat -c %Y "$release/.source-commit")"
+  deployed_at="$(date -u -d "@$source_epoch" +%Y-%m-%dT%H:%M:%SZ)"
+  meta_tmp="$(mktemp "$release/.deployment.json.XXXXXXXX")"
+  trap 'rm -f -- "$meta_tmp"' EXIT
+  printf '{"schemaVersion":"1","branch":"main","commit":"%s","deployedAt":"%s"}\n' \
+    "$sha" "$deployed_at" > "$meta_tmp"
+  chmod 0644 "$meta_tmp"
+  mv -f -- "$meta_tmp" "$release/deployment.json"
+  trap - EXIT
+  echo "Restored missing deployment.json for $(printf %.12s "$sha") using release stamp $deployed_at"
+fi
 if [[ -d "$release" && -L "$WEB/current" && "$(readlink -f "$WEB/current")" == "$release" ]]; then
   echo "No changes since $(printf %.12s "$sha")"; exit 0
 fi
