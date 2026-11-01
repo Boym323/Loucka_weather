@@ -128,3 +128,10 @@ curl -i http://127.0.0.1:8080/api/v1/readyz
 Aktivační helper musí být root-owned právě v `/usr/local/libexec/`: systemd ho spouští s vyššími právy přes `ExecStartPost=+`. Nikdy nespouštěj skript přímo z uživatelem `loucka` upravitelného pracovního repozitáře s root právy. API restartuje pouze po nové úspěšné publikaci nebo při nefunkční službě; při selhání readiness se poslední úspěšný stav nepotvrdí a systemd sync označí jako neúspěšný.
 
 Pokud `/healthz` odpovídá 200, ale `/readyz` 503, není to už chyba proxy: ověř `WEATHER_DB_HOST`, spojení k MariaDB, účet se skutečně pouze `SELECT` a přístup k `archive`. Pokud roční klimatologie přesto selže, ověř existenci tabulek WeeWX `archive_day_*` a práva `SELECT` také k nim. Diagnostické výstupy a hesla neukládej do repozitáře.
+
+
+## Bezvýpadkové změny statického frontendu
+
+Aktivační helper porovnává Git strom `api/` mezi posledním aktivovaným commitem a aktuálním release. Pokud se změnil pouze `frontend/` nebo dokumentace a `healthz` + `readyz` vracejí zdravý stav, Fastify se **nerestartuje**. Poslední aktivovaný commit se přesto bezpečně aktualizuje. Pokud API není zdravé nebo se změnil strom `api/`, restart a health gate zůstávají povinné. Při skutečném nasazení nového API může stále vzniknout krátký výpadek; modro-zelené nasazení API zatím neexistuje.
+
+Veřejný Playwright smoke čeká na správný `deployment.json` a dvě po sobě jdoucí připravené odpovědi `/api/v1/readyz`, aby nevyhodnocoval běžné přechodné 502 během aktivace jako dlouhodobou chybu.
