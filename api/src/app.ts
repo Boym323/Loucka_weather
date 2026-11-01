@@ -9,7 +9,7 @@ import type {OutputUnits} from './units.js';
 type Dataset='original'|'approved';
 type CurrentQuery={asOf?:string;units?:OutputUnits;dataset?:Dataset};
 type HistoryQuery={metric?:string;from?:string;to?:string;resolution?:'auto'|'raw'|'hourly'|'daily';
-  limit?:number;units?:OutputUnits;dataset?:Dataset};
+  limit?:string;units?:OutputUnits;dataset?:Dataset};
 const datePattern=/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
 const source= {source:'weewx_archive',provenance:null} as const;
 const commonQuery={
@@ -99,7 +99,60 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date()){
    properties:{...commonQuery.properties,
     metric:{type:'string'},from:{type:'string'},to:{type:'string'},
     resolution:{type:'string',enum:['auto','raw','hourly','daily']},
-    limit:{type:'integer',minimum:1,maximum:10000}}}}
+    limit:{type:'string',pattern:'^[0-9]{1,5}}}}
+ },async(req,reply)=>{
+  const {metric,from,to,resolution='auto',limit:limitText,units='metricwx',dataset='original'}=req.query;
+  const limit=limitText===undefined?2000:Number(limitText);
+  if(!Number.isSafeInteger(limit)||limit<1||limit>10000)
+   return bad(reply,req.id,'BAD_REQUEST','limit must be an integer from 1 to 10000');
+  if(dataset==='approved')return bad(reply,req.id,'DATASET_UNAVAILABLE','No approved dataset published',503);
+  if(!metric||!isMetric(metric))return bad(reply,req.id,'UNKNOWN_METRIC','Unsupported public metric');
+  const start=from?epoch(from):null,end=to?epoch(to):null;
+  if(start===null||end===null||end<=start)return bad(reply,req.id,'INVALID_RANGE','Invalid UTC time range',422);
+  if(resolution==='hourly'||resolution==='daily')
+   return bad(reply,req.id,'INVALID_AGGREGATION','Aggregate history not yet implemented in staging',422);
+  if(end-start>31*86400)
+   return bad(reply,req.id,'LIMIT_EXCEEDED','Raw history is limited to 31 days',422);
+  let rows:ArchiveRow[];
+  try{rows=await reader.history(metric,start,end,Math.min(limit+1,10001));}
+  catch{return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Archive unavailable',503);}
+  if(rows.length>limit)return bad(reply,req.id,'LIMIT_EXCEEDED','Too many archive points for requested limit',422);
+  const points:any[]=[];
+  let previous=start,valid=0;
+  try{
+   for(const row of rows){
+    if(!Number.isSafeInteger(row.dateTime)||!Number.isInteger(row.interval)||row.interval<=0
+      ||row.dateTime<=previous||row.dateTime>end)throw new Error('Invalid row order or interval');
+    const rowStart=row.dateTime-row.interval*60;
+    if(rowStart>previous){
+     points.push({startTime:utcIso(previous),endTime:utcIso(rowStart),
+      value:null,quality:'missing',source:'derived',provenance:null,sourceUsUnits:null});
+    }
+    const reading=converted(metric,row[metric],row.usUnits,units);
+    points.push({startTime:utcIso(rowStart),endTime:utcIso(row.dateTime),
+     value:reading.value,quality:reading.quality,...source,sourceUsUnits:reading.sourceUsUnits});
+    if(reading.value!==null)valid++;
+    previous=row.dateTime;
+   }
+   if(rows.length && previous<end)points.push({
+    startTime:utcIso(previous),endTime:utcIso(end),value:null,
+    quality:'missing',source:'derived',provenance:null,sourceUsUnits:null
+   });
+   if(points.length>limit)return bad(reply,req.id,'LIMIT_EXCEEDED','Too many points including gaps',422);
+   const fingerprint=createHash('sha256').update(JSON.stringify(rows)).digest('hex').slice(0,16);
+   return conditional(req,reply,{
+    schemaVersion:'1',metric,unit:outputUnit(metric,units),
+    range:{from:utcIso(start),to:utcIso(end),boundary:'(start,end]',calendarTimezone:'Europe/Prague'},
+    resolution:'raw',points,count:points.length,
+    completeness:{expected:null,valid,fraction:null},
+    units,dataset,dataRevision:`archive-${fingerprint}`,
+    aggregation:'sample',truncated:false,gapPolicy:'explicit-null'
+   });
+  }catch{return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Unsupported archived observation',503);}
+ });
+ return app;
+}
+}}}}
  },async(req,reply)=>{
   const {metric,from,to,resolution='auto',limit=2000,units='metricwx',dataset='original'}=req.query;
   if(dataset==='approved')return bad(reply,req.id,'DATASET_UNAVAILABLE','No approved dataset published',503);
