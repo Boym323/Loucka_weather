@@ -300,3 +300,156 @@ h1,h2,h3,p{margin-top:0}h1{font-size:clamp(26px,3vw,42px);line-height:1.2;letter
 .deployment-info [hidden]{display:none!important}
 .about-deployment{margin-top:14px}
 @media(max-width:650px){.site-footer .deployment-info{width:100%;order:3}.deployment-info{font-size:10px}}
+
+
+/* ===== 9-panel reference design: denser responsive meteorological dashboard ===== */
+:root{
+ --panel:#091f2d;--panel-2:#0d2a3c;--panel-3:#143446;
+ --line:#204253;--muted:#a1b9c7;--teal:#4cf1b7;--gold:#ffca56;
+}
+.site-header{background:#041722f2;backdrop-filter:blur(12px)}
+.header-inner{min-height:58px}.brand-label strong{letter-spacing:0}
+.content{padding-top:13px}.section{border-radius:9px}
+.site-banner{
+ height:clamp(110px,10vw,175px);background-position:center 52%;
+ background-image:linear-gradient(180deg,#051d2a00 5%,#04182255 80%),url('/landscape.svg');
+ border-color:#1a4554;margin-bottom:12px;
+}
+.site-banner::before{
+ content:"";position:absolute;inset:0;
+ background:linear-gradient(110deg,#02192644 30%,transparent 65%),
+  radial-gradient(ellipse at 79% 27%,#fe9b4d55,transparent 34%);
+ pointer-events:none
+}
+.site-banner .banner-copy{z-index:1;left:20px;bottom:12px}
+.site-banner .banner-copy strong{font-size:20px}
+.dashboard-top{grid-template-columns:minmax(0,1.36fr) minmax(350px,1fr);gap:11px;margin-bottom:11px;align-items:stretch}
+.dashboard-primary{display:flex;flex-direction:column;min-width:0;gap:8px}
+.dashboard-primary>.current-panel{flex:1;display:flex;flex-direction:column;padding:15px 17px}
+.dashboard-primary .current-panel .metric-grid{flex:1;min-height:235px;grid-template-rows:repeat(3,minmax(64px,1fr))}
+.dashboard-primary .current-panel .metric-card{display:flex;flex-direction:column;justify-content:center}
+.dashboard-primary .current-panel .metric-card.featured{background:linear-gradient(135deg,#0c4c42,#123147);border-color:#247465}
+.dashboard-primary .metric-card.featured .metric-number{color:#fff}
+.dashboard-primary .metric-card.featured .metric-label{color:#bfefdf}
+.dashboard-primary .quick-reading-grid{margin-top:8px}
+.dashboard-side-notes{display:grid;grid-template-columns:minmax(0,.72fr) minmax(0,1.1fr);gap:9px;align-items:stretch}
+.dashboard-side-notes .warning-panel{margin:0;min-width:0;padding:12px}
+.dashboard-side-notes .overview-readings{margin:0;padding:12px}
+.dashboard-side-notes .overview-list>div{padding:4px 0}
+.dashboard-side-notes .overview-list dt{font-size:10px}
+.dashboard-side-notes .overview-list dd{font-size:11px}
+.dashboard-side-notes .overview-readings>.source-note{font-size:10px}
+.dashboard-side-notes .note-panel p{font-size:11px}
+.home-quick-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.home-quick-links a{display:flex;align-items:center;justify-content:space-between;gap:5px;text-decoration:none;background:#0e2e3c;border:1px solid #22546a;border-radius:6px;color:#afcad7;padding:8px 10px;font-size:11px}
+.home-quick-links a:hover{color:var(--teal);border-color:var(--teal)}
+.dashboard-bottom{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.04fr);gap:11px}
+.dashboard-bottom>.section{min-height:355px;padding:14px}
+.dashboard-bottom .chart-box{height:220px}
+.dashboard-bottom .radar-map{height:235px;min-height:0}
+.dashboard-bottom .radar-panel{min-width:0}
+.dashboard-bottom .radar-controls{margin-top:7px}
+.dashboard-bottom .radar-compact .preview-footer{margin-top:auto}
+.home-camera-image{display:block;flex:1;min-height:180px;max-height:285px;overflow:hidden}
+.home-camera-image img{width:100%;height:100%;object-fit:cover;display:block}
+.camera-preview-panel .preview-footer{margin-top:auto}
+.panel-title h2{font-size:14px;margin:0;font-weight:750}
+.forecast-panel{padding:13px 14px;min-width:0}
+.forecast-panel .section-heading{margin-bottom:9px}
+.forecast-tabs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.forecast-day{min-width:0;padding:8px 3px;display:flex;flex-direction:column;align-items:center;gap:4px;border:1px solid #274659;border-radius:7px;background:#0c2a3a;text-align:center;font-variant-numeric:tabular-nums}
+.forecast-day:first-child{background:#12483f;border-color:#338975}
+.forecast-day strong{font-size:10px;color:#c1d5df;white-space:nowrap}
+.forecast-symbol{font-size:25px;line-height:1.5;min-height:32px}
+.forecast-temp{font-size:19px;font-weight:800;color:#fff}
+.forecast-day small{font-size:12px;color:#c0ccdc}
+.forecast-rain{font-size:10px;color:#62bde8;white-space:nowrap}
+.forecast-context{font-size:11px;color:var(--muted);margin:8px 0 0}
+.forecast-panel .preview-footer{margin-top:8px;align-items:center}
+.forecast-panel .preview-footer .source-note{font-size:10px}
+.radar-map{height:390px;min-height:240px;position:relative;overflow:hidden;border:1px solid var(--line);border-radius:8px;background:#193a41;isolation:isolate}
+.radar-world{width:512px;height:512px;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#b4c6ba}
+.radar-base{position:absolute;inset:0}
+.radar-base img{position:absolute;width:256px;height:256px;max-width:none}
+.radar-overlay{width:512px;height:512px;position:absolute;inset:0;z-index:1;pointer-events:none;image-rendering:auto}
+.radar-pin{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;
+ background:#db323e;border:2px solid white;border-radius:50%;box-shadow:0 0 0 5px #db323e55;color:#fff;font-size:0;width:13px;height:13px}
+.radar-overlay-message{position:absolute;left:12px;bottom:36px;right:12px;padding:8px;background:#031823c8;border:1px solid #34586a;border-radius:5px;color:#fff;z-index:4;font-size:11px}
+.radar-overlay-message[hidden]{display:none}
+.radar-scale{position:absolute;bottom:8px;left:10px;right:10px;display:flex;align-items:center;gap:6px;color:#fff;font-size:9px;text-shadow:0 1px 3px #000;z-index:3}
+.radar-scale i{display:block;flex:1;height:8px;border-radius:4px;background:linear-gradient(90deg,#154ab0,#3db6ff,#4dd58e,#e9d733,#eb7631,#d32945,#d11bc4)}
+.radar-controls{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.radar-controls [data-radar-time]{margin-left:auto;font-variant-numeric:tabular-nums}
+.radar-panel .preview-footer{font-size:10px;flex-wrap:wrap}
+.radar-panel .preview-footer a{color:#72d1f7}
+.map-tabs{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
+.map-tabs .is-active{color:#08291c;background:var(--teal);border-color:var(--teal);font-weight:750}
+.map-tabs .muted{opacity:.6}
+.actual-intro{display:flex;justify-content:space-between;gap:16px;align-items:center}
+.actual-layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(270px,.75fr);gap:11px;align-items:start}
+.actual-main,.actual-side{display:grid;gap:11px;min-width:0}
+.actual-wind-row{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.3fr);gap:11px}
+.actual-wind-row .chart-box{height:195px}
+.actual-wind-row [data-history-chart]{min-width:0}
+.actual-wind-row .wind-gauge{width:132px;height:132px}
+.actual-wind-row .wind-layout{min-height:165px;gap:15px}
+.actual-wind-row .wind-degrees{font-size:26px}
+.actual-side .overview-readings{min-height:290px}
+.actual-layout+.sensors-overview{margin-top:12px}
+.sensor-channel-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:15px 0}
+.sensor-channel{border:1px solid #28485a;background:#0c293a;border-radius:8px;padding:12px;min-width:0;position:relative;overflow:hidden}
+.sensor-channel::after{content:"";position:absolute;bottom:0;left:0;width:100%;height:2px;background:linear-gradient(90deg,transparent,#3fe3b2,transparent);opacity:.3}
+.sensor-head{display:flex;align-items:center;gap:9px;font-size:12px;color:#b7d1dd}
+.sensor-head span{font-size:20px}
+.sensor-head strong{font-weight:650}
+.sensor-number{font-size:27px;font-weight:780;margin:9px 0 7px;font-variant-numeric:tabular-nums;color:var(--text)}
+.sensor-number small{font-size:13px;color:var(--muted);margin-left:4px}
+.sensor-state{font-size:10px;color:var(--muted)}
+.sensor-state.available{color:#4ad9aa}
+.sensor-state.unavailable{color:#ffbd78}
+.sensor-foot-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-top:11px}
+.sensor-diagnostic-placeholder{padding:20px;background:#0a2c3c;border:1px dashed var(--line);border-radius:8px}
+.sensor-diagnostic-placeholder>span{display:block;color:var(--teal);font-size:25px}
+.sensor-diagnostic-placeholder p{color:var(--muted);font-size:12px;margin:6px 0}
+:root[data-theme="light"] .forecast-day,:root[data-theme="light"] .sensor-channel{background:var(--panel-2);border-color:var(--line)}
+:root[data-theme="light"] .forecast-temp{color:var(--text)}
+:root[data-theme="light"] .dashboard-primary .metric-card.featured .metric-number{color:var(--text)}
+:root[data-theme="light"] .dashboard-side-notes .warning-panel{background:#ffe6e0;color:#742b2b}
+@media(max-width:1280px){
+ .dashboard-top{grid-template-columns:minmax(0,1.13fr) minmax(340px,1fr)}
+ .dashboard-bottom{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .dashboard-bottom>.radar-panel{grid-column:span 2}
+ .dashboard-bottom>.radar-panel .radar-map{height:310px}
+ .dashboard-side-notes{grid-template-columns:1fr}
+ .sensor-channel-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:960px){
+ .dashboard-top{grid-template-columns:1fr}
+ .dashboard-side-notes{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .sidebar-stack{gap:10px}
+ .actual-layout{grid-template-columns:1fr}
+ .actual-side{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .sensor-channel-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:650px){
+ .site-banner{height:115px}
+ .site-banner .banner-copy strong{font-size:16px}
+ .dashboard-bottom{grid-template-columns:1fr}
+ .dashboard-bottom>.radar-panel{grid-column:auto}
+ .dashboard-side-notes,.actual-side,.actual-wind-row,.sensor-foot-grid{grid-template-columns:1fr}
+ .forecast-tabs{gap:4px}
+ .forecast-day{padding:8px 2px}
+ .forecast-day strong{font-size:9px}
+ .forecast-symbol{font-size:20px;min-height:25px}
+ .forecast-temp{font-size:16px}
+ .forecast-day small,.forecast-rain{font-size:9px}
+ .home-quick-links{grid-template-columns:1fr}
+ .dashboard-primary .current-panel .metric-grid{min-height:0}
+ .sensor-channel-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+ .sensor-channel{padding:10px}
+ .sensor-head{font-size:10px}
+ .sensor-number{font-size:22px}
+ .radar-map{height:320px}
+ .actual-intro{align-items:flex-start;flex-direction:column}
+ .dashboard-bottom>.section{min-height:0}
+}
