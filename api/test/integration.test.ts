@@ -56,6 +56,14 @@ test('synthetic WeeWX archive on ephemeral MariaDB, SELECT-only adapter and time
  assert.equal(history.statusCode,200,history.body);
  assert.equal(history.json().points.filter((x:any)=>x.source==='weewx_archive').length,2);
  assert.equal(history.json().points.at(-1).value,13);
+ // A writer/root account must be refused even though runtime SQL contains SELECTs only.
+ process.env.WEATHER_DB_USER='root';
+ process.env.WEATHER_DB_PASSWORD='root';
+ const wrongReader=createMariaDbReader();
+ t.after(()=>wrongReader.close?.());
+ await assert.rejects(wrongReader.latest(1793520000));
+ process.env.WEATHER_DB_USER='ci_reader';
+ process.env.WEATHER_DB_PASSWORD='ci_pwd_fixture';
  const ro=mariadb.createPool({host:'127.0.0.1',port:3306,
   user:'ci_reader',password:'ci_pwd_fixture',database:SCHEMA,connectionLimit:1});
  t.after(()=>ro.end());
