@@ -18,8 +18,8 @@ import OverviewReadings from '../features/current/OverviewReadings.astro';
     <dl>
      <div><dt>Směr pohledu</dt><dd>Západ</dd></div>
      <div><dt>Zdroj</dt><dd>Počasí Loučka</dd></div>
-     <div><dt>Čas pořízení</dt><dd>Neověřený</dd></div>
-     <div><dt>Interval aktualizace</dt><dd>Neověřený</dd></div>
+     <div><dt>Čas pořízení</dt><dd data-camera-captured>Neověřený</dd></div>
+     <div><dt>Stáří snímku</dt><dd data-camera-age>Neověřené</dd></div>
      <div><dt>Archiv snímků</dt><dd>Nepřipojen</dd></div>
     </dl>
     <p class="source-note">Úspěšné načtení fotografie nezaručuje, že jde o čerstvý snímek.</p>
@@ -52,6 +52,8 @@ import OverviewReadings from '../features/current/OverviewReadings.astro';
  @media(max-width:650px){.camera-sidebar{grid-template-columns:1fr}.camera-sidebar .overview-readings{grid-column:auto}}
 </style>
 <script>
+ import {getCameraStatus} from '../shared/api/client';
+ import {formatTimestamp} from '../shared/domain/weather';
  const root=document.querySelector<HTMLElement>('[data-camera]');
  const img=root?.querySelector<HTMLImageElement>('[data-camera-image]');
  const status=root?.querySelector<HTMLElement>('[data-camera-status]');
@@ -61,5 +63,17 @@ import OverviewReadings from '../features/current/OverviewReadings.astro';
  function failed(){if(status){status.textContent='Kamera nedostupná';status.className='status-chip error';}if(message)message.textContent='Snímek se nepodařilo načíst. Zkuste jej obnovit.';}
  img?.addEventListener('load',loaded);img?.addEventListener('error',failed);
  if(img?.complete){if(img.naturalWidth)loaded();else failed();}
+ const metaController=new AbortController();
+ void getCameraStatus(metaController.signal).then(info=>{
+  const captured=document.querySelector<HTMLElement>('[data-camera-captured]');
+  const age=document.querySelector<HTMLElement>('[data-camera-age]');
+  if(info.status==='fresh'||info.status==='stale'){
+   if(captured&&info.capturedAt)captured.textContent=formatTimestamp(info.capturedAt);
+   if(age&&info.ageSeconds!==null)age.textContent=Math.round(info.ageSeconds/60)+' minut';
+   if(status){status.textContent=info.status==='fresh'?'Snímek ověřen':'Starší snímek';status.className='status-chip '+(info.status==='fresh'?'ok':'warning');}
+  }
+  // The current API explicitly reports disabled; do not imply verified LIVE data.
+ }).catch(()=>{});
+ document.addEventListener('astro:before-swap',()=>metaController.abort(),{once:true});
  refresh?.addEventListener('click',()=>{if(!img)return;if(status){status.textContent='Načítám snímek';status.className='status-chip';}img.src='https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg?t='+Date.now();});
 </script>

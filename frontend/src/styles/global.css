@@ -564,3 +564,18 @@ h1,h2,h3,p{margin-top:0}h1{font-size:clamp(26px,3vw,42px);line-height:1.2;letter
 .actual-main>.daily-brief .daily-brief-status{grid-column:1/-1;max-width:none}
 @media(max-width:1050px){.daily-brief{grid-template-columns:repeat(3,minmax(0,1fr))}.daily-brief-status{grid-column:1/-1;max-width:none}}
 @media(max-width:650px){.daily-brief{grid-template-columns:repeat(2,minmax(0,1fr))}.daily-brief-item{flex-wrap:wrap}.daily-brief-item>span{width:100%}}
+
+
+/* Verified physical sensor registry: only server-provided identities and depths. */
+.audited-sensor-registry{margin-bottom:12px}
+.sensor-inventory-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.sensor-inventory-grid>.empty-state{grid-column:1/-1}
+.sensor-inventory-card{background:var(--panel-2);border:1px solid var(--line);border-radius:7px;padding:13px;min-width:0}
+.sensor-inventory-card h3{font-size:14px;margin:0 0 9px}
+.sensor-inventory-card dl{margin:0;font-size:11px}
+.sensor-inventory-card dl>div{display:flex;align-items:baseline;gap:12px;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)}
+.sensor-inventory-card dt{color:var(--muted)}
+.sensor-inventory-card dd{margin:0;text-align:right}
+.sensor-inventory-card p{font-size:11px;color:var(--muted)}
+@media(max-width:900px){.sensor-inventory-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.sensor-inventory-grid{grid-template-columns:1fr}}

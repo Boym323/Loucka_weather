@@ -1,9 +1,11 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SensorChannels from '../features/sensors/SensorChannels.astro';
+import AuditedSensorRegistry from '../features/sensors/AuditedSensorRegistry.astro';
 ---
 <BaseLayout title="Senzory">
  <div class="page-intro"><span class="eyebrow">Senzory · meteo archiv · diagnostika</span><h1>Senzory a diagnostika</h1><p>Archivované údaje z meteostanice, jejich dostupnost a kontrola kvality posledního měření.</p></div>
+ <AuditedSensorRegistry />
  <SensorChannels />
  <div class="sensor-foot-grid">
   <section class="section">
