@@ -35,11 +35,13 @@ Datum: 2026-10-30. Dokument stanovuje stav návrhu. „Doporučení“ není pot
 - B navíc archiv predikcí, modelové srovnání a vlastní radarový pipeline ihned.
 **Doporučení: A pro MVP, B v další fázi**, po licenčním a provozním auditu.
 
-### Q6 – Jazyk API nad MariaDB 11.8
-- **A: Go** (`net/http` + `database/sql` + `go-sql-driver/mysql`) – doporučená první volba pro read-only API nad `archive` a `archive_day_*`.
-- **B: Rust** (Axum + SQLx) – výkonná alternativa s přísnější typovou bezpečností, ale vyšší kompilační a vývojovou náročností.
-- **C: Python** (FastAPI + ovladač MariaDB/MySQL) – vhodná alternativa, pokud převáží potřeba vědeckých datových knihoven.
-**Výsledek auditu: doporučit A – Go. Finální volba pro implementaci je ještě k potvrzení.** Nejde o naměřený výkonový benchmark implementací. Podklad: [BACKEND_TECHNOLOGY_AUDIT.md](BACKEND_TECHNOLOGY_AUDIT.md).
+### Q6 – Jazyk API nad MariaDB 11.8 (aktualizováno 1. 11. 2026)
+- **Pracovní volba pro první staging: Node.js + Fastify + TypeScript.** Vychází z novějšího [ADR v main](docs/ARCHITECTURE_DECISION_2026-10-31.md) a sdílených TypeScript kontraktů. **Není to definitivně schválená produkční volba.**
+- **Go** (`net/http` + `database/sql` + `go-sql-driver/mysql`) – doložená alternativa; dřívější audit z 30. 10. doporučoval Go. Tento historický závěr se nepřepisuje zpětně, ale nepředstavuje aktuální výchozí zadání.
+- **Rust** (Axum + SQLx) – možný samostatný backend nebo dávkový worker až při prokázaném výkonovém přínosu.
+- **Python** (FastAPI) – vhodný pro datově-vědecké offline úlohy, nikoli zvolený HTTP runtime.
+- **Rozhraní:** nezávislé verzované `/api/v1` dle [OpenAPI v PR #4](https://github.com/Boym323/Loucka_weather/pull/4); nahrazení Fastify za Go/Rust musí projít paritou na izolovaném DB snapshotu.
+**Status:** rozhodnutí pro staging je pracovní a vyžaduje reálný integrační test. Původní metodický audit [BACKEND_TECHNOLOGY_AUDIT.md](BACKEND_TECHNOLOGY_AUDIT.md) ponecháváme jako dokument se stavem ke 30. 10.
 
 ### Q7 – Kdy zprovoznit vlastní předpočtené statistiky L3?
 - **A: Nejprve pouze L1+L2** a změřit výkon/platnost denních souhrnů; L3 vytvořit až pro skutečně potřebné ukazatele.

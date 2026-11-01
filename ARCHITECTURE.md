@@ -1,3 +1,5 @@
+> **Stav 1. 11. 2026:** Preferenci Go uvnitř tohoto staršího architektonického dokumentu čti jako původní doporučení auditu. Novější pracovní návrh je **Fastify/TypeScript pro staging** dle `main/docs/ARCHITECTURE_DECISION_2026-10-31.md`; definitivní runtime nebyl schválen. Stabilní je pouze jazykově nezávislé OpenAPI v1 (PR #4).
+
 # ARCHITECTURE – návrh provozní a datové architektury
 
 Status: **NÁVRH K REVIZI**, 2026-10-30. Nepředstavuje potvrzení skutečné konfigurace LXC ani hotovou implementaci.

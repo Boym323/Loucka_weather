@@ -1,34 +1,28 @@
-# AGENTS.md – pravidla pro AI vývojáře
+# AI / Codex pokyny – Loučka Weather
 
-Před jakoukoliv úpravou si přečti `README.md`, `FRONTEND_SPEC.md`, `STATISTICS_SPEC.md`, `ARCHITECTURE.md` a `DECISIONS.md`. Tento repozitář je zatím pouze specifikace a nesmí se prezentovat jako již implementovaný web.
+## Povinný start pro každého nového agenta
+1. Přečti [docs/PROJECT_CONTEXT.md](docs/PROJECT_CONTEXT.md).
+2. Přečti [docs/ARCHITECTURE_DECISION_2026-10-31.md](docs/ARCHITECTURE_DECISION_2026-10-31.md), [docs/API_ARCHITECTURE_AND_MIGRATION_2026-10-31.md](docs/API_ARCHITECTURE_AND_MIGRATION_2026-10-31.md), [docs/TRAFFIC_AUDIT_2026-10-31.md](docs/TRAFFIC_AUDIT_2026-10-31.md), [docs/MATOMO_AUDIT_2026-10-31.md](docs/MATOMO_AUDIT_2026-10-31.md) a [docs/BENCHMARK_SYNTHESIS_2026-10-31.md](docs/BENCHMARK_SYNTHESIS_2026-10-31.md).
+3. Strojově čitelná data: [docs/data/observations_2026-10-31.json](docs/data/observations_2026-10-31.json), [docs/data/traffic_daily_2026-09-27_2026-10-31.csv](docs/data/traffic_daily_2026-09-27_2026-10-31.csv).
+4. Benchmark kód je v samostatné větvi `bench/go-rust-python`, návrh [PR #2](https://github.com/Boym323/Loucka_weather/pull/2) **je draft**; nikdy netvrď, že byl merge do main nebo že nový web už běží.
+5. Rozlišuj zdrojově ověřené hodnoty, orientační heuristiky, syntetická měření a návrhy. Nikdy netvrď, že benchmark numeriky použil skutečné meteo archive, ani že plné HTTP benchmarky byly na izolované DB.
 
-## Povinnosti
-1. Nejprve ověř stav repozitáře, přesnou konfiguraci, schema a skutečné měřené datové zdroje. Nikdy nehadej DB tabulky, URL kamery nebo interní adresy.
-2. Webový backend **čte MariaDB přímo při HTTP požadavcích** (přes parametrizované SQL, allowlist, limity, pool a cache). Prohlížeč se nesmí přímo připojit k DB. Bez výslovného schválení **žádné zápisy** do `pocasi-loucka.eu`, `loucka_reconstruction`, WeeWX konfigurace nebo produkčních služeb. Pozor: účet MCP může mít širší práva, než některé jednotlivé nástroje pro čtení.
-3. Pro měření používáš vždy explicitně určenou databázi. Nepoužívej default `DATABASE()` bez ověření identity – může se měnit mezi historickou/rekonstrukční DB.
-4. Výpočty jednotek, časových intervalů, DST a původu musí mít regresní testy na konkrétních fixtures. Původní, opravená, rekonstruovaná a modelová data odlišovat.
-5. Na produkčním LXC nespouštěj build webu. Build provozuj v CI; změny staging dříve než prod.
-6. Žádné live demo číslo nesmí vypadat jako skutečné měření; při absenci dat ukaž „Nedostupné“.
-7. Nepoužívej předgenerované JSON soubory jako hlavní datový přístup k historii: požadovaná architektura je Nginx + Astro + interní Python HTTP API -> MariaDB SELECT.
-8. Externí data používej z legálních/zdokumentovaných zdrojů, s attribution a timeouty.
-9. Malé PR, vysvětlení rizik, testů, výkonu a rollbacku. CI musí projít před merge.
-10. Vždy ověř grafickou podobu v desktopu i mobilu a světle/tmavém motivu.
-11. Pokud zdroj není dostupný, zaznamenej blocker a pokračuj v bezpečné implementaci bez fabrifikace.
+## Nepřekročitelné meze
+- **WeeWX + Belchertown, MariaDB a produkční měření musí zůstat funkční.** Původní `pocasi-loucka.eu.archive` měnit nesmíš. Pro aplikaci je read-only. Správa opravených hodnot patří do `loucka_reconstruction` přes výslovně schválený, auditovatelný proces.
+- Neprováděj intenzivní SQL/HTTP benchmark proti produkci. Používej oddělený lokální snapshot.
+- Nezveřejňuj privátní IP, osobní údaje návštěvníků, surové NPM logy, přihlašovací údaje, adresy interních hostů ani citlivá URL. GitHub repozitář je **veřejný**.
+- Meteorologické konvence: WeeWX `dateTime` je konec intervalu `(start,end]`, lokální kalendář `Europe/Prague`, DST CET/CEST, jednotky `usUnits` (US/METRIC/METRICWX), neměň NULL na nulu, odděluj originální a rekonstruovaná data, počítej úplnost dat.
+- Nezaměňuj současnou návštěvnost Matomo s počtem HTTP requestů Nginx, `101` s počtem aktivních websocketů ani `404` automaticky s chybami UX.
+- Volba **Node.js/Fastify** je aktuální **pracovní návrh**, nikoli definitivně schválené nebo nasazené řešení.
 
-## Závazný tříúrovňový model statistik
-- L1: `pocasi-loucka.eu.archive` pro detailní měření a krátkodobé grafy.
-- L2: `pocasi-loucka.eu.archive_day_*` pro stávající denní souhrny a rychlé měsíční/roční agregace.
-- L3: `loucka_weather_stats` je **pouze navržené volitelné schéma** na tomtéž MariaDB serveru. **MVP bude využívat pouze L1+L2** podle [WEEWX_DAILY_SUMMARIES_AUDIT.md](WEEWX_DAILY_SUMMARIES_AUDIT.md). Neimplementovat L3 bez měřeného přínosu a schválení.
-- Webové API má pouze SELECT práva na schválené zdroje. **Případný stats worker** má oddělený účet, který smí po schválení zapisovat pouze do schválených vlastních statistických tabulek; žádné zápisy do originálního archivu, WeeWX denních souhrnů nebo rekonstrukční DB.
-- Doplňování historie a rebuild souhrnů řeší WeeWX v samostatném procesu, **nejsou úkolem implementace frontendu**. Bez zvláštního schválení **nevytvářej tabulky, DB účty ani migrace, nespouštěj backfill**. V každém PR odděl přípravu migrací od jejího provedení na produkci.
-- Nepředpokládej, že `archive_day_*` jsou očištěné po rekonstrukci; využívej explicitní origin/quality a verzi algoritmu.
-- Při změně zdrojových dat nebo pravidel QC invaliduj dotčené odvozené statistiky, přepočti závislé rekordy; zpracování musí být idempotentní, atomické a testované na DB kopii.
+## Praktický postup v repozitáři
+- Před návrhem změny zkontroluj aktuální `main`, otevřené PR a pracovní dokumentaci, abys zbytečně nepřepisoval novější změny.
+- API provozuj odděleně od WeeWX (v MVP může běžet jako samostatná služba vedle Astro v novém LXC); frontend musí záviset jen na jazykově nezávislém verzovaném OpenAPI kontraktu, ne na Fastify nebo Go. Při výměně backendu vyžaduj paritní testy, staging a možnost rollbacku.
+- Pro Node API nejprve definuj čtecí kontrakty `/current`, `/history/24h`, `/history/30d`, `/statistics/yearly`, `/healthz` a jejich bezpečnostní omezení. Využívej cache a agregáty, náročné činnosti mimo HTTP.
+- Výsledky nových měření zapisuj do `docs/` včetně data, rozsahu, zdroje, metrik, metodiky, omezení, případných dostupných JSON výstupů a odkazu na relevantní PR.
+- Pokud se objeví rozpor mezi existujícími reporty a měřením, zaznamenej ho výslovně, nic potichu nepřepisuj.
+- Když uživatel žádá postup pro nový chat, odkazuj na `main/docs/PROJECT_CONTEXT.md` a tento `AGENTS.md`, nevyžaduj opakování už zdokumentovaných informací.
 
-## Co nyní neimplementovat
-- Neslučovat historické databáze automaticky.
-- Nesměšovat `rain` a `rainRate`; ani soilTemp s extraTemp.
-- Nespravovat produkční `archive` ze součástí webu.
-- Nepřidávat PHP, Rust, Next.js nebo další DB bez samostatného ADR s ověřeným přínosem.
-
-## Převzetí změny
-Každý PR uvádí: přesné soubory, důvod, testy včetně výsledků, migrace (pokud žádné, explicitně „žádné“), náklady RAM/CPU v případě relevantních změn, vliv na live databázi, možné selhání a rollback.
+## Doplněné odborné podklady
+- K meteo statistice čti `STATISTICS_SPEC.md` a `WEEWX_DAILY_SUMMARIES_AUDIT.md`, k průběhu rozhodnutí `DECISIONS.md`.
+- Audit `BACKEND_TECHNOLOGY_AUDIT.md` z 30.10. historicky navrhoval Go. **Aktuální pracovní preference pro staging zůstává Fastify/TypeScript** podle `docs/ARCHITECTURE_DECISION_2026-10-31.md`; konečný runtime nebyl potvrzen.

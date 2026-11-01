@@ -1,5 +1,8 @@
 # Audit backendu pro MariaDB WeeWX – výběr jazyka a technologie
 
+> **Aktualizace 1. 11. 2026 – pořadí doporučení:** Tento dokument historicky vyhodnocoval Go před dokončením šestijazyčných HTTP benchmarků a architektonického rozhodování. Současný [ADR 31. 10.](docs/ARCHITECTURE_DECISION_2026-10-31.md) navrhuje pro první **staging Node.js + Fastify + TypeScript**; Go zůstává relevantní alternativou. API se řídí nezávislým OpenAPI kontraktem PR #4. Ani Fastify, ani Go nejsou potvrzené jako finální produkční runtime. Níže uvedené dobové závěry zůstávají historickým podkladem, nikoli novým rozhodnutím.
+
+
 **Datum:** 2026-10-30  
 **Repozitář:** `Boym323/Loucka_weather`  
 **Režim auditu:** pouze read-only SELECT / information_schema / EXPLAIN; žádný zápis, rebuild ani změna provozu.  
