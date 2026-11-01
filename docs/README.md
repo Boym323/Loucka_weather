@@ -22,3 +22,5 @@
 **Pravidlo:** Nezveřejňovat raw HTTP logy, IP adresy ani tajné údaje. Neměnit originální meteorologickou databázi. Nespouštět plné zátěžové benchmarky na produkční DB.
 
 - [API v1 – produktový kontrakt, meteorologické výpočty, provoz a otevřená rozhodnutí](API_V1_PRODUCT_CONTRACT.md)
+
+- [Detekce nového archivního záznamu a SSE archive-updated](ARCHIVE_REFRESH_CONTRACT.md) – aktualizace grafů, souhrnů a obnova po výpadku (návrh).

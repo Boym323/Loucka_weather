@@ -42,3 +42,6 @@ Doplněn `?units=us|metric|metricwx` (default metricwx); zdrojová normalizace p
 
 ## API v1 – aktuální zadání
 Draft PR #4 obsahuje OpenAPI 3.1, meteorologické a feature JSON Schema, pravidla agregací, metadata senzorů, denní/měsíční statistiky, SSE, status kamery a readiness. Viz [API_V1_PRODUCT_CONTRACT.md](API_V1_PRODUCT_CONTRACT.md). Není to nasazená služba a live parita Fastify/Go/Rust neproběhla.
+
+## Archivní refresh – návrh
+Návrhový read-only observer pro nové záznamy v `archive` (poller ~15s a overlap/catch-up) po zjištění commitu odešle `archive-updated` přes SSE. Dotčené grafy a statistiky se revalidují odděleně podle `summaryStatus`. Viz [ARCHIVE_REFRESH_CONTRACT.md](ARCHIVE_REFRESH_CONTRACT.md). Jde o kontrakt, nikoli produkční běžící proces.

@@ -35,3 +35,8 @@
 - Povinně čti docs/API_V1_PRODUCT_CONTRACT.md, schemas/aggregation-policy.json a schemas/features.schema.json.
 - Nepovoluj libovolné numerické agregace: kontroluj dvojice metric x aggregation a stav zdrojových senzorů.
 - Dataset original je výchozí. Approved vyžaduje schválený QC proces. Live a kamera mohou být reálně nedostupné.
+
+## Automatická obnova archivních dat
+- Povinně čti [docs/ARCHIVE_REFRESH_CONTRACT.md](docs/ARCHIVE_REFRESH_CONTRACT.md) pro `archive-updated`, `summaryStatus`, deduplikaci, backfill, cache a návrat po výpadku.
+- Jeden centrální read-only poller, žádný SQL dotaz per návštěvník, žádný slib přesného času 5min zápisu. Schémata v `schemas/features.schema.json`, referenční model `contracts/archive_refresh.py`, testy `tests/test_archive_refresh.py`.
+- Dokud nejsou prokazatelně aktuální `archive_day_*` souhrny, nepublikuj `summaryStatus=ready` ani jejich údajně čerstvé statistiky.

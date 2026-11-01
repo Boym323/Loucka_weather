@@ -63,6 +63,10 @@ Neexistuje jedna univerzální funkce pro všech 45 veličin. Vymahatelný sezna
 - Na reconnect zasílá EventSource `Last-Event-ID`. Replay pouze v omezeném bufferu, po ztrátě historie `reset` a nový snapshot. V proxy vypnout SSE buffering, limitovat klientskou frontu, při přetížení odpojit pomalý stream. Polling archive každou sekundu pro každého uživatele je zakázán.
 - Při výpadku live lze zobrazit `archive_fallback` s pravdivým označením archivu; nikdy jej nevydávat za skutečné live. Stav kamery ani nelegální/nevěřený radar nesmí blokovat ostatní meteo endpointy.
 
+### Archivní změny a cílená obnova klientských grafů
+
+Návrh pětiminutové obnovy není přesně načasovaný `setInterval(300s)`. Jeden read-only observer detekuje skutečně zapsané řádky `archive` (výchozí kandidátní kontrola každých 15 sekund), ošetřuje stránkovaný catch-up, překryvné okno pro opožděné zápisy a vysílá `archive-updated` přes již existující `/api/v1/live` SSE. Událost obsahuje dotčený časový rozsah, revizi a `summaryStatus`; grafy se revalidují po archivním commitu, denní/měsíční/roční statistiky až po ověření jejich souhrnů. Podrobný kontrakt a bezpečnostní limity: [ARCHIVE_REFRESH_CONTRACT.md](ARCHIVE_REFRESH_CONTRACT.md). Je to návrh, nikoli funkční watcher.
+
 ## 7. Kamera, senzory a schopnosti stanice
 
 - Webkamera: status API veřejně vrací pouze sanitizovaná metadata a odkaz na serverově publikovaný maskovaný snímek, ne URL privátní kamery. Neověřený zdroj => `disabled`/`unavailable`, nikoliv falešný aktuální obrázek. Capture worker a maskování/retence jsou oddělené; kamera má vlastní readiness.

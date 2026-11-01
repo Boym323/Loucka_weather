@@ -41,3 +41,5 @@ Výkonnostní implementace, kompletní HTTP reporty a compute benchmark jsou st�
 **Pozor:** README před audity uvádělo jako první kandidát datové vrstvy Python. Tento návrh je v roce 2026 nahrazen **pracovní preferencí Node.js/Fastify** popsanou v [ADR](docs/ARCHITECTURE_DECISION_2026-10-31.md), nikoli hotovým schválením.
 
 Před implementací backendu čtěte [API v1 – produktový kontrakt](docs/API_V1_PRODUCT_CONTRACT.md). API je nadále pouze návrh v draft PR #4.
+
+Pětiminutová archivní aktualizace a událost `archive-updated`: [kontrakt obnovy archivu](docs/ARCHIVE_REFRESH_CONTRACT.md) (draft, ne nasazená služba).
