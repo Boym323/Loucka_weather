@@ -106,3 +106,9 @@ Listener se odmítne spustit bez přesně určené LAN IP, allowlistu IP brány 
 ## Zdroj
 
 Ecowitt GW3000 manual (Weather Services -> Customized), příklady Ecowitt HTTP POST a datová dokumentace; skutečný paket z konkrétní instalace musí být ještě ověřen. CI využívá syntetické testovací pakety pouze pro protokol, nikoli jako reálná meteorologická měření.
+
+### Potvrzeno skutečnou odpovědí GW3000
+
+Dodaná lokální odpověď má `common_list` pro venkovní teplotu, relativní vlhkost, vítr, UV, záření; `rain` pro intenzitu; `wh25` pro vnitřní teplotu/vlhkost a absolutní/relativní tlak; `ch_pm25` pro kanál PM2,5 č. 1 a `ch_soil` pro procentuální vlhkost půdy na kanálu 1. Převod explicitně kontroluje jednotky a hranice, ignoruje neznámé ID a staré datum posledního blesku. Surové číselné kódy `battery` neinterpretuje jako procenta či volty. Tento parser nyní má regresní test podle skutečného paketu, nejen syntetických příkladů.
+
+Aktivace na LXC pokračuje uvedeným *read-only* postupem; nepotřebuje měnit Weather Services, Customized, ani firmware GW3000. Na port 80 zařízení provádíme jen běžné dotazy GET.

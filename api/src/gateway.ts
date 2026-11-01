@@ -16,7 +16,8 @@ const units:Record<string,string>={
  outTemp:'degC',outHumidity:'percent',inTemp:'degC',inHumidity:'percent',
  barometer:'hPa',pressure:'hPa',windDir:'degree',windSpeed:'meter_per_second',
  windGust:'meter_per_second',rainRate:'mm_per_hour',
- radiation:'watt_per_meter_squared',UV:'uv_index'
+ radiation:'watt_per_meter_squared',UV:'uv_index',
+ pm25_1:'microgram_per_cubic_meter',soilMoisture1:'percent'
 };
 export const LIVE_TTL_MS=120000;
 export function validatedSnapshot(value:unknown,nowMs=Date.now()):GatewaySnapshot|null{
