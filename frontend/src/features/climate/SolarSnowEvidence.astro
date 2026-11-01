@@ -1,0 +1,81 @@
+<div class="climate-evidence-grid">
+ <section class="section" id="solar-evidence" data-solar-evidence>
+  <div class="section-heading"><h2>Sluneční energie</h2><span class="status-chip" data-solar-status>Načítám</span></div>
+  <strong class="climate-evidence-number" data-solar-energy>—</strong>
+  <p class="source-note">kWh/m² · odvozeno integrací naměřeného globálního záření W/m² v čase</p>
+  <p data-solar-coverage class="source-note">Pokrytí archivu se zjišťuje.</p>
+  <p class="lead">Jde o dopadající sluneční energii, <strong>ne</strong> o dobu slunečního svitu v hodinách. V archivu pro rok 2025 nejsou pro dobu svitu samostatné platné hodnoty; záření nelze bez kalibrace vydávat za dobu slunečního svitu.</p>
+ </section>
+ <section class="section" id="snow-evidence" data-snow-evidence>
+  <div class="section-heading"><h2>Mrazové dny</h2><span class="status-chip" data-frost-status>Načítám</span></div>
+  <strong class="climate-evidence-number" data-frost-count>—</strong>
+  <p class="source-note" data-frost-coverage>Počet dní s naměřeným denním minimem pod 0 °C</p>
+  <div class="frost-month-grid" data-frost-monthly></div>
+  <p class="lead">Mráz není důkazem sněhové pokrývky. Dlouhodobá výška sněhu se v archivních kanálech neukládá, proto skutečnou výšku sněhu ani počet dní se sněhem bez dalšího zdroje nelze uvést.</p>
+ </section>
+</div>
+<script>
+ import {getHistoryInterval} from '../../shared/api/client';
+ import {pragueMidnightIso} from '../../shared/domain/statistics';
+ const root=document.querySelector<HTMLElement>('[data-climate-dashboard]');
+ if(root){
+  const selector=root.querySelector<HTMLSelectElement>('[data-climate-year]');
+  let controller:AbortController|undefined;
+  const months=['Led','Úno','Bře','Dub','Kvě','Čvn','Čvc','Srp','Zář','Říj','Lis','Pro'];
+  async function refresh(){
+   controller?.abort();controller=new AbortController();const signal=controller.signal;
+   const year=Number(selector?.value??2025);
+   const solar=root.querySelector<HTMLElement>('[data-solar-energy]');
+   const solarStatus=root.querySelector<HTMLElement>('[data-solar-status]');
+   const coverage=root.querySelector<HTMLElement>('[data-solar-coverage]');
+   const frost=root.querySelector<HTMLElement>('[data-frost-count]');
+   const frostStatus=root.querySelector<HTMLElement>('[data-frost-status]');
+   const frostCover=root.querySelector<HTMLElement>('[data-frost-coverage]');
+   const monthChart=root.querySelector<HTMLElement>('[data-frost-monthly]');
+   if(solar)solar.textContent='—';if(frost)frost.textContent='—';
+   if(solarStatus)solarStatus.textContent='Načítám';
+   if(frostStatus)frostStatus.textContent='Načítám';
+   try{
+    const response=await fetch('/api/v1/climate/solar?year='+year,{signal});
+    if(!response.ok)throw Error('Solar API '+response.status);
+    const data=await response.json() as {energyKwhM2:number|null;coverageFraction:number;validRecords:number};
+    if(signal.aborted)return;
+    if(data.energyKwhM2!==null&&Number.isFinite(data.energyKwhM2)){
+     if(solar)solar.textContent=new Intl.NumberFormat('cs-CZ',{maximumFractionDigits:1}).format(data.energyKwhM2);
+     if(coverage)coverage.textContent='Pokrytí platnými intervaly: '+new Intl.NumberFormat('cs-CZ',{style:'percent',maximumFractionDigits:0}).format(Math.min(1,data.coverageFraction))+'; '+data.validRecords+' archivních měření.';
+     if(solarStatus){solarStatus.textContent='Odvozeno z archivu';solarStatus.className='status-chip warning';}
+    }else if(solarStatus)solarStatus.textContent='Bez zdrojových měření';
+   }catch{if(!signal.aborted&&solarStatus)solarStatus.textContent='Zdroj nedostupný';}
+   try{
+    const from=pragueMidnightIso(year+'-01-01'),to=pragueMidnightIso((year+1)+'-01-01');
+    const daily=await getHistoryInterval('outTemp',from,to,'daily',signal);
+    if(signal.aborted)return;
+    const days=daily.points.filter(p=>p.minValue!==null&&p.minValue!==undefined&&Number.isFinite(p.minValue));
+    const frozen=days.filter(p=>(p.minValue as number)<0);
+    if(frost)frost.textContent=String(frozen.length);
+    if(frostCover)frostCover.textContent='Z '+days.length+' dní s dostupným minimem; neúplné dny se neodhadují.';
+    if(frostStatus){frostStatus.textContent='Denní minima WeeWX';frostStatus.className='status-chip ok';}
+    if(monthChart){
+     monthChart.replaceChildren();
+     const counts=Array(12).fill(0) as number[];
+     for(const p of frozen){
+      const month=Number(new Intl.DateTimeFormat('en-US',{timeZone:'Europe/Prague',month:'numeric'}).format(new Date(p.startTime)))-1;
+      if(month>=0&&month<12)counts[month]++;
+     }
+     const max=Math.max(1,...counts);
+     counts.forEach((count,i)=>{
+      const el=document.createElement('div');el.className='frost-month-bar';
+      const bar=document.createElement('i');bar.style.height=Math.max(2,42*count/max)+'px';
+      const value=document.createElement('strong');value.textContent=String(count);
+      const label=document.createElement('small');label.textContent=months[i];
+      el.append(value,bar,label);monthChart.append(el);
+     });
+    }
+   }catch{if(!signal.aborted&&frostStatus)frostStatus.textContent='Denní minima nedostupná';}
+  }
+  selector?.addEventListener('change',()=>void refresh());
+  root.querySelector('[data-climate-reload]')?.addEventListener('click',()=>void refresh());
+  document.addEventListener('astro:before-swap',()=>controller?.abort(),{once:true});
+  void refresh();
+ }
+</script>
