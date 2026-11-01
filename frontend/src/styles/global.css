@@ -637,3 +637,48 @@ h1,h2,h3,p{margin-top:0}h1{font-size:clamp(26px,3vw,42px);line-height:1.2;letter
 .map-layer-panel .source-note{display:block;margin-top:14px}
 @media(max-width:1020px){.map-page-layout{grid-template-columns:1fr}.map-page-sidebar{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){.map-page-sidebar{grid-template-columns:1fr}}
+
+
+/* Verified-source extension (November 2026). All data labels retain provenance. */
+.local-warnings{background:linear-gradient(130deg,#142638,#142c38);border-color:#3b5360}
+.local-warnings .section-heading{margin-bottom:7px}
+.local-warnings .panel-title{color:#ffd08d}
+.local-warnings .panel-title h2{font-size:14px}
+.local-warnings .source-note{margin:6px 0}
+.local-alert-entry{border-top:1px solid var(--line);padding:8px 0;max-height:240px;overflow:auto}
+.local-alert-entry strong{color:var(--gold);font-size:12px}
+.local-alert-entry p{font-size:11px;color:var(--text);margin:5px 0;white-space:pre-wrap}
+.sensor-diagnostic-value{font-size:17px;font-weight:750;color:var(--teal);margin:6px 0}
+.sensor-inventory-card .status-chip{display:inline-block}
+.camera-archive-section{margin-top:13px}
+.camera-archive-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.camera-archive-grid>.empty-state{grid-column:1/-1}
+.camera-archive-thumb{display:block;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;text-decoration:none;overflow:hidden}
+.camera-archive-thumb img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover}
+.camera-archive-thumb span{display:block;padding:6px 7px;font-size:10px;color:var(--muted)}
+.camera-timelapse-block{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+.camera-timelapse-block select{background:var(--panel-2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:6px}
+.camera-timelapse-block video{display:block;width:100%;max-width:880px;aspect-ratio:16/9;background:#021019;border-radius:7px}
+.camera-timelapse-block video[hidden]{display:none}
+.climate-evidence-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
+.climate-evidence-number{font-size:clamp(25px,3vw,38px);line-height:1.1;color:var(--teal)}
+.climate-evidence-grid .lead{margin-top:10px}
+.frost-month-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));min-height:90px;gap:4px;align-items:end}
+.frost-month-bar{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;justify-content:end;min-width:0}
+.frost-month-bar i{display:block;background:var(--blue);width:80%;min-width:4px;max-width:28px;border-radius:2px 2px 0 0}
+.frost-month-bar small{font-size:9px;color:var(--muted)}
+.model-overlay{position:absolute;inset:0;pointer-events:none;z-index:5}
+.model-overlay[hidden]{display:none}
+.model-map-marker{position:absolute;transform:translate(-50%,-50%);border:1px solid #62dabb;border-radius:5px;background:#07202be8;color:#edfafa;font-size:11px;font-weight:760;text-align:center;line-height:1.15;white-space:nowrap;padding:4px 6px;text-shadow:0 1px 3px #000;box-shadow:0 2px 7px #0008}
+.model-map-marker.model-temp{background:#1e4550ee;border-color:#ffe28f}
+.model-map-controls{border-top:1px solid var(--line);margin-top:11px;padding-top:9px}
+.model-map-controls .source-note{font-size:10px}
+@media(max-width:900px){
+ .camera-archive-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .climate-evidence-grid{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+ .camera-archive-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .local-warnings{padding:12px}
+ .frost-month-bar small{font-size:8px}
+}
