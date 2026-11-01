@@ -1,6 +1,9 @@
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
+import {mkdtemp,mkdir,writeFile,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
 import {test} from 'node:test';
+import type {TestContext} from 'node:test';
 import assert from 'node:assert/strict';
 import {buildApp} from '../src/app.js';
 import {converted} from '../src/units.js';
@@ -13,8 +16,18 @@ const fixture:ArchiveRow={dateTime:1793520000,usUnits:16,interval:5,
 function reader(row:ArchiveRow|null=fixture,rows:ArchiveRow[]=[]):ArchiveReader{
  return {latest:async()=>row,history:async()=>rows,ping:async()=>{}};
 }
+/** Unit tests are hermetic even on an LXC with working camera and CAP collectors.
+ * CI and production run the same assertions. No live state is modified.
+ */
+async function isolatedSourceApp(t:TestContext){
+ const root=await mkdtemp(join(tmpdir(),'loucka-source-tests-'));
+ const files={cameraDir:join(root,'camera'),warningsFile:join(root,'chmi','alerts.json')};
+ const app=buildApp(reader(),now,undefined,files);
+ t.after(async()=>{await app.close();await rm(root,{recursive:true,force:true});});
+ return {app,root,files};
+}
 test('healthz, readiness, station, camera and sensors do not fabricate capabilities',async t=>{
- const app=buildApp(reader(),now);t.after(()=>app.close());
+ const {app}=await isolatedSourceApp(t);
  const h=await app.inject('/api/v1/healthz');
  assert.equal(h.statusCode,200);assert.equal(h.json().status,'ok');
  const ready=(await app.inject('/api/v1/readyz')).json();
@@ -172,7 +185,7 @@ test('extra read-only endpoints expose real-source telemetry and derived solar o
  assert.equal((await app.inject('/api/v1/climate/solar?year=bad')).statusCode,400);
 });
 test('camera archive and CHMI warning fail closed when collectors not installed',async t=>{
- const app=buildApp(reader(),now);t.after(()=>app.close());
+ const {app}=await isolatedSourceApp(t);
  const archive=(await app.inject('/api/v1/camera/archive')).json();
  assert.equal(archive.status,'unavailable');
  assert.deepEqual(archive.frames,[]);
@@ -186,7 +199,7 @@ test('camera archive and CHMI warning fail closed when collectors not installed'
 });
 
 test('camera day browsing rejects traversal, invalid dates and future requests',async t=>{
- const app=buildApp(reader(),now);t.after(()=>app.close());
+ const {app}=await isolatedSourceApp(t);
  assert.equal((await app.inject('/api/v1/camera/archive/day/2026-02-30')).statusCode,400);
  assert.equal((await app.inject('/api/v1/camera/archive/day/bad')).statusCode,400);
  const distant=await app.inject('/api/v1/camera/archive/day/2020-01-01');
@@ -196,4 +209,37 @@ test('camera day browsing rejects traversal, invalid dates and future requests',
  assert.equal(today.statusCode,200);
  assert.equal(today.json().status,'unavailable');
  assert.deepEqual(today.json().frames,[]);
+});
+
+test('camera and CHMI report real validated collector files from explicit isolated paths',async t=>{
+ const {app,files}=await isolatedSourceApp(t);
+ const stamp=new Date();
+ const name=stamp.toISOString().replace(/[-:]/g,'').replace(/\\.\\d{3}Z$/,'Z')+'.jpg';
+ const fetchedAt=stamp.toISOString();
+ await mkdir(files.cameraDir,{recursive:true});
+ await mkdir(join(files.cameraDir,'frames'),{recursive:true});
+ await mkdir(join(files.warningsFile,'..'),{recursive:true});
+ await writeFile(join(files.cameraDir,'index.json'),JSON.stringify({
+  schemaVersion:'1',frames:[{name,fetchedAt}],videos:[]
+ }));
+ await writeFile(join(files.cameraDir,'frames',name),'fake-jpeg-fixture');
+ await writeFile(files.warningsFile,JSON.stringify({
+  schemaVersion:'1',source:'CHMI_CAP',orp:'7209',status:'verified',
+  checkedAt:stamp.toISOString(),alerts:[]
+ }));
+ const camera=(await app.inject('/api/v1/camera/status')).json();
+ assert.equal(camera.status,'fresh');
+ assert.equal(camera.latestUrl,'/api/v1/camera/frames/'+name);
+ const listing=(await app.inject('/api/v1/camera/archive')).json();
+ assert.equal(listing.status,'ok');
+ assert.equal(listing.frames.length,1);
+ const day=(await app.inject('/api/v1/camera/archive/day/'+stamp.toISOString().slice(0,10))).json();
+ assert.equal(day.status,'ok');
+ assert.equal(day.frames.length,1);
+ const alert=(await app.inject('/api/v1/alerts/local')).json();
+ assert.equal(alert.status,'verified');
+ assert.deepEqual(alert.alerts,[]);
+ const monitor=(await app.inject('/api/v1/monitor/status')).json();
+ assert.equal(monitor.components.camera.status,'ok');
+ assert.equal(monitor.components.chmi.status,'ok');
 });
