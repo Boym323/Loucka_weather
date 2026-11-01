@@ -40,6 +40,14 @@ class GW3000HTTPTests(unittest.TestCase):
         self.assertEqual(m["UV"], 2)
         self.assertNotIn("rain", m)
 
+    def test_separate_rain_array_uses_rate_not_cumulative_total(self):
+        packet = sample()
+        packet["common_list"] = [x for x in packet["common_list"] if x["id"] != "0x0E"]
+        packet["rain"] = [{"id": "0x10", "val": "200 mm"}, {"id": "0x0E", "val": "1.5 mm/Hr"}]
+        parsed = mod.parse_live_payload(packet, STAMP)
+        self.assertAlmostEqual(parsed["readings"]["rainRate"], 1.5)
+        self.assertNotIn("rain", parsed["readings"])
+
     def test_missing_units_and_lux_are_not_guessed(self):
         raw = sample()
         raw["common_list"][0].pop("unit")
