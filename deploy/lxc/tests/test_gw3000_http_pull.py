@@ -125,8 +125,10 @@ class GW3000HTTPTests(unittest.TestCase):
         data["ch_pm25"] = [{"channel": "2", "PM25": "3.0"}]
         data["ch_soil"] = [{"channel": "2", "humidity": "48%"}]
         parsed = mod.parse_live_payload(data, STAMP)["readings"]
-        for forbidden in ("inHumidity", "pressure", "barometer", "pm25_1", "soilMoisture1"):
+        for forbidden in ("inHumidity", "pressure", "pm25_1", "soilMoisture1"):
             self.assertNotIn(forbidden, parsed)
+        # Valid common_list pressure wins over an invalid WH25 replacement.
+        self.assertAlmostEqual(parsed["barometer"], 1015.9166, places=2)
         # Invalid 24h PM2.5 and AQI values are not used as live PM2.5.
         data["ch_pm25"] = [{"channel": "1", "PM25": "None", "PM25_24H": "7.4",
                             "PM25_RealAQI": "13"}]
