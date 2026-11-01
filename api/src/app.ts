@@ -1,5 +1,6 @@
 import Fastify from 'fastify';
 import {registerExtras,archiveCameraStatus} from './extras.js';
+import type {ExtraSourceFiles} from './extras.js';
 import {createHash} from 'node:crypto';
 import type {ArchiveReader,ArchiveRow,DailySummaryRow} from './store.js';
 import {isMetric,metrics} from './metrics.js';
@@ -287,7 +288,8 @@ function aggregateSummaryRows(metric:Metric,aggregation:string,rows:DailySummary
   ?raw:sourceUnits===undefined?null:converted(metric,raw,sourceUnits,units).value;
  return {value,unit,valid,extremaObservedAt};
 }
-export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHub?:LiveHub){
+export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHub?:LiveHub,
+ sourceFiles:ExtraSourceFiles={}){
  const app=Fastify({logger:false,ajv:{customOptions:{removeAdditional:false,coerceTypes:false}}});
  const metadataCheckedAt=now().toISOString();
  const errorBody=(code:string,message:string,requestId:string)=>({
@@ -342,10 +344,10 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
   const timestamp=now(),epochMs=timestamp.getTime();
   const last=liveHub?.latestObservation?.dateTime;
   const age=last===null||last===undefined?null:Math.max(0,Math.floor(epochMs/1000-last));
-  const camera=await archiveCameraStatus();
+  const camera=await archiveCameraStatus(sourceFiles);
   let alerts:'ok'|'stale'|'missing'='missing',alertsAge:number|null=null;
   try{
-   const path=process.env.LOUCKA_ALERTS_FILE||'/var/lib/loucka-alerts/alerts.json';
+   const path=sourceFiles.warningsFile??process.env.LOUCKA_ALERTS_FILE??'/var/lib/loucka-alerts/alerts.json';
    const info=JSON.parse(await readFile(path,'utf8')) as {checkedAt?:string;source?:string;status?:string;orp?:string};
    if(info.source==='CHMI_CAP'&&info.status==='verified'&&info.orp==='7209'){
     const checked=Date.parse(info.checkedAt??'');
@@ -374,7 +376,7 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
   schemaVersion:'1',stationId:'loucka',updatedAt:metadataCheckedAt,
   sensors:[] // Verified physical mapping and installation epochs are not supplied.
  }));
- app.get('/api/v1/camera/status',async()=>archiveCameraStatus());
+ app.get('/api/v1/camera/status',async()=>archiveCameraStatus(sourceFiles));
  const statisticsRoute=(period:'day'|'month'|'year')=>async(req:any,reply:any)=>{
   const {metric,aggregation,units='metricwx',dataset='original'}=req.query as StatisticsQuery;
   const label=period==='day'?(req.query as StatisticsQuery).date!:period==='month'?
@@ -605,6 +607,6 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
    return makeResponse('daily',policy.aggregation,result.points,result.valid,digest);
   }catch{return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Daily summaries unavailable or invalid',503);}
  });
- registerExtras(app,reader);
+ registerExtras(app,reader,sourceFiles);
  return app;
 }
