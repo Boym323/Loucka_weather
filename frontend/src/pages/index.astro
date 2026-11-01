@@ -2,6 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CurrentPanel from '../features/current/CurrentPanel.astro';
 import HistoryChart from '../features/history/HistoryChart.astro';
+import OverviewReadings from '../features/current/OverviewReadings.astro';
 ---
 <BaseLayout title="Přehled" description="Aktuální meteorologická měření a historické grafy Počasí Loučka.">
  <section class="site-banner" aria-label="Ilustrační krajina při západu slunce">
@@ -15,10 +16,11 @@ import HistoryChart from '../features/history/HistoryChart.astro';
     <div class="section-heading"><div class="panel-title"><span class="panel-mark" aria-hidden="true">◷</span> Předpověď pro Loučku</div><span class="status-chip">Nenapojeno</span></div>
     <div class="note-panel"><strong>Předpověď připravujeme</strong><p>Zdroj předpovědi a jeho licence zatím nebyly ověřeny. Nezobrazujeme modelové hodnoty jako naměřené počasí.</p></div>
    </section>
-   <section class="section">
+   <section class="section warning-section">
     <div class="note-panel warning-panel"><div class="panel-title"><span aria-hidden="true">⚠</span> Výstrahy ČHMÚ – stav neověřen</div><p>Bez připojeného aktuálního zdroje nemůžeme potvrdit ani vyloučit platné výstrahy.</p></div>
-    <div class="note-panel ok-panel"><div class="panel-title"><span aria-hidden="true">◈</span> Archivní měření</div><p>Aktuální teplotu, vítr a další veličiny čteme přes Fastify API ze skutečného archivu WeeWX.</p></div>
+    
    </section>
+   <OverviewReadings />
   </aside>
  </div>
  <div class="dashboard-bottom">

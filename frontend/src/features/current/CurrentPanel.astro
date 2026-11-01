@@ -2,8 +2,16 @@
 import MetricCard from '../../shared/ui/MetricCard.astro';
 import { metrics } from '../../shared/domain/metrics';
 interface Props { variant?: 'dashboard' | 'detail' }
-const {variant='detail'}=Astro.props;
-const view=variant==='dashboard' ? metrics.slice(0,8) : metrics;
+const { variant = 'detail' } = Astro.props;
+// Homepage: 6 compact cards plus a separate row of contextual readings.
+// Detail page keeps the full public selection.
+const view = variant === 'dashboard' ? metrics.slice(0, 6) : metrics;
+const quickReadings = [
+ { id:'radiation', label:'Sluneční záření', unit:'W/m²', digits:0 },
+ { id:'UV', label:'UV index', unit:'', digits:1 },
+ { id:'pm25_1', label:'PM2,5', unit:'µg/m³', digits:1 },
+ { id:'rain', label:'Srážky v intervalu', unit:'mm', digits:1 }
+];
 ---
 <section class="section current-panel" data-current-panel data-variant={variant} aria-labelledby="current-title">
  <div class="section-heading">
@@ -14,7 +22,14 @@ const view=variant==='dashboard' ? metrics.slice(0,8) : metrics;
  <div class="metric-grid">
   {view.map((metric,index)=><MetricCard id={metric.id} label={metric.label} unit={metric.unit} featured={index===0} />)}
  </div>
- <p class="source-note">Zdroj: původní archiv WeeWX · jednotky METRICWX · chybějící nebo podezřelé hodnoty nejsou nahrazovány nulou.</p>
+ {variant==='dashboard' && <div class="quick-reading-grid" aria-label="Doplňková měření">
+  {quickReadings.map(metric => <div class="quick-reading">
+   <span class="quick-label">{metric.label}</span>
+   <strong><span data-quick-value={metric.id}>—</span><small>{metric.unit}</small></strong>
+   <span class="sr-only" data-quick-quality={metric.id}>Čeká na měření</span>
+  </div>)}
+ </div>}
+ <p class="source-note source-note-bottom">Původní archiv WeeWX · METRICWX · podezřelé a chybějící údaje se nezobrazují jako nula.</p>
 </section>
 <script>
  import { getCurrent } from '../../shared/api/client';
@@ -42,6 +57,15 @@ const view=variant==='dashboard' ? metrics.slice(0,8) : metrics;
    if(node)node.textContent=formatValue(reading.value,metric.digits);
    if(quality)quality.textContent=reading.quality==='reconstructed'?'Rekonstruované měření':
     reading.quality==='derived'?'Odvozené měření':'Archivní měření';
+  }
+  const quick=[{id:'radiation',digits:0},{id:'UV',digits:1},{id:'pm25_1',digits:1},{id:'rain',digits:1}];
+  for(const metric of quick){
+   const node=section.querySelector<HTMLElement>('[data-quick-value="'+metric.id+'"]');
+   const quality=section.querySelector<HTMLElement>('[data-quick-quality="'+metric.id+'"]');
+   const reading=response.readings[metric.id];
+   const valid=reading&&reading.value!==null&&reading.quality!=='missing'&&reading.quality!=='suspect';
+   if(node)node.textContent=valid?formatValue(reading.value,metric.digits):'—';
+   if(quality)quality.textContent=valid?'Platné měření':reading?.quality==='suspect'?'Podezřelý údaj':'Nedostupné měření';
   }
  }).catch(()=>{
   if(controller.signal.aborted)return;

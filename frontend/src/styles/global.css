@@ -72,3 +72,67 @@ h1,h2,h3,p{margin-top:0}h1{font-size:clamp(26px,3vw,42px);line-height:1.2;letter
 .wind-center{position:absolute;top:50%;left:50%;width:12px;height:12px;background:var(--text);border-radius:50%;transform:translate(-50%,-50%);z-index:4}
 .wind-degrees{font-size:43px;font-weight:760;line-height:1.1;margin-bottom:5px}.wind-degrees span{font-size:19px;color:var(--muted)}
 @media(max-width:650px){.wind-layout{gap:20px;min-height:170px}.wind-gauge{width:150px;height:150px}}
+
+
+/* Screenshot refinement (PDF review 2026-11-01): use compact weather cards
+   and real archive-derived secondary readings rather than empty columns. */
+.current-panel[data-variant="dashboard"] .metric-grid{
+ grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0 10px;
+}
+.current-panel[data-variant="dashboard"] .metric-card{
+ padding:12px 14px;min-height:78px;
+}
+.current-panel[data-variant="dashboard"] .featured{
+ grid-column:span 2;grid-row:span 2;min-height:167px;
+ background:linear-gradient(115deg,#11453f 0%,#123646 100%);
+}
+.current-panel[data-variant="dashboard"] .metric-card:nth-child(4),
+.current-panel[data-variant="dashboard"] .metric-card:nth-child(5),
+.current-panel[data-variant="dashboard"] .metric-card:nth-child(6){
+ grid-row:3; 
+}
+.current-panel[data-variant="dashboard"] .featured .metric-number{font-size:clamp(42px,5.2vw,70px)}
+.current-panel[data-variant="dashboard"] .metric-card .metric-number{margin:6px 0 2px}
+.current-panel[data-variant="dashboard"] .metric-note{margin-top:4px}
+.quick-reading-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:10px}
+.quick-reading{min-width:0;background:var(--panel-2);border:1px solid var(--line);border-radius:7px;padding:9px 11px}
+.quick-reading:nth-child(1){border-left:3px solid #f5bb57}
+.quick-reading:nth-child(2){border-left:3px solid #ba9aff}
+.quick-reading:nth-child(3){border-left:3px solid #67c5ea}
+.quick-reading:nth-child(4){border-left:3px solid #57b8eb}
+.quick-label{display:block;color:var(--muted);font-size:10px;white-space:normal}
+.quick-reading strong{display:block;font-size:17px;font-variant-numeric:tabular-nums;white-space:nowrap;margin-top:5px}
+.quick-reading strong small{font-size:10px;font-weight:450;color:var(--muted);margin-left:3px}
+.source-note-bottom{margin:11px 0 0}
+.sidebar-stack{grid-template-rows:auto auto 1fr}
+.sidebar-stack .section{padding:14px}
+.sidebar-stack .warning-section{background:transparent;border:none;padding:0}
+.sidebar-stack .warning-section .note-panel{padding:14px}
+.overview-readings{display:flex;flex-direction:column;min-height:0}
+.overview-readings h2{font-size:14px}
+.overview-list{margin:0 0 8px}
+.overview-list>div{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.overview-list dt{font-size:12px;color:var(--muted)}
+.overview-list dd{font-size:14px;font-weight:760;margin:0;font-variant-numeric:tabular-nums;white-space:nowrap}
+.overview-readings>.source-note{margin:auto 0 0;padding-top:8px}
+.dashboard-bottom>.section{display:flex;flex-direction:column;min-height:340px}
+.dashboard-bottom .preview-visual{height:auto;min-height:180px;flex:1}
+.dashboard-bottom .chart-box{height:225px}
+.dashboard-bottom .chart-message{padding:8px 0;margin:0}
+.dashboard-bottom .history-legend{margin-top:auto;padding-top:10px}
+.dashboard-bottom .preview-footer{margin-top:12px;flex-wrap:wrap}
+:root[data-theme="light"] .current-panel[data-variant="dashboard"] .featured{background:linear-gradient(110deg,#d0f3e4,#e7f1f5)}
+@media(max-width:1050px){
+ .quick-reading-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .sidebar-stack{grid-template-rows:auto}
+ .dashboard-bottom>.section{min-height:0}
+}
+@media(max-width:650px){
+ .current-panel[data-variant="dashboard"] .metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .current-panel[data-variant="dashboard"] .featured{grid-column:span 2;grid-row:auto;min-height:140px}
+ .current-panel[data-variant="dashboard"] .metric-card:nth-child(4),
+ .current-panel[data-variant="dashboard"] .metric-card:nth-child(5),
+ .current-panel[data-variant="dashboard"] .metric-card:nth-child(6){grid-row:auto}
+ .current-panel[data-variant="dashboard"] .metric-card{min-height:80px}
+ .quick-reading-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
