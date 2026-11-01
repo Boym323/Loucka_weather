@@ -22,3 +22,7 @@
 - Výsledky nových měření zapisuj do `docs/` včetně data, rozsahu, zdroje, metrik, metodiky, omezení, případných dostupných JSON výstupů a odkazu na relevantní PR.
 - Pokud se objeví rozpor mezi existujícími reporty a měřením, zaznamenej ho výslovně, nic potichu nepřepisuj.
 - Když uživatel žádá postup pro nový chat, odkazuj na `main/docs/PROJECT_CONTEXT.md` a tento `AGENTS.md`, nevyžaduj opakování už zdokumentovaných informací.
+
+## Doplněné odborné podklady
+- K meteo statistice čti `STATISTICS_SPEC.md` a `WEEWX_DAILY_SUMMARIES_AUDIT.md`, k průběhu rozhodnutí `DECISIONS.md`.
+- Audit `BACKEND_TECHNOLOGY_AUDIT.md` z 30.10. historicky navrhoval Go. **Aktuální pracovní preference pro staging zůstává Fastify/TypeScript** podle `docs/ARCHITECTURE_DECISION_2026-10-31.md`; konečný runtime nebyl potvrzen.

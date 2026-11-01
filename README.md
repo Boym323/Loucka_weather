@@ -38,3 +38,8 @@ Výkonnostní implementace, kompletní HTTP reporty a compute benchmark jsou st�
 - Před prvním nasazením ověřit bezpečnost, read-only přístup aplikace, správnost numeriky, přechody CET/CEST a HTTP/MQTT zátěž na stagingu.
 
 **Pozor:** README před audity uvádělo jako první kandidát datové vrstvy Python. Tento návrh je v roce 2026 nahrazen **pracovní preferencí Node.js/Fastify** popsanou v [ADR](docs/ARCHITECTURE_DECISION_2026-10-31.md), nikoli hotovým schválením.
+
+## Doplňující historické audity a specifikace (PR #1)
+- [Rozhodovací log a původní varianty](DECISIONS.md) – historické závěry doplněné o současný pracovní směr Fastify.
+- [Audit MariaDB a denních souhrnů](WEEWX_DAILY_SUMMARIES_AUDIT.md) a [pravidla statistik](STATISTICS_SPEC.md) – pro první verzi preferovat L1 archive + L2 archive_day_*, bez L3 zápisů.
+- [Původní audit Go backendu](BACKEND_TECHNOLOGY_AUDIT.md) a [komponenty frontendu](FRONTEND_SPEC.md) – metodické podklady, nikoli potvrzené nasazení.
