@@ -1,0 +1,26 @@
+name: LXC preview deployment config
+on:
+  push:
+    branches: [main]
+    paths:
+      - "deploy/lxc/**"
+      - ".github/workflows/lxc-preview-config.yml"
+  pull_request:
+    paths:
+      - "deploy/lxc/**"
+      - ".github/workflows/lxc-preview-config.yml"
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Bash syntax
+        run: bash -n deploy/lxc/auto-deploy-preview.sh
+      - name: Validate Nginx syntax
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq nginx
+          sudo cp deploy/lxc/nginx-preview.conf /etc/nginx/conf.d/loucka-preview.conf
+          sudo nginx -t
