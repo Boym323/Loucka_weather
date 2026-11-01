@@ -4,6 +4,13 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ## 2026-11-01
 
+### Ověřené zdroje a lokální archiv, vývoj 1. 11.
+- Read-only API: reálné surové RSSI/signal/battery kanály z produkčních sloupců, energie globálního záření z archivních intervalů, archiv JPEG+MP4 a lokální CAP.
+- Samostatný, opt-in Python sběrač skutečných veřejných fotografií a oficiálních výstrah ČHMÚ pro ORP 7209, se systemd timerem, omezenou retencí a nezávislým lokálním úložištěm.
+- Frontend: zobrazení dostupných diagnostických kanálů bez falešné interpretace jednotek, archivní galerie + časosběr, lokální výstrahy s fail-closed stavem, energie slunečního záření a mrazové dny.
+- Mapy: vrstvy modelových bodů Open-Meteo teploty a větru jako dodatek k radarovým měřením RainViewer.
+- Žádné zápisy do MariaDB a žádné syntetické historické fotografie nebo sněhová pokrývka.
+
 ### Stabilita klimatologických grafů při nginx 5 r/s
 - Prohlížečový screenshot potvrdil, že část ročních/měsíčních statistik chybí i při funkčním API a úspěšném smoke testu.
 - Nginx pro staging omezuje API na 5 požadavků/s s burst 12; klimatologie dříve posílala až 58 statistik v rychlých dávkách.

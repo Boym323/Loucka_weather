@@ -6,6 +6,7 @@ import HistoryChart from '../features/history/HistoryChart.astro';
 import OverviewReadings from '../features/current/OverviewReadings.astro';
 import ForecastPanel from '../features/forecast/ForecastPanel.astro';
 import RadarPanel from '../features/maps/RadarPanel.astro';
+import LocalWarnings from '../features/alerts/LocalWarnings.astro';
 ---
 <BaseLayout title="Přehled" description="Počasí Loučka: skutečná data meteostanice, aktuální předpověď, grafy, webkamera a radar.">
  <section class="site-banner" aria-label="Pohled západní kamerou na Loučku; čas pořízení snímku nebyl ověřen">
@@ -26,10 +27,7 @@ import RadarPanel from '../features/maps/RadarPanel.astro';
   <aside class="sidebar-stack" aria-label="Předpověď a doplňková meteorologická data">
    <ForecastPanel compact />
    <div class="dashboard-side-notes">
-    <section class="note-panel warning-panel" aria-label="Výstrahy ČHMÚ">
-     <div class="panel-title"><span aria-hidden="true">⚠</span> Výstrahy ČHMÚ <span class="status-chip">Stav neověřen</span></div>
-     <p>Bez napojení oficiálního zdroje nemůžeme potvrdit ani vyloučit platné výstrahy.</p>
-    </section>
+    <LocalWarnings compact />
     <OverviewReadings />
    </div>
   </aside>

@@ -1,0 +1,49 @@
+---
+interface Props { compact?:boolean }
+const {compact=false}=Astro.props;
+---
+<section class:list={['section','local-warnings',{compact}]} data-local-warnings aria-label="Výstrahy ČHMÚ pro Loučku">
+ <div class="section-heading"><div class="panel-title"><span aria-hidden="true">⚠</span><h2>Výstrahy ČHMÚ</h2></div><span class="status-chip" data-alert-status role="status">Ověřuji ORP 7209</span></div>
+ <div data-alert-body class="source-note">Načítám oficiální CAP pro ORP Valašské Klobouky…</div>
+ <p class="source-note">Obec Loučka (okres Zlín) · ORP Valašské Klobouky. Zdroj <a href="https://vystrahy-cr.chmi.cz/" target="_blank" rel="noopener noreferrer">ČHMÚ</a> · nezávislé zpracování. V nebezpečí sledujte přímo pokyny ČHMÚ.</p>
+</section>
+<script>
+ const root=document.querySelector<HTMLElement>('[data-local-warnings]');
+ if(root){
+  const status=root.querySelector<HTMLElement>('[data-alert-status]');
+  const body=root.querySelector<HTMLElement>('[data-alert-body]');
+  const controller=new AbortController();
+  type Alert={event:string;severity:string;onset:string;expires:string;headline:string;description:string;instruction:string};
+  void fetch('/api/v1/alerts/local',{signal:controller.signal}).then(r=>r.json() as Promise<{status:string;checkedAt?:string;alerts:Alert[]}>).then(data=>{
+   if(controller.signal.aborted||!body)return;
+   body.replaceChildren();
+   if(data.status!=='verified'){
+    if(status){status.textContent='Stav nelze ověřit';status.className='status-chip warning';}
+    body.textContent='Ověřená lokální výstraha není k dispozici. To neznamená, že žádná výstraha neplatí.';
+    return;
+   }
+   if(!data.alerts.length){
+    if(status){status.textContent='Bez aktuální výstrahy pro ORP';status.className='status-chip ok';}
+    body.textContent='Poslední ověřený CAP neobsahuje platnou výstrahu pro ORP Valašské Klobouky.';
+   }else{
+    if(status){status.textContent=data.alerts.length+' výstrah pro ORP';status.className='status-chip warning';}
+    for(const alert of data.alerts){
+     const article=document.createElement('article');article.className='local-alert-entry';
+     const h=document.createElement('strong');h.textContent=alert.headline||alert.event;article.append(h);
+     const p=document.createElement('p');
+     p.textContent=[alert.severity,alert.onset&&'Od '+alert.onset,alert.expires&&'Do '+alert.expires].filter(Boolean).join(' · ');
+     article.append(p);
+     if(alert.description){const desc=document.createElement('p');desc.textContent=alert.description;article.append(desc);}
+     if(alert.instruction){const note=document.createElement('p');note.textContent='Doporučení ČHMÚ: '+alert.instruction;article.append(note);}
+     body.append(article);
+    }
+   }
+   if(data.checkedAt){const checked=document.createElement('small');checked.textContent='Zdroj ověřen: '+new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',dateStyle:'short',timeStyle:'short'}).format(new Date(data.checkedAt));body.append(checked);}
+  }).catch(()=>{
+   if(controller.signal.aborted)return;
+   if(status)status.textContent='Výstrahy nelze ověřit';
+   if(body)body.textContent='Oficiální výstražný zdroj není momentálně dostupný.';
+  });
+  document.addEventListener('astro:before-swap',()=>controller.abort(),{once:true});
+ }
+</script>

@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import {registerExtras,archiveCameraStatus} from './extras.js';
 import {createHash} from 'node:crypto';
 import type {ArchiveReader,ArchiveRow,DailySummaryRow} from './store.js';
 import {isMetric,metrics} from './metrics.js';
@@ -329,12 +330,7 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
   schemaVersion:'1',stationId:'loucka',updatedAt:metadataCheckedAt,
   sensors:[] // Verified physical mapping and installation epochs are not supplied.
  }));
- app.get('/api/v1/camera/status',async(req,reply)=>conditional(req,reply,{
-  schemaVersion:'1',cameraId:'west',status:'disabled',
-  capturedAt:null,publishedAt:null,latestUrl:null,ageSeconds:null,
-  width:null,height:null,privacyMaskApplied:null,
-  updatedAt:metadataCheckedAt
- }));
+ app.get('/api/v1/camera/status',async()=>archiveCameraStatus());
  const statisticsRoute=(period:'day'|'month'|'year')=>async(req:any,reply:any)=>{
   const {metric,aggregation,units='metricwx',dataset='original'}=req.query as StatisticsQuery;
   const label=period==='day'?(req.query as StatisticsQuery).date!:period==='month'?
@@ -561,5 +557,6 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
    return makeResponse('daily',policy.aggregation,result.points,result.valid,digest);
   }catch{return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Daily summaries unavailable or invalid',503);}
  });
+ registerExtras(app,reader);
  return app;
 }

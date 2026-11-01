@@ -73,3 +73,13 @@ Změny zapisuj i do [changelogu](../CHANGELOG.md). Vždy odliš stav v GitHubu, 
 - **Testy:** Playwright vyžaduje viditelnost mobilního menu, tři roční klimatologické grafy, prvky kamery, přepínač radarové vrstvy a trendové kontejnery senzorů.
 
 Nezávislé blokery před publikací jako kompletního produktu: ověřený archiv fotografií a časosběr, určení času vzniku JPEG, registry fyzických čidel a telemetrie RSSI/baterií, lokálně validované výstrahy CAP ČHMÚ, případně další licenčně a technicky ověřené mapové vrstvy.
+
+
+## Ověřené rozšíření: archiv kamery, čidla, lokální CAP, modelové vrstvy a klima
+
+- Kamera: plnohodnotná galerie archivovaných skutečných JPEG a denní MP4 time-lapse z časovače na staging LXC. Bez spuštění časovače galerie pravdivě hlásí prázdný archiv. Čas na fotografii = archivace/stáhnutí, nikoli čas expozice.
+- Senzory: `/api/v1/diagnostics/sensors` čte pouze stávající povolené diagnostické kanály z produkčního archivu WeeWX. Jde o surové hodnoty a předběžné mapování, nikoli potvrzené RSSI v dBm či procenta baterie.
+- Výstrahy: oficiální ČHMÚ CAP XML `XOCZ50_OKPR.xml`, zpracování pro CISORP `7209`, expirační časy a fallback při neověřené geokódované oblasti. Zdroj se získává samostatnou Python službou na LXC, nikoli klientským CORS voláním.
+- Klimatologie: integrál záření (kWh/m²) s uvedením pokrytí a počet mrazových dnů z původních denních minim. Obě statistiky jsou **odvozené**; nejsou to naměřené hodiny slunečního svitu ani výška sněhu.
+- Mapy: vedle historického radaru RainViewer se zobrazují volitelné vzorkované hodnoty teploty a větru z předpovědního modelu Open-Meteo, jasně oddělené od staničních měření.
+- Nepotvrzené historické snímky, sněhová pokrývka a dobu slunečního svitu web nedoplňuje syntetickými hodnotami.

@@ -1,0 +1,55 @@
+<section class="section camera-archive-section" data-camera-archive aria-labelledby="camera-archive-title">
+ <div class="section-heading"><div><span class="eyebrow">Skutečně uložené záznamy</span><h2 id="camera-archive-title">Archiv západní kamery a časosběr</h2></div><span class="status-chip" data-archive-status role="status">Zjišťuji archiv</span></div>
+ <p class="lead">Historie vzniká z veřejného snímku při archivaci na LXC. Čas pod fotografií znamená čas stažení, nikoli ověřený čas pořízení kamerou. Historii před zapnutím archivace nelze získat z jediného aktuálního JPEG.</p>
+ <div class="camera-archive-grid" data-archive-frames></div>
+ <div class="camera-timelapse-block">
+  <div class="section-heading"><h3>Denní časosběrné video</h3><select data-archive-video aria-label="Vybrat den časosběru" disabled><option>Žádné video</option></select></div>
+  <video controls preload="none" playsinline data-archive-player hidden aria-label="Časosběr z kamerových archivních fotografií"></video>
+  <p class="source-note" data-archive-video-note>Video se vytvoří z alespoň šesti uložených snímků předchozího dne, pokud je na LXC dostupný FFmpeg.</p>
+ </div>
+</section>
+<script>
+ const root=document.querySelector<HTMLElement>('[data-camera-archive]');
+ if(root){
+  const status=root.querySelector<HTMLElement>('[data-archive-status]');
+  const frames=root.querySelector<HTMLElement>('[data-archive-frames]');
+  const select=root.querySelector<HTMLSelectElement>('[data-archive-video]');
+  const player=root.querySelector<HTMLVideoElement>('[data-archive-player]');
+  const ctrl=new AbortController();
+  type Frame={fetchedAt:string;url:string};
+  type Video={date:string;url:string};
+  void fetch('/api/v1/camera/archive',{signal:ctrl.signal}).then(r=>r.json() as Promise<{status:string;frames:Frame[];videos:Video[]}>).then(data=>{
+   if(ctrl.signal.aborted||!frames)return;
+   frames.replaceChildren();
+   if(data.status!=='ok'||!data.frames.length){
+    const empty=document.createElement('div');empty.className='empty-state';
+    empty.textContent='Archiv zatím nemá žádné zachycené snímky. Je potřeba jednorázově zapnout sběrnou systemd službu.';
+    frames.append(empty);if(status)status.textContent='Archiv zatím prázdný';
+   }else{
+    if(status){status.textContent=data.frames.length+' dostupných snímků';status.className='status-chip ok';}
+    const formatter=new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    for(const f of data.frames.slice(0,12)){
+     if(!/^\/api\/v1\/camera\/frames\/\d{8}T\d{6}Z\.jpg$/.test(f.url))continue;
+     const link=document.createElement('a');link.className='camera-archive-thumb';link.href=f.url;link.target='_blank';link.rel='noopener noreferrer';
+     const img=document.createElement('img');img.src=f.url;img.alt='Archivní snímek ze západní kamery';img.loading='lazy';
+     const label=document.createElement('span');label.textContent='Staženo '+formatter.format(new Date(f.fetchedAt));
+     link.append(img,label);frames.append(link);
+    }
+   }
+   if(select&&player&&data.videos?.length){
+    select.replaceChildren();
+    const videos=data.videos.filter(v=>/^\/api\/v1\/camera\/timelapse\/\d{4}-\d{2}-\d{2}\.mp4$/.test(v.url));
+    for(const v of videos){const option=document.createElement('option');option.value=v.url;option.textContent=v.date;select.append(option);}
+    if(videos.length){
+     select.disabled=false;player.hidden=false;player.src=videos[0].url;
+     select.addEventListener('change',()=>{player.src=select.value;player.load();});
+    }
+   }
+  }).catch(()=>{
+   if(ctrl.signal.aborted)return;
+   if(status)status.textContent='Archiv nedostupný';
+   if(frames)frames.textContent='Historii fotografií se nepodařilo načíst.';
+  });
+  document.addEventListener('astro:before-swap',()=>{ctrl.abort();player?.pause();},{once:true});
+ }
+</script>

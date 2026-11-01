@@ -1,4 +1,5 @@
 ---
+import SolarSnowEvidence from './SolarSnowEvidence.astro';
 const currentYear=Math.min(2100,new Date().getUTCFullYear());
 const defaultYear=currentYear>2009?currentYear-1:currentYear;
 const years=Array.from({length:currentYear-2008},(_,i)=>currentYear-i);
@@ -14,7 +15,7 @@ const months=['Led','Úno','Bře','Dub','Kvě','Čvn','Čvc','Srp','Zář','Ří
  <nav class="climate-tabs" aria-label="Kategorie klimatologie">
   <a class="is-active" href="#prehled">Přehled</a><a href="#teploty">Teploty</a>
   <a href="#srazky">Srážky</a><a href="#vitr">Vítr</a><a href="#extremy">Extrémy</a>
-  <a href="#slunecni-svit">Sluneční svit</a><a href="#snih">Sníh</a>
+  <a href="#solar-evidence">Sluneční svit</a><a href="#snow-evidence">Sníh</a>
  </nav>
  <div class="climate-filter section" id="prehled">
   <div><span class="eyebrow">Historický archiv</span><strong>2009–{currentYear}</strong><span class="source-note">Pouze existující měření, bez doplňování mezer</span></div>
@@ -60,20 +61,13 @@ const months=['Led','Úno','Bře','Dub','Kvě','Čvn','Čvc','Srp','Zář','Ří
    <div class="climate-extreme-values"><div>Nejnižší denní minimum <strong data-extreme="min">—</strong></div><div>Nejvyšší denní maximum <strong data-extreme="max">—</strong></div></div>
    <p class="source-note">Orientační hodnoty z původních denních souhrnů WeeWX. Nejde o definitivní rekordy po forenzní kontrole historických měření.</p>
   </section>
-  <section class="section climate-card" id="slunecni-svit">
-   <div class="section-heading"><h2>Sluneční svit</h2><span class="status-chip">Mapování neověřeno</span></div>
-   <div class="empty-state">Archiv obsahuje sluneční záření ve W/m². Dobu slunečního svitu nelze automaticky považovat za součet záření; pro délku svitu potřebujeme samostatnou ověřenou veličinu.</div>
-  </section>
-  <section class="section climate-card" id="snih">
-   <div class="section-heading"><h2>Sněhová pokrývka</h2><span class="status-chip">Zdroj nedostupný</span></div>
-   <div class="empty-state">Ověřená dlouhodobá měření výšky sněhu nejsou v aktuálním statistickém API dostupná.</div>
-  </section>
  </div>
  <div class="climate-trend-row" aria-label="Roční klimatologické trendy">
   <section class="section climate-trend-card"><div class="section-heading"><h2>Roční průměr teploty</h2><span class="source-note">°C</span></div><div class="climate-trend-canvas" data-climate-trend="temperature" role="img" aria-label="Roční průměr teploty za posledních šest let"></div></section>
   <section class="section climate-trend-card"><div class="section-heading"><h2>Roční úhrn srážek</h2><span class="source-note">mm</span></div><div class="climate-trend-canvas" data-climate-trend="rain" role="img" aria-label="Roční srážky za posledních šest let"></div></section>
   <section class="section climate-trend-card"><div class="section-heading"><h2>Průměrná rychlost větru</h2><span class="source-note">m/s</span></div><div class="climate-trend-canvas" data-climate-trend="wind" role="img" aria-label="Roční vítr za posledních šest let"></div></section>
  </div>
+ <SolarSnowEvidence />
  <p class="source-note climate-footnote">Zdroj: původní denní souhrny WeeWX. Časové hranice: Europe/Prague včetně CET/CEST. Výpočty neodstraňují historické pochybné záznamy.</p>
 </div>
 <script>

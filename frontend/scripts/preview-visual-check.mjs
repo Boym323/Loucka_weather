@@ -149,8 +149,15 @@ try{
      }));
      if(!controls.auto||!controls.fullscreen||!controls.latest)
       errors.push(size.name+': missing camera controls');
+     if(await page.locator('[data-camera-archive] [data-archive-status]').count()!==1)
+      errors.push(size.name+': missing real camera archive gallery');
+     if(await page.locator('[data-archive-video]').count()!==1)
+      errors.push(size.name+': missing timelapse video selection');
     }
     if(path==='/mapy/'){
+     if(await page.locator('[data-model-temperature]').count()!==1||
+      await page.locator('[data-model-wind]').count()!==1)
+      errors.push(size.name+': missing Open-Meteo model layer toggles');
      const radarLayer=page.locator('[data-map-radar-visible]');
      if(await radarLayer.count()!==1)errors.push(size.name+': missing map layer toggle');
      else{
@@ -160,8 +167,21 @@ try{
       await radarLayer.check();
      }
     }
-    if(path==='/senzory/'&&await page.locator('[data-sensor-trend]').count()<8)
-     errors.push(size.name+': missing real sensor trend containers');
+    if(path==='/senzory/'){
+     if(await page.locator('[data-sensor-trend]').count()<8)
+      errors.push(size.name+': missing real sensor trend containers');
+     if(await page.locator('[data-sensor-diagnostics]').count()!==1)
+      errors.push(size.name+': missing source-specific signal and battery telemetry');
+    }
+    if(path==='/klimatologie/'){
+     if(await page.locator('[data-solar-evidence]').count()!==1||
+      await page.locator('[data-snow-evidence]').count()!==1)
+      errors.push(size.name+': missing solar energy and clearly-labelled frost data');
+    }
+    if(path==='/'){
+     if(await page.locator('[data-local-warnings]').count()!==1)
+      errors.push(size.name+': missing locality-filtered CHMI alert panel');
+    }
     if(state.width>state.viewport+3)errors.push(size.name+' '+path+': horizontal overflow '+state.width+'px > '+state.viewport+'px');
     await page.screenshot({path:out+'/'+size.name+'-'+name+'.png',fullPage:true});
     console.log('OK',size.name,path,state.title,'scrollWidth='+state.width);
@@ -175,6 +195,24 @@ try{
    }catch(e){errors.push(size.name+' '+path+': '+String(e));}
   }
   await page.close();
+ }
+ // Verify new source-aware endpoints without asserting that opt-in collectors are installed.
+ for(const [name,path] of [
+  ['camera-archive','/api/v1/camera/archive'],
+  ['local-chmi','/api/v1/alerts/local'],
+  ['sensor-telemetry','/api/v1/diagnostics/sensors'],
+  ['solar-2025','/api/v1/climate/solar?year=2025']
+ ]){
+  try{
+   const endpoint=await fetch(base+path,{signal:AbortSignal.timeout(15000)});
+   const data=await endpoint.json();
+   console.log('SOURCE EXTENSION',name,JSON.stringify({
+    status:endpoint.status,sourceStatus:data.status,
+    count:data.readings?.length??data.frames?.length??data.alerts?.length??null,
+    energy:data.energyKwhM2??null
+   }));
+   if(![200,503].includes(endpoint.status))errors.push(name+': unexpected HTTP '+endpoint.status);
+  }catch(e){errors.push(name+': endpoint exception '+String(e));}
  }
  // Independently check the deployment and read-only API, with no credentials.
  const response=await fetch(base+'/deployment.json',{signal:AbortSignal.timeout(12000)});

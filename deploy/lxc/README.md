@@ -135,3 +135,44 @@ Pokud `/healthz` odpovídá 200, ale `/readyz` 503, není to už chyba proxy: ov
 Aktivační helper porovnává Git strom `api/` mezi posledním aktivovaným commitem a aktuálním release. Pokud se změnil pouze `frontend/` nebo dokumentace a `healthz` + `readyz` vracejí zdravý stav, Fastify se **nerestartuje**. Poslední aktivovaný commit se přesto bezpečně aktualizuje. Pokud API není zdravé nebo se změnil strom `api/`, restart a health gate zůstávají povinné. Při skutečném nasazení nového API může stále vzniknout krátký výpadek; modro-zelené nasazení API zatím neexistuje.
 
 Veřejný Playwright smoke čeká na správný `deployment.json` a dvě po sobě jdoucí připravené odpovědi `/api/v1/readyz`, aby nevyhodnocoval běžné přechodné 502 během aktivace jako dlouhodobou chybu.
+
+
+## Doplnění sběru kamery a výstrah ČHMÚ (volitelné, jednorázové zapnutí)
+
+Fastify stále pouze **čte** meteorologickou produkční databázi. Samostatné Python služby běží s uživatelem `loucka`, stahují veřejný JPEG a oficiální CAP XML a zapisují výhradně do dedikovaných lokálních adresářů ve staging LXC. **Nenabíhat na produkční WeeWX LXC**; na testovacím LXC archivace začne až zapnutím časovače. Od minulosti nelze zpětně dopočítat záznamy kamerového JPEG.
+
+Ověř první, zda je správně použita veřejná a případně již anonymizovaná fotografie. Jednou jako root na **testovacím LXC** po aktualizaci main:
+
+```bash
+apt update && apt install -y python3 ffmpeg
+install -D -o root -g root -m 0755 /home/loucka/Loucka_weather/deploy/lxc/loucka-data-collector.py /usr/local/libexec/loucka-data-collector.py
+for unit in loucka-camera-collect.service loucka-camera-collect.timer loucka-alerts-collect.service loucka-alerts-collect.timer; do
+  install -o root -g root -m 0644 "/home/loucka/Loucka_weather/deploy/lxc/$unit" "/etc/systemd/system/$unit"
+done
+systemctl daemon-reload
+systemctl start loucka-camera-collect.service loucka-alerts-collect.service
+systemctl enable --now loucka-camera-collect.timer loucka-alerts-collect.timer
+journalctl -u loucka-camera-collect.service -u loucka-alerts-collect.service -n 40 --no-pager
+curl -fsS http://127.0.0.1:3100/api/v1/camera/archive | jq .
+curl -fsS http://127.0.0.1:3100/api/v1/alerts/local | jq .
+```
+
+Služby používají `StateDirectory` s `/var/lib/loucka-camera` a `/var/lib/loucka-alerts`. Není potřeba měnit nginx konfiguraci ani práva v MariaDB. Stávající Fastify API si při novém commitu samo obnoví backend; při uvádění do provozu případně `systemctl restart loucka-weather-api.service`. Pokud některý externí zdroj nebude dostupný, zůstane status `unavailable`; žádná automaticky domyšlená výstraha ani snímek se nevytvoří. CAP parser přímo ověřuje kód ORP 7209 (Loučka, okres Zlín). Pokud oficiální XML změní podobu nebo kódování oblasti, parser **odmítne** potvrdit stav „bez výstrahy“.
+
+**Kamera:** snímky každých 10 minut; kontrola JPEG, opakovaný identický snímek se nearchivuje; retence 35 dní. Z uložených obrázků vzniká denní MP4 pro předchozí UTC den, pokud má alespoň šest snímků a FFmpeg je dostupný. Pro přehled API publikuje nejvýše 120 posledních JPEG a 45 MP4. Čas u souboru = čas stažení z veřejné adresy, není to EXIF/capture timestamp. Výkon a spotřebu úložiště kontroluj přes `du -sh /var/lib/loucka-camera`. Důležité: samotná veřejná fotografie může obsahovat osoby nebo jiný osobní obsah; archivaci zapínej pouze při schválených zásadách soukromí a případném maskování obrazu.
+
+**ČHMÚ:** kontrola CAP po 10 minutách, TTL 45 minut, ukazuje jen ORP Valašské Klobouky, kód 7209. Při výpadku se nehlásí „bez výstrahy“. Není to oficiální varovný systém.
+
+Pořadí: nejprve sloučit a nasadit API i statický web, pak jednorázově nainstalovat root-owned collector a systemd jednotky. `git pull` samo o sobě **neaktualizuje** root-owned soubor v /usr/local/libexec. Zápisová práva k `/var/lib/loucka-*` nikdy nepřidávej uživateli nginx ani veřejným HTTP cestám.
+
+### Ověření nových archivních a klimatologických API
+
+```bash
+curl -fsS http://127.0.0.1:3100/api/v1/diagnostics/sensors | jq .
+curl -fsS 'http://127.0.0.1:3100/api/v1/climate/solar?year=2025' | jq .
+curl -fsS http://127.0.0.1:3100/api/v1/camera/status | jq .
+curl -fsS http://127.0.0.1:3100/api/v1/camera/archive | jq .
+curl -fsS http://127.0.0.1:3100/api/v1/alerts/local | jq .
+```
+
+Pokud diagnostika v produkčním archivu nevrátí žádnou telemetrii, je to důvod ověřit názvy existujících sloupců a jejich aktuální naplňování. Vývoj nepřevádí staré signálové stupnice na dBm ani napětí na procenta bez ověřené definice. Odvozená sluneční energie z globálního záření není měřená doba slunečního svitu. Počet mrazových dnů není počet dnů se sněhem.

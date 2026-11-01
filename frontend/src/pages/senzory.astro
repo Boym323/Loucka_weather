@@ -2,16 +2,14 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SensorChannels from '../features/sensors/SensorChannels.astro';
 import AuditedSensorRegistry from '../features/sensors/AuditedSensorRegistry.astro';
+import SensorDiagnostics from '../features/sensors/SensorDiagnostics.astro';
 ---
 <BaseLayout title="Senzory">
  <div class="page-intro"><span class="eyebrow">Senzory · meteo archiv · diagnostika</span><h1>Senzory a diagnostika</h1><p>Archivované údaje z meteostanice, jejich dostupnost a kontrola kvality posledního měření.</p></div>
  <AuditedSensorRegistry />
  <SensorChannels />
  <div class="sensor-foot-grid">
-  <section class="section">
-   <div class="section-heading"><h2>Signál a baterie</h2><span class="status-chip">Údaje zatím nedostupné</span></div>
-   <div class="sensor-diagnostic-placeholder"><span aria-hidden="true">▮▮▮▯</span><strong>Telemetrie GW3000</strong><p>RSSI, stav baterií a typy jednotlivých senzorů zpřístupníme až po ověřeném napojení telemetrického API.</p></div>
-  </section>
+  <SensorDiagnostics />
   <section class="section">
    <div class="section-heading"><h2>Poslední diagnostické události</h2><span class="status-chip">Nepřipojeno</span></div>
    <p class="lead">Samostatný diagnostický protokol stanice není součástí aktuálního archivu WeeWX. Nezobrazujeme smyšlená upozornění nebo historii výpadků.</p>

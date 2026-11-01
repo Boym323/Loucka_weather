@@ -1,0 +1,80 @@
+<div data-model-map class="model-map-controls">
+ <p class="source-note">Modelový odhad teploty a větru v devíti bodech kolem Loučky. Nejde o měření ČHMÚ ani o plošný souvislý meteorologický rastr.</p>
+ <label class="map-layer-option"><input type="checkbox" data-model-temperature /> Teplota · modelové body <small>Open-Meteo</small></label>
+ <label class="map-layer-option"><input type="checkbox" data-model-wind /> Vítr · modelové body <small>Open-Meteo</small></label>
+ <p class="source-note" data-model-status>Modelová vrstva je vypnutá.</p>
+ <p class="source-note">Zdroj: <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a> (CC BY 4.0). Aktualizace podle dostupnosti modelu.</p>
+</div>
+<script>
+ const root=document.querySelector<HTMLElement>('[data-model-map]');
+ const temp=root?.querySelector<HTMLInputElement>('[data-model-temperature]');
+ const wind=root?.querySelector<HTMLInputElement>('[data-model-wind]');
+ const state=root?.querySelector<HTMLElement>('[data-model-status]');
+ const world=document.querySelector<HTMLElement>('[data-radar-panel]:not(.radar-compact) .radar-world');
+ const center={lat:49.170035,lon:17.876076},zoom=7,scale=256*2**zoom;
+ const project=(lat:number,lon:number)=>{
+  const x=(lon+180)/360*scale;
+  const y=(1-Math.asinh(Math.tan(lat*Math.PI/180))/Math.PI)/2*scale;
+  return {x,y};
+ };
+ const midpoint=project(center.lat,center.lon);
+ const locations=[49.35,49.17,48.99].flatMap(lat=>[17.59,17.88,18.17].map(lon=>({lat,lon})));
+ type Sample={latitude:number;longitude:number;current?:{temperature_2m?:number;wind_speed_10m?:number;wind_direction_10m?:number;time?:string}};
+ let model:Sample[]|undefined,loading:Promise<void>|undefined;
+ const controller=new AbortController();
+ const layer=document.createElement('div');layer.className='model-overlay';layer.hidden=true;
+ if(world)world.append(layer);
+ function draw(){
+  if(!world||!temp||!wind)return;
+  layer.hidden=!(temp.checked||wind.checked);
+  layer.replaceChildren();
+  if(!model||layer.hidden)return;
+  model.forEach((entry,i)=>{
+   const values=entry.current;
+   if(!values)return;
+   const position=project(locations[i].lat,locations[i].lon);
+   const x=256+position.x-midpoint.x,y=256+position.y-midpoint.y;
+   if(x<20||x>492||y<20||y>492)return;
+   const marker=document.createElement('div');marker.className='model-map-marker';
+   marker.style.left=x+'px';marker.style.top=y+'px';
+   const fragments=[];
+   if(temp.checked&&Number.isFinite(values.temperature_2m)){
+    fragments.push(new Intl.NumberFormat('cs-CZ',{maximumFractionDigits:0}).format(values.temperature_2m!)+' °C');
+    marker.classList.add('model-temp');
+   }
+   if(wind.checked&&Number.isFinite(values.wind_speed_10m)){
+    fragments.push(new Intl.NumberFormat('cs-CZ',{maximumFractionDigits:0}).format(values.wind_speed_10m!)+' km/h');
+   }
+   if(!fragments.length)return;
+   marker.textContent=fragments.join(' · ');
+   marker.title='Modelový bod: '+locations[i].lat+', '+locations[i].lon;
+   layer.append(marker);
+  });
+ }
+ function activate(){
+  if(!temp||!wind)return;
+  if(!temp.checked&&!wind.checked){if(state)state.textContent='Modelová vrstva je vypnutá.';draw();return;}
+  if(model){if(state)state.textContent='Modelové body · nikoli stanice ČHMÚ';draw();return;}
+  if(loading)return;
+  if(state)state.textContent='Načítám modelové hodnoty…';
+  const params=new URLSearchParams({
+   latitude:locations.map(p=>p.lat).join(','),longitude:locations.map(p=>p.lon).join(','),
+   current:'temperature_2m,wind_speed_10m,wind_direction_10m',wind_speed_unit:'kmh',
+   timezone:'Europe/Prague'
+  });
+  loading=fetch('https://api.open-meteo.com/v1/forecast?'+params,{signal:controller.signal}).then(async response=>{
+   if(!response.ok)throw Error('Model nedostupný');
+   const result=await response.json() as unknown;
+   if(!Array.isArray(result)||result.length!==locations.length)throw Error('Neplatné modelové body');
+   model=result as Sample[];
+   if(state)state.textContent='Předpovědní model · 9 vzorkovaných bodů · nikoli přímá měření';
+   draw();
+  }).catch(()=>{
+   if(controller.signal.aborted)return;
+   if(state)state.textContent='Modelová data nejsou dostupná. Radar funguje nezávisle.';
+  }).finally(()=>{loading=undefined;});
+ }
+ temp?.addEventListener('change',activate);
+ wind?.addEventListener('change',activate);
+ document.addEventListener('astro:before-swap',()=>{controller.abort();layer.remove();},{once:true});
+</script>
