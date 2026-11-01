@@ -1,10 +1,11 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import RadarPanel from '../features/maps/RadarPanel.astro';
+import ModelWeatherLayer from '../features/maps/ModelWeatherLayer.astro';
 ---
 <BaseLayout title="Meteorologické mapy" description="Meteorologická mapa Loučky a okolí, radarové snímky s časovou osou.">
- <div class="page-intro"><span class="eyebrow">Meteorologické mapy a radar</span><h1>Meteorologické mapy</h1><p>Radarová historie nad mapou Loučky. Ostatní meteorologické vrstvy připojíme postupně, až bude ověřen jejich zdroj.</p></div>
- <div class="map-tabs" aria-label="Dostupné mapové vrstvy"><span class="chart-tab is-active">Radarové srážky</span><span class="chart-tab muted">Satelit – nepřipojeno</span><span class="chart-tab muted">Blesky – nepřipojeno</span><span class="chart-tab muted">Teplota – nepřipojeno</span></div>
+ <div class="page-intro"><span class="eyebrow">Meteorologické mapy a radar</span><h1>Meteorologické mapy</h1><p>Skutečné radarové snímky a volitelné modelové body teploty a větru, vždy jasně oddělené podle zdroje.</p></div>
+ <div class="map-tabs" aria-label="Dostupné mapové vrstvy"><span class="chart-tab is-active">Radarové srážky</span><span class="chart-tab muted">Satelit – nepřipojeno</span><span class="chart-tab muted">Blesky – nepřipojeno</span><span class="chart-tab">Teplota a vítr · model</span></div>
  <div class="map-page-layout">
   <div class="map-page-primary"><RadarPanel /></div>
   <aside class="map-page-sidebar">
@@ -13,7 +14,7 @@ import RadarPanel from '../features/maps/RadarPanel.astro';
     <label class="map-layer-option"><input type="checkbox" data-map-radar-visible checked /> Radarové srážky <small>RainViewer</small></label>
     <label class="map-layer-option unavailable"><input type="checkbox" disabled /> Satelitní oblačnost <small>Zdroj není připojen</small></label>
     <label class="map-layer-option unavailable"><input type="checkbox" disabled /> Blesky <small>Zdroj není připojen</small></label>
-    <label class="map-layer-option unavailable"><input type="checkbox" disabled /> Teplota ČHMÚ <small>Zdroj není připojen</small></label>
+    <ModelWeatherLayer />
     <p class="source-note">Vypnutí radaru ponechá orientační podkladovou mapu. Nepřipojené vrstvy nelze vybrat.</p>
    </section>
    <section class="section">
