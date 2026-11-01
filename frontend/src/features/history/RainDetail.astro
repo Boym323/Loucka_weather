@@ -1,0 +1,53 @@
+<section class="section" data-rain-detail aria-labelledby="rain-detail-title">
+ <div class="section-heading">
+  <div><span class="eyebrow">Srážky · archivní intervaly</span><h2 id="rain-detail-title">Srážky za posledních 24 hodin</h2></div>
+  <span class="status-chip" data-rain-status role="status">Načítání</span>
+ </div>
+ <div class="rain-detail-chart" data-rain-chart role="img" aria-label="Sloupcový graf srážek z archivních intervalů"></div>
+ <div class="chart-summary" data-rain-summary></div>
+ <p class="source-note">Součet je pouze z dostupných intervalů; při mezerách v archivu nemusí odpovídat úplnému dennímu úhrnu.</p>
+</section>
+<script>
+ import {getHistory24h} from '../../shared/api/client';
+ import {formatValue} from '../../shared/domain/metrics';
+ import * as echarts from 'echarts/core';
+ import { BarChart } from 'echarts/charts';
+ import { GridComponent, TooltipComponent } from 'echarts/components';
+ import { SVGRenderer } from 'echarts/renderers';
+ echarts.use([BarChart,GridComponent,TooltipComponent,SVGRenderer]);
+ const root=document.querySelector<HTMLElement>('[data-rain-detail]');
+ const target=root?.querySelector<HTMLElement>('[data-rain-chart]');
+ const status=root?.querySelector<HTMLElement>('[data-rain-status]');
+ const summary=root?.querySelector<HTMLElement>('[data-rain-summary]');
+ if(target){
+  const chart=echarts.init(target,undefined,{renderer:'svg'});
+  const observer=new ResizeObserver(()=>chart.resize());observer.observe(target);
+  const controller=new AbortController();
+  void getHistory24h('rain',controller.signal).then(result=>{
+   const values=result.points.map(p=>[
+    Date.parse(p.endTime),
+    p.value===null||p.quality==='missing'||p.quality==='suspect'?null:p.value
+   ] as [number,number|null]);
+   chart.setOption({
+    backgroundColor:'transparent',animation:false,grid:{top:16,bottom:30,left:46,right:10},
+    tooltip:{trigger:'axis'},
+    xAxis:{type:'time',axisLabel:{color:'#a1b8c8',fontSize:10},axisLine:{lineStyle:{color:'#355768'}},splitLine:{show:false}},
+    yAxis:{type:'value',min:0,name:'mm',axisLabel:{color:'#a1b8c8'},splitLine:{lineStyle:{color:'#234356',type:'dashed'}}},
+    series:[{name:'Intervalový úhrn',type:'bar',data:values,itemStyle:{color:'#56b7ec'},barMaxWidth:14}]
+   });
+   const valid=values.filter((p):p is [number,number]=>p[1]!==null&&Number.isFinite(p[1]));
+   const hasGaps=values.length===0||values.some(p=>p[1]===null);
+   if(status){status.textContent=valid.length+' platných intervalů';status.classList.add('ok');}
+   if(summary){
+    const total=valid.reduce((acc,p)=>acc+p[1],0);
+    summary.textContent='Součet naměřených intervalů: '+formatValue(total,1)+' mm'+(hasGaps?' · neúplné pokrytí':'');
+   }
+   chart.resize();
+  }).catch(()=>{
+   if(controller.signal.aborted)return;
+   if(status){status.textContent='Historie nedostupná';status.classList.add('error');}
+   if(summary)summary.textContent='Intervalové srážky se nepodařilo načíst.';
+  });
+  document.addEventListener('astro:before-swap',()=>{controller.abort();observer.disconnect();chart.dispose();},{once:true});
+ }
+</script>

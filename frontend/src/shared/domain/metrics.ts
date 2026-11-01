@@ -5,6 +5,7 @@ export const metrics = [
   { id: 'windSpeed', label: 'Rychlost větru', unit: 'm/s', digits: 1 },
   { id: 'windGust', label: 'Náraz větru', unit: 'm/s', digits: 1 },
   { id: 'rainRate', label: 'Intenzita srážek', unit: 'mm/h', digits: 1 },
+  { id: 'rain', label: 'Srážky za archivní interval', unit: 'mm', digits: 1 },
   { id: 'radiation', label: 'Sluneční záření', unit: 'W/m²', digits: 0 },
   { id: 'UV', label: 'UV index', unit: '', digits: 1 },
   { id: 'pm25_1', label: 'PM2,5', unit: 'µg/m³', digits: 1 }

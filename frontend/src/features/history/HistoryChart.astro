@@ -1,21 +1,22 @@
 ---
-interface Props { compact?: boolean }
-const { compact = false } = Astro.props;
+interface Props { compact?: boolean; defaultMetric?: string }
+const { compact = false, defaultMetric = 'outTemp' } = Astro.props;
 const tabs = [
  { id:'outTemp',label:'Teplota' },
  { id:'outHumidity',label:'Vlhkost' },
  { id:'barometer',label:'Tlak' },
  { id:'windSpeed',label:'Vítr' },
+ { id:'windGust',label:'Nárazy' },
  { id:'rainRate',label:'Srážky' }
 ];
 ---
-<section class="section" data-history-chart data-compact={compact ? 'true' : 'false'} aria-labelledby={compact?'home-chart-title':'history-chart-title'}>
+<section class="section" data-history-chart data-compact={compact ? 'true' : 'false'} data-default-metric={defaultMetric} aria-labelledby={compact?'home-chart-title':'history-chart-title'}>
  <div class="section-heading">
-  <div><span class="eyebrow">◷ Skutečná archivní data</span><h2 id={compact?'home-chart-title':'history-chart-title'}>{compact?'Posledních 24 hodin':'Interaktivní meteorologický graf'}</h2></div>
+  <div><span class="eyebrow">◷ Skutečná archivní data</span><h2 id={compact?'home-chart-title':'history-chart-title'}>{compact?(defaultMetric==='windGust'?'Nárazy větru · 24 hodin':'Posledních 24 hodin'):'Interaktivní meteorologický graf'}</h2></div>
   <span class="status-chip" data-chart-status role="status">Načítání grafu</span>
  </div>
  <div class="chart-toolbar" role="group" aria-label="Vybrat veličinu">
-  {tabs.map((tab,index)=><button class="chart-tab" data-select-metric={tab.id} type="button" aria-pressed={index===0?'true':'false'}>{tab.label}</button>)}
+  {tabs.map(tab=><button class="chart-tab" data-select-metric={tab.id} type="button" aria-pressed={tab.id===defaultMetric?'true':'false'}>{tab.label}</button>)}
  </div>
  {!compact && <div class="chart-toolbar" role="group" aria-label="Časový rozsah" style="margin-top:10px">
   <span class="source-note">Období:</span>
@@ -41,7 +42,7 @@ const tabs = [
 
  echarts.use([LineChart, BarChart, GridComponent, TooltipComponent, DataZoomComponent, SVGRenderer]);
  const formatTime=(value:number)=>new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',hour:'2-digit',minute:'2-digit',day:'numeric',month:'numeric'}).format(new Date(value));
- const colorByMetric:Record<string,string>={outTemp:'#ff6674',outHumidity:'#5dc1ee',barometer:'#b39cff',windSpeed:'#4de0a5',rainRate:'#56baf0'};
+ const colorByMetric:Record<string,string>={outTemp:'#ff6674',outHumidity:'#5dc1ee',barometer:'#b39cff',windSpeed:'#4de0a5',windGust:'#4de0a5',rainRate:'#56baf0'};
  document.querySelectorAll<HTMLElement>('[data-history-chart]').forEach(root=>{
   const element=root.querySelector<HTMLElement>('[data-chart-canvas]');
   const message=root.querySelector<HTMLElement>('[data-chart-message]');
@@ -51,7 +52,7 @@ const tabs = [
   const chart=echarts.init(element,undefined,{renderer:'svg'});
   const observer=new ResizeObserver(()=>chart.resize());observer.observe(element);
   let controller:AbortController|undefined;
-  let activeMetric='outTemp',hours=24;
+  let activeMetric=root.dataset.defaultMetric??'outTemp',hours=24;
   async function update(){
    controller?.abort();controller=new AbortController();const signal=controller.signal;
    if(status){status.textContent='Načítání…';status.className='status-chip';}
@@ -80,7 +81,7 @@ const tabs = [
      yAxis:{type:'value',scale:true,name:known.unit,nameTextStyle:{color:'#9bb2c3'},axisLabel:{color:'#99b4c6',fontSize:10},
       splitLine:{lineStyle:{color:'#264357',type:'dashed'}}},
      series:[{
-      name:known.label,type:activeMetric==='rainRate'?'bar':'line',data:plotted,
+      name:known.label,type:activeMetric==='rainRate'||activeMetric==='windGust'?'bar':'line',data:plotted,
       showSymbol:false,connectNulls:false,smooth:false,lineStyle:{width:2,color},
       itemStyle:{color},areaStyle:activeMetric==='rainRate'?undefined:{color,opacity:.13},
       barMaxWidth:16
