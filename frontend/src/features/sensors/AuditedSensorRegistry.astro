@@ -1,0 +1,57 @@
+<section class="section audited-sensor-registry" data-audited-sensors aria-labelledby="sensor-inventory-heading">
+ <div class="section-heading">
+  <div><span class="eyebrow">Ověřený inventář</span><h2 id="sensor-inventory-heading">Fyzické senzory stanice</h2></div>
+  <span data-inventory-status class="status-chip" role="status">Načítání</span>
+ </div>
+ <p class="lead">Zařízení, instalace, hloubky a stav připojení zobrazujeme pouze tehdy, pokud je zveřejní ověřený inventář API. Archivované kanály níže nemusí odpovídat fyzickému rozmístění.</p>
+ <div data-inventory-cards class="sensor-inventory-grid">
+  <div class="empty-state">Načítám údaje z inventáře senzorů…</div>
+ </div>
+</section>
+<script>
+ import {getSensorInventory} from '../../shared/api/client';
+ import {formatTimestamp} from '../../shared/domain/weather';
+ const root=document.querySelector<HTMLElement>('[data-audited-sensors]')!;
+ if(root){
+  const status=root.querySelector<HTMLElement>('[data-inventory-status]');
+  const cards=root.querySelector<HTMLElement>('[data-inventory-cards]');
+  const controller=new AbortController();
+  void getSensorInventory(controller.signal).then(sensors=>{
+   if(!cards)return;
+   cards.replaceChildren();
+   if(!sensors.length){
+    const empty=document.createElement('div');empty.className='empty-state';
+    empty.textContent='API zatím nepublikuje ověřený registr fyzických zařízení. Archivní měřicí kanály najdeš níže.';
+    cards.append(empty);
+    if(status){status.textContent='Mapování čeká na ověření';status.classList.add('warning');}
+    return;
+   }
+   for(const sensor of sensors){
+    const article=document.createElement('article');article.className='sensor-inventory-card';
+    const name=document.createElement('h3');name.textContent=sensor.displayName;article.append(name);
+    const values=[
+     ['Stav',sensor.status==='active'?'Aktivní':sensor.status==='retired'?'Vyřazený':'Neověřený'],
+     ['Veličina',sensor.metric],
+     ['Umístění',sensor.depthCm===null?'Neověřeno':sensor.depthCm+' cm pod povrchem'],
+     ['Poslední záznam',sensor.lastObservedAt?formatTimestamp(sensor.lastObservedAt):'Neznámý'],
+     ['Původ',sensor.source],
+     ['Důvěryhodnost',sensor.confidence==='verified'?'Ověřeno':sensor.confidence==='provisional'?'Předběžně':'Neznámo']
+    ];
+    const dl=document.createElement('dl');
+    for(const [key,value] of values){
+     const row=document.createElement('div'),dt=document.createElement('dt'),dd=document.createElement('dd');
+     dt.textContent=key;dd.textContent=value;row.append(dt,dd);dl.append(row);
+    }
+    article.append(dl);
+    if(sensor.note){const p=document.createElement('p');p.textContent=sensor.note;article.append(p);}
+    cards.append(article);
+   }
+   if(status){status.textContent=sensors.length+' evidovaných senzorů';status.classList.add('ok');}
+  }).catch(()=>{
+   if(controller.signal.aborted)return;
+   if(status){status.textContent='Inventář nedostupný';status.classList.add('error');}
+   if(cards)cards.textContent='Nepodařilo se načíst inventář fyzických senzorů.';
+  });
+  document.addEventListener('astro:before-swap',()=>controller.abort(),{once:true});
+ }
+</script>
