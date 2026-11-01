@@ -39,6 +39,7 @@ const quickReadings = [
  const status=section?.querySelector<HTMLElement>('[data-current-status]');
  const updated=section?.querySelector<HTMLElement>('[data-current-updated]');
  const controller=new AbortController();
+ let lastLiveEvent:Event|undefined;
  const refresh=()=>getCurrent(controller.signal).then(response=>{
   if(status){
    status.textContent=response.stale?'Zastaralé měření':'Archivní měření';
@@ -70,6 +71,7 @@ const quickReadings = [
    if(node)node.textContent=valid?formatValue(reading.value,metric.digits):'—';
    if(quality)quality.textContent=valid?'Platné měření':reading?.quality==='suspect'?'Podezřelý údaj':'Nedostupné měření';
   }
+  if(lastLiveEvent)applyLive(lastLiveEvent);
  }).catch(()=>{
   if(controller.signal.aborted)return;
   if(status){status.textContent='API nedostupné';status.classList.add('error');}
@@ -84,6 +86,7 @@ const quickReadings = [
   const received=Date.parse(data?.receivedAt??'');
   if(data?.state!=='live'||data.units!=='metricwx'||!Number.isFinite(received)||
    Date.now()-received>120000)return;
+  lastLiveEvent=event;
   const readings=data.readings??{};
   const all=[...metrics,{id:'rain',digits:1},{id:'radiation',digits:0},{id:'UV',digits:1}];
   for(const metric of all){
@@ -102,6 +105,7 @@ const quickReadings = [
    ' · nezahrnuté veličiny z posledního archivu WeeWX';
  };
  const restoreArchive=()=>{
+  lastLiveEvent=undefined;
   if(!controller.signal.aborted)void refresh();
  };
  if(section){
