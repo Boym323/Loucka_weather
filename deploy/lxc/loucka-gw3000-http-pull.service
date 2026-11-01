@@ -1,0 +1,20 @@
+[Unit]
+Description=Počasí Loučka - READ-ONLY Ecowitt GW3000 LAN HTTP poll
+Wants=network-online.target
+After=network-online.target
+[Service]
+Type=oneshot
+User=loucka
+Group=loucka
+EnvironmentFile=/etc/loucka-weather/gw3000-pull.env
+ExecStart=/usr/bin/python3 /usr/local/libexec/loucka-gw3000-http-pull.py
+StateDirectory=loucka-live
+StateDirectoryMode=0750
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/loucka-live
+RestrictAddressFamilies=AF_INET AF_UNIX
+TimeoutStartSec=12
