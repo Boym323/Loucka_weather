@@ -51,12 +51,15 @@ const quickReadings = [
    const reading=response.readings[metric.id];
    if(!reading||reading.value===null||reading.quality==='missing'||reading.quality==='suspect'){
     if(node)node.textContent='—';
-    if(quality)quality.textContent=reading?.quality==='suspect'?'Podezřelý údaj':'Nedostupné měření';
+    if(quality){quality.textContent=reading?.quality==='suspect'?'Podezřelý údaj':'Nedostupné měření';quality.dataset.readingState=reading?.quality==='suspect'?'suspect':'missing';}
     continue;
    }
    if(node)node.textContent=formatValue(reading.value,metric.digits);
-   if(quality)quality.textContent=reading.quality==='reconstructed'?'Rekonstruované měření':
+   if(quality){
+    quality.textContent=reading.quality==='reconstructed'?'Rekonstruované měření':
     reading.quality==='derived'?'Odvozené měření':'Archivní měření';
+    quality.dataset.readingState=reading.quality;
+   }
   }
   const quick=[{id:'radiation',digits:0},{id:'UV',digits:1},{id:'pm25_1',digits:1},{id:'rain',digits:1}];
   for(const metric of quick){
