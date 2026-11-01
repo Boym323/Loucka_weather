@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import DeploymentInfo from '../shared/ui/DeploymentInfo.astro';
+import LiveSync from '../shared/ui/LiveSync.astro';
 interface Props { title: string; description?: string }
 const { title, description = 'Meteorologická měření ze stanice Počasí Loučka.' } = Astro.props;
 const navigation = [
@@ -39,6 +40,7 @@ const active = Astro.url.pathname;
      {navigation.map(item => <a href={item.href} aria-current={active === item.href ? 'page' : undefined}>{item.title}</a>)}
     </nav>
     <div class="header-actions">
+     <LiveSync />
      <button type="button" class="theme-toggle" data-theme-toggle aria-label="Přepnout světlý a tmavý motiv" title="Přepnout motiv">☼ <span class="theme-name">Motiv</span></button>
      <span class="header-clock" data-prague-clock aria-label="Místní čas v Loučce">--:--</span>
     </div>

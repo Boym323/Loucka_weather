@@ -543,3 +543,11 @@ h1,h2,h3,p{margin-top:0}h1{font-size:clamp(26px,3vw,42px);line-height:1.2;letter
 .advanced-history .chart-summary{margin:11px 0}
 @media(max-width:1060px){.advanced-history-form{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.advanced-history-form{grid-template-columns:1fr 1fr}.advanced-history-form button{font-size:12px}.advanced-history-chart{height:290px}}
+
+
+/* Live SSE represents archive change notifications, not instant GW3000 telemetry. */
+.live-archive-indicator{display:inline-flex;align-items:center;gap:5px;color:#a8becc;font-size:10px;white-space:nowrap}
+.live-archive-dot{width:7px;height:7px;border-radius:50%;background:#617785}
+.live-archive-indicator.live-connected .live-archive-dot{background:#4ce3a6;box-shadow:0 0 0 3px #4ce3a621}
+.live-archive-indicator.live-connected{color:#76ecc6}
+@media(max-width:950px){.live-archive-indicator{display:none}}

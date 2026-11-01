@@ -39,7 +39,7 @@ const quickReadings = [
  const status=section?.querySelector<HTMLElement>('[data-current-status]');
  const updated=section?.querySelector<HTMLElement>('[data-current-updated]');
  const controller=new AbortController();
- if(section)void getCurrent(controller.signal).then(response=>{
+ const refresh=()=>getCurrent(controller.signal).then(response=>{
   if(status){
    status.textContent=response.stale?'Zastaralé měření':'Archivní měření';
    status.classList.add(response.stale?'warning':'ok');
@@ -75,5 +75,9 @@ const quickReadings = [
   if(status){status.textContent='API nedostupné';status.classList.add('error');}
   if(updated)updated.textContent='Nepodařilo se načíst archivní měření. Zkuste stránku obnovit.';
  });
+ if(section){
+  void refresh();
+  window.addEventListener('loucka:archive-updated',()=>{if(!controller.signal.aborted)void refresh();});
+ }
  document.addEventListener('astro:before-swap',()=>controller.abort(),{once:true});
 </script>
