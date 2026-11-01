@@ -151,3 +151,36 @@ test('unit conversions match the independent Python reference golden vectors',()
    JSON.stringify({sample,actual:r.value}));
  }
 });
+
+test('extra read-only endpoints expose real-source telemetry and derived solar only',async t=>{
+ const mock:ArchiveReader={...reader(),
+  telemetrySnapshot:async()=>[{column:'ws80_sig',dateTime:1793520000,value:3},
+   {column:'ws80_batt',dateTime:1793520000,value:2.7}],
+  solarYear:async()=>({records:100,validRecords:80,validMinutes:400,energyKwhM2:2.4})
+ };
+ const app=buildApp(mock,now);t.after(()=>app.close());
+ const diag=await app.inject('/api/v1/diagnostics/sensors');
+ assert.equal(diag.statusCode,200,diag.body);
+ assert.equal(diag.json().readings.length,2);
+ assert.equal(diag.json().readings[0].unit,'raw');
+ const solar=await app.inject('/api/v1/climate/solar?year=2025');
+ assert.equal(solar.statusCode,200,solar.body);
+ assert.equal(solar.json().energyKwhM2,2.4);
+ assert.equal(solar.json().sunshineHours,null);
+ assert.equal(solar.json().snowDepthCm,null);
+ assert.equal((await app.inject('/api/v1/climate/solar?year=2000')).statusCode,400);
+ assert.equal((await app.inject('/api/v1/climate/solar?year=bad')).statusCode,400);
+});
+test('camera archive and CHMI warning fail closed when collectors not installed',async t=>{
+ const app=buildApp(reader(),now);t.after(()=>app.close());
+ const archive=(await app.inject('/api/v1/camera/archive')).json();
+ assert.equal(archive.status,'unavailable');
+ assert.deepEqual(archive.frames,[]);
+ const alert=(await app.inject('/api/v1/alerts/local')).json();
+ assert.equal(alert.status,'unavailable');
+ assert.deepEqual(alert.alerts,[]);
+ const traversal=await app.inject('/api/v1/camera/frames/..%2Fapi.env');
+ assert.ok([400,404].includes(traversal.statusCode));
+ assert.equal((await app.inject('/api/v1/camera/frames/invalid.jpg')).statusCode,404);
+ assert.equal((await app.inject('/api/v1/camera/timelapse/unknown.mp4')).statusCode,404);
+});
