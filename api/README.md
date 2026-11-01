@@ -1,21 +1,39 @@
-# Loučka Weather API – Fastify staging vertical slice (DRAFT)
+# Loučka Weather API – Fastify/TypeScript staging (PR #5)
 
-**Nejde o produkční backend ani kompletní OpenAPI implementaci.** První skutečné HTTP endpointy: `/api/v1/healthz`, `/readyz`, `/station` a `/current` (prozatím outTemp/rain/windSpeed/barometer). Ostatní endpointy a SSE jsou stále kontrakt k implementaci; `station.capabilities` proto uvádí jen `current`.
+**Stav: implementace části API v1, zatím pouze v draft PR; nic není nasazené.**
 
-Kontrakt: [root openapi.yaml](../openapi.yaml), [meteorologická pravidla](../docs/API_V1_PRODUCT_CONTRACT.md). První verze používá Fastify v5, Node 24 a MariaDB Connector/Node.js. Testy používají injektovaný fake reader a nikde se nepřipojují k produkci.
+Implementované čtecí trasy:
 
-## Spuštění – pouze autorizovaný staging
+| Endpoint | Stav |
+|---|---|
+| `GET /api/v1/healthz` | Liveness bez dotazu na DB |
+| `GET /api/v1/readyz` | Dostupnost databáze, sanitizované chyby |
+| `GET /api/v1/station` | Metadata, nezveřejňuje neověřenou polohu |
+| `GET /api/v1/sensors` | Vrací prázdný seznam, dokud není ověřeno mapování senzorů |
+| `GET /api/v1/camera/status` | Pravdivý stav `disabled` bez soukromých URL |
+| `GET /api/v1/current` | Poslední záznam archivu včetně všech 45 veřejných metrik a tří systémů jednotek |
+| `GET /api/v1/history` | Pouze `raw`, bounded (31 dnů; max 10 000 bodů včetně mezer), žádné tiché zkrácení |
+
+`resolution=auto` použije `raw` jen pokud se vejde do mezí. `hourly` a `daily` zatím vrací kontrolovanou chybu `422`, nikoli neověřenou meteorologickou agregaci. Složité statistiky, streaming `/live`, archivní observer a reálná kamera jsou **nehotové**.
+
+Zdrojový katalog metrik a jednotek: `../schemas/metrics.json`; `src/metrics.ts` je z něj generovaná kopie. Jednotky se interpretují **u každého řádku** podle původního `usUnits`; `NULL` zůstává `null` a neznámé usUnits se odmítne. Odpovědi `current` a `history` mají ETag / 304, `dataset=approved` je bez schválení nepřístupný (503).
+
+## Ověření
 ```bash
 cd api
 npm install
 npm test
-# Pouze na stagingu a jen se zvláštním uživatelem MariaDB s právem SELECT:
+```
+Jednotkové testy používají injektovaný fake reader; vedle nich CI vytváří **samostatnou syntetickou MariaDB 11.8** a ověřuje skutečné SQL dotazy i SELECT-only přístup. Neprobíhá žádný přístup na produkční databázi. Spustit `npm test` neznamená spustit live test na produkci.
+
+## Pouze autorizovaný staging
+```bash
+# Na testovací LXC s odděleným MariaDB účtem pouze SELECT:
+cd api
 WEATHER_STAGING_ENABLED=YES WEATHER_DB_HOST=... WEATHER_DB_SCHEMA=... \
 WEATHER_DB_USER=... WEATHER_DB_PASSWORD=... npm start
 ```
 
-Použij systémové `EnvironmentFile` s právy 0600 mimo repozitář, nikdy neukládej hesla do GitHubu. Konfigurace bez explicitního `WEATHER_STAGING_ENABLED=YES` skončí chybou; default host je pouze `127.0.0.1` pro HTTP server. API musí být dostupné jen přes same-origin Nginx Proxy Manager, ne veřejně na novém portu.
+Doporučeno `systemd EnvironmentFile` s oprávněním 0600 mimo Git. Chybějící `WEATHER_STAGING_ENABLED=YES` zabrání startu DB adapteru. HTTP backend naslouchá standardně pouze na `127.0.0.1:3100`, přístup přes důvěryhodný Nginx Proxy Manager same-origin. DB adapter používá parametrizované SELECT, pevně vymezené identifikátory metrik a max. dvě databázová spojení.
 
-**Bezpečnost:** SQL pouze SELECT (parametr `asOf` vázaný), uživatelský vstup nesmí ovlivnit název tabulky. DB schéma je pouze konfigurace procesu, ne HTTP parametr. Pro produkci je nutné doplnit rate limiting, vědecké QC, cache a invalidaci `dataRevision` při opravách, plné CI paritní testy a nezávislý snapshot. Toto PR takové nasazení neschvaluje.
-
-**Před označením ready:** vytvořit a commitnout `package-lock.json`, v CI přejít na `npm ci`, rozšířit golden testy všech 45 veličin, real DB staging a 11 endpointů, otestovat přechody DST a obnovu archivu. Produkční WeeWX, databázi ani LXC tento PR nemění.
+**Nenahrazuje bezpečnostní schválení produkce:** nutné přidat rate limiting, produkční cache a její invalidaci, ověřené QC senzory/rekonstrukce, autentizaci administrativních částí (pokud vzniknou), bezpečnostní audit, plných 11 endpointů, reálné srovnání s WeeWX `archive_day_*`, SSE/MQTT a zátěžové testy výhradně na izolovaném snapshotu. Dokumentovaný kontrakt v `../openapi.yaml` je širší než tato částečná implementace.
