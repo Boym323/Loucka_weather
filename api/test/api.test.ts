@@ -122,7 +122,9 @@ test('history refuses large raw periods and silent truncation while supporting r
  const app=buildApp(reader(fixture,[{dateTime:600,interval:5,usUnits:16,outTemp:10},{dateTime:900,interval:5,usUnits:16,outTemp:9}]),now);t.after(()=>app.close());
  const base='/api/v1/history?metric=outTemp&from=1970-01-01T00:00:00Z&to=1970-01-01T00:15:00Z';
  assert.equal((await app.inject(base+'&resolution=hourly')).statusCode,200);
- assert.equal((await app.inject(base+'&limit=1')).statusCode,422);
+ const rolled=await app.inject(base+'&limit=1');
+ assert.equal(rolled.statusCode,200);
+ assert.equal(rolled.json().resolution,'hourly');
  assert.equal((await app.inject(base.replace('outTemp','__injected'))).statusCode,400);
  assert.equal((await app.inject(base+'&dataset=approved')).statusCode,503);
  assert.equal((await app.inject(base+'&unexpected=1')).statusCode,400);
