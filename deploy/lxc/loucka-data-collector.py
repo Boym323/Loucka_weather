@@ -54,7 +54,7 @@ def save_index() -> None:
         "schemaVersion": "1",
         "timestampMeaning": "downloaded_not_captured",
         "updatedAt": datetime.now(UTC).isoformat(),
-        "frames": [{"name": f.name, "fetchedAt": datetime.strptime(f.name, "%Y%m%dT%H%M%SZ").replace(tzinfo=UTC).isoformat()} for f in frames],
+        "frames": [{"name": f.name, "fetchedAt": datetime.strptime(f.stem, "%Y%m%dT%H%M%SZ").replace(tzinfo=UTC).isoformat()} for f in frames],
         "videos": [{"name": v.name, "date": v.stem} for v in videos],
     }
     atomic_write(CAMERA_DIR / "index.json", json.dumps(index, ensure_ascii=False).encode())

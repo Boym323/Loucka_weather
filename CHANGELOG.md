@@ -4,6 +4,12 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ## 2026-11-01
 
+### Oprava archivace kamery – 1. 11. 2026
+- První JPEG se z veřejné kamery uložil, ale `save_index()` selhal: `datetime.strptime(f.name, ...)` dostal příponu `.jpg` a vyvolal `ValueError: unconverted data remains: .jpg`.
+- Při čtení času používáme `f.stem`. Ověřené nové regresní testy zahrnují vytvoření indexu, deduplikaci JPEG a vytvoření denního MP4 pomocí mocku FFmpeg.
+- Root-owned kopie `/usr/local/libexec/loucka-data-collector.py` se neaktualizuje při automatickém `git pull`: po merge je nutná jednorázová přeinstalace a nové spuštění sběrače na testovacím LXC.
+- Ověřené CAP výstrahy pro ORP 7209 jsou na tomto incidentu nezávislé, není nutný restart služby ČHMÚ.
+
 ### Archiv kamery – denní prohlížeč
 - Rozšířený bezpečný endpoint `/api/v1/camera/archive/day/YYYY-MM-DD` pro snímky vybraného UTC dne a omezenou 35denní retenci.
 - Galerie kamery obsahuje datumový filtr a stránkování po 20 skutečných snímcích; nepřítomné datum se zobrazuje jako chybějící archiv, nikoli vygenerovaný obsah.
