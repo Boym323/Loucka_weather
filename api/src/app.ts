@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import {registerExtras} from './extras.js';
 import {createHash} from 'node:crypto';
 import type {ArchiveReader,ArchiveRow,DailySummaryRow} from './store.js';
 import {isMetric,metrics} from './metrics.js';
@@ -561,5 +562,6 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
    return makeResponse('daily',policy.aggregation,result.points,result.valid,digest);
   }catch{return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Daily summaries unavailable or invalid',503);}
  });
+ registerExtras(app,reader);
  return app;
 }
