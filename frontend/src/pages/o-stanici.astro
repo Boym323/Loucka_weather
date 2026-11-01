@@ -1,0 +1,11 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="O projektu">
+ <div class="page-intro"><span class="eyebrow">O meteorologické stanici</span><h1>O projektu Počasí Loučka</h1><p>Nezávislé meteorologické měření a veřejný archiv. Nový portál vzniká jako modulární frontend nad verzovaným meteorologickým API.</p></div>
+ <div class="info-grid">
+  <section class="section"><h2>Hardware</h2><p class="lead">Ecowitt GW3000 a připojená čidla. Individuální historie konkrétních senzorů bude zveřejněna po validaci.</p></section>
+  <section class="section"><h2>Datový archiv</h2><p class="lead">MariaDB / WeeWX. Zdrojové časové značky jsou konce intervalů (start, end]; veřejný klient nekomunikuje přímo s databází.</p></section>
+  <section class="section"><h2>Webové technologie</h2><p class="lead">Astro + TypeScript + Fastify API. Grafy využívají Apache ECharts. Úpravy tohoto webu nezasahují do původní stanice.</p></section>
+ </div>
+</BaseLayout>

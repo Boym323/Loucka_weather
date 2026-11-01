@@ -1,0 +1,35 @@
+<details class="section details-panel" data-history-panel>
+ <summary>Zobrazit tabulku posledních měření teploty (24 h)</summary>
+ <div class="table-scroll">
+  <table class="history-table">
+   <thead><tr><th scope="col">Konec intervalu</th><th scope="col">Teplota</th><th scope="col">Kvalita</th></tr></thead>
+   <tbody data-history-body><tr><td colspan="3">Načítání…</td></tr></tbody>
+  </table>
+ </div>
+</details>
+<script>
+ import {getHistory24h} from '../../shared/api/client';
+ import {formatValue} from '../../shared/domain/metrics';
+ import {formatTimestamp} from '../../shared/domain/weather';
+ const root=document.querySelector<HTMLDetailsElement>('[data-history-panel]');
+ let fetched=false;
+ root?.addEventListener('toggle',()=>{
+  if(!root.open||fetched)return;
+  fetched=true;
+  const body=root.querySelector<HTMLTableSectionElement>('[data-history-body]');
+  if(!body)return;
+  void getHistory24h('outTemp').then(result=>{
+   body.replaceChildren();
+   if(!result.points.length){const r=body.insertRow();const c=r.insertCell();c.colSpan=3;c.textContent='Žádná dostupná data.';return;}
+   for(const point of result.points.slice(-288)){
+    const row=body.insertRow();
+    row.insertCell().textContent=formatTimestamp(point.endTime);
+    row.insertCell().textContent=point.value===null?'—':formatValue(point.value,1)+' °C';
+    row.insertCell().textContent=point.quality;
+   }
+  }).catch(()=>{
+   body.replaceChildren();const row=body.insertRow(),cell=row.insertCell();
+   cell.colSpan=3;cell.textContent='Tabulku se nepodařilo načíst.';
+  });
+ });
+</script>

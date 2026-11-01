@@ -1,0 +1,40 @@
+<section class="section overview-readings" data-overview-readings aria-labelledby="overview-title">
+ <div class="section-heading"><div class="panel-title"><span class="panel-mark" aria-hidden="true">≋</span><h2 id="overview-title">Další měření</h2></div><span class="status-chip" data-overview-status role="status">Načítám</span></div>
+ <dl class="overview-list">
+  <div><dt>Pocitová teplota</dt><dd data-overview-value="appTemp">—</dd></div>
+  <div><dt>Rosný bod</dt><dd data-overview-value="dewpoint">—</dd></div>
+  <div><dt>Vnitřní teplota</dt><dd data-overview-value="inTemp">—</dd></div>
+  <div><dt>Vnitřní vlhkost</dt><dd data-overview-value="inHumidity">—</dd></div>
+  <div><dt>Směr větru</dt><dd data-overview-value="windDir">—</dd></div>
+ </dl>
+ <p class="source-note">Naměřené nebo odvozené veličiny z posledního archivního záznamu. Nejde o samostatně ověřený stav fyzických čidel.</p>
+</section>
+<script>
+ import {getCurrent} from '../../shared/api/client';
+ import {formatValue} from '../../shared/domain/metrics';
+ const root=document.querySelector<HTMLElement>('[data-overview-readings]');
+ if(root){
+  const status=root.querySelector<HTMLElement>('[data-overview-status]');
+  const controller=new AbortController();
+  const items=[
+   {id:'appTemp',unit:'°C',digits:1},
+   {id:'dewpoint',unit:'°C',digits:1},
+   {id:'inTemp',unit:'°C',digits:1},
+   {id:'inHumidity',unit:'%',digits:0},
+   {id:'windDir',unit:'°',digits:0}
+  ];
+  void getCurrent(controller.signal).then(response=>{
+   if(status){status.textContent=response.stale?'Zastaralé':'Archiv';status.classList.add(response.stale?'warning':'ok');}
+   for(const item of items){
+    const node=root.querySelector<HTMLElement>('[data-overview-value="'+item.id+'"]');
+    const reading=response.readings[item.id];
+    if(!node||!reading||reading.value===null||reading.quality==='missing'||reading.quality==='suspect')continue;
+    node.textContent=formatValue(reading.value,item.digits)+' '+item.unit;
+   }
+  }).catch(()=>{
+   if(controller.signal.aborted)return;
+   if(status){status.textContent='Nedostupné';status.classList.add('error');}
+  });
+  document.addEventListener('astro:before-swap',()=>controller.abort(),{once:true});
+ }
+</script>
