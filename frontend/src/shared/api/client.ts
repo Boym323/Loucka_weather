@@ -64,3 +64,31 @@ export async function getStationCapabilities(signal?:AbortSignal):Promise<string
  return data.schemaVersion==='1'&&Array.isArray(data.capabilities)
   ?data.capabilities.filter((item):item is string=>typeof item==='string'):[];
 }
+
+
+export interface AuditedSensor {
+ id:string; metric:string; displayName:string;
+ status:'active'|'unavailable'|'not_installed'|'retired'|'unknown';
+ enabled:boolean; lastObservedAt:string|null; validFrom:string|null; validTo:string|null;
+ depthCm:number|null;source:string;confidence:'verified'|'provisional'|'unknown';note:string|null;
+}
+export async function getSensorInventory(signal?:AbortSignal):Promise<AuditedSensor[]>{
+ const data=await request('/api/v1/sensors',signal) as {schemaVersion?:unknown;sensors?:unknown};
+ if(data.schemaVersion!=='1'||!Array.isArray(data.sensors))
+  throw new Error('Neplatný inventář senzorů');
+ return data.sensors.filter((s):s is AuditedSensor=>
+  s!==null&&typeof s==='object'&&typeof s.id==='string'&&typeof s.displayName==='string'&&
+  typeof s.status==='string'&&typeof s.metric==='string'&&
+  (s.confidence==='verified'||s.confidence==='provisional'||s.confidence==='unknown'));
+}
+export interface CameraStatus {
+ cameraId:'west'; status:'fresh'|'stale'|'unavailable'|'disabled';
+ capturedAt:string|null; publishedAt:string|null; latestUrl:string|null;
+ ageSeconds:number|null;width:number|null;height:number|null;privacyMaskApplied:boolean|null;
+}
+export async function getCameraStatus(signal?:AbortSignal):Promise<CameraStatus>{
+ const d=await request('/api/v1/camera/status',signal) as Partial<CameraStatus>;
+ if(d.cameraId!=='west'||!['fresh','stale','unavailable','disabled'].includes(d.status??''))
+  throw new Error('Neplatný status kamery');
+ return d as CameraStatus;
+}
