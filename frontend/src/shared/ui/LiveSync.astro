@@ -9,6 +9,7 @@
  const controller=new AbortController();
  let eventSource:EventSource|undefined;
  let currentTimer:ReturnType<typeof setInterval>|undefined;
+ let hadLive=false;
  type Observation={state?:string;observedAt?:string;receivedAt?:string;units?:string;
    source?:string;readings?:Record<string,{value:number;quality:string;unit:string;source:string}>};
  const fresh=(data:Observation)=>{
@@ -22,6 +23,7 @@
  }
  function dispatchLive(data:Observation){
   if(!fresh(data))return false;
+  hadLive=true;
   window.dispatchEvent(new CustomEvent('loucka:live-observation',{detail:data}));
   label('GW3000 · živě',true);return true;
  }
@@ -33,12 +35,12 @@
    const result=await response.json() as Observation;
    if(!dispatchLive(result)){
     label('Archivní režim',false);
-    window.dispatchEvent(new CustomEvent('loucka:live-expired'));
+    if(hadLive){hadLive=false;window.dispatchEvent(new CustomEvent('loucka:live-expired'));}
    }
   }catch{
    if(controller.signal.aborted)return;
    label('Archivní režim',false);
-   window.dispatchEvent(new CustomEvent('loucka:live-expired'));
+   if(hadLive){hadLive=false;window.dispatchEvent(new CustomEvent('loucka:live-expired'));}
   }
  }
  void getStationCapabilities(controller.signal).then(capabilities=>{
