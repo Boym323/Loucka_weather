@@ -159,3 +159,15 @@ def test_calendar_patterns_and_conditional_get_headers():
         params=O['paths'][path]['get']['parameters']
         assert any(p.get('$ref')=='#/components/parameters/IfNoneMatch' for p in params)
         assert '304' in O['paths'][path]['get']['responses']
+
+def test_docs_from_previous_prs_survive_merge_reconciliation():
+    root_readme=(ROOT/"README.md").read_text(encoding="utf-8")
+    docs_index=(ROOT/"docs/README.md").read_text(encoding="utf-8")
+    agents=(ROOT/"AGENTS.md").read_text(encoding="utf-8")
+    for path in ("docs/API_V1_PRODUCT_CONTRACT.md","docs/ARCHIVE_REFRESH_CONTRACT.md",
+                 "WEEWX_DAILY_SUMMARIES_AUDIT.md","benchmark/lxc/README.md"):
+        assert (ROOT/path).is_file(), path
+    assert "docs/API_V1_PRODUCT_CONTRACT.md" in root_readme
+    assert "benchmark/lxc/README.md" in root_readme
+    assert "FRONTEND_FEATURES_CAMERA_AUDIT_2026-10-31.md" in docs_index
+    assert "WEEWX_DAILY_SUMMARIES_AUDIT.md" in agents
