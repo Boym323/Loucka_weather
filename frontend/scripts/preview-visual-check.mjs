@@ -11,7 +11,7 @@ const out='test-results/preview-screenshots';
 const routes=[
  ['prehled','/'],['aktualne','/aktualne/'],['grafy','/grafy/'],
  ['klimatologie','/klimatologie/'],['kamera','/kamera/'],
- ['mapy','/mapy/'],['senzory','/senzory/'],['o-stanici','/o-stanici/']
+ ['mapy','/mapy/'],['senzory','/senzory/'],['stav','/stav/'],['o-stanici','/o-stanici/']
 ];
 const sizes=[
  {name:'desktop',width:1440,height:900},
@@ -170,6 +170,8 @@ try{
       await radarLayer.check();
      }
     }
+    if(path==='/stav/'&&await page.locator('[data-monitor-card]').count()!==5)
+     errors.push(size.name+': monitoring dashboard must list five independent sources');
     if(path==='/senzory/'){
      if(await page.locator('[data-sensor-trend]').count()<8)
       errors.push(size.name+': missing real sensor trend containers');
