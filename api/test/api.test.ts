@@ -1,3 +1,5 @@
+import {readFileSync} from 'node:fs';
+import {join} from 'node:path';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {buildApp} from '../src/app.js';
@@ -133,4 +135,17 @@ test('history has no fabricated points when no source rows exist',async t=>{
  assert.equal(res.statusCode,200);
  assert.deepEqual(res.json().points,[]);
  assert.equal(res.json().count,0);
+});
+
+test('unit conversions match the independent Python reference golden vectors',()=>{
+ const data=JSON.parse(readFileSync(join(process.cwd(),'../tests/fixtures/unit-conversions.json'),'utf8')) as {
+  cases:Array<{metric:string;value:number|null;usUnits:number;units:'us'|'metric'|'metricwx';expected:number|null}>
+ };
+ for(const sample of data.cases){
+  assert.ok(metricNames.includes(sample.metric as typeof metricNames[number]));
+  const r=converted(sample.metric as typeof metricNames[number],sample.value,sample.usUnits,sample.units);
+  if(sample.expected===null)assert.equal(r.value,null);
+  else assert.ok(r.value!==null && Math.abs(r.value-sample.expected)<1e-7,
+   JSON.stringify({sample,actual:r.value}));
+ }
 });
