@@ -96,7 +96,7 @@ try{
      if(climate.annual!=='Souhrny WeeWX')
       errors.push(size.name+': annual climate table not ready: '+climate.annual);
      for(const [metric,value] of Object.entries(climate.summary)){
-      if(!/\\d/.test(value)||value==='—')
+      if(!/[0-9]/.test(value)||value==='—')
        errors.push(size.name+': '+metric+' annual summary missing: '+value);
      }
     }
