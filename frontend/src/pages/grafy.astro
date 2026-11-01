@@ -1,12 +1,16 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import HistoryChart from '../features/history/HistoryChart.astro';
+import AdvancedHistory from '../features/history/AdvancedHistory.astro';
 import HistoryPanel from '../features/history/HistoryPanel.astro';
 import RainDetail from '../features/history/RainDetail.astro';
 ---
 <BaseLayout title="Grafy a historie">
- <div class="page-intro"><span class="eyebrow">Meteorologický archiv</span><h1>Historická data</h1><p>Interaktivní grafy skutečných měření a přehled intervalů. Čas v Europe/Prague, mezery zůstávají prázdné.</p></div>
- <HistoryChart />
+ <div class="page-intro">
+  <span class="eyebrow">Meteorologický archiv od roku 2009</span>
+  <h1>Historická data</h1>
+  <p>Porovnání veličin, interaktivní rozsahy, výběr data a stažení skutečně naměřených dat.</p>
+ </div>
+ <AdvancedHistory />
  <RainDetail />
  <HistoryPanel />
 </BaseLayout>
