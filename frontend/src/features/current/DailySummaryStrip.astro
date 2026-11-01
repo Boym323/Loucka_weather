@@ -1,0 +1,36 @@
+<section class="daily-brief" data-daily-brief aria-label="Dnešní archivní souhrn">
+ <div class="daily-brief-item"><span>Minimum dnes</span><strong data-daily-stat="low">—</strong><small>°C</small></div>
+ <div class="daily-brief-item"><span>Maximum dnes</span><strong data-daily-stat="high">—</strong><small>°C</small></div>
+ <div class="daily-brief-item"><span>Dnešní srážky</span><strong data-daily-stat="rain">—</strong><small>mm</small></div>
+ <span class="daily-brief-status" data-daily-status role="status">Denní archivní souhrny</span>
+</section>
+<script>
+ import {getStatistics} from '../../shared/api/client';
+ import {formatValue} from '../../shared/domain/metrics';
+ import {qualitySupported} from '../../shared/domain/statistics';
+ const root=document.querySelector<HTMLElement>('[data-daily-brief]')!;
+ if(root){
+  const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Prague',
+   year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  const controller=new AbortController();
+  const status=root.querySelector<HTMLElement>('[data-daily-status]');
+  const requests=[
+   {id:'low',metric:'outTemp',aggregation:'min' as const,digits:1},
+   {id:'high',metric:'outTemp',aggregation:'max' as const,digits:1},
+   {id:'rain',metric:'rain',aggregation:'sum' as const,digits:1}
+  ];
+  void Promise.allSettled(requests.map(r=>getStatistics('daily',r.metric,r.aggregation,day,controller.signal)))
+   .then(results=>{
+    if(controller.signal.aborted)return;
+    let valid=0;
+    results.forEach((result,index)=>{
+     const node=root.querySelector<HTMLElement>('[data-daily-stat="'+requests[index].id+'"]');
+     if(!node||result.status!=='fulfilled'||!qualitySupported(result.value))return;
+     node.textContent=formatValue(result.value.value,requests[index].digits);
+     valid++;
+    });
+    if(status)status.textContent=valid?'Souhrny WeeWX · '+day:'Denní souhrny zatím nejsou dostupné';
+   });
+  document.addEventListener('astro:before-swap',()=>controller.abort(),{once:true});
+ }
+</script>
