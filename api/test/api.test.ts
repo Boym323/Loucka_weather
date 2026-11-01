@@ -1,55 +1,136 @@
-import { test } from 'node:test';
+import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import { buildApp } from '../src/app.js';
-import type { ArchiveReader,ArchiveRow } from '../src/store.js';
+import {buildApp} from '../src/app.js';
+import {converted} from '../src/units.js';
+import {metricNames,metrics} from '../src/metrics.js';
+import type {ArchiveReader,ArchiveRow} from '../src/store.js';
+
 const now=()=>new Date('2026-11-01T08:10:00Z');
 const fixture:ArchiveRow={dateTime:1793520000,usUnits:16,interval:5,
-  outTemp:12.5,rain:0.1,windSpeed:36,barometer:1013.25};
-function reader(row:ArchiveRow|null=fixture):ArchiveReader{
-  return {latest:async()=>row,ping:async()=>{}};
+ outTemp:12.5,rain:0.1,windSpeed:36,barometer:1013.25};
+function reader(row:ArchiveRow|null=fixture,rows:ArchiveRow[]=[]):ArchiveReader{
+ return {latest:async()=>row,history:async()=>rows,ping:async()=>{}};
 }
-test('health and station expose only actual capabilities',async t=>{
-  const app=buildApp(reader(),now);t.after(()=>app.close());
-  const h=await app.inject('/api/v1/healthz');
-  assert.equal(h.statusCode,200);assert.equal(h.json().status,'ok');
-  const station=(await app.inject('/api/v1/station')).json();
-  assert.deepEqual(station.capabilities,['current']);
-  assert.deepEqual(station.availableDatasets,['original']);
-  assert.equal(station.location.verified,false);
+test('healthz, readiness, station, camera and sensors do not fabricate capabilities',async t=>{
+ const app=buildApp(reader(),now);t.after(()=>app.close());
+ const h=await app.inject('/api/v1/healthz');
+ assert.equal(h.statusCode,200);assert.equal(h.json().status,'ok');
+ const ready=(await app.inject('/api/v1/readyz')).json();
+ assert.equal(ready.ready,true);
+ assert.equal(ready.components.live,'disabled');
+ const station=(await app.inject('/api/v1/station')).json();
+ assert.deepEqual(station.capabilities,['current','history','sensors']);
+ assert.deepEqual(station.availableDatasets,['original']);
+ assert.equal(station.location.verified,false);
+ const sensors=(await app.inject('/api/v1/sensors')).json();
+ assert.deepEqual(sensors.sensors,[]);
+ const camera=(await app.inject('/api/v1/camera/status')).json();
+ assert.equal(camera.status,'disabled');
+ assert.equal(camera.latestUrl,null);
 });
-test('current converts METRIC archive by row source units',async t=>{
-  const app=buildApp(reader(),now);t.after(()=>app.close());
-  const res=await app.inject('/api/v1/current?units=metricwx');
-  assert.equal(res.statusCode,200,res.body);
-  const body=res.json();
-  assert.equal(body.dataset,'original');
-  assert.equal(body.readings.outTemp.value,12.5);
-  assert.equal(body.readings.windSpeed.value,10);
-  assert.equal(body.readings.rain.value,1);
-  assert.equal(body.readings.windSpeed.unit,'m_per_s');
-  assert.equal(body.readings.outTemp.sourceUsUnits,16);
+test('current converts METRIC archive by source system and reports all 45 public metrics',async t=>{
+ const app=buildApp(reader(),now);t.after(()=>app.close());
+ const res=await app.inject('/api/v1/current?units=metricwx');
+ assert.equal(res.statusCode,200,res.body);
+ const body=res.json();
+ assert.equal(body.dataset,'original');
+ assert.equal(Object.keys(body.readings).length,45);
+ assert.equal(body.readings.outTemp.value,12.5);
+ assert.equal(body.readings.windSpeed.value,10);
+ assert.equal(body.readings.rain.value,1);
+ assert.equal(body.readings.windSpeed.unit,'m_per_s');
+ assert.equal(body.readings.outTemp.sourceUsUnits,16);
+ assert.equal(body.readings.soilTemp4.value,null);
 });
-test('missing values stay null, unsupported source is not fabricated',async t=>{
-  const app=buildApp(reader({...fixture,outTemp:null,usUnits:1}),now);t.after(()=>app.close());
-  const good=(await app.inject('/api/v1/current?units=us')).json();
-  assert.equal(good.readings.outTemp.value,null);
-  assert.equal(good.readings.outTemp.quality,'missing');
-  const invalid=buildApp(reader({...fixture,usUnits:255}),now);t.after(()=>invalid.close());
-  const r=await invalid.inject('/api/v1/current');
-  assert.equal(r.statusCode,503);
+test('each publicly catalogued metric has safe mappings for all 3 by 3 unit systems',()=>{
+ assert.equal(metricNames.length,45);
+ for(const name of metricNames){
+  const expected=metrics[name];
+  for(const source of [1,16,17]){
+   for(const units of ['us','metric','metricwx'] as const){
+    const nullSample=converted(name,null,source,units);
+    assert.equal(nullSample.value,null);
+    assert.equal(nullSample.quality,'missing');
+    assert.equal(nullSample.unit,expected.outputs[units]);
+    assert.equal(nullSample.sourceUsUnits,source);
+    const measured=converted(name,1,source,units);
+    assert.ok(measured.value!==null&&Number.isFinite(measured.value));
+   }
+  }
+ }
+ assert.equal(converted('lightning_distance',1,1,'metricwx').unit,'km');
 });
-test('bad request, unapproved dataset and empty archive fail closed',async t=>{
-  const app=buildApp(reader(null),now);t.after(()=>app.close());
-  assert.equal((await app.inject('/api/v1/current?units=invalid')).statusCode,400);
-  assert.equal((await app.inject('/api/v1/current?asOf=2026-11-01')).statusCode,400);
-  assert.equal((await app.inject('/api/v1/current?dataset=approved')).statusCode,503);
-  assert.equal((await app.inject('/api/v1/current')).statusCode,404);
+test('missing is null, invalid source & nonfinite numbers fail closed',async t=>{
+ const app=buildApp(reader({...fixture,outTemp:null,usUnits:1}),now);t.after(()=>app.close());
+ const good=(await app.inject('/api/v1/current?units=us')).json();
+ assert.equal(good.readings.outTemp.value,null);
+ assert.equal(good.readings.outTemp.quality,'missing');
+ const invalid=buildApp(reader({...fixture,usUnits:255}),now);t.after(()=>invalid.close());
+ assert.equal((await invalid.inject('/api/v1/current')).statusCode,503);
+ assert.throws(()=>converted('rain',Infinity,16,'metricwx'));
 });
-test('readiness separates DB failure from process liveness',async t=>{
-  const fail:ArchiveReader={ping:async()=>{throw Error('secret DB error');},latest:async()=>null};
-  const app=buildApp(fail,now);t.after(()=>app.close());
-  assert.equal((await app.inject('/api/v1/healthz')).statusCode,200);
-  const r=await app.inject('/api/v1/readyz');
-  assert.equal(r.statusCode,503);
-  assert.ok(!r.body.includes('secret DB error'));
+test('bad inputs, forbidden datasets, unsupported source and empty archive',async t=>{
+ const app=buildApp(reader(null),now);t.after(()=>app.close());
+ assert.equal((await app.inject('/api/v1/current?units=invalid')).statusCode,400);
+ assert.equal((await app.inject('/api/v1/current?asOf=2026-11-01')).statusCode,400);
+ assert.equal((await app.inject('/api/v1/current?dataset=approved')).statusCode,503);
+ assert.equal((await app.inject('/api/v1/current')).statusCode,404);
+ assert.equal((await app.inject('/api/v1/current?anything=1')).statusCode,400);
+});
+test('readiness separates DB failure from liveness without exposing secrets',async t=>{
+ const fail:ArchiveReader={ping:async()=>{throw Error('private DB error');},
+  latest:async()=>null,history:async()=>[]};
+ const app=buildApp(fail,now);t.after(()=>app.close());
+ assert.equal((await app.inject('/api/v1/healthz')).statusCode,200);
+ const r=await app.inject('/api/v1/readyz');
+ assert.equal(r.statusCode,503);assert.ok(!r.body.includes('private DB error'));
+});
+test('ETag and conditional GET invalidate after changing data',async t=>{
+ const app=buildApp(reader(),now);t.after(()=>app.close());
+ const initial=await app.inject('/api/v1/current');
+ assert.ok(initial.headers.etag);
+ const again=await app.inject({url:'/api/v1/current',headers:{'if-none-match':String(initial.headers.etag)}});
+ assert.equal(again.statusCode,304);
+ assert.equal(again.body,'');
+ const other=await app.inject({url:'/api/v1/current?units=us',headers:{'if-none-match':String(initial.headers.etag)}});
+ assert.equal(other.statusCode,200);
+});
+test('bounded history raw retains interval ends, actual null and explicit gaps',async t=>{
+ const rows:ArchiveRow[]=[
+  {dateTime:600,interval:5,usUnits:16,outTemp:10},
+  {dateTime:1200,interval:5,usUnits:17,outTemp:null},
+  {dateTime:1500,interval:5,usUnits:1,outTemp:50}
+ ];
+ const app=buildApp(reader(fixture,rows),now);t.after(()=>app.close());
+ const res=await app.inject('/api/v1/history?metric=outTemp&from=1970-01-01T00:00:00Z&to=1970-01-01T00:25:00Z&resolution=raw&limit=15');
+ assert.equal(res.statusCode,200,res.body);
+ const body=res.json();
+ assert.equal(body.resolution,'raw');
+ assert.equal(body.aggregation,'sample');
+ assert.equal(body.truncated,false);
+ assert.equal(body.points.length,4);
+ assert.equal(body.points[1].quality,'missing');
+ assert.equal(body.points[1].source,'derived');
+ assert.equal(body.points[2].value,null);
+ assert.equal(body.points[3].value,10);
+ assert.equal(body.completeness.valid,2);
+ assert.equal(body.completeness.expected,null);
+});
+test('raw history refuses large periods, silent truncation and unsupported rollups',async t=>{
+ const app=buildApp(reader(fixture,[{dateTime:600,interval:5,usUnits:16,outTemp:10},{dateTime:900,interval:5,usUnits:16,outTemp:9}]),now);t.after(()=>app.close());
+ const base='/api/v1/history?metric=outTemp&from=1970-01-01T00:00:00Z&to=1970-01-01T00:15:00Z';
+ assert.equal((await app.inject(base+'&resolution=hourly')).statusCode,422);
+ assert.equal((await app.inject(base+'&limit=1')).statusCode,422);
+ assert.equal((await app.inject(base.replace('outTemp','__injected'))).statusCode,400);
+ assert.equal((await app.inject(base+'&dataset=approved')).statusCode,503);
+ assert.equal((await app.inject(base+'&unexpected=1')).statusCode,400);
+ const big='/api/v1/history?metric=outTemp&from=2026-01-01T00:00:00Z&to=2026-05-01T00:00:00Z';
+ assert.equal((await app.inject(big)).statusCode,422);
+});
+test('history has no fabricated points when no source rows exist',async t=>{
+ const app=buildApp(reader(fixture,[]),now);t.after(()=>app.close());
+ const res=await app.inject('/api/v1/history?metric=rain&from=1970-01-01T00:00:00Z&to=1970-01-01T00:10:00Z');
+ assert.equal(res.statusCode,200);
+ assert.deepEqual(res.json().points,[]);
+ assert.equal(res.json().count,0);
 });
