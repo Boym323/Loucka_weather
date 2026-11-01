@@ -4,6 +4,14 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ## 2026-11-01
 
+### Skutečný LAN přenos Ecowitt GW3000 + monitoring
+- Nový explicitně aktivovaný, neprivilegovaný Python přijímač Ecowitt HTTP POST, s požadovaným LAN IP whitelistem a tajným tokenem v cestě.
+- Převod ověřených veličin z °F/mph/inHg/in/h na METRICWX, validace zdroje, času a fyzikálního rozsahu. Jediný atomický lokální JSON, bez zápisu do MariaDB.
+- Fastify poller nových paketů, SSE události observation, read-only /api/v1/live/current. Po 120 s bez nových měření bezpečný archivní fallback.
+- Nezávislé /api/v1/monitor/status sleduje čerstvost archivu, GW3000, kamery a CAP. Nová stránka /stav/ a volitelná pětiminutová systemd kontrola.
+- Nutné skutečné zapojení GW3000 na LXC před označením zdroje jako live; neměnit již používaný Customized upload WeeWX.
+- Regression CI s falešnými pakety pouze v testech, žádné syntetické hodnoty ve veřejné aplikaci.
+
 ### Oprava archivace kamery – 1. 11. 2026
 - První JPEG se z veřejné kamery uložil, ale `save_index()` selhal: `datetime.strptime(f.name, ...)` dostal příponu `.jpg` a vyvolal `ValueError: unconverted data remains: .jpg`.
 - Při čtení času používáme `f.stem`. Ověřené nové regresní testy zahrnují vytvoření indexu, deduplikaci JPEG a vytvoření denního MP4 pomocí mocku FFmpeg.

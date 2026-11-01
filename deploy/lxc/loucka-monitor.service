@@ -1,0 +1,15 @@
+[Unit]
+Description=Počasí Loučka - independent source freshness watchdog
+After=network-online.target loucka-weather-api.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=loucka
+Group=loucka
+ExecStart=/usr/bin/python3 /usr/local/libexec/loucka-monitor.py
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+TimeoutStartSec=12

@@ -1,0 +1,26 @@
+[Unit]
+Description=Počasí Loučka - private GW3000 Ecowitt live receiver
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=loucka
+Group=loucka
+EnvironmentFile=/etc/loucka-weather/gw3000.env
+ExecStart=/usr/bin/python3 /usr/local/libexec/loucka-gw3000-live.py
+Restart=on-failure
+RestartSec=5s
+StateDirectory=loucka-live
+StateDirectoryMode=0750
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/loucka-live
+RestrictAddressFamilies=AF_INET AF_UNIX
+TimeoutStopSec=10s
+
+[Install]
+WantedBy=multi-user.target

@@ -7,6 +7,8 @@ import {aggregationPolicy} from './aggregation.js';
 import type {Aggregation} from './aggregation.js';
 import {LiveHub,serializeSse} from './live.js';
 import {readingsFromRow,converted,outputUnit} from './units.js';
+import {gatewayReadings} from './gateway.js';
+import {readFile} from 'node:fs/promises';
 import type {Metric} from './metrics.js';
 import type {OutputUnits} from './units.js';
 
@@ -315,7 +317,7 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
  app.get('/api/v1/readyz',async(req,reply)=>{
   try{await reader.ping();}catch{return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Archive unavailable',503);}
   return {schemaVersion:'1',checkedAt:now().toISOString(),ready:true,
-   components:{api:'ok',archive:'ok',live:liveHub?'degraded':'disabled',camera:'disabled'}};
+   components:{api:'ok',archive:'ok',live:liveHub?.gatewayStatus(now().getTime())==='fresh'?'ok':liveHub?'degraded':'disabled',camera:'disabled'}};
  });
  app.get('/api/v1/station',async(req,reply)=>conditional(req,reply,{
   schemaVersion:'1',stationId:'loucka',name:'Počasí Loučka',timezone:'Europe/Prague',
@@ -323,9 +325,51 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
   archivalSource:'weewx',supportedOutputUnits:['us','metric','metricwx'],
   dataRevision:liveHub?.dataRevision??'original-unverified',updatedAt:metadataCheckedAt,
   capabilities:['current','history','sensors',...(reader.dailySummaries?
-   ['daily_statistics','monthly_statistics','yearly_statistics']:[]),...(liveHub?['live_sse']:[])],
+   ['daily_statistics','monthly_statistics','yearly_statistics']:[]),...(liveHub?['live_sse']:[]),...(liveHub?.gatewayConfigured?['gw3000_live']:[])],
   availableDatasets:['original']
  }));
+ app.get('/api/v1/live/current',async()=>{
+  const gateway=liveHub?.getGateway(now().getTime());
+  if(gateway)return {schemaVersion:'1',source:'gw3000_live',state:'live',
+   observedAt:gateway.observedAt,receivedAt:gateway.receivedAt,units:'metricwx',
+   readings:gatewayReadings(gateway)};
+  return {schemaVersion:'1',source:'weewx_archive',state:liveHub?.gatewayStatus(now().getTime())??'disabled',
+   observedAt:null,receivedAt:liveHub?.gatewayLastReceivedAt??null,units:'metricwx',
+   readings:{}};
+ });
+ // Independent source monitoring must NEVER cause /healthz or /readyz to fail.
+ app.get('/api/v1/monitor/status',async()=>{
+  const timestamp=now(),epochMs=timestamp.getTime();
+  const last=liveHub?.latestObservation?.dateTime;
+  const age=last===null||last===undefined?null:Math.max(0,Math.floor(epochMs/1000-last));
+  const camera=await archiveCameraStatus();
+  let alerts:'ok'|'stale'|'missing'='missing',alertsAge:number|null=null;
+  try{
+   const path=process.env.LOUCKA_ALERTS_FILE||'/var/lib/loucka-alerts/alerts.json';
+   const info=JSON.parse(await readFile(path,'utf8')) as {checkedAt?:string;source?:string;status?:string;orp?:string};
+   if(info.source==='CHMI_CAP'&&info.status==='verified'&&info.orp==='7209'){
+    const checked=Date.parse(info.checkedAt??'');
+    if(Number.isFinite(checked)&&checked<=epochMs+60000){
+     alertsAge=Math.max(0,Math.floor((epochMs-checked)/1000));
+     alerts=alertsAge<=2700?'ok':'stale';
+    }
+   }
+  }catch{/* No official validated CAP cache; report missing. */}
+  const gateway=liveHub?.gatewayStatus(epochMs)??'disabled';
+  const archive=age===null?'missing':age>900?'stale':'ok';
+  const components={
+   api:{status:'ok'},
+   archive:{status:archive,lastObservedAt:last?utcIso(last):null,ageSeconds:age},
+   gw3000:{status:gateway,lastObservedAt:liveHub?.getGateway(epochMs)?.observedAt??null,
+    lastReceivedAt:liveHub?.gatewayLastReceivedAt??null},
+   camera:{status:camera.status==='fresh'?'ok':camera.status==='stale'?'stale':'missing',
+    lastReceivedAt:camera.publishedAt??null},
+   chmi:{status:alerts,ageSeconds:alertsAge}
+  };
+  const degraded=Object.values(components).some(x=>x.status==='stale'||x.status==='missing');
+  return {schemaVersion:'1',checkedAt:timestamp.toISOString(),status:degraded?'degraded':'ok',
+   components,notes:'Source monitoring is separate from API liveness and database readiness'};
+ });
  app.get('/api/v1/sensors',async(req,reply)=>conditional(req,reply,{
   schemaVersion:'1',stationId:'loucka',updatedAt:metadataCheckedAt,
   sensors:[] // Verified physical mapping and installation epochs are not supplied.
@@ -412,6 +456,10 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
   };
   unsubscribe=liveHub.subscribe(write);
   const snapshot=(eventType:'snapshot'|'reset')=>{
+   const gateway=units==='metricwx'?liveHub.getGateway(now().getTime()):null;
+   if(gateway)return liveHub.createLiveEvent({eventType,observedAt:gateway.observedAt,
+    receivedAt:gateway.receivedAt,emittedAt:now().toISOString(),units:'metricwx',
+    state:'live',source:'gw3000_live',readings:gatewayReadings(gateway)});
    let row=liveHub.latestObservation;
    let readings:unknown={},state:'archive_fallback'|'stale'|'unavailable'=row?
     (now().getTime()/1000-row.dateTime>120?'stale':'archive_fallback'):'unavailable';

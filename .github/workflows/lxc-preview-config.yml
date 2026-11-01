@@ -25,6 +25,8 @@ jobs:
       - name: Validate collector and local CAP scope tests
         run: |
           python3 -m py_compile deploy/lxc/loucka-data-collector.py
+          python3 -m py_compile deploy/lxc/loucka-gw3000-live.py
+          python3 -m py_compile deploy/lxc/loucka-monitor.py
           python3 -m unittest discover -s deploy/lxc/tests -p 'test_*.py'
       - name: Validate Nginx syntax
         run: |

@@ -1,6 +1,6 @@
-<span class="live-archive-indicator" data-live-archive title="Nová archivní měření jsou detekována přibližně po 15 sekundách">
+<span class="live-archive-indicator" data-live-archive title="Skutečná GW3000 data, nebo bezpečný archivní fallback">
  <span class="live-archive-dot" aria-hidden="true"></span>
- <span data-live-archive-status role="status">Archivní režim</span>
+ <span data-live-archive-status role="status">Zjišťuji stav GW3000</span>
 </span>
 <script>
  import {getStationCapabilities} from '../api/client';
@@ -8,18 +8,60 @@
  const container=document.querySelector<HTMLElement>('[data-live-archive]');
  const controller=new AbortController();
  let eventSource:EventSource|undefined;
+ let currentTimer:ReturnType<typeof setInterval>|undefined;
+ let hadLive=false;
+ type Observation={state?:string;observedAt?:string;receivedAt?:string;units?:string;
+   source?:string;readings?:Record<string,{value:number;quality:string;unit:string;source:string}>};
+ const fresh=(data:Observation)=>{
+  const at=Date.parse(data.receivedAt??'');
+  return data.state==='live'&&data.source==='gw3000_live'&&data.units==='metricwx'&&
+   Number.isFinite(at)&&Date.now()-at<120000&&Date.now()>=at-60000;
+ };
  function label(text:string,connected:boolean){
   if(status)status.textContent=text;
   container?.classList.toggle('live-connected',connected);
  }
+ function dispatchLive(data:Observation){
+  if(!fresh(data))return false;
+  hadLive=true;
+  window.dispatchEvent(new CustomEvent('loucka:live-observation',{detail:data}));
+  label('GW3000 · živě',true);return true;
+ }
+ const notifyArchive=()=>window.dispatchEvent(new CustomEvent('loucka:archive-updated'));
+ async function pollLive(){
+  try{
+   const response=await fetch('/api/v1/live/current',{signal:controller.signal,cache:'no-store'});
+   if(!response.ok)throw Error('Live gateway unavailable');
+   const result=await response.json() as Observation;
+   if(!dispatchLive(result)){
+    label('Archivní režim',false);
+    if(hadLive){hadLive=false;window.dispatchEvent(new CustomEvent('loucka:live-expired'));}
+   }
+  }catch{
+   if(controller.signal.aborted)return;
+   label('Archivní režim',false);
+   if(hadLive){hadLive=false;window.dispatchEvent(new CustomEvent('loucka:live-expired'));}
+  }
+ }
  void getStationCapabilities(controller.signal).then(capabilities=>{
-  if(!capabilities.includes('live_sse'))return;
+  if(!capabilities.includes('live_sse')){label('Archivní režim',false);return;}
   eventSource=new EventSource('/api/v1/live?units=metricwx');
-  eventSource.addEventListener('open',()=>label('Sleduji archiv',true));
-  eventSource.addEventListener('error',()=>label('Archivní režim',false));
-  const notify=()=>window.dispatchEvent(new CustomEvent('loucka:archive-updated'));
-  eventSource.addEventListener('archive-updated',notify);
-  eventSource.addEventListener('reset',notify);
+  eventSource.addEventListener('observation',event=>{
+   try{dispatchLive(JSON.parse((event as MessageEvent).data) as Observation);}catch{}
+  });
+  eventSource.addEventListener('snapshot',event=>{
+   try{
+    const result=JSON.parse((event as MessageEvent).data) as Observation;
+    if(!dispatchLive(result))label('Sleduji archiv',false);
+   }catch{}
+  });
+  eventSource.addEventListener('archive-updated',notifyArchive);
+  eventSource.addEventListener('reset',notifyArchive);
+  eventSource.addEventListener('error',()=>{if(status?.textContent!=='GW3000 · živě')label('Archivní režim',false);});
+  void pollLive();
+  currentTimer=setInterval(()=>void pollLive(),30000);
  }).catch(()=>label('Archivní režim',false));
- document.addEventListener('astro:before-swap',()=>{controller.abort();eventSource?.close();},{once:true});
+ document.addEventListener('astro:before-swap',()=>{
+  controller.abort();eventSource?.close();if(currentTimer)clearInterval(currentTimer);
+ },{once:true});
 </script>
