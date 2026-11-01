@@ -91,6 +91,20 @@ def parse_live_payload(data: object, fetched: datetime) -> dict:
         value = convert(metric, *parsed)
         if value is not None and math.isfinite(value) and minimum <= value <= maximum:
             readings[metric] = round(value, 5)
+    # Some firmware puts the tipping-bucket rain rate in a separate "rain" array.
+    # Do not substitute piezo rain or daily totals for interval rain.
+    if "rainRate" not in readings and isinstance(data.get("rain"), list):
+        for item in data["rain"]:
+            if not isinstance(item, dict): continue
+            try: ident = int(str(item.get("id", "")), 0)
+            except (TypeError, ValueError): continue
+            if ident != 0x0E: continue
+            parsed = number_and_unit(item.get("val"), item.get("unit"))
+            if parsed is not None:
+                value = convert("rainRate", *parsed)
+                if value is not None and math.isfinite(value) and 0 <= value <= 600:
+                    readings["rainRate"] = round(value, 5)
+            break
     if len(readings) < 3 or not any(k in readings for k in ("outTemp", "barometer", "windSpeed")):
         raise ValueError("Insufficient usable Ecowitt measurements")
     timestamp = fetched.isoformat().replace("+00:00", "Z")
