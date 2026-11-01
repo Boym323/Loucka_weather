@@ -23,9 +23,9 @@ Zvol dvě soukromé LAN IPv4: staging LXC a GW3000. Port 3102 není přístupný
 5. Vytvořit root-owned /etc/loucka-weather/gw3000.env (mode 0600) s hodnotami:
     LOUCKA_GW3000_BIND=LAN_IP_STAGING_LXC
     LOUCKA_GW3000_ALLOWED_IP=LAN_IP_GW3000
-    LOUCKA_GW3000_TOKEN=TAJNY_NAHODNY_HEX_TOKEN_48_ZNAKU
+    LOUCKA_GW3000_TOKEN=TAJNY_NAHODNY_HEX_TOKEN_32_ZNAKU
     LOUCKA_GW3000_PORT=3102
-   Token vygeneruj například pomocí openssl rand -hex 24 a nikdy jej nevkládej do GitHubu nebo veřejného logu.
+   Použij 128bitový náhodný token (openssl rand -hex 16, tedy 32 hex znaků). U některých firmware může součet délek hostitele, portu a cesty přesáhnout limit 64 znaků; před uložením to ověř. Token nikdy nevkládej do GitHubu ani veřejného logu.
 6. systemctl daemon-reload; systemctl enable --now loucka-gw3000-live.service; systemctl enable --now loucka-monitor.timer.
 7. Do stávajícího /etc/loucka-weather/api.env přidat GW3000_LIVE_ENABLED=YES, pak systemctl restart loucka-weather-api.service.
 8. Na GW3000 jen je-li volné Customized: Enable, Protocol Same As Ecowitt, Host LAN_IP_STAGING_LXC, Port 3102, Path /gw3000/TAJNY_TOKEN, Upload Interval 30 nebo 60 sekund.
