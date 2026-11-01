@@ -1,0 +1,187 @@
+name: Benchmark Go Rust Python MariaDB
+
+on:
+  push:
+    branches: [bench/go-rust-python]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    name: Three real HTTP servers against MariaDB 11.8 fixture
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    services:
+      mariadb:
+        image: mariadb:11.8
+        env:
+          MARIADB_DATABASE: weewx
+          MARIADB_USER: bench
+          MARIADB_PASSWORD: bench
+          MARIADB_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "healthcheck.sh --connect --innodb_initialized"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned or latest rust stable toolchain
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          rustc -V
+          cargo -V
+      - name: Install Python benchmark dependencies
+        run: |
+          python -m pip install -r benchmark/python/requirements.txt
+      - name: Generate fixture in isolated MariaDB
+        run: |
+          python benchmark/fixture.py
+      - name: Build Go HTTP server
+        run: |
+          mkdir -p benchmark/bin
+          cd benchmark/go
+          go mod tidy
+          /usr/bin/time -f 'GO_BUILD_SECONDS %e' go build -o ../bin/bench_go .
+      - name: Build Rust HTTP server
+        run: |
+          cd benchmark/rust
+          /usr/bin/time -f 'RUST_BUILD_SECONDS %e' cargo build --release
+      - name: Execute 36 real HTTP scenarios
+        run: |
+          python benchmark/run.py
+      - name: Save reproducible results and server logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: |
+            benchmark/results.json
+            benchmark/*.log
+          if-no-files-found: warn
+
+  six-language:
+    name: Six LXC server implementations against isolated MariaDB fixture
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      mariadb:
+        image: mariadb:11.8
+        env:
+          MARIADB_DATABASE: weewx
+          MARIADB_USER: bench
+          MARIADB_PASSWORD: bench
+          MARIADB_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "healthcheck.sh --connect --innodb_initialized"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install Rust stable and C++ / PHP dependencies
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential pkg-config libmariadb-dev libmicrohttpd-dev nlohmann-json3-dev \
+            php-cli php-mysql
+      - name: Install fixture dependencies and create synthetic MariaDB
+        run: |
+          python -m pip install -r benchmark/lxc/python/requirements.txt
+          python benchmark/fixture.py
+          python - <<'PY'
+          import pymysql
+          db = pymysql.connect(host='127.0.0.1', user='root', password='root', autocommit=True)
+          with db.cursor() as c:
+              c.execute("CREATE USER IF NOT EXISTS 'six_bench_ro'@'%' IDENTIFIED BY 'six_bench_ro_ci'")
+              c.execute("GRANT SELECT ON weewx.* TO 'six_bench_ro'@'%'")
+          db.close()
+          PY
+      - name: Configure test-only SELECT account and LXC benchmark
+        run: |
+          cat > benchmark/lxc/config.env <<'EOF'
+          BENCH_DB_HOST='127.0.0.1'
+          BENCH_DB_PORT='3306'
+          BENCH_DB_NAME='weewx'
+          BENCH_DB_USER='six_bench_ro'
+          BENCH_DB_PASSWORD='six_bench_ro_ci'
+          BENCH_YEAR='2026'
+          BENCH_ISOLATED_DB='YES'
+          BENCH_DB_POOL_MAX='3'
+          EOF
+          chmod 600 benchmark/lxc/config.env
+          git -C benchmark/lxc status --short
+      - name: Fail-closed FULL attestation guard regression tests
+        run: |
+          PYTHONPATH=. python -m unittest discover -s benchmark/lxc/tests -p 'test_*.py' -v
+      - name: Integration test FULL guard against a separate CI-only snapshot marker
+        run: |
+          python - <<'PY'
+          import os
+          import pymysql
+          from benchmark.lxc.isolation_guard import IsolationError, verify_full_snapshot
+          attestation='ci_snapshot_marker_123456'
+          admin=pymysql.connect(host='127.0.0.1',user='root',password='root',autocommit=True)
+          with admin.cursor() as c:
+              c.execute('CREATE DATABASE weewx_bench_fixture')
+              c.execute('CREATE TABLE weewx_bench_fixture.bench_isolation_attestation (snapshot_id VARCHAR(64) PRIMARY KEY)')
+              c.execute('INSERT INTO weewx_bench_fixture.bench_isolation_attestation VALUES (%s)',(attestation,))
+              c.execute("GRANT SELECT ON weewx_bench_fixture.* TO 'six_bench_ro'@'%'")
+          admin.close()
+          con=pymysql.connect(host='127.0.0.1',user='six_bench_ro',password='six_bench_ro_ci',
+                              database='weewx_bench_fixture',autocommit=True)
+          options={'BENCH_DB_NAME':'weewx_bench_fixture','BENCH_ISOLATED_DB':'YES',
+                   'BENCH_EXPECTED_SNAPSHOT_ID':attestation}
+          with con.cursor() as c:
+              assert verify_full_snapshot(c,options)
+              try:
+                  verify_full_snapshot(c,{**options,'BENCH_EXPECTED_SNAPSHOT_ID':'wrong_marker_123456789'})
+              except IsolationError:
+                  pass
+              else:
+                  raise AssertionError('Guard did not reject wrong marker')
+          con.close()
+          print('PASS: connected DB marker validated, mismatch rejected')
+          PY
+      - name: Verify six independent HTTP servers (smoke)
+        run: |
+          cd benchmark/lxc
+          bash ./run.sh smoke
+      - name: Run 24 low-concurrency scenarios on isolated fixture
+        run: |
+          cd benchmark/lxc
+          bash ./run.sh light
+      - name: Save CI smoke/light logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: six-language-benchmark-validation
+          path: |
+            benchmark/lxc/results/*.json
+            benchmark/lxc/results/*.md
+            benchmark/lxc/results/*.log
+          if-no-files-found: warn

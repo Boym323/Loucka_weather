@@ -1,0 +1,36 @@
+name: Offline meteorological compute benchmark
+on:
+  pull_request:
+    paths:
+      - 'benchmark/compute/**'
+      - '.github/workflows/stats-compute-benchmark.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  parity-six-languages:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Dependencies (build-only test runner; no database)
+        run: sudo apt-get update && sudo apt-get install -y php-cli g++
+      - name: Rust stable
+        run: rustup toolchain install stable --profile minimal && rustup default stable
+      - name: Edge cases and date/units rules
+        run: python3 -m unittest discover -s benchmark/compute/tests -p 'test_*.py' -v
+      - name: All six backends – parity smoke
+        run: python3 benchmark/compute/run.py smoke --trials 1
+      - name: All six backends – parity light
+        run: python3 benchmark/compute/run.py light --trials 1 --iterations 1

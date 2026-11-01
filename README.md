@@ -27,7 +27,7 @@ Moderní meteorologický portál pro **https://pocasi-loucka.eu/**. **Stav 31. 1
 | [Souhrn metrik pro AI (JSON)](docs/data/observations_2026-10-31.json) | Strojově čitelná čísla bez osobních identifikátorů |
 | [Počty požadavků po dnech (CSV)](docs/data/traffic_daily_2026-09-27_2026-10-31.csv) | 35 dní provozu bez IP adres |
 
-Výkonnostní implementace, kompletní HTTP reporty a compute benchmark jsou stále ve větvi [`bench/go-rust-python`](https://github.com/Boym323/Loucka_weather/tree/bench/go-rust-python) a v otevřeném **draft [PR #2](https://github.com/Boym323/Loucka_weather/pull/2)**; nejsou v `main` a nejsou to produkční služby.
+Referenční implementace a reporty šestijazyčného benchmarku jsou v [`benchmark/`](benchmark/) a pocházejí z [PR #2](https://github.com/Boym323/Loucka_weather/pull/2). Nejde o produkční API. **Plný benchmark je blokován bez ověření skutečného cílového DB snapshotu** (samostatné testovací LXC, test-only schéma, unikátní marker na cílovém serveru). Viz [bezpečnostní postup](benchmark/lxc/README.md).
 
 ## Bezpečnostní zásady
 
