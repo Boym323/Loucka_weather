@@ -15,7 +15,7 @@ spec.loader.exec_module(mod)
 def sample(now=None):
     now = now or datetime.now(timezone.utc)
     return ("PASSKEY=TESTPASS&stationtype=GW3000_V1.0&dateutc=" +
-        now.strftime("%Y-%m-%d+%H%3A%M%3A%S") +
+        now.strftime("%Y-%m-%d %H:%M:%S").replace(" ", "+").replace(":", "%3A") +
         "&tempf=50&humidity=68&baromrelin=30&winddir=270&windgustmph=4.5" +
         "&windspeedmph=2&rainratein=0.1&solarradiation=200&uv=2").encode()
 
