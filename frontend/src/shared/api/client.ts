@@ -25,3 +25,42 @@ export async function getHistoryRange(metric:string,hours:number,signal?:AbortSi
  return data;
 }
 export const getHistory24h=(metric:string,signal?:AbortSignal)=>getHistoryRange(metric,24,signal);
+
+
+export async function getStatistics(
+ period: import('../domain/statistics').StatsPeriod,
+ metric:string,
+ aggregation:import('../domain/statistics').Aggregation,
+ value:string,
+ signal?:AbortSignal
+):Promise<import('../domain/statistics').StatisticsResult> {
+ const {isStatisticsResult}=await import('../domain/statistics');
+ const key=period==='daily'?'date':period==='monthly'?'month':'year';
+ if(!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(metric))throw new Error('Neplatná veličina');
+ if(!/^(20\d{2}-\d{2}(-\d{2})?|20\d{2})$/.test(value))throw new Error('Neplatné období');
+ const params=new URLSearchParams({metric,aggregation,[key]:value,units:'metricwx',dataset:'original'});
+ const data=await request('/api/v1/statistics/'+period+'?'+params,signal);
+ if(!isStatisticsResult(data)||data.metric!==metric||data.aggregation!==aggregation)
+  throw new Error('Neplatná odpověď statistiky');
+ return data;
+}
+
+export async function getHistoryInterval(
+ metric:string,from:string,to:string,resolution:'raw'|'hourly'|'daily',
+ signal?:AbortSignal
+):Promise<HistoryResponse>{
+ if(!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(metric))throw new Error('Neplatná veličina');
+ if(!Number.isFinite(Date.parse(from))||!Number.isFinite(Date.parse(to))||Date.parse(from)>=Date.parse(to))
+  throw new Error('Neplatný časový rozsah');
+ const query=new URLSearchParams({metric,from,to,resolution,units:'metricwx',dataset:'original',limit:'1000'});
+ const data=await request('/api/v1/history?'+query,signal);
+ if(!isHistoryResponse(data)||data.metric!==metric||data.resolution!==resolution)
+  throw new Error('Neplatný formát agregované historie');
+ return data;
+}
+
+export async function getStationCapabilities(signal?:AbortSignal):Promise<string[]>{
+ const data=await request('/api/v1/station',signal) as {schemaVersion?:string;capabilities?:unknown};
+ return data.schemaVersion==='1'&&Array.isArray(data.capabilities)
+  ?data.capabilities.filter((item):item is string=>typeof item==='string'):[];
+}

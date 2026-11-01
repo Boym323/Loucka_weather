@@ -22,6 +22,11 @@ export interface HistoryPoint {
   quality: ReadingQuality;
   source: string;
   provenance: string | null;
+  minValue?: number | null;
+  maxValue?: number | null;
+  minObservedAt?: string | null;
+  maxObservedAt?: string | null;
+  validCount?: number;
 }
 export interface HistoryResponse {
   schemaVersion: '1';
@@ -29,6 +34,8 @@ export interface HistoryResponse {
   unit: string;
   points: HistoryPoint[];
   resolution: 'raw' | 'hourly' | 'daily';
+  aggregation?: string;
+  completeness?: { expected: number | null; valid: number; fraction: number | null };
   dataRevision: string;
 }
 export function isCurrentResponse(data: unknown): data is CurrentResponse {
