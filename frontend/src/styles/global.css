@@ -139,3 +139,54 @@ h1,h2,h3,p{margin-top:0}h1{font-size:clamp(26px,3vw,42px);line-height:1.2;letter
 
 /* Single source badge at card group level: do not repeat the same text on every measured value. */
 .current-panel[data-variant="dashboard"] .metric-note[data-reading-state="measured"]{display:none}
+
+/* PDF visual QA 2026-11-01 / 14:56: eliminate the blank area below the
+   current readings without fabricating another metric or inflating the sidebar. */
+@media(min-width:931px){
+ .dashboard-top > .current-panel[data-variant="dashboard"]{
+  display:flex;
+  flex-direction:column;
+ }
+ .dashboard-top > .current-panel[data-variant="dashboard"] .metric-grid{
+  flex:1 1 auto;
+  min-height:245px;
+  grid-template-rows:repeat(3,minmax(72px,1fr));
+ }
+ .dashboard-top > .current-panel[data-variant="dashboard"] .metric-card{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+ }
+ .dashboard-top > .current-panel[data-variant="dashboard"] .metric-card.featured{
+  justify-content:center;
+ }
+ .dashboard-top > .current-panel[data-variant="dashboard"] .quick-reading-grid{
+  flex:0 0 auto;
+ }
+ .dashboard-top > .current-panel[data-variant="dashboard"] .source-note-bottom{
+  flex:0 0 auto;
+ }
+}
+@media(min-width:931px) and (max-width:1250px){
+ .dashboard-top > .current-panel[data-variant="dashboard"] .metric-grid{
+  min-height:220px;
+  grid-template-rows:repeat(3,minmax(65px,1fr));
+ }
+}
+.chart-summary span{
+ display:inline-flex;
+ align-items:center;
+ background:var(--panel-2);
+ border:1px solid var(--line);
+ border-radius:5px;
+ padding:6px 9px;
+ font-size:11px;
+ font-variant-numeric:tabular-nums;
+}
+.dashboard-bottom [data-history-chart] .history-legend{
+ line-height:1.4;
+}
+@media(max-width:650px){
+ .chart-summary{gap:6px}
+ .chart-summary span{font-size:10px}
+}
