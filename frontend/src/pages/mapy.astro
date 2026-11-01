@@ -5,10 +5,34 @@ import RadarPanel from '../features/maps/RadarPanel.astro';
 <BaseLayout title="Meteorologické mapy" description="Meteorologická mapa Loučky a okolí, radarové snímky s časovou osou.">
  <div class="page-intro"><span class="eyebrow">Meteorologické mapy a radar</span><h1>Meteorologické mapy</h1><p>Radarová historie nad mapou Loučky. Ostatní meteorologické vrstvy připojíme postupně, až bude ověřen jejich zdroj.</p></div>
  <div class="map-tabs" aria-label="Dostupné mapové vrstvy"><span class="chart-tab is-active">Radarové srážky</span><span class="chart-tab muted">Satelit – nepřipojeno</span><span class="chart-tab muted">Blesky – nepřipojeno</span><span class="chart-tab muted">Teplota – nepřipojeno</span></div>
- <RadarPanel />
+ <div class="map-page-layout">
+  <div class="map-page-primary"><RadarPanel /></div>
+  <aside class="map-page-sidebar">
+   <section class="section map-layer-panel">
+    <div class="section-heading"><h2>Vrstvy</h2><span class="status-chip ok">1 aktivní zdroj</span></div>
+    <label class="map-layer-option"><input type="checkbox" data-map-radar-visible checked /> Radarové srážky <small>RainViewer</small></label>
+    <label class="map-layer-option unavailable"><input type="checkbox" disabled /> Satelitní oblačnost <small>Zdroj není připojen</small></label>
+    <label class="map-layer-option unavailable"><input type="checkbox" disabled /> Blesky <small>Zdroj není připojen</small></label>
+    <label class="map-layer-option unavailable"><input type="checkbox" disabled /> Teplota ČHMÚ <small>Zdroj není připojen</small></label>
+    <p class="source-note">Vypnutí radaru ponechá orientační podkladovou mapu. Nepřipojené vrstvy nelze vybrat.</p>
+   </section>
+   <section class="section">
+    <div class="section-heading"><h2>Okolí Loučky</h2></div>
+    <p class="lead">Mapa ukazuje aktuálně dostupné historické radarové snímky. Pro předpověď dalších dnů použij modelové údaje v přehledu.</p>
+    <a href="/" class="panel-link">Předpověď pro Loučku ↗</a>
+   </section>
+  </aside>
+ </div>
  <section class="section" style="margin-top:14px">
   <div class="section-heading"><h2>O radarových údajích</h2><span class="status-chip">Externí zdroj</span></div>
   <p class="lead">Snímky pocházejí ze služby RainViewer a představují historická radarová pozorování, nikoliv předpověď ani přímo data ČHMÚ. Poloha Loučky je na mapě vyznačena orientačně. Pokud zdroj snímky neposkytne, zobrazí se pouze podkladová mapa a informace o výpadku.</p>
   <p class="source-note">Mapové podklady © OpenStreetMap contributors. Radar © RainViewer – použití pro osobní a komunitní projekty.</p>
  </section>
 </BaseLayout>
+
+<script>
+ const toggle=document.querySelector<HTMLInputElement>('[data-map-radar-visible]');
+ toggle?.addEventListener('change',()=>{
+  window.dispatchEvent(new CustomEvent('loucka:radar-visibility',{detail:{visible:toggle.checked}}));
+ });
+</script>
