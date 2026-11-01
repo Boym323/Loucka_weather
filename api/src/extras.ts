@@ -3,7 +3,7 @@
  */
 import type {FastifyInstance} from 'fastify';
 import {createReadStream} from 'node:fs';
-import {readFile,lstat} from 'node:fs/promises';
+import {readFile,lstat,readdir} from 'node:fs/promises';
 import {join} from 'node:path';
 import type {ArchiveReader} from './store.js';
 
@@ -79,6 +79,25 @@ export function registerExtras(app:FastifyInstance,reader:ArchiveReader){
     frames:frames.map(f=>({fetchedAt:f.fetchedAt,url:'/api/v1/camera/frames/'+f.name})),
     videos:videos.map(v=>({date:v.date,url:'/api/v1/camera/timelapse/'+v.name}))};
   }catch{return {schemaVersion:'1',status:'unavailable',frames:[],videos:[]};}
+ });
+ app.get<{Params:{date:string}}>('/api/v1/camera/archive/day/:date',async(req,reply)=>{
+  const date=req.params.date;
+  if(!/^20\d{2}-\d{2}-\d{2}$/.test(date)||!Number.isFinite(Date.parse(date+'T00:00:00Z'))||
+   new Date(date+'T00:00:00Z').toISOString().slice(0,10)!==date)
+   return reply.code(400).send({schemaVersion:'1',error:'Invalid UTC date'});
+  const target=Date.parse(date+'T00:00:00Z');
+  if(target>Date.now()+86400000||target<Date.now()-37*86400000)
+   return {schemaVersion:'1',date,status:'outside_retention',frames:[]};
+  try{
+   const prefix=date.replace(/-/g,'')+'T';
+   const files=(await readdir(join(cameraDir,'frames'))).filter(n=>n.startsWith(prefix)&&fileNameOk(n,'frame'))
+    .sort().reverse().slice(0,160);
+   return {schemaVersion:'1',date,status:'ok',timestampMeaning:'downloaded_not_captured',
+    frames:files.map(n=>({fetchedAt:new Date(Date.UTC(
+      Number(n.slice(0,4)),Number(n.slice(4,6))-1,Number(n.slice(6,8)),
+      Number(n.slice(9,11)),Number(n.slice(11,13)),Number(n.slice(13,15)))).toISOString(),
+      url:'/api/v1/camera/frames/'+n}))};
+  }catch{return {schemaVersion:'1',date,status:'unavailable',frames:[]};}
  });
  app.get<{Params:{file:string}}>('/api/v1/camera/frames/:file',async(req,reply)=>{
   if(!fileNameOk(req.params.file,'frame'))return reply.code(404).send();
