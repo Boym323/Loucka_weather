@@ -51,6 +51,8 @@ const { compact = false } = Astro.props;
  }
  const timeLabel=(t:number)=>new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',hour:'2-digit',minute:'2-digit'}).format(new Date(t*1000));
  document.querySelectorAll<HTMLElement>('[data-radar-panel]').forEach(root=>{
+  const map=root.querySelector<HTMLElement>('[data-radar-map]');
+  const world=root.querySelector<HTMLElement>('.radar-world');
   const base=root.querySelector<HTMLElement>('[data-radar-base]');
   const image=root.querySelector<HTMLImageElement>('[data-radar-overlay]');
   const status=root.querySelector<HTMLElement>('[data-radar-status]');
@@ -61,17 +63,29 @@ const { compact = false } = Astro.props;
   const play=root.querySelector<HTMLButtonElement>('[data-radar-play]');
   if(!base||!image)return;
   baseTiles(base);
+  const scaleToContainer=()=>{
+   if(!map||!world)return;
+   const s=Math.max(1,Math.min(2.6,map.clientWidth/512));
+   world.style.transform='translate(-50%,-50%) scale('+s+')';
+  };
+  const resizeObserver=new ResizeObserver(scaleToContainer);
+  if(map)resizeObserver.observe(map);
+  scaleToContainer();
   let host='',frames:Frame[]=[],i=0,interval:number|undefined;
+  let isStale=false;
   const stop=()=>{if(interval!==undefined){window.clearInterval(interval);interval=undefined;}if(play)play.textContent='▶ Přehrát';};
   const render=()=>{
    const frame=frames[i];if(!frame)return;
    const path=frame.path;
-   if(!/^\/v2\/radar\/[0-9]+$/.test(path))return;
+   if(!/^\/v2\/radar\/[a-f0-9]{8,64}$/.test(path))return;
    image.hidden=true;
    image.onload=()=>{
     image.hidden=false;
     if(message)message.hidden=true;
-    if(status){status.textContent='Radar dostupný';status.classList.add('ok');}
+    if(status){
+     status.textContent=isStale?'Zastaralý radarový snímek':'Radar dostupný';
+     status.classList.add(isStale?'warning':'ok');
+    }
    };
    image.onerror=()=>{
     image.hidden=true;
@@ -87,11 +101,10 @@ const { compact = false } = Astro.props;
    const data=await response.json() as RV;
    if(!data.host||!/^https:\/\/[a-z0-9.-]*rainviewer\.com$/.test(data.host))throw new Error('Neznámý radarový hostitel');
    if(!Array.isArray(data.radar?.past))throw new Error('Chybějící snímky');
-   frames=data.radar.past.filter(f=>Number.isSafeInteger(f.time)&&/^\/v2\/radar\/[0-9]+$/.test(f.path)).slice(-12);
+   frames=data.radar.past.filter(f=>Number.isSafeInteger(f.time)&&/^\/v2\/radar\/[a-f0-9]{8,64}$/.test(f.path)).slice(-12);
    if(!frames.length)throw new Error('Žádné radarové snímky');
    host=data.host;i=frames.length-1;
-   const age=Date.now()/1000-frames[i].time;
-   if(age>60*60){if(status){status.textContent='Radar zastaralý';status.classList.add('warning');}}
+   isStale=Date.now()/1000-frames[i].time>60*60;
    render();
   }).catch(()=>{
    if(controller.signal.aborted)return;
@@ -101,6 +114,6 @@ const { compact = false } = Astro.props;
   prev?.addEventListener('click',()=>{if(!frames.length)return;stop();i=(i-1+frames.length)%frames.length;render();});
   next?.addEventListener('click',()=>{if(!frames.length)return;stop();i=(i+1)%frames.length;render();});
   play?.addEventListener('click',()=>{if(!frames.length)return;if(interval!==undefined){stop();return;}if(play)play.textContent='Ⅱ Pozastavit';interval=window.setInterval(()=>{i=(i+1)%frames.length;render();},1500);});
-  document.addEventListener('astro:before-swap',()=>{controller.abort();stop();},{once:true});
+  document.addEventListener('astro:before-swap',()=>{controller.abort();stop();resizeObserver.disconnect();},{once:true});
  });
 </script>

@@ -467,3 +467,31 @@ h1,h2,h3,p{margin-top:0}h1{font-size:clamp(26px,3vw,42px);line-height:1.2;letter
 [data-rain-detail]{margin-top:12px}
 [data-rain-detail] .chart-summary{margin-block:10px}
 @media(max-width:650px){.rain-detail-chart{height:195px}.site-banner .banner-scene{object-position:center}}
+
+
+/* Deployed Playwright screenshot QA: revert stale two-column sidebar CSS,
+   so a six-day forecast occupies the entire right half of the overview. */
+@media(min-width:961px){
+ .dashboard-top>.sidebar-stack{
+   display:flex;
+   flex-direction:column;
+   gap:9px;
+   min-width:0;
+ }
+ .dashboard-top>.sidebar-stack>section:first-child{grid-column:auto;grid-row:auto;flex:0 0 auto}
+ .dashboard-top>.sidebar-stack>.dashboard-side-notes{
+   display:grid;
+   grid-template-columns:minmax(0,.88fr) minmax(0,1.12fr);
+   gap:9px;
+   flex:1 1 auto;
+   align-items:stretch;
+ }
+ .dashboard-side-notes>.warning-panel,
+ .dashboard-side-notes>.overview-readings{
+   grid-column:auto;grid-row:auto;min-width:0;
+ }
+ .dashboard-side-notes .overview-list>div{padding:6px 0}
+}
+@media(min-width:961px) and (max-width:1190px){
+ .dashboard-top>.sidebar-stack>.dashboard-side-notes{grid-template-columns:1fr}
+}
