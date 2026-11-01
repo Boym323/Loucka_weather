@@ -47,3 +47,29 @@ test('file observer sends exactly one live observation for the same captured upl
   assert.equal(hub.gatewayStatus(Date.parse(now)),'fresh');
  }finally{unsubscribe();obs.stop();await rm(folder,{recursive:true,force:true});}
 });
+
+test('public read-only gateway and monitor endpoints reflect source freshness without touching archive',async()=>{
+ const {buildApp}=await import('../src/app.js');
+ const hub=new LiveHub();
+ hub.enableGateway();
+ const valid=validatedSnapshot(fixture,Date.parse(now));
+ assert.ok(valid);
+ hub.publishGateway(valid);
+ const reader={
+  latest:async()=>null,
+  history:async()=>[],
+  ping:async()=>{}
+ };
+ const app=buildApp(reader,()=>new Date(now),hub);
+ try{
+  const live=await app.inject('/api/v1/live/current');
+  assert.equal(live.statusCode,200);
+  assert.equal(live.json().state,'live');
+  assert.equal(live.json().readings.outTemp.value,12.4);
+  assert.equal(live.json().readings.outTemp.source,'gw3000_live');
+  const monitor=await app.inject('/api/v1/monitor/status');
+  assert.equal(monitor.statusCode,200);
+  assert.equal(monitor.json().components.gw3000.status,'fresh');
+  assert.equal(monitor.json().components.archive.status,'missing');
+ }finally{await app.close();}
+});
