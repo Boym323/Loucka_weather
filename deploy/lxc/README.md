@@ -176,3 +176,20 @@ curl -fsS http://127.0.0.1:3100/api/v1/alerts/local | jq .
 ```
 
 Pokud diagnostika v produkčním archivu nevrátí žádnou telemetrii, je to důvod ověřit názvy existujících sloupců a jejich aktuální naplňování. Vývoj nepřevádí staré signálové stupnice na dBm ani napětí na procenta bez ověřené definice. Odvozená sluneční energie z globálního záření není měřená doba slunečního svitu. Počet mrazových dnů není počet dnů se sněhem.
+
+### Pokud kamera selže s `unconverted data remains: .jpg` (1. 11. 2026)
+
+Chyba byla ve vytváření indexu, nikoli ve stažení fotografie. Opravená verze používá při parsování názvu `f.stem`. Jako root na staging LXC po merge:
+
+```bash
+runuser -u loucka -- git -C /home/loucka/Loucka_weather pull --ff-only origin main
+install -D -o root -g root -m 0755 /home/loucka/Loucka_weather/deploy/lxc/loucka-data-collector.py /usr/local/libexec/loucka-data-collector.py
+python3 -m py_compile /usr/local/libexec/loucka-data-collector.py
+systemctl reset-failed loucka-camera-collect.service
+systemctl start loucka-camera-collect.service
+systemctl status loucka-camera-collect.service --no-pager -l
+curl -fsS http://127.0.0.1:3100/api/v1/camera/archive | jq .
+curl -fsS http://127.0.0.1:3100/api/v1/camera/status | jq .
+```
+
+Nevypínej funkční ČHMÚ timer. Pokud fotografie již před chybou existuje, nový běh ji zachová; při shodném snímku nevytvoří duplicitu, pouze opraví index. Po prvním úspěchu nemá smysl očekávat nové MP4, dokud nejsou nasbírány aspoň šest snímků z předchozího dne.
