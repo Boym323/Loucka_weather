@@ -4,6 +4,13 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ## 2026-11-01
 
+### GW3000 LAN API – skutečný paket a úplnější živá telemetrie (1. 11.)
+- Regresní test přímo podle dodané odpovědi `GET /get_livedata_info?`: 6,5 °C, vlhkost 80 %, vítr 4,2 m/s, náraz 5,1 m/s, směr 62°, bez srážek.
+- `wh25`: 10,3 °C, 57 % vlhkost, absolutní tlak 976,3 hPa a relativní 1027,6 hPa, pouze pokud chybí korektní odpovídající common_list měření.
+- `ch_pm25` kanál 1: 3,0 µg/m³, `ch_soil` kanál 1: 48 %; obě veličiny jsou nyní dostupné v živém API a PM2,5 i na přehledu.
+- Nevydáváme starý údaj o blesku, nejednoznačná další čidla ani surové bateriové kódy za platná živá měření; bez fyzického mapování zůstávají oddělené.
+- GW3000 ani WeeWX se nijak nenastavují či nerestartují. Aktivace přímého čtení vyžaduje pouze připojení LXC k již funkční LAN IP.
+
 ### GW3000 bez změny konfigurace – read-only LAN HTTP
 - Nový samostatný `loucka-gw3000-http-pull.py` používá výhradně oficiální `GET /get_livedata_info?` na přesně určené RFC1918 IPv4 GW3000, bez cloud API, bez zásahu do Customized a bez přepisování WeeWX.
 - Dvacetisekundový opt-in systemd timer, omezená délka odpovědi a 4s timeout, bez přesměrování a bez systémové proxy; zapisuje pouze jeden atomický soubor `/var/lib/loucka-live/latest.json`.
