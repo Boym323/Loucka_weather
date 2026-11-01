@@ -78,3 +78,27 @@ Pro vizuální kontrolu sdílej PDF/screenshot, nebo použij připojený prohlí
 Staré release se nemažou automaticky; sleduj disk. Před ručním rollbackem zastav timer, pak jako uživatel loucka přepni current atomicky na existující release SHA. Backend drží proces na portu 3100 a loguje journalctl -u loucka-weather-api.service. Pro přerušení automatických aktualizací:
 
     systemctl disable --now loucka-preview-sync.timer
+
+
+## Informace o zveřejněné verzi
+Po úspěšném sestavení se do statického release uloží soubor
+/deployment.json se schemaVersion=1, branch=main, celým SHA commitu
+a timestampem deployedAt v UTC. Teprve potom se atomicky změní
+symlink current. Každá stránka má v patičce krátké SHA s odkazem
+na GitHub commit a čas nasazení v časovém pásmu Europe/Prague.
+Totéž je v sekci O projektu. Nejde o poslední commit na GitHubu
+ani o změnu ve zdrojové databázi, ale o skutečně vydanou verzi HTML.
+
+Ověření z Macu:
+
+    curl -sS https://dev.pocasi-loucka.eu/deployment.json
+
+Ověření na LXC:
+
+    readlink -f /srv/loucka-preview/current
+    cat /srv/loucka-preview/current/deployment.json
+
+Frontend načítá metadata bez cache (včetně query parametru).
+Během lokálního Astro HMR (bez vydaného release) se zobrazí
+informace o místním vývoji, nikoliv smyšlené číslo verze.
+Neukládej do deployment.json žádné přístupové údaje ani interní adresy.

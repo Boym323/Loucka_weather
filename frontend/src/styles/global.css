@@ -288,3 +288,15 @@ h1,h2,h3,p{margin-top:0}h1{font-size:clamp(26px,3vw,42px);line-height:1.2;letter
 .about-tech{margin-top:12px}.about-tech-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.about-tech-grid>div{padding:14px;background:var(--panel-2);border:1px solid var(--line);border-radius:7px}.about-tech-grid p{color:var(--muted);font-size:12px;margin:8px 0 0}.about-tech-grid a{display:inline-block;margin-top:8px}
 @media(max-width:800px){.about-layout{grid-template-columns:1fr}.about-tech-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:480px){.about-facts{grid-template-columns:repeat(2,minmax(0,1fr))}.about-tech-grid{grid-template-columns:1fr}.about-image img{height:175px}}
+
+
+/* Version metadata of the actual published preview release. */
+.deployment-info{display:flex;align-items:center;flex-wrap:wrap;gap:6px 9px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.deployment-info-label{font-weight:600;color:inherit}
+.deployment-version-link{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--teal);font-size:11px;text-decoration:underline;text-underline-offset:3px}
+.deployment-info time{color:inherit}
+.deployment-info-detailed{margin-top:13px;font-size:13px;gap:8px 14px}
+.deployment-info-detailed .deployment-version-link{font-size:13px}
+.deployment-info [hidden]{display:none!important}
+.about-deployment{margin-top:14px}
+@media(max-width:650px){.site-footer .deployment-info{width:100%;order:3}.deployment-info{font-size:10px}}

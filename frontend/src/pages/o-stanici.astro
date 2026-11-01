@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import DeploymentInfo from '../shared/ui/DeploymentInfo.astro';
 ---
 <BaseLayout title="O projektu">
  <div class="page-intro"><span class="eyebrow">O meteorologické stanici</span><h1>O projektu Počasí Loučka</h1><p>Místní měření a přehled počasí z Loučky a okolí.</p></div>
@@ -8,4 +9,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   <section class="section about-main"><span class="eyebrow">Meteorologická stanice</span><h2>Počasí Loučka</h2><p class="lead">Místní stanice sleduje počasí v Loučce a zpřístupňuje současná i archivní měření. Historie archivu sahá do roku 2009.</p><div class="about-facts"><div><strong>2009</strong><span>Počátek archivu</span></div><div><strong>Loučka</strong><span>Umístění stanice</span></div><div><strong>GW3000</strong><span>Meteorologická brána</span></div><div><strong>WeeWX</strong><span>Zpracování měření</span></div></div></section>
  </div>
  <section class="section about-tech"><div class="section-heading"><div><span class="eyebrow">O datech</span><h2>Jak web funguje</h2></div></div><div class="about-tech-grid"><div><strong>Archiv měření</strong><p>Archivní záznamy zpřístupňuje WeeWX. Čas záznamu označuje konec měřicího intervalu.</p></div><div><strong>Aktuální údaje</strong><p>Stránka zobrazuje poslední dostupný archivní záznam a upozorní na zastaralá data.</p></div><div><strong>Grafy a historie</strong><p>Chybějící hodnoty zůstávají prázdné. Čas zobrazujeme v pásmu Europe/Prague.</p></div><div><strong>Webkamera</strong><p>Aktuální snímek zachycuje pohled západním směrem.</p><a class="panel-link" href="/kamera/">Zobrazit kameru ↗</a></div></div></section>
+ <section class="section about-deployment" aria-labelledby="deployment-heading">
+  <span class="eyebrow">Vývojové prostředí</span>
+  <h2 id="deployment-heading">Aktuálně nasazená verze webu</h2>
+  <p class="lead">Údaje pocházejí z posledního úspěšného sestavení zveřejněného na testovacím LXC. Nejde o poslední commit na GitHubu, pokud ještě nebyl nasazen.</p>
+  <DeploymentInfo detailed />
+ </section>
 </BaseLayout>
