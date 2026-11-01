@@ -2,10 +2,59 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 <BaseLayout title="Klimatologie">
- <div class="page-intro"><span class="eyebrow">Historická měření od roku 2009</span><h1>Klimatologie Loučka</h1><p>Dlouhodobé statistiky, měsíční normály a roční rekordy s kontrolou úplnosti a kvality dat.</p></div>
- <div class="info-grid">
-  <section class="section"><h2>Roční přehled</h2><div class="empty-state">Roční souhrny zatím API neposkytuje. Žádné hodnoty z návrhového obrázku nevydáváme za skutečná měření.</div></section>
-  <section class="section"><h2>Měsíční teploty</h2><div class="empty-state">Čeká na ověřené agregace a posouzení úplnosti měření.</div></section>
-  <section class="section"><h2>Srážkové rekordy</h2><div class="empty-state">Před zveřejněním je nutné promítnout audit historických srážek a QC.</div></section>
+ <div class="climate-page">
+  <div class="page-intro climate-intro">
+   <span class="eyebrow">Historická měření od roku 2009</span>
+   <div class="section-heading"><div><h1>Klimatologie Loučka</h1><p>Dlouhodobé statistiky a rekordy stanice s kontrolou úplnosti a kvality dat.</p></div><span class="status-chip">Denní statistiky čekají na API</span></div>
+  </div>
+
+  <nav class="climate-tabs" aria-label="Kategorie klimatologie">
+   <a class="is-active" href="#prehled" aria-current="page">Přehled</a>
+   <a href="#teploty">Teploty</a><a href="#srazky">Srážky</a><a href="#slunecni-svit">Sluneční svit</a>
+   <a href="#vitr">Vítr</a><a href="#snih">Sněhová pokrývka</a><a href="#extremy">Extrémy</a>
+  </nav>
+
+  <div class="climate-filter section" id="prehled">
+   <div><span class="eyebrow">Období pozorování</span><strong>2009–2026</strong><span class="source-note">Rozsah podle dostupného archivu</span></div>
+   <label for="climate-range">Zobrazené období</label>
+   <select id="climate-range" disabled aria-describedby="climate-api-note"><option>Celá historie (2009–2026)</option></select>
+   <span id="climate-api-note" class="status-chip">Výběr bude dostupný po napojení denních statistik</span>
+  </div>
+
+  <div class="climate-grid">
+   <section class="section climate-card" aria-labelledby="annual-title">
+    <div class="section-heading"><div><span class="eyebrow">Přehled po letech</span><h2 id="annual-title">Roční průměry</h2></div><span class="status-chip">Čeká na API</span></div>
+    <div class="table-scroll climate-table-wrap"><table class="history-table climate-table"><thead><tr><th>Rok</th><th>Průměrná teplota</th><th>Srážky</th><th>Sluneční svit</th></tr></thead><tbody><tr><td colspan="4">Roční souhrny se zobrazí po zpřístupnění ověřených denních agregací.</td></tr></tbody></table></div>
+    <p class="source-note">Neúplné roky budou označené podle skutečného pokrytí měření.</p>
+   </section>
+
+   <section class="section climate-card" id="teploty" aria-labelledby="temperature-title">
+    <div class="section-heading"><div><span class="eyebrow">Měsíční průběh</span><h2 id="temperature-title">Průměrné měsíční teploty</h2></div><span class="status-chip">Čeká na API</span></div>
+    <div class="climate-chart-placeholder" role="img" aria-label="Graf bude dostupný po napojení denních statistik"><span aria-hidden="true">⌁</span><strong>Graf klimatologických průměrů</strong><p>Nejprve je potřeba ověřit denní souhrny a jejich pokrytí.</p></div>
+    <div class="climate-legend"><span><i class="legend-dot mean"></i>Průměr</span><span><i class="legend-dot min"></i>Minimum</span><span><i class="legend-dot max"></i>Maximum</span></div>
+   </section>
+
+   <section class="section climate-card" id="srazky" aria-labelledby="rain-title">
+    <div class="section-heading"><div><span class="eyebrow">Roční srovnání</span><h2 id="rain-title">Srážkové úhrny</h2></div><span class="status-chip">Čeká na API</span></div>
+    <div class="climate-chart-placeholder compact" role="img" aria-label="Graf srážek čeká na denní agregace"><span aria-hidden="true">▥</span><strong>Roční úhrny srážek</strong><p>Součty budou sestavené z denních intervalových úhrnů.</p></div>
+    <p class="source-note">Intenzita srážek se nezaměňuje za jejich úhrn.</p>
+   </section>
+
+   <section class="section climate-card" id="slunecni-svit" aria-labelledby="sun-title">
+    <div class="section-heading"><div><span class="eyebrow">Délka slunečního svitu</span><h2 id="sun-title">Sluneční svit</h2></div><span class="status-chip">Čeká na API</span></div>
+    <div class="climate-chart-placeholder compact" role="img" aria-label="Graf slunečního svitu čeká na denní agregace"><span aria-hidden="true">☼</span><strong>Měsíční přehled</strong><p>Časové součty zveřejníme po ověření mapování veličiny.</p></div>
+   </section>
+
+   <section class="section climate-card" id="vitr" aria-labelledby="wind-title">
+    <div class="section-heading"><div><span class="eyebrow">Rychlost a směr</span><h2 id="wind-title">Větrné podmínky</h2></div><span class="status-chip">Čeká na API</span></div>
+    <div class="climate-chart-placeholder compact" role="img" aria-label="Větrné statistiky čekají na denní agregace"><span aria-hidden="true">↗</span><strong>Roční a měsíční přehled</strong><p>Směr větru vyžaduje vektorové zpracování, ne běžný průměr úhlů.</p></div>
+   </section>
+
+   <section class="section climate-card climate-records" id="extremy" aria-labelledby="records-title">
+    <div class="section-heading"><div><span class="eyebrow">Ověřené denní extrémy</span><h2 id="records-title">Teplotní rekordy</h2></div><span class="status-chip">Čeká na QC</span></div>
+    <div class="empty-state">Rekordy zatím nezveřejňujeme. Denní maxima WeeWX mohou obsahovat LOOP měření a část historických extrémů potřebuje samostatnou kontrolu kvality.</div>
+   </section>
+  </div>
+  <p class="source-note climate-footnote">Zdroj: archiv WeeWX · časové pásmo Europe/Prague · údaje se zobrazí, až budou ověřené souhrny dostupné z read-only API.</p>
  </div>
 </BaseLayout>

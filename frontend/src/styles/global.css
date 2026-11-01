@@ -190,3 +190,60 @@ h1,h2,h3,p{margin-top:0}h1{font-size:clamp(26px,3vw,42px);line-height:1.2;letter
  .chart-summary{gap:6px}
  .chart-summary span{font-size:10px}
 }
+
+/* Climate dashboard follows the compact dark reference while keeping
+   unavailable daily aggregates visibly separate from measured data. */
+.climate-page{max-width:1320px;margin-inline:auto}
+.climate-intro{padding-bottom:12px}
+.climate-intro .section-heading{align-items:flex-end;margin:5px 0 0}
+.climate-intro h1{margin-bottom:4px}
+.climate-intro p{margin-top:4px}
+.climate-tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;padding:0 2px;border-bottom:1px solid var(--line);scrollbar-width:thin}
+.climate-tabs a{flex:0 0 auto;text-decoration:none;color:var(--muted);font-size:12px;padding:9px 12px;border-bottom:2px solid transparent}
+.climate-tabs a:hover,.climate-tabs a.is-active{color:var(--teal);border-color:var(--teal)}
+.climate-filter{display:flex;align-items:center;gap:14px;margin-bottom:12px;padding:12px 15px}
+.climate-filter>div{display:grid;grid-template-columns:auto auto;align-items:center;column-gap:9px;margin-right:auto}
+.climate-filter>div .eyebrow,.climate-filter>div .source-note{grid-column:1/-1}
+.climate-filter>div strong{font-size:16px;font-variant-numeric:tabular-nums}
+.climate-filter label{font-size:11px;color:var(--muted)}
+.climate-filter select{min-width:190px;background:var(--panel-2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:8px}
+.climate-filter select:disabled{opacity:.72}
+.climate-filter .status-chip{max-width:240px}
+.climate-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.climate-card{padding:16px;min-width:0}
+.climate-card .section-heading{margin-bottom:12px}
+.climate-card h2{font-size:17px}
+.climate-table-wrap{max-height:340px;border:1px solid var(--line);border-radius:7px}
+.climate-table{min-width:480px}
+.climate-table td[colspan]{height:150px;text-align:center;color:var(--muted);white-space:normal;max-width:560px;padding-inline:24px}
+.climate-chart-placeholder{height:235px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:8px;padding:18px;border:1px dashed #385c6e;border-radius:8px;background:linear-gradient(145deg,#0c2939,#091c2b);color:var(--muted)}
+.climate-chart-placeholder.compact{height:180px}
+.climate-chart-placeholder>span{display:grid;place-items:center;width:42px;height:42px;border:1px solid #2d7567;border-radius:50%;color:var(--teal);font-size:25px}
+.climate-chart-placeholder strong{color:var(--text);font-size:13px}
+.climate-chart-placeholder p{max-width:44ch;margin:0;font-size:11px}
+.climate-legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;color:var(--muted);font-size:10px}
+.climate-legend span{display:flex;align-items:center;gap:6px}
+.legend-dot{display:inline-block;width:8px;height:8px;border-radius:50%}
+.legend-dot.mean{background:var(--gold)}.legend-dot.min{background:var(--blue)}.legend-dot.max{background:var(--red)}
+.climate-card>.source-note{display:block;margin:10px 0 0}
+.climate-records{grid-column:1/-1}
+.climate-records .empty-state{min-height:95px;display:flex;align-items:center}
+.climate-footnote{margin:12px 2px 0}
+@media(max-width:760px){
+ .climate-grid{grid-template-columns:1fr}
+ .climate-records{grid-column:auto}
+ .climate-filter{align-items:flex-start;flex-wrap:wrap}
+ .climate-filter>div{width:100%;margin:0}
+ .climate-filter label{align-self:center}
+ .climate-filter select{flex:1;min-width:160px}
+ .climate-filter .status-chip{max-width:none;width:100%}
+}
+@media(max-width:480px){
+ .climate-intro .section-heading{align-items:flex-start}
+ .climate-intro .section-heading>.status-chip{max-width:120px;white-space:normal;text-align:center}
+ .climate-tabs a{padding-inline:9px}
+ .climate-card{padding:13px}
+ .climate-card .section-heading{align-items:flex-start}
+ .climate-card .status-chip{white-space:nowrap}
+ .climate-chart-placeholder{height:210px}
+}
