@@ -3,41 +3,64 @@ import '../styles/global.css';
 interface Props { title: string; description?: string }
 const { title, description = 'Meteorologická měření ze stanice Počasí Loučka.' } = Astro.props;
 const navigation = [
-  { href: '/', title: 'Přehled' },
-  { href: '/aktualne/', title: 'Aktuálně' },
-  { href: '/grafy/', title: 'Historie' },
-  { href: '/senzory/', title: 'Senzory' },
-  { href: '/o-stanici/', title: 'O stanici' }
+ { href:'/',title:'Přehled' },
+ { href:'/aktualne/',title:'Aktuálně' },
+ { href:'/grafy/',title:'Grafy' },
+ { href:'/klimatologie/',title:'Klimatologie' },
+ { href:'/kamera/',title:'Kamera' },
+ { href:'/mapy/',title:'Mapy' },
+ { href:'/senzory/',title:'Senzory' },
+ { href:'/o-stanici/',title:'O projektu' }
 ];
+const active = Astro.url.pathname;
 ---
 <!doctype html>
-<html lang="cs">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content={description} />
-    <meta name="color-scheme" content="dark light" />
-    <title>{title} | Počasí Loučka</title>
-  </head>
-  <body>
-    <a class="skip-link" href="#obsah">Přejít k obsahu</a>
-    <header class="site-header">
-      <div class="wrap header-inner">
-        <a class="brand" href="/" aria-label="Počasí Loučka – úvodní stránka">
-          <span class="brand-icon" aria-hidden="true">◉</span><span>POČASÍ <strong>LOUČKA</strong></span>
-        </a>
-        <nav aria-label="Hlavní navigace" class="nav">
-          {navigation.map((item) => <a href={item.href} aria-current={Astro.url.pathname === item.href ? 'page' : undefined}>{item.title}</a>)}
-        </nav>
-      </div>
-    </header>
-    <main id="obsah" class="wrap content">
-      <slot />
-    </main>
-    <footer class="site-footer">
-      <div class="wrap footer-inner"><span>Počasí Loučka · vývojová verze</span>
-        <span>Časové pásmo Europe/Prague · údaje podle dostupného API</span>
-      </div>
-    </footer>
-  </body>
+<html lang="cs" data-theme="dark">
+ <head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content={description} />
+  <meta name="theme-color" content="#061723" />
+  <title>{title} | Počasí Loučka</title>
+  <script is:inline>
+   try { document.documentElement.dataset.theme = localStorage.getItem('loucka-theme') === 'light' ? 'light' : 'dark'; } catch {}
+  </script>
+ </head>
+ <body>
+  <a class="skip-link" href="#obsah">Přejít k obsahu</a>
+  <header class="site-header">
+   <div class="wrap header-inner">
+    <a class="brand" href="/" aria-label="Počasí Loučka – úvod">
+     <span class="brand-symbol" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 5-7 4 4 3-3 6 6"/><path d="M3 19h18"/><path d="M16.5 4.5v3m-1.5-1.5h3"/></svg></span>
+     <span class="brand-label"><strong>Počasí Loučka</strong><small>Místní meteorologická stanice</small></span>
+    </a>
+    <nav aria-label="Hlavní navigace" class="nav">
+     {navigation.map(item => <a href={item.href} aria-current={active === item.href ? 'page' : undefined}>{item.title}</a>)}
+    </nav>
+    <div class="header-actions">
+     <button type="button" class="theme-toggle" data-theme-toggle aria-label="Přepnout světlý a tmavý motiv" title="Přepnout motiv">☼ <span class="theme-name">Motiv</span></button>
+     <span class="header-clock" data-prague-clock aria-label="Místní čas v Loučce">--:--</span>
+    </div>
+    <details class="mobile-nav">
+     <summary aria-label="Otevřít navigaci">☰ <span>Menu</span></summary>
+     <nav aria-label="Mobilní navigace">
+      {navigation.map(item => <a href={item.href} aria-current={active === item.href ? 'page' : undefined}>{item.title}</a>)}
+     </nav>
+    </details>
+   </div>
+  </header>
+  <main id="obsah" class="wrap content"><slot /></main>
+  <footer class="site-footer"><div class="wrap footer-inner"><span>© Počasí Loučka · vývojový náhled</span><span>WeeWX · Archivní měření · Europe/Prague</span><a href="/o-stanici/">O projektu a zdrojích dat</a></div></footer>
+  <script>
+   const switcher=document.querySelector<HTMLButtonElement>('[data-theme-toggle]');
+   switcher?.addEventListener('click',()=>{
+    const mode=document.documentElement.dataset.theme==='light'?'dark':'light';
+    document.documentElement.dataset.theme=mode;
+    try {localStorage.setItem('loucka-theme',mode);}catch{}
+   });
+   const clock=document.querySelector<HTMLElement>('[data-prague-clock]');
+   const tick=()=>{if(clock)clock.textContent=new Intl.DateTimeFormat('cs-CZ',{dateStyle:'short',timeStyle:'short',timeZone:'Europe/Prague'}).format(new Date());};
+   tick(); setInterval(tick,60_000);
+  </script>
+ </body>
 </html>

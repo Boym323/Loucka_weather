@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="370" viewBox="0 0 1600 370" role="img" aria-label="Ilustrační vektorová horská krajina při západu slunce">
+ <defs>
+  <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#062639"/><stop offset=".45" stop-color="#245774"/><stop offset=".74" stop-color="#bc624c"/><stop offset="1" stop-color="#e4a469"/></linearGradient>
+  <radialGradient id="glow"><stop stop-color="#fbe49a" stop-opacity=".87"/><stop offset=".18" stop-color="#ffcb83" stop-opacity=".55"/><stop offset="1" stop-color="#f1ad6f" stop-opacity="0"/></radialGradient>
+  <linearGradient id="forest" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#0b393f"/><stop offset="1" stop-color="#051925"/></linearGradient>
+ </defs>
+ <rect width="1600" height="370" fill="url(#sky)"/>
+ <ellipse cx="1220" cy="175" rx="380" ry="180" fill="url(#glow)"/>
+ <circle cx="1220" cy="132" r="25" fill="#ffe9a6" opacity=".92"/>
+ <path d="M0 220 Q200 180 360 204 T750 208 Q990 160 1250 195 T1600 200 V370 H0" fill="#284e61" opacity=".55"/>
+ <path d="M0 261 130 209 230 236 410 176 570 252 770 191 950 255 1140 192 1350 262 1530 204 1600 234 V370 H0" fill="#153f4d"/>
+ <path d="M0 285 124 238 246 277 370 222 521 283 680 215 826 269 980 223 1104 291 1275 230 1420 275 1600 242 V370 H0" fill="#10343c"/>
+ <path d="M0 315 170 283 300 296 420 266 530 307 690 270 850 304 1020 262 1170 310 1330 269 1490 310 1600 277 V370 H0" fill="url(#forest)"/>
+ <path d="M0 338 Q230 292 400 329 T850 324 Q1050 287 1250 327 T1600 315 V370 H0" fill="#08262b"/>
+ <g stroke="#0a252a" stroke-width="5" opacity=".9"><path d="M41 320v-48m0 9-17 24m17-26 19 27M120 325v-75m0 18-25 27m25-28 23 29M258 319v-55m0 18-18 25m18-25 20 25M1440 327v-75m0 17-22 31m22-31 21 30M1530 325v-65m0 15-23 26m23-29 24 28"/></g>
+</svg>

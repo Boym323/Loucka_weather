@@ -1,55 +1,52 @@
 ---
 import MetricCard from '../../shared/ui/MetricCard.astro';
 import { metrics } from '../../shared/domain/metrics';
-const main = metrics[0];
+interface Props { variant?: 'dashboard' | 'detail' }
+const {variant='detail'}=Astro.props;
+const view=variant==='dashboard' ? metrics.slice(0,8) : metrics;
 ---
-<section class="section" data-current-panel aria-labelledby="current-title">
-  <div class="section-heading">
-    <div>
-      <span class="eyebrow">Měření stanice</span>
-      <h2 id="current-title">Aktuální počasí</h2>
-    </div>
-    <span data-current-status class="status-chip" role="status">Čeká na API</span>
-  </div>
-  <p class="source-note" data-current-updated>Čas posledního měření zatím není známý.</p>
-  <div class="metric-grid">
-    <MetricCard id={main.id} label={main.label} unit={main.unit} featured />
-    {metrics.slice(1).map((item) => <MetricCard id={item.id} label={item.label} unit={item.unit} />)}
-  </div>
-  <p class="source-note">Zdroj: archiv WeeWX přes API v1. Chybějící měření se nezaměňují za nulu.</p>
+<section class="section current-panel" data-current-panel data-variant={variant} aria-labelledby="current-title">
+ <div class="section-heading">
+  <div><span class="eyebrow">✦ Aktuální počasí · GW3000 / WeeWX</span><h2 id="current-title">{variant==='dashboard'?'Aktuální podmínky':'Aktuální údaje'}</h2></div>
+  <span data-current-status class="status-chip" role="status">Načítám měření</span>
+ </div>
+ <p class="source-note" data-current-updated>Čekám na poslední archivní záznam.</p>
+ <div class="metric-grid">
+  {view.map((metric,index)=><MetricCard id={metric.id} label={metric.label} unit={metric.unit} featured={index===0} />)}
+ </div>
+ <p class="source-note">Zdroj: původní archiv WeeWX · jednotky METRICWX · chybějící nebo podezřelé hodnoty nejsou nahrazovány nulou.</p>
 </section>
 <script>
-  import { getCurrent } from '../../shared/api/client';
-  import { formatValue, metrics } from '../../shared/domain/metrics';
-  import { formatTimestamp } from '../../shared/domain/weather';
-  const section = document.querySelector<HTMLElement>('[data-current-panel]');
-  const status = section?.querySelector<HTMLElement>('[data-current-status]');
-  const updated = section?.querySelector<HTMLElement>('[data-current-updated]');
-  const controller = new AbortController();
-  if (section) {
-    void getCurrent(controller.signal).then((response) => {
-      if (status) status.textContent = response.stale ? 'Archivní data jsou zastaralá' : 'Poslední archivní měření';
-      if (updated) updated.textContent = 'Naměřeno: ' + formatTimestamp(response.observedAt) +
-        ' · zdroj: ' + response.dataset + ' · revize: ' + response.dataRevision;
-      for (const metric of metrics) {
-        const node = section.querySelector<HTMLElement>('[data-metric-value="' + metric.id + '"]');
-        const quality = section.querySelector<HTMLElement>('[data-metric-quality="' + metric.id + '"]');
-        const reading = response.readings[metric.id];
-        if (!reading || reading.value === null || reading.quality === 'missing' || reading.quality === 'suspect') {
-          if (node) node.textContent = '—';
-          if (quality) quality.textContent = reading?.quality === 'suspect' ? 'Podezřelé měření – nezobrazeno' : 'Údaj není dostupný';
-          continue;
-        }
-        if (node) node.textContent = formatValue(reading.value, metric.digits);
-        if (quality) quality.textContent = reading.quality === 'reconstructed' ? 'Rekonstruovaná hodnota' :
-          reading.quality === 'derived' ? 'Odvozená hodnota' : 'Archivní měření';
-      }
-    }).catch((error: unknown) => {
-      if (controller.signal.aborted) return;
-      if (status) status.textContent = 'API není dostupné';
-      if (updated) updated.textContent = 'Zatím nejsou k dispozici ověřená data. ' +
-        (error instanceof Error ? error.message : '');
-    });
+ import { getCurrent } from '../../shared/api/client';
+ import { formatValue, metrics } from '../../shared/domain/metrics';
+ import { formatTimestamp } from '../../shared/domain/weather';
+ const section=document.querySelector<HTMLElement>('[data-current-panel]');
+ const status=section?.querySelector<HTMLElement>('[data-current-status]');
+ const updated=section?.querySelector<HTMLElement>('[data-current-updated]');
+ const controller=new AbortController();
+ if(section)void getCurrent(controller.signal).then(response=>{
+  if(status){
+   status.textContent=response.stale?'Zastaralé měření':'Archivní měření';
+   status.classList.add(response.stale?'warning':'ok');
   }
-  document.addEventListener('astro:before-swap', () => controller.abort(), { once: true });
+  if(updated)updated.textContent='Naměřeno '+formatTimestamp(response.observedAt)+' · původní archiv';
+  for(const metric of metrics){
+   const node=section.querySelector<HTMLElement>('[data-metric-value="'+metric.id+'"]');
+   const quality=section.querySelector<HTMLElement>('[data-metric-quality="'+metric.id+'"]');
+   const reading=response.readings[metric.id];
+   if(!reading||reading.value===null||reading.quality==='missing'||reading.quality==='suspect'){
+    if(node)node.textContent='—';
+    if(quality)quality.textContent=reading?.quality==='suspect'?'Podezřelý údaj':'Nedostupné měření';
+    continue;
+   }
+   if(node)node.textContent=formatValue(reading.value,metric.digits);
+   if(quality)quality.textContent=reading.quality==='reconstructed'?'Rekonstruované měření':
+    reading.quality==='derived'?'Odvozené měření':'Archivní měření';
+  }
+ }).catch(()=>{
+  if(controller.signal.aborted)return;
+  if(status){status.textContent='API nedostupné';status.classList.add('error');}
+  if(updated)updated.textContent='Nepodařilo se načíst archivní měření. Zkuste stránku obnovit.';
+ });
+ document.addEventListener('astro:before-swap',()=>controller.abort(),{once:true});
 </script>
