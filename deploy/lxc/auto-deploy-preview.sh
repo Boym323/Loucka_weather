@@ -37,6 +37,8 @@ if [[ ! -d "$release" ]]; then
   tmp="$(mktemp -d "$WEB/releases/.building.XXXXXXXX")"
   trap 'rm -rf -- "$tmp"' EXIT
   cp -a dist/. "$tmp/"
+  # mktemp creates a 0700 directory. nginx (www-data) must traverse releases.
+  chmod -R u=rwX,go=rX "$tmp"
   printf '%s\n' "$sha" > "$tmp/.source-commit"
   mv -T -- "$tmp" "$release"
   trap - EXIT
