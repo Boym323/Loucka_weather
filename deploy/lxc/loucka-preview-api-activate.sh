@@ -19,24 +19,42 @@ api_ready() {
     grep -Eq '"ready"[[:space:]]*:[[:space:]]*true'
 }
 
-# The sync timer runs frequently: do not interrupt live SSE clients without need.
-if [[ -r "$state_marker" ]] && [[ "$(cat "$state_marker")" == "$commit" ]] &&
-   systemctl is-active --quiet "$api_unit" && api_ready; then
-  echo "API already healthy for $commit"
-  exit 0
+# Read Git objects with the unprivileged repo owner; never execute repo code as root.
+api_tree() {
+  runuser -u loucka -- git -C /home/loucka/Loucka_weather rev-parse --verify "$1:api"
+}
+desired_tree=$(api_tree "$commit")
+[[ "$desired_tree" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid API tree" >&2; exit 1; }
+
+persist_active_commit() {
+  install -d -o root -g root -m 0750 "$state_dir"
+  tmp=$(mktemp "$state_dir/.active-commit.XXXXXXXX")
+  trap 'rm -f -- "$tmp"' EXIT
+  printf '%s\n' "$commit" > "$tmp"
+  chmod 0640 "$tmp"
+  mv -f -- "$tmp" "$state_marker"
+  trap - EXIT
+}
+
+# A frontend-only/docs-only commit must not restart a healthy backend.
+# Compare the actual Git api/ tree with the last activated release, not the full SHA.
+if [[ -r "$state_marker" ]] && systemctl is-active --quiet "$api_unit" && api_ready; then
+  active_commit=$(cat "$state_marker")
+  if [[ "$active_commit" =~ ^[0-9a-f]{40}$ ]]; then
+    active_tree=$(api_tree "$active_commit" 2>/dev/null || true)
+    if [[ "$active_tree" == "$desired_tree" ]]; then
+      persist_active_commit
+      echo "API unchanged and healthy ($desired_tree); no restart for $commit"
+      exit 0
+    fi
+  fi
 fi
 
 # Restart only after npm ci, tests and TypeScript build have completed.
 systemctl restart "$api_unit"
 for attempt in {1..15}; do
   if systemctl is-active --quiet "$api_unit" && api_ready; then
-    install -d -o root -g root -m 0750 "$state_dir"
-    tmp=$(mktemp "$state_dir/.active-commit.XXXXXXXX")
-    trap 'rm -f -- "$tmp"' EXIT
-    printf '%s\n' "$commit" > "$tmp"
-    chmod 0640 "$tmp"
-    mv -f -- "$tmp" "$state_marker"
-    trap - EXIT
+    persist_active_commit
     echo "API healthy for $commit"
     exit 0
   fi
