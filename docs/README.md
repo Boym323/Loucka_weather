@@ -5,6 +5,7 @@
 ## Audity a rozhodnutí
 - [ADR 001 – pracovní volba Astro/TypeScript/Node.js Fastify](ARCHITECTURE_DECISION_2026-10-31.md)
 - [Audit funkcí nového webu, webkamery, radaru, senzorů a výstrah](FRONTEND_FEATURES_CAMERA_AUDIT_2026-10-31.md)
+- [Audit modularity frontendu a bezpečného rozšiřování čidel (1. 11. 2026)](FRONTEND_MODULARITY_AUDIT_2026-11-01.md)
 - [Návrh vyměnitelného API – OpenAPI kontrakt, provoz vedle Astro, testy a migrace](API_ARCHITECTURE_AND_MIGRATION_2026-10-31.md)
 - [OpenAPI v1 – audit sloupců, JSON schémata a testy parity](API_CONTRACT_AUDIT_2026-10-31.md)
 - [API v1 – produktový kontrakt, meteorologické výpočty a provoz](API_V1_PRODUCT_CONTRACT.md)
