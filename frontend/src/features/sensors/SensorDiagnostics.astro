@@ -1,0 +1,58 @@
+<section class="section" data-sensor-diagnostics aria-labelledby="sensor-diagnostics-title">
+ <div class="section-heading"><div><span class="eyebrow">Telemetrie · skutečný archiv WeeWX</span><h2 id="sensor-diagnostics-title">Signál a baterie čidel</h2></div><span class="status-chip" data-diag-status role="status">Načítám</span></div>
+ <p class="lead">Surové diagnostické kanály zařízení GW3000. U baterií není bez potvrzeného mapování uvedena jednotka napětí ani procenta, a u signálu nepředpokládáme jednotku dBm. Poslední záznam neznamená automaticky online stav.</p>
+ <div class="sensor-inventory-grid" data-diagnostics-list><div class="empty-state">Ověřuji dostupnost historické telemetrie…</div></div>
+ <p class="source-note">Zobrazuje se poslední nenulová či nulová platná číselná hodnota každého kanálu za 24 hodin. Surové hodnoty nejsou automaticky diagnostikovány jako „dobrá baterie“ nebo „offline“.</p>
+</section>
+<script>
+ const section=document.querySelector<HTMLElement>('[data-sensor-diagnostics]');
+ if(section){
+  const status=section.querySelector<HTMLElement>('[data-diag-status]');
+  const list=section.querySelector<HTMLElement>('[data-diagnostics-list]');
+  const controller=new AbortController();
+  const labels:Record<string,string>={
+   ws80_sig:'WS80 · signál',ws80_rssi:'WS80 · RSSI',ws80_batt:'WS80 · baterie',
+   wh31_ch1_sig:'WH31 · kanál 1 · signál',wh31_ch2_sig:'WH31 · kanál 2 · signál',
+   wh31_ch1_rssi:'WH31 · kanál 1 · RSSI',
+   wh51_ch1_sig:'WH51 · kanál 1 · signál',wh51_ch1_rssi:'WH51 · kanál 1 · RSSI',
+   wh40_rssi:'WH40 · RSSI',wh41_ch1_rssi:'WH41 · RSSI',wh57_rssi:'WH57 · RSSI',wh26_rssi:'WH26 · RSSI',
+   pm25_Batt1:'PM2,5 · baterie',soilMoistBatt1:'Půdní vlhkost · baterie',
+   lightning_Batt:'Detektor blesků · baterie',batteryStatus1:'Baterie · obecný kanál 1',
+   batteryStatus2:'Baterie · obecný kanál 2'
+  };
+  type Item={column:string;observedAt:string;rawValue:number};
+  void fetch('/api/v1/diagnostics/sensors',{signal:controller.signal}).then(async response=>{
+   if(!response.ok)throw Error('Diagnostics API unavailable');
+   return response.json() as Promise<{status:string;readings:Item[]}>;
+  }).then(data=>{
+   if(!list||controller.signal.aborted)return;
+   list.replaceChildren();
+   if(data.status!=='ok'||!data.readings.length){
+    const el=document.createElement('div');el.className='empty-state';el.textContent='V produkčním archivu se nenašla nová telemetrie za posledních 24 hodin.';list.append(el);
+    if(status)status.textContent='Bez současných dat';
+    return;
+   }
+   const entries=data.readings.filter(item=>Object.hasOwn(labels,item.column)&&Number.isFinite(item.rawValue));
+   for(const entry of entries){
+    const card=document.createElement('article');card.className='sensor-inventory-card';
+    const h=document.createElement('h3');h.textContent=labels[entry.column];card.append(h);
+    const number=document.createElement('p');number.className='sensor-diagnostic-value';
+    number.textContent=new Intl.NumberFormat('cs-CZ',{maximumFractionDigits:3}).format(entry.rawValue)+' (surová hodnota)';
+    card.append(number);
+    const stamp=document.createElement('p');
+    stamp.textContent='Archivováno: '+new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',dateStyle:'short',timeStyle:'short'}).format(new Date(entry.observedAt));
+    card.append(stamp);
+    const age=(Date.now()-Date.parse(entry.observedAt))/60000;
+    const state=document.createElement('span');state.className='status-chip '+(age<45?'ok':'warning');
+    state.textContent=age<45?'Nedávný záznam':'Starší záznam';
+    card.append(state);list.append(card);
+   }
+   if(status){status.textContent=entries.length+' diagnostických kanálů';status.className='status-chip ok';}
+  }).catch(()=>{
+   if(controller.signal.aborted)return;
+   if(status){status.textContent='Telemetrie nedostupná';status.className='status-chip warning';}
+   if(list)list.textContent='Diagnostický endpoint nebo přístup ke sloupcům archivní databáze není dostupný.';
+  });
+  document.addEventListener('astro:before-swap',()=>controller.abort(),{once:true});
+ }
+</script>
