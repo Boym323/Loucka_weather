@@ -1,0 +1,6 @@
+build/
+data/
+results/
+rust/target/
+*.pyc
+__pycache__/

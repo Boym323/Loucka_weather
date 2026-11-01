@@ -28,7 +28,7 @@ Moderní meteorologický portál pro **https://pocasi-loucka.eu/**. **Stav 31. 1
 | [Souhrn metrik pro AI (JSON)](docs/data/observations_2026-10-31.json) | Strojově čitelná čísla bez osobních identifikátorů |
 | [Počty požadavků po dnech (CSV)](docs/data/traffic_daily_2026-09-27_2026-10-31.csv) | 35 dní provozu bez IP adres |
 
-Výkonnostní implementace, kompletní HTTP reporty a compute benchmark jsou stále ve větvi [`bench/go-rust-python`](https://github.com/Boym323/Loucka_weather/tree/bench/go-rust-python) a v otevřeném **draft [PR #2](https://github.com/Boym323/Loucka_weather/pull/2)**; nejsou v `main` a nejsou to produkční služby.
+Referenční implementace a reporty šestijazyčného benchmarku jsou v [`benchmark/`](benchmark/) a pocházejí z [PR #2](https://github.com/Boym323/Loucka_weather/pull/2). Nejde o produkční API. **Plný benchmark je blokován bez ověření skutečného cílového DB snapshotu** (samostatné testovací LXC, test-only schéma, unikátní marker na cílovém serveru). Viz [bezpečnostní postup](benchmark/lxc/README.md).
 
 ## Bezpečnostní zásady
 
@@ -45,4 +45,4 @@ Výkonnostní implementace, kompletní HTTP reporty a compute benchmark jsou st�
 - [Audit MariaDB a denních souhrnů](WEEWX_DAILY_SUMMARIES_AUDIT.md) a [pravidla statistik](STATISTICS_SPEC.md) – pro první verzi preferovat L1 archive + L2 archive_day_*, bez L3 zápisů.
 - [Původní audit Go backendu](BACKEND_TECHNOLOGY_AUDIT.md) a [komponenty frontendu](FRONTEND_SPEC.md) – metodické podklady, nikoli potvrzené nasazení.
 
-Podrobný [produktový kontrakt API v1](docs/API_V1_PRODUCT_CONTRACT.md) a [archivní aktualizace `archive-updated`](docs/ARCHIVE_REFRESH_CONTRACT.md) popisují návrh rozhraní; žádná produkční API služba zatím není nasazená.
+Podrobný [produktový kontrakt API v1](docs/API_V1_PRODUCT_CONTRACT.md) a [pětiminutové archivní aktualizace](docs/ARCHIVE_REFRESH_CONTRACT.md) jsou součástí specifikace. **API dosud není nasazená služba**; offline kontraktové testy nejsou integračním ověřením skutečné implementace.
