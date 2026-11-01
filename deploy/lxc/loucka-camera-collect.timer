@@ -1,0 +1,9 @@
+[Unit]
+Description=Loucka camera capture every ten minutes
+[Timer]
+OnCalendar=*:0/10
+Persistent=true
+RandomizedDelaySec=10
+Unit=loucka-camera-collect.service
+[Install]
+WantedBy=timers.target
