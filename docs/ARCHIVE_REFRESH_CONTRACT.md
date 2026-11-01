@@ -50,6 +50,14 @@ Příklad je v `tests/fixtures/archive-updated.json`. Povinná pole:
 
 **Frontend:** při `archive-updated` zneplatnit pouze odpovídající cache klíče `dataset=original`, `units`, `metric` a dotčené UTC/Europe/Prague rozsahy. Pro aktuální archiv zavolat `/current`, pro otevřené grafy cíleně `/history` s `If-None-Match`, zpracovat 304. Statistiky `daily/monthly/yearly` znovu načíst při `summaryStatus=ready` (ne při `pending`). Zároveň může pokračovat příjem LOOP událostí. Nepřenačítat celé stránky ani celý historický graf za 2009–2026. Při `reset`, ztrátě SSE událostí nebo delším odpojení načíst aktuální snapshot a revalidovat viditelné výstupy.
 
+## Nezávislost archivního streamu na MQTT
+
+Události `archive-updated` jsou produkovány z read-only pozorování MariaDB, **ne z LOOP/MQTT**. SSE multiplex na `/api/v1/live` musí zůstat dostupný při výpadku MQTT, pokud je archivní observer funkční; úvodní `status` může oznámit `state=unavailable` pro LOOP, ale nesmí tím zakázat oznámení z archivu. Odpověď SSE `503` je vhodná až při nedostupnosti samotné streamovací vrstvy, ne při pouhém výpadku LOOP.
+
+Jestliže SSE spojení selže, frontend použije řízený **fallback na podmíněné GET s `If-None-Match`** (návrh: revalidace viditelných `current/history` přibližně každých 60 s, při skrytém tabu pozastavit nebo omezit; statistiky samostatně a méně často). Vše přes sdílenou backendovou cache, **ne SQL dotaz na každou otevřenou stránku**. Po opětovném připojení SSE přednostně provést `reset`/snapshot revalidaci a vypnout záložní polling, aby se data nestahovala dvakrát.
+
+Pokud úplně zmizí všechny archivní řádky z právě sledovaného okna, reference observeru tuto situaci bezpečně odmítne; produkční implementace má ohlásit `status/reset` a znovu synchronizovat snapshot, nikoliv sestavit neplatnou událost s neexistujícím `latestArchiveAt`.
+
 ## Provozní testy před nasazením
 
 - Pozdní zápis po hranici 5 minut i odlišné archivní intervaly; kontrola, že observer nespoléhá na wall-clock 5 minut.
