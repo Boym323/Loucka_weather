@@ -1,0 +1,69 @@
+/**
+ * External screenshot and runtime smoke test for the *deployed* preview.
+ * Read-only: never modifies the site, GitHub or MariaDB.
+ * Produces desktop/mobile screenshots in test-results/preview-screenshots.
+ */
+import { chromium } from 'playwright';
+import { mkdir } from 'node:fs/promises';
+
+const base=process.env.LOUCKA_PREVIEW_URL || 'https://dev.pocasi-loucka.eu';
+const out='test-results/preview-screenshots';
+const routes=[
+ ['prehled','/'],['aktualne','/aktualne/'],['grafy','/grafy/'],
+ ['klimatologie','/klimatologie/'],['kamera','/kamera/'],
+ ['mapy','/mapy/'],['senzory','/senzory/'],['o-stanici','/o-stanici/']
+];
+const sizes=[
+ {name:'desktop',width:1440,height:900},
+ {name:'mobil',width:390,height:844}
+];
+const errors=[];
+await mkdir(out,{recursive:true});
+const browser=await chromium.launch({headless:true});
+try{
+ for(const size of sizes){
+  const page=await browser.newPage({viewport:{width:size.width,height:size.height},deviceScaleFactor:1});
+  page.on('pageerror',error=>errors.push(size.name+': JavaScript exception: '+error.message));
+  for(const [name,path] of routes){
+   try{
+    const response=await page.goto(base+path,{waitUntil:'domcontentloaded',timeout:25000});
+    if(!response||response.status()!==200){
+     errors.push(size.name+' '+path+': HTTP '+(response?.status()??'no response'));
+     continue;
+    }
+    await page.waitForTimeout(900);
+    const state=await page.evaluate(()=>({
+     title:document.title,
+     brand:!!document.querySelector('.brand'),
+     main:!!document.querySelector('main'),
+     width:document.documentElement.scrollWidth,
+     viewport:window.innerWidth
+    }));
+    if(!state.brand||!state.main)errors.push(size.name+' '+path+': missing layout');
+    if(state.width>state.viewport+3)errors.push(size.name+' '+path+': horizontal overflow '+state.width+'px > '+state.viewport+'px');
+    await page.screenshot({path:out+'/'+size.name+'-'+name+'.png',fullPage:true});
+    console.log('OK',size.name,path,state.title,'scrollWidth='+state.width);
+   }catch(e){errors.push(size.name+' '+path+': '+String(e));}
+  }
+  await page.close();
+ }
+ // Independently check the deployment and read-only API, with no credentials.
+ const response=await fetch(base+'/deployment.json',{signal:AbortSignal.timeout(12000)});
+ if(!response.ok)errors.push('deployment.json: HTTP '+response.status);
+ else{
+  const data=await response.json();
+  if(!/^[a-f0-9]{40}$/.test(data.commit??''))errors.push('deployment.json: invalid commit');
+  else console.log('Publicly deployed commit:',data.commit);
+ }
+ const health=await fetch(base+'/api/v1/readyz',{signal:AbortSignal.timeout(12000)});
+ if(!health.ok)errors.push('readyz: HTTP '+health.status);
+ else{
+  const state=await health.json();
+  if(state.ready!==true)errors.push('readyz: archive not ready');
+ }
+}catch(e){errors.push('Preview health: '+String(e));}
+finally{await browser.close();}
+if(errors.length){
+ console.error('VISUAL SMOKE FAILED:\n'+errors.join('\n'));
+ process.exitCode=1;
+}else console.log('Visual preview smoke passed for 8 routes and both viewports.');

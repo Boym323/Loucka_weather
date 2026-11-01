@@ -1,0 +1,34 @@
+name: Public dev website visual smoke
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 8 * * *"
+permissions:
+  contents: read
+jobs:
+  preview:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Install pinned Playwright browser
+        working-directory: frontend
+        run: |
+          npm ci --no-audit --no-fund
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Visit deployed dev website, check 8 routes, desktop and mobile
+        working-directory: frontend
+        run: node scripts/preview-visual-check.mjs
+        env:
+          LOUCKA_PREVIEW_URL: https://dev.pocasi-loucka.eu
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: preview-screenshots
+          path: frontend/test-results/preview-screenshots
+          retention-days: 7
+          if-no-files-found: warn
