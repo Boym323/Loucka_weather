@@ -19,8 +19,16 @@ const sizes=[
 ];
 const errors=[];
 const expectedCommit=process.env.LOUCKA_EXPECT_COMMIT || '';
+const checkPublicReady=async()=>{
+ try{
+  const response=await fetch(base+'/api/v1/readyz?probe='+Date.now(),{
+   cache:'no-store',signal:AbortSignal.timeout(8000)
+  });
+  const data=await response.json().catch(()=>null);
+  return response.ok&&data?.ready===true;
+ }catch{return false;}
+};
 const waitForPublishedCommit=async () => {
- if(!expectedCommit)return;
  const deadline=Date.now()+6*60_000;
  let last='metadata not yet available';
  while(Date.now()<deadline){
@@ -32,15 +40,24 @@ const waitForPublishedCommit=async () => {
    if(response.ok){
     const body=await response.json();
     last=String(body.commit ?? 'unknown');
-    if(body.commit===expectedCommit){
-     console.log('Confirmed public deploy:',expectedCommit);
-     return;
+    if(!expectedCommit||body.commit===expectedCommit){
+     // Publishing the static commit can briefly precede API activation.
+     // Require stable readiness before visiting pages, including manual/scheduled runs.
+     await new Promise(resolve=>setTimeout(resolve,2000));
+     if(await checkPublicReady()){
+      await new Promise(resolve=>setTimeout(resolve,1500));
+      if(await checkPublicReady()){
+       console.log('Confirmed public deploy with ready API:',body.commit);
+       return;
+      }
+     }
+     last='API not yet stable after deploying '+body.commit;
     }
    } else last='HTTP '+response.status;
   }catch(e){last=String(e);}
   await new Promise(resolve=>setTimeout(resolve,12000));
  }
- throw new Error('Staging did not deploy expected '+expectedCommit+' within 6 minutes. Last: '+last);
+ throw new Error('Staging did not deploy ready API for expected '+(expectedCommit||'current')+' within 6 minutes. Last: '+last);
 };
 await waitForPublishedCommit();
 await mkdir(out,{recursive:true});
