@@ -1,0 +1,52 @@
+---
+const channels=[
+ {id:'soilTemp1',name:'Teplota půdy · kanál 1',unit:'°C',digits:1,symbol:'🌱'},
+ {id:'soilTemp2',name:'Teplota půdy · kanál 2',unit:'°C',digits:1,symbol:'🌱'},
+ {id:'soilTemp3',name:'Teplota půdy · kanál 3',unit:'°C',digits:1,symbol:'🌱'},
+ {id:'soilTemp4',name:'Teplota půdy · kanál 4',unit:'°C',digits:1,symbol:'🌱'},
+ {id:'extraTemp1',name:'Teplota · externí kanál 1',unit:'°C',digits:1,symbol:'🌡️'},
+ {id:'extraHumid1',name:'Vlhkost · externí kanál 1',unit:'%',digits:0,symbol:'◉'},
+ {id:'pm25_1',name:'PM2,5 · archivní kanál',unit:'µg/m³',digits:1,symbol:'◌'},
+ {id:'lightning_distance',name:'Detekce blesků · vzdálenost',unit:'km',digits:0,symbol:'⚡'}
+];
+---
+<section class="section sensors-overview" data-sensor-channels>
+ <div class="section-heading"><div><span class="eyebrow">Archivované kanály</span><h2>Stav měřených veličin</h2></div><span class="status-chip" data-sensors-status role="status">Načítám</span></div>
+ <p class="lead">Číslování odpovídá sloupcům WeeWX, nikoliv ověřené poloze čidel. Stav baterií, typ zařízení a RSSI zde nemáme spolehlivě přiřazené.</p>
+ <div class="sensor-channel-grid">
+  {channels.map(item=><article class="sensor-channel" data-sensor-id={item.id}>
+   <div class="sensor-head"><span aria-hidden="true">{item.symbol}</span><strong>{item.name}</strong></div>
+   <p class="sensor-number"><span data-sensor-value={item.id}>—</span><small>{item.unit}</small></p>
+   <span class="sensor-state" data-sensor-quality={item.id}>Čeká na měření</span>
+  </article>)}
+ </div>
+ <p class="source-note">Zelený stav znamená pouze platné poslední archivní měření, nikoliv potvrzené připojení fyzického senzoru.</p>
+</section>
+<script>
+ import {getCurrent} from '../../shared/api/client';
+ import {formatValue} from '../../shared/domain/metrics';
+ const root=document.querySelector<HTMLElement>('[data-sensor-channels]');
+ if(root){
+  const status=root.querySelector<HTMLElement>('[data-sensors-status]');
+  const controller=new AbortController();
+  const digits:Record<string,number>={soilTemp1:1,soilTemp2:1,soilTemp3:1,soilTemp4:1,extraTemp1:1,extraHumid1:0,pm25_1:1,lightning_distance:0};
+  void getCurrent(controller.signal).then(resp=>{
+   if(status){status.textContent=resp.stale?'Archiv zastaralý':'Poslední archivní měření';status.classList.add(resp.stale?'warning':'ok');}
+   Object.entries(digits).forEach(([id,count])=>{
+    const reading=resp.readings[id];
+    const value=root.querySelector<HTMLElement>('[data-sensor-value="'+id+'"]');
+    const quality=root.querySelector<HTMLElement>('[data-sensor-quality="'+id+'"]');
+    if(!quality)return;
+    if(!reading||reading.value===null||reading.quality==='missing'||reading.quality==='suspect'){
+     quality.textContent=reading?.quality==='suspect'?'Podezřelý údaj':'Měření není k dispozici';
+     quality.classList.add('unavailable');
+    } else {
+     if(value)value.textContent=formatValue(reading.value,count);
+     quality.textContent=resp.stale?'Archivní hodnota – zastaralá':'Dostupné v archivu';
+     quality.classList.add(resp.stale?'unavailable':'available');
+    }
+   });
+  }).catch(()=>{if(status){status.textContent='API nedostupné';status.classList.add('error');}});
+  document.addEventListener('astro:before-swap',()=>controller.abort(),{once:true});
+ }
+</script>

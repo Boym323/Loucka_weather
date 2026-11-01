@@ -1,0 +1,106 @@
+---
+interface Props { compact?: boolean }
+const { compact = false } = Astro.props;
+---
+<section class:list={['section','radar-panel',{ 'radar-compact':compact }]} data-radar-panel aria-labelledby="radar-heading">
+ <div class="section-heading">
+  <div class="panel-title"><span class="panel-mark" aria-hidden="true">◉</span><h2 id="radar-heading">Srážkový radar – Loučka a okolí</h2></div>
+  <span class="status-chip" data-radar-status role="status">Načítám radar</span>
+ </div>
+ <div class="radar-map" data-radar-map aria-label="Radar srážek na podkladě OpenStreetMap">
+  <div class="radar-world">
+   <div data-radar-base class="radar-base" aria-hidden="true"></div>
+   <img class="radar-overlay" data-radar-overlay alt="" hidden />
+   <span class="radar-pin" title="Loučka, okres Zlín" aria-hidden="true">●</span>
+  </div>
+  <div class="radar-overlay-message" data-radar-message role="status">Zjišťuji poslední radarový snímek…</div>
+  <div class="radar-scale" aria-hidden="true"><span>Slabé</span><i></i><span>Silné</span></div>
+ </div>
+ <div class="radar-controls">
+  <button type="button" class="chart-tab" data-radar-prev aria-label="Předchozí radarový snímek">◀</button>
+  <button type="button" class="chart-tab" data-radar-play aria-label="Přehrát radarovou historii">▶ Přehrát</button>
+  <button type="button" class="chart-tab" data-radar-next aria-label="Následující radarový snímek">▶</button>
+  <span class="source-note" data-radar-time>Čas snímku neznámý</span>
+ </div>
+ <div class="preview-footer">
+  <span class="source-note">Historická radarová pozorování · nikoli předpověď</span>
+  <span class="source-note">Mapy © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> · radar <a href="https://www.rainviewer.com/" target="_blank" rel="noopener noreferrer">RainViewer</a></span>
+ </div>
+</section>
+<script>
+ type Frame={time:number;path:string};
+ type RV={host?:string;radar?:{past?:Frame[]}};
+ const lat=49.170035,lon=17.876076,zoom=7,size=256;
+ const n=2**zoom;
+ const latRad=lat*Math.PI/180;
+ const px=(lon+180)/360*n*size;
+ const py=(1-Math.asinh(Math.tan(latRad))/Math.PI)/2*n*size;
+ // OSM tile grid and radar coordinate tile share the same EPSG:3857 center.
+ function baseTiles(parent:HTMLElement){
+  const x0=px-256,y0=py-256;
+  for(let x=Math.floor(x0/size);x<=Math.floor((x0+512)/size);x++){
+   for(let y=Math.floor(y0/size);y<=Math.floor((y0+512)/size);y++){
+    if(x<0||x>=n||y<0||y>=n)continue;
+    const img=document.createElement('img');
+    img.src='https://tile.openstreetmap.org/'+zoom+'/'+x+'/'+y+'.png';
+    img.alt='';img.loading='lazy';img.decoding='async';
+    img.style.left=(x*size-x0)+'px';img.style.top=(y*size-y0)+'px';
+    parent.append(img);
+   }
+  }
+ }
+ const timeLabel=(t:number)=>new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',hour:'2-digit',minute:'2-digit'}).format(new Date(t*1000));
+ document.querySelectorAll<HTMLElement>('[data-radar-panel]').forEach(root=>{
+  const base=root.querySelector<HTMLElement>('[data-radar-base]');
+  const image=root.querySelector<HTMLImageElement>('[data-radar-overlay]');
+  const status=root.querySelector<HTMLElement>('[data-radar-status]');
+  const message=root.querySelector<HTMLElement>('[data-radar-message]');
+  const time=root.querySelector<HTMLElement>('[data-radar-time]');
+  const prev=root.querySelector<HTMLButtonElement>('[data-radar-prev]');
+  const next=root.querySelector<HTMLButtonElement>('[data-radar-next]');
+  const play=root.querySelector<HTMLButtonElement>('[data-radar-play]');
+  if(!base||!image)return;
+  baseTiles(base);
+  let host='',frames:Frame[]=[],i=0,interval:number|undefined;
+  const stop=()=>{if(interval!==undefined){window.clearInterval(interval);interval=undefined;}if(play)play.textContent='▶ Přehrát';};
+  const render=()=>{
+   const frame=frames[i];if(!frame)return;
+   const path=frame.path;
+   if(!/^\/v2\/radar\/[0-9]+$/.test(path))return;
+   image.hidden=true;
+   image.onload=()=>{
+    image.hidden=false;
+    if(message)message.hidden=true;
+    if(status){status.textContent='Radar dostupný';status.classList.add('ok');}
+   };
+   image.onerror=()=>{
+    image.hidden=true;
+    if(message){message.hidden=false;message.textContent='Radarový snímek se nepodařilo načíst.';}
+    if(status){status.textContent='Chyba snímku';status.classList.add('warning');}
+   };
+   image.src=host+path+'/512/7/'+lat+'/'+lon+'/2/1_1.png';
+   if(time)time.textContent='Snímek '+timeLabel(frame.time);
+  };
+  const controller=new AbortController();
+  void fetch('https://api.rainviewer.com/public/weather-maps.json',{signal:controller.signal}).then(async response=>{
+   if(!response.ok)throw new Error('Nedostupné radarové snímky');
+   const data=await response.json() as RV;
+   if(!data.host||!/^https:\/\/[a-z0-9.-]*rainviewer\.com$/.test(data.host))throw new Error('Neznámý radarový hostitel');
+   if(!Array.isArray(data.radar?.past))throw new Error('Chybějící snímky');
+   frames=data.radar.past.filter(f=>Number.isSafeInteger(f.time)&&/^\/v2\/radar\/[0-9]+$/.test(f.path)).slice(-12);
+   if(!frames.length)throw new Error('Žádné radarové snímky');
+   host=data.host;i=frames.length-1;
+   const age=Date.now()/1000-frames[i].time;
+   if(age>60*60){if(status){status.textContent='Radar zastaralý';status.classList.add('warning');}}
+   render();
+  }).catch(()=>{
+   if(controller.signal.aborted)return;
+   if(message){message.hidden=false;message.textContent='Radarový zdroj není dostupný. Podkladová mapa zůstává pouze orientační.';}
+   if(status){status.textContent='Radar nedostupný';status.classList.add('warning');}
+  });
+  prev?.addEventListener('click',()=>{if(!frames.length)return;stop();i=(i-1+frames.length)%frames.length;render();});
+  next?.addEventListener('click',()=>{if(!frames.length)return;stop();i=(i+1)%frames.length;render();});
+  play?.addEventListener('click',()=>{if(!frames.length)return;if(interval!==undefined){stop();return;}if(play)play.textContent='Ⅱ Pozastavit';interval=window.setInterval(()=>{i=(i+1)%frames.length;render();},1500);});
+  document.addEventListener('astro:before-swap',()=>{controller.abort();stop();},{once:true});
+ });
+</script>

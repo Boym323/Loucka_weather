@@ -1,0 +1,63 @@
+---
+interface Props { compact?: boolean }
+const { compact = false } = Astro.props;
+---
+<section class:list={['section','forecast-panel',{ 'forecast-compact':compact }]} data-forecast-panel aria-labelledby="forecast-heading">
+ <div class="section-heading">
+  <div class="panel-title"><span class="panel-mark" aria-hidden="true">☀</span><h2 id="forecast-heading">Předpověď pro Loučku</h2></div>
+  <span class="status-chip" data-forecast-status role="status">Načítám model</span>
+ </div>
+ <div class="forecast-tabs" aria-label="Následující dny">
+  {Array.from({length:6},(_,i)=><div class="forecast-day" data-forecast-day={i}>
+    <strong data-forecast-label={i}>—</strong>
+    <span class="forecast-symbol" data-forecast-icon={i} aria-hidden="true">◌</span>
+    <span class="forecast-temp" data-forecast-max={i}>—</span>
+    <small data-forecast-min={i}>—</small>
+    <span class="forecast-rain" data-forecast-rain={i}>—</span>
+  </div>)}
+ </div>
+ <p class="forecast-context" data-forecast-message>Modelová předpověď je oddělená od naměřených dat stanice.</p>
+ <div class="preview-footer">
+  <span class="source-note">Modelová předpověď · nikoli měření</span>
+  <a class="panel-link" href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Zdroj: Open-Meteo (CC BY 4.0) ↗</a>
+ </div>
+</section>
+<script>
+ type Daily = {time:string[];weather_code:number[];temperature_2m_max:number[];temperature_2m_min:number[];precipitation_sum:number[]};
+ const icon=(code:number)=>code===0?'☀️':code<=3?'⛅':code<=48?'🌫️':code<=67?'🌧️':code<=77?'🌨️':code<=82?'🌦️':code<=86?'❄️':code>=95?'⛈️':'☁️';
+ const fmt=(n:number)=>new Intl.NumberFormat('cs-CZ',{maximumFractionDigits:0}).format(n);
+ const timeFmt=new Intl.DateTimeFormat('cs-CZ',{weekday:'short',day:'numeric',month:'numeric',timeZone:'Europe/Prague'});
+ const url='https://api.open-meteo.com/v1/forecast?latitude=49.170035&longitude=17.876076&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Europe%2FPrague&forecast_days=6';
+ document.querySelectorAll<HTMLElement>('[data-forecast-panel]').forEach(root=>{
+  const status=root.querySelector<HTMLElement>('[data-forecast-status]');
+  const msg=root.querySelector<HTMLElement>('[data-forecast-message]');
+  const controller=new AbortController();
+  void fetch(url,{signal:controller.signal}).then(async response=>{
+   if(!response.ok)throw new Error('Model není dostupný');
+   const data=await response.json() as {daily?:Daily};
+   const d=data.daily;
+   if(!d||!Array.isArray(d.time)||d.time.length<6||
+    ![d.weather_code,d.temperature_2m_max,d.temperature_2m_min,d.precipitation_sum].every(a=>Array.isArray(a)&&a.length>=6))throw new Error('Neplatná odpověď modelu');
+   for(let i=0;i<6;i++){
+    const vals=[d.weather_code[i],d.temperature_2m_max[i],d.temperature_2m_min[i],d.precipitation_sum[i]];
+    if(vals.some(n=>!Number.isFinite(n)))throw new Error('Neúplná předpověď');
+    const put=(name:string,value:string)=>{
+     const node=root.querySelector<HTMLElement>('[data-forecast-'+name+'="'+i+'"]');
+     if(node)node.textContent=value;
+    };
+    put('label',timeFmt.format(new Date(d.time[i]+'T12:00:00Z')));
+    put('icon',icon(d.weather_code[i]));
+    put('max',fmt(d.temperature_2m_max[i])+'°');
+    put('min',fmt(d.temperature_2m_min[i])+'°');
+    put('rain',fmt(d.precipitation_sum[i])+' mm');
+   }
+   if(status){status.textContent='Modelová data';status.classList.add('ok');}
+   if(msg)msg.textContent='Předpověď počasí pro oblast Loučky, okres Zlín. Změny mohou nastat při aktualizaci modelu.';
+  }).catch(()=>{
+   if(controller.signal.aborted)return;
+   if(status){status.textContent='Model nedostupný';status.classList.add('warning');}
+   if(msg)msg.textContent='Předpověď se nepodařilo načíst. Naměřené hodnoty stanice zůstávají dostupné.';
+  });
+  document.addEventListener('astro:before-swap',()=>controller.abort(),{once:true});
+ });
+</script>
