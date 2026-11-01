@@ -88,9 +88,9 @@ import CameraArchive from '../features/camera/CameraArchive.astro';
   const captured=document.querySelector<HTMLElement>('[data-camera-captured]');
   const age=document.querySelector<HTMLElement>('[data-camera-age]');
   if(info.status==='fresh'||info.status==='stale'){
-   if(captured&&info.capturedAt)captured.textContent=formatTimestamp(info.capturedAt);
-   if(age&&info.ageSeconds!==null)age.textContent=Math.round(info.ageSeconds/60)+' minut';
-   if(status){status.textContent=info.status==='fresh'?'Snímek ověřen':'Starší snímek';status.className='status-chip '+(info.status==='fresh'?'ok':'warning');}
+   if(captured)captured.textContent='Neověřený · archiv ukládá čas stažení';
+   if(age&&info.ageSeconds!==null)age.textContent='Od stažení '+Math.round(info.ageSeconds/60)+' minut';
+   if(status){status.textContent=info.status==='fresh'?'Snímek nedávno stažen':'Starší uložený snímek';status.className='status-chip '+(info.status==='fresh'?'ok':'warning');}
   }
   // The current API explicitly reports disabled; do not imply verified LIVE data.
  }).catch(()=>{});
