@@ -17,7 +17,7 @@
 <script>
  import {getHistoryInterval} from '../../shared/api/client';
  import {pragueMidnightIso} from '../../shared/domain/statistics';
- const root=document.querySelector<HTMLElement>('[data-climate-dashboard]');
+ const root=document.querySelector<HTMLElement>('[data-climate-dashboard]')!;
  if(root){
   const selector=root.querySelector<HTMLSelectElement>('[data-climate-year]');
   let controller:AbortController|undefined;
