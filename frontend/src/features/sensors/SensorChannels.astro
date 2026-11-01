@@ -57,7 +57,7 @@ const channels=[
    await Promise.all(Array.from({length:3},async()=>{
     while(cursor<channels.length){
      const id=channels[cursor++];
-     const container=root.querySelector<HTMLElement>('[data-sensor-trend="'+id+'"]');
+     const container=root?.querySelector<HTMLElement>('[data-sensor-trend="'+id+'"]');
      if(!container)continue;
      try{
       const response=await getHistoryInterval(id,begin,end,'raw',controller.signal);
