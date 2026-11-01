@@ -83,3 +83,5 @@ Nezávislé blokery před publikací jako kompletního produktu: ověřený arch
 - Klimatologie: integrál záření (kWh/m²) s uvedením pokrytí a počet mrazových dnů z původních denních minim. Obě statistiky jsou **odvozené**; nejsou to naměřené hodiny slunečního svitu ani výška sněhu.
 - Mapy: vedle historického radaru RainViewer se zobrazují volitelné vzorkované hodnoty teploty a větru z předpovědního modelu Open-Meteo, jasně oddělené od staničních měření.
 - Nepotvrzené historické snímky, sněhová pokrývka a dobu slunečního svitu web nedoplňuje syntetickými hodnotami.
+
+Archivační galerie navíc podporuje výběr konkrétního UTC dne za posledních 35 dní a stránkování jednotlivých JPEG. Sběr zůstává opt-in a bez sběrné služby budou výsledky prázdné.
