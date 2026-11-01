@@ -1,0 +1,14 @@
+[Unit]
+Description=Loucka Weather: build and publish main to staging
+Wants=network-online.target
+After=network-online.target
+[Service]
+Type=oneshot
+User=loucka
+Group=loucka
+WorkingDirectory=/home/loucka/Loucka_weather
+Environment=HOME=/home/loucka
+ExecStart=/usr/bin/bash /home/loucka/Loucka_weather/deploy/lxc/auto-deploy-preview.sh
+TimeoutStartSec=240
+NoNewPrivileges=true
+PrivateTmp=true

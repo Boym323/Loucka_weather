@@ -1,0 +1,19 @@
+[Unit]
+Description=Loucka Weather: localhost Fastify staging API
+Wants=network-online.target
+After=network-online.target
+[Service]
+Type=simple
+User=loucka
+Group=loucka
+WorkingDirectory=/home/loucka/Loucka_weather/api
+EnvironmentFile=/etc/loucka-weather/api.env
+ExecStart=/usr/bin/node --watch dist/src/main.js
+Restart=always
+RestartSec=4
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+UMask=0077
+[Install]
+WantedBy=multi-user.target
