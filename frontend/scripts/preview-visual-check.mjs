@@ -99,6 +99,9 @@ try{
       },
       svgs:Object.fromEntries(['temperature','rain','wind'].map(name=>[
        name,document.querySelector('[data-chart="'+name+'"] svg')!==null
+      ])),
+      validMonths:Object.fromEntries(['temperature','rain','wind'].map(name=>[
+       name,Number(document.querySelector('[data-chart="'+name+'"]')?.getAttribute('data-valid-months')??0)
       ]))
      }));
      console.log('CLIMATE VERIFIED',size.name,JSON.stringify(climate));
@@ -113,6 +116,8 @@ try{
        errors.push(size.name+': '+metric+' climate chart missing data: '+status);
       if(!climate.svgs[metric])
        errors.push(size.name+': '+metric+' chart SVG not rendered');
+      if(climate.validMonths[metric]!==12)
+       errors.push(size.name+': '+metric+' missing months '+climate.validMonths[metric]+'/12 for complete year 2025');
      }
      if(climate.annual!=='Souhrny WeeWX')
       errors.push(size.name+': annual climate table not ready: '+climate.annual);
