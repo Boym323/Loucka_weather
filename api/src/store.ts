@@ -1,15 +1,13 @@
-/** Contract for one bounded, read-only latest-archive query. */
-export interface ArchiveRow {
-  dateTime: number;
-  usUnits: number;
-  interval: number;
-  outTemp: number | null;
-  rain: number | null;
-  windSpeed: number | null;
-  barometer: number | null;
-}
+/** Bounded read-only weather archive adapter. End timestamp is UTC epoch seconds. */
+import type {Metric} from './metrics.js';
+export type ArchiveRow={
+  dateTime:number;
+  usUnits:number;
+  interval:number;
+} & Partial<Record<Metric,number|null>>;
 export interface ArchiveReader {
-  latest(asOfEpoch: number): Promise<ArchiveRow | null>;
-  ping(): Promise<void>;
-  close?(): Promise<void>;
+  latest(asOfEpoch:number):Promise<ArchiveRow|null>;
+  history(metric:Metric,fromExclusive:number,toInclusive:number,limit:number):Promise<ArchiveRow[]>;
+  ping():Promise<void>;
+  close?():Promise<void>;
 }
