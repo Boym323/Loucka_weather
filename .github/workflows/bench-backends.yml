@@ -138,6 +138,35 @@ jobs:
       - name: Fail-closed FULL attestation guard regression tests
         run: |
           PYTHONPATH=. python -m unittest discover -s benchmark/lxc/tests -p 'test_*.py' -v
+      - name: Integration test FULL guard against a separate CI-only snapshot marker
+        run: |
+          python - <<'PY'
+          import os
+          import pymysql
+          from benchmark.lxc.isolation_guard import IsolationError, verify_full_snapshot
+          attestation='ci_snapshot_marker_123456'
+          admin=pymysql.connect(host='127.0.0.1',user='root',password='root',autocommit=True)
+          with admin.cursor() as c:
+              c.execute('CREATE DATABASE weewx_bench_fixture')
+              c.execute('CREATE TABLE weewx_bench_fixture.bench_isolation_attestation (snapshot_id VARCHAR(64) PRIMARY KEY)')
+              c.execute('INSERT INTO weewx_bench_fixture.bench_isolation_attestation VALUES (%s)',(attestation,))
+              c.execute("GRANT SELECT ON weewx_bench_fixture.* TO 'six_bench_ro'@'%'")
+          admin.close()
+          con=pymysql.connect(host='127.0.0.1',user='six_bench_ro',password='six_bench_ro_ci',
+                              database='weewx_bench_fixture',autocommit=True)
+          options={'BENCH_DB_NAME':'weewx_bench_fixture','BENCH_ISOLATED_DB':'YES',
+                   'BENCH_EXPECTED_SNAPSHOT_ID':attestation}
+          with con.cursor() as c:
+              assert verify_full_snapshot(c,options)
+              try:
+                  verify_full_snapshot(c,{**options,'BENCH_EXPECTED_SNAPSHOT_ID':'wrong_marker_123456789'})
+              except IsolationError:
+                  pass
+              else:
+                  raise AssertionError('Guard did not reject wrong marker')
+          con.close()
+          print('PASS: connected DB marker validated, mismatch rejected')
+          PY
       - name: Verify six independent HTTP servers (smoke)
         run: |
           cd benchmark/lxc
