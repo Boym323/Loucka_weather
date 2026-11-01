@@ -9,6 +9,8 @@ Group=loucka
 WorkingDirectory=/home/loucka/Loucka_weather
 Environment=HOME=/home/loucka
 ExecStart=/usr/bin/bash /home/loucka/Loucka_weather/deploy/lxc/auto-deploy-preview.sh
+# '+' runs this fixed root-owned helper as root; never run repo-owned scripts as root.
+ExecStartPost=+/usr/local/libexec/loucka-preview-api-activate.sh
 TimeoutStartSec=240
 NoNewPrivileges=true
 PrivateTmp=true
