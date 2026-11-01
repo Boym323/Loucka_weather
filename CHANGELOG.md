@@ -11,6 +11,8 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ### Frontend a staging
 
+- Stránka kamery: přidán panel s informacemi, ruční obnova snímku a stav načtení či chyby; čas pořízení zůstává neznámý.
+
 - `62e8917`: integrace informace o nasazené verzi do patičky a stránky projektu a publikování metadat deploy skriptem; nasazení a metadata je třeba ověřit na webu.
 - `65691ea`: připraven parser metadat nasazeného releasu a komponenta s unit testy.
 - `a6a1aef`: přepracována stránka O projektu, doplněny informační karty a responzivní rozložení.

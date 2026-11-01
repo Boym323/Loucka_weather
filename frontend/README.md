@@ -23,7 +23,7 @@ Vývojový server je standardně dostupný lokálně. Automatický testovací de
 - **Aktuálně:** poslední dostupný archivní záznam a směr větru. Není to sekundový živý LOOP.
 - **Grafy:** jedna zvolená veličina, 6/24/72 hodin a tabulka archivních bodů. Grafy pro libovolné datum, více současných veličin a dlouhá agregovaná období z předlohy zatím chybí.
 - **Klimatologie:** rozvržení přehledu bez zveřejněných statistik. Výběr období a grafy čekají na implementaci API a ověření dat.
-- **Kamera:** snímek z uživatelem dodaného zdroje. Čas pořízení, automatická obnova, archiv, dostupnost zdroje a chování při chybě vyžadují ověření.
+- **Kamera:** snímek z uživatelem dodaného zdroje. Stránka obsahuje ruční obnovení a oznámení chyby načtení. Čas pořízení, automatická obnova, archiv a funkce v nasazeném prohlížeči vyžadují ověření.
 - **Mapy a senzory:** stavy nepřipojených zdrojů; radar, vrstvy a ověřený registr fyzických senzorů zatím nejsou hotové.
 - **O projektu:** přehled stanice a dat. Krajina v `public/landscape.svg` je ilustrace.
 - **Mobilní zobrazení:** CSS obsahuje responzivní pravidla a mobilní menu. Kompletní vizuální a funkční kontrola všech stránek v reálném mobilním viewportu zůstává otevřená.

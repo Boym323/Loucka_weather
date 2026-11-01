@@ -2,6 +2,29 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 <BaseLayout title="Webkamera">
- <div class="page-intro"><span class="eyebrow">Pohled na Loučku a okolí</span><h1>Webkamera Loučka</h1><p>Pohled webkamery na Loučku a okolí západním směrem.</p></div>
- <section class="section"><div class="section-heading"><h2>Aktuální snímek</h2><span class="status-chip">Aktuální snímek</span></div><div class="camera-image camera-image-large"><img src="https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg" alt="Pohled webkamery na Loučku západním směrem" /></div><p class="source-note">Čas pořízení snímku a archiv kamery nejsou zatím k dispozici.</p></section>
+ <div class="page-intro"><span class="eyebrow">Pohled na Loučku a okolí</span><h1>Webkamera Loučka – západ</h1><p>Aktuální snímek západní kamery.</p></div>
+ <div class="camera-layout">
+  <section class="section camera-panel" data-camera>
+   <div class="section-heading"><h2>Aktuální snímek</h2><span class="status-chip" data-camera-status role="status">Načítám snímek</span></div>
+   <div class="camera-image camera-image-large"><img data-camera-image src="https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg" alt="Pohled webkamery na Loučku západním směrem" /></div>
+   <p class="source-note" data-camera-message>Čas pořízení snímku není dostupný.</p>
+   <div class="camera-actions"><button type="button" class="camera-refresh" data-camera-refresh>Obnovit snímek</button><a class="panel-link" href="https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg" target="_blank" rel="noopener noreferrer">Otevřít originál ↗</a></div>
+  </section>
+  <aside class="section camera-info"><h2>Informace o kameře</h2><dl><div><dt>Směr pohledu</dt><dd>Západ</dd></div><div><dt>Čas pořízení</dt><dd>Neznámý</dd></div><div><dt>Archiv snímků</dt><dd>Nedostupný</dd></div></dl><p class="source-note">Úspěšné načtení souboru samo o sobě nepotvrzuje stáří snímku.</p></aside>
+ </div>
 </BaseLayout>
+<style>
+ .camera-layout{display:grid;grid-template-columns:minmax(0,3fr) minmax(220px,1fr);gap:12px;align-items:start}.camera-panel{min-width:0}.camera-actions{display:flex;gap:16px;align-items:center;flex-wrap:wrap}.camera-refresh{padding:8px 12px;color:#052119;background:#43e6ab;border:0;border-radius:6px;font-weight:700}.camera-info dl{margin:12px 0}.camera-info dl div{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:10px 0;font-size:12px}.camera-info dt{color:var(--muted)}.camera-info dd{margin:0;text-align:right}.camera-panel [data-camera-message]{margin:10px 0}@media(max-width:750px){.camera-layout{grid-template-columns:1fr}}
+</style>
+<script>
+ const root=document.querySelector<HTMLElement>('[data-camera]');
+ const img=root?.querySelector<HTMLImageElement>('[data-camera-image]');
+ const status=root?.querySelector<HTMLElement>('[data-camera-status]');
+ const message=root?.querySelector<HTMLElement>('[data-camera-message]');
+ const refresh=root?.querySelector<HTMLButtonElement>('[data-camera-refresh]');
+ function loaded(){if(status){status.textContent='Snímek načten';status.className='status-chip ok';}if(message)message.textContent='Čas pořízení snímku není dostupný.';}
+ function failed(){if(status){status.textContent='Kamera nedostupná';status.className='status-chip error';}if(message)message.textContent='Snímek se nepodařilo načíst. Zkuste jej obnovit.';}
+ img?.addEventListener('load',loaded);img?.addEventListener('error',failed);
+ if(img?.complete){if(img.naturalWidth)loaded();else failed();}
+ refresh?.addEventListener('click',()=>{if(!img)return;if(status){status.textContent='Načítám snímek';status.className='status-chip';}img.src='https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg?t='+Date.now();});
+</script>
