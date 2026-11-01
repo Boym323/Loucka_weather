@@ -2,10 +2,10 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 <BaseLayout title="O projektu">
- <div class="page-intro"><span class="eyebrow">O meteorologické stanici</span><h1>O projektu Počasí Loučka</h1><p>Nezávislé meteorologické měření a veřejný archiv. Nový portál vzniká jako modulární frontend nad verzovaným meteorologickým API.</p></div>
- <div class="info-grid">
-  <section class="section"><h2>Hardware</h2><p class="lead">Ecowitt GW3000 a připojená čidla. Individuální historie konkrétních senzorů bude zveřejněna po validaci.</p></section>
-  <section class="section"><h2>Datový archiv</h2><p class="lead">MariaDB / WeeWX. Zdrojové časové značky jsou konce intervalů (start, end]; veřejný klient nekomunikuje přímo s databází.</p></section>
-  <section class="section"><h2>Webové technologie</h2><p class="lead">Astro + TypeScript + Fastify API. Grafy využívají Apache ECharts. Úpravy tohoto webu nezasahují do původní stanice.</p></section>
+ <div class="page-intro"><span class="eyebrow">O meteorologické stanici</span><h1>O projektu Počasí Loučka</h1><p>Místní měření a přehled počasí z Loučky a okolí.</p></div>
+ <div class="about-layout">
+  <section class="section about-image"><img src="/landscape.svg" alt="Ilustrace krajiny v okolí Loučky" /><span class="source-note">Ilustrační krajina</span></section>
+  <section class="section about-main"><span class="eyebrow">Meteorologická stanice</span><h2>Počasí Loučka</h2><p class="lead">Místní stanice sleduje počasí v Loučce a zpřístupňuje současná i archivní měření. Historie archivu sahá do roku 2009.</p><div class="about-facts"><div><strong>2009</strong><span>Počátek archivu</span></div><div><strong>Loučka</strong><span>Umístění stanice</span></div><div><strong>GW3000</strong><span>Meteorologická brána</span></div><div><strong>WeeWX</strong><span>Zpracování měření</span></div></div></section>
  </div>
+ <section class="section about-tech"><div class="section-heading"><div><span class="eyebrow">O datech</span><h2>Jak web funguje</h2></div></div><div class="about-tech-grid"><div><strong>Archiv měření</strong><p>Archivní záznamy zpřístupňuje WeeWX. Čas záznamu označuje konec měřicího intervalu.</p></div><div><strong>Aktuální údaje</strong><p>Stránka zobrazuje poslední dostupný archivní záznam a upozorní na zastaralá data.</p></div><div><strong>Grafy a historie</strong><p>Chybějící hodnoty zůstávají prázdné. Čas zobrazujeme v pásmu Europe/Prague.</p></div><div><strong>Webkamera</strong><p>Aktuální snímek zachycuje pohled západním směrem.</p><a class="panel-link" href="/kamera/">Zobrazit kameru ↗</a></div></div></section>
 </BaseLayout>
