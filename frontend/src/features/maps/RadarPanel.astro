@@ -84,7 +84,7 @@ const { compact = false } = Astro.props;
   const visibility=(event:Event)=>{
    const detail=(event as CustomEvent<{visible:boolean}>).detail;
    radarVisible=detail?.visible!==false;
-   if(image&&!image.hidden||!radarVisible)image.hidden=!radarVisible;
+   if(image)image.hidden=!radarVisible||!image.complete||image.naturalWidth===0;
    if(message&&!radarVisible){message.hidden=false;message.textContent='Radarová vrstva je vypnutá – podkladová mapa zůstává viditelná.';}
    else if(message&&image.complete&&image.naturalWidth)message.hidden=true;
    if(status&&frames.length)status.textContent=radarVisible?(isStale?'Zastaralý radarový snímek':'Radar dostupný'):'Radarová vrstva skrytá';
