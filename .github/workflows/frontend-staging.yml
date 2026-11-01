@@ -29,6 +29,8 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Type and Astro diagnostics
         run: npm run check
+      - name: Validate browser smoke test syntax
+        run: node --check scripts/preview-visual-check.mjs
       - name: Unit tests
         run: npm test
       - name: Build static website
