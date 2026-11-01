@@ -4,10 +4,10 @@ První nezávislá vývojová implementace. Nejde o produkční nasazení, žád
 
 ## Lokální start (Node.js 24)
 
-Přepni Git na větev feat/astro-frontend-modular-scaffold, přejdi do frontend/, spusť npm install a poté npm run dev. Astro poslouchá jen na 127.0.0.1:4321. Prohlížeč připoj přes VS Code Remote SSH port forwarding na port 4321. Vývojové změny se aktualizují přes HMR bez build.
+Přepni Git na větev feat/astro-frontend-modular-scaffold, přejdi do frontend/, spusť npm ci a poté npm run dev. Astro poslouchá jen na 127.0.0.1:4321. Prohlížeč připoj přes VS Code Remote SSH port forwarding na port 4321. Vývojové změny se aktualizují přes HMR bez build.
 
 Příkazy:
-- npm install – první instalace závislostí (vygeneruje package-lock.json, nutno commitnout před definitivním merge)
+- npm ci – reprodukovatelná instalace z commitnutého package-lock.json
 - npm run dev – vývojový server na 127.0.0.1:4321
 - npm run check – typová kontrola
 - npm test – doménové testy
@@ -33,4 +33,4 @@ Modul senzorů zatím nezobrazuje vymyšlená metadata; /senzory je pouze výslo
 
 ## Co tato verze neslibuje
 
-Nemá živé SSE, QC integraci fyzických senzorů, ECharts agregace, archiv kamery, produkční CI/CD release, reálnou databázi ani hotový dlouhodobý frontend. Následující PR doplní lockfile, generování DTO z OpenAPI, ECharts graf a E2E.
+Nemá živé SSE, QC integraci fyzických senzorů, ECharts agregace, archiv kamery, produkční CI/CD release, reálnou databázi ani hotový dlouhodobý frontend. Následující PR doplní generování DTO z OpenAPI, ECharts graf a E2E.
