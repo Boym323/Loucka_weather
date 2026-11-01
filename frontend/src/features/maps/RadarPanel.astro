@@ -80,7 +80,16 @@ const { compact = false } = Astro.props;
   if(map)resizeObserver.observe(map);
   scaleToContainer();
   let host='',frames:Frame[]=[],i=0,interval:number|undefined;
-  let isStale=false;
+  let isStale=false,radarVisible=true;
+  const visibility=(event:Event)=>{
+   const detail=(event as CustomEvent<{visible:boolean}>).detail;
+   radarVisible=detail?.visible!==false;
+   if(image&&!image.hidden||!radarVisible)image.hidden=!radarVisible;
+   if(message&&!radarVisible){message.hidden=false;message.textContent='Radarová vrstva je vypnutá – podkladová mapa zůstává viditelná.';}
+   else if(message&&image.complete&&image.naturalWidth)message.hidden=true;
+   if(status&&frames.length)status.textContent=radarVisible?(isStale?'Zastaralý radarový snímek':'Radar dostupný'):'Radarová vrstva skrytá';
+  };
+  window.addEventListener('loucka:radar-visibility',visibility);
   const stop=()=>{if(interval!==undefined){window.clearInterval(interval);interval=undefined;}if(play)play.textContent='▶ Přehrát';};
   const render=()=>{
    const frame=frames[i];if(!frame)return;
@@ -90,8 +99,8 @@ const { compact = false } = Astro.props;
    if(!/^\/v2\/radar\/[a-f0-9]{8,64}$/.test(path))return;
    image.hidden=true;
    image.onload=()=>{
-    image.hidden=false;
-    if(message)message.hidden=true;
+    image.hidden=!radarVisible;
+    if(message)message.hidden=radarVisible;
     if(status){
      status.textContent=isStale?'Zastaralý radarový snímek':'Radar dostupný';
      status.classList.add(isStale?'warning':'ok');
@@ -127,6 +136,9 @@ const { compact = false } = Astro.props;
   prev?.addEventListener('click',()=>{if(!frames.length)return;stop();i=(i-1+frames.length)%frames.length;render();});
   next?.addEventListener('click',()=>{if(!frames.length)return;stop();i=(i+1)%frames.length;render();});
   play?.addEventListener('click',()=>{if(!frames.length)return;if(interval!==undefined){stop();return;}if(play)play.textContent='Ⅱ Pozastavit';interval=window.setInterval(()=>{i=(i+1)%frames.length;render();},1500);});
-  document.addEventListener('astro:before-swap',()=>{controller.abort();stop();resizeObserver.disconnect();},{once:true});
+  document.addEventListener('astro:before-swap',()=>{
+   controller.abort();stop();resizeObserver.disconnect();
+   window.removeEventListener('loucka:radar-visibility',visibility);
+  },{once:true});
  });
 </script>
