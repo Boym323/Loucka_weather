@@ -35,7 +35,7 @@ const quickReadings = [
  import { getCurrent } from '../../shared/api/client';
  import { formatValue, metrics } from '../../shared/domain/metrics';
  import { formatTimestamp } from '../../shared/domain/weather';
- const section=document.querySelector<HTMLElement>('[data-current-panel]');
+ const section=document.querySelector<HTMLElement>('[data-current-panel]')!;
  const status=section?.querySelector<HTMLElement>('[data-current-status]');
  const updated=section?.querySelector<HTMLElement>('[data-current-updated]');
  const controller=new AbortController();
