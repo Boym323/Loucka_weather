@@ -1,5 +1,7 @@
 import {createHash,randomUUID} from 'node:crypto';
 import type {ArchiveReader,ArchiveRow} from './store.js';
+import {gatewayReadings,LIVE_TTL_MS} from './gateway.js';
+import type {GatewaySnapshot} from './gateway.js';
 
 type EventMessage={schemaVersion:'1';eventId:string;eventType:string;emittedAt:string;[key:string]:unknown};
 type ArchiveChange='appended'|'backfilled'|'revised'|'deleted';
@@ -13,6 +15,29 @@ export class LiveHub{
  private readonly subscribers=new Set<(event:EventMessage)=>void>();
  private revision='archive-uninitialized';
  private observation:ArchiveRow|null=null;
+ private gatewayEnabled=false;
+ private gatewaySnapshot:GatewaySnapshot|null=null;
+ enableGateway(){this.gatewayEnabled=true;}
+ get gatewayConfigured(){return this.gatewayEnabled;}
+ gatewayStatus(nowMs=Date.now()):'disabled'|'missing'|'fresh'|'stale'{
+  if(!this.gatewayEnabled)return 'disabled';
+  if(!this.gatewaySnapshot)return 'missing';
+  return nowMs-Date.parse(this.gatewaySnapshot.receivedAt)<=LIVE_TTL_MS?'fresh':'stale';
+ }
+ get gatewayLastReceivedAt():string|null{return this.gatewaySnapshot?.receivedAt??null;}
+ getGateway(nowMs=Date.now()):GatewaySnapshot|null{
+  return this.gatewayStatus(nowMs)==='fresh'?this.gatewaySnapshot:null;
+ }
+ publishGateway(snapshot:GatewaySnapshot){
+  if(!this.gatewayEnabled)return;
+  this.gatewaySnapshot=snapshot;
+  const event:EventMessage={schemaVersion:'1',eventId:`${this.session}-gw3000-${++this.sequence}`,
+   eventType:'observation',emittedAt:new Date().toISOString(),
+   observedAt:snapshot.observedAt,receivedAt:snapshot.receivedAt,state:'live',
+   units:'metricwx',source:'gw3000_live',readings:gatewayReadings(snapshot)};
+  this.history.push(event);if(this.history.length>256)this.history.shift();
+  for(const subscriber of this.subscribers)subscriber(event);
+ }
  get dataRevision():string{return this.revision;}
  get latestObservation():ArchiveRow|null{return this.observation;}
  get subscriberCount():number{return this.subscribers.size;}
