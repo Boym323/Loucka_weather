@@ -3,37 +3,43 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import CurrentPanel from '../features/current/CurrentPanel.astro';
 import HistoryChart from '../features/history/HistoryChart.astro';
 import OverviewReadings from '../features/current/OverviewReadings.astro';
+import ForecastPanel from '../features/forecast/ForecastPanel.astro';
+import RadarPanel from '../features/maps/RadarPanel.astro';
 ---
-<BaseLayout title="Přehled" description="Aktuální meteorologická měření a historické grafy Počasí Loučka.">
- <section class="site-banner" aria-label="Ilustrační krajina při západu slunce">
-  <div class="banner-copy"><strong>Počasí Loučka</strong><span>Lokální měření a přehled skutečných dat</span></div>
-  <small class="illustration-label">Ilustrační grafika · nejde o snímek webkamery</small>
+<BaseLayout title="Přehled" description="Počasí Loučka: skutečná data meteostanice, aktuální předpověď, grafy, webkamera a radar.">
+ <section class="site-banner" aria-label="Ilustrační krajina v podvečerním světle">
+  <div class="banner-copy"><strong>Počasí Loučka</strong><span>Aktuální měření · lokální meteostanice ve Zlínském kraji</span></div>
+  <small class="illustration-label">Ilustrace okolní krajiny</small>
  </section>
  <div class="dashboard-top">
-  <CurrentPanel variant="dashboard" />
-  <aside class="sidebar-stack" aria-label="Doplňkové meteorologické informace">
-   <section class="section">
-    <div class="section-heading"><div class="panel-title"><span class="panel-mark" aria-hidden="true">◷</span> Předpověď pro Loučku</div><span class="status-chip">Nenapojeno</span></div>
-    <div class="note-panel"><strong>Předpověď připravujeme</strong><p>Zdroj předpovědi a jeho licence zatím nebyly ověřeny. Nezobrazujeme modelové hodnoty jako naměřené počasí.</p></div>
-   </section>
-   <section class="section warning-section">
-    <div class="note-panel warning-panel"><div class="panel-title"><span aria-hidden="true">⚠</span> Výstrahy ČHMÚ – stav neověřen</div><p>Bez připojeného aktuálního zdroje nemůžeme potvrdit ani vyloučit platné výstrahy.</p></div>
-    
-   </section>
-   <OverviewReadings />
+  <div class="dashboard-primary">
+   <CurrentPanel variant="dashboard" />
+   <div class="home-quick-links" aria-label="Další údaje">
+    <a href="/aktualne/"><span aria-hidden="true">◉</span> Podrobné aktuální údaje <span aria-hidden="true">↗</span></a>
+    <a href="/grafy/"><span aria-hidden="true">⌁</span> Historie a grafy <span aria-hidden="true">↗</span></a>
+    <a href="/senzory/"><span aria-hidden="true">▥</span> Senzory <span aria-hidden="true">↗</span></a>
+   </div>
+  </div>
+  <aside class="sidebar-stack" aria-label="Předpověď a doplňková meteorologická data">
+   <ForecastPanel compact />
+   <div class="dashboard-side-notes">
+    <section class="note-panel warning-panel" aria-label="Výstrahy ČHMÚ">
+     <div class="panel-title"><span aria-hidden="true">⚠</span> Výstrahy ČHMÚ <span class="status-chip">Stav neověřen</span></div>
+     <p>Bez napojení oficiálního zdroje nemůžeme potvrdit ani vyloučit platné výstrahy.</p>
+    </section>
+    <OverviewReadings />
+   </div>
   </aside>
  </div>
  <div class="dashboard-bottom">
   <HistoryChart compact />
-  <section class="section">
-   <div class="section-heading"><div class="panel-title"><span class="panel-mark" aria-hidden="true">▣</span> Webkamera Loučka</div><a class="panel-link" href="/kamera/">Detail ↗</a></div>
-   <a class="camera-image" href="/kamera/"><img src="https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg" alt="Pohled webkamery na Loučku západním směrem" loading="lazy" /></a>
-   <div class="preview-footer"><span class="source-note">Aktuální snímek · čas pořízení není ověřen</span><a class="panel-link" href="/kamera/">Archiv kamery ↗</a></div>
+  <section class="section camera-preview-panel">
+   <div class="section-heading"><div class="panel-title"><span class="panel-mark" aria-hidden="true">▣</span> Webkamera Loučka – západ</div><a class="panel-link" href="/kamera/">Kamera ↗</a></div>
+   <a class="camera-image home-camera-image" href="/kamera/" aria-label="Otevřít aktuální snímek kamery">
+    <img src="https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg" alt="Webkamera Loučka směrem na západ" loading="lazy" />
+   </a>
+   <div class="preview-footer"><span class="source-note">Snímek z kamery · čas pořízení nebyl ověřen</span><a class="panel-link" href="/kamera/">Zobrazit detail ↗</a></div>
   </section>
-  <section class="section">
-   <div class="section-heading"><div class="panel-title"><span class="panel-mark" aria-hidden="true">◉</span> Srážky – radar ČHMÚ</div><a class="panel-link" href="/mapy/">Mapy ↗</a></div>
-   <div class="preview-visual"><span class="preview-icon" aria-hidden="true">⌖</span><strong>Radarová data zatím nejsou připojena</strong><span>Neověřený zdroj nevykreslujeme jako aktuální radar.</span></div>
-   <div class="preview-footer"><span class="source-note">Zdroj a licence k prověření</span><a class="panel-link" href="/mapy/">Meteorologické mapy ↗</a></div>
-  </section>
+  <RadarPanel compact />
  </div>
 </BaseLayout>

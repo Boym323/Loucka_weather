@@ -1,7 +1,19 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import SensorChannels from '../features/sensors/SensorChannels.astro';
 ---
 <BaseLayout title="Senzory">
- <div class="page-intro"><span class="eyebrow">GW3000 · diagnostika</span><h1>Senzory a dostupnost</h1><p>Stav jednotlivých čidel, baterií, dostupnost a ověřené vazby na meteorologická měření.</p></div>
- <section class="section"><div class="section-heading"><h2>Registr senzorů</h2><span class="status-chip">Mapování neověřeno</span></div><div class="empty-state">Přesné typy, umístění, hloubky a RSSI zatím nebyly publikovány jako ověřené záznamy. Nepřidáváme simulované stavy připojení či baterií.</div></section>
+ <div class="page-intro"><span class="eyebrow">Senzory · meteo archiv · diagnostika</span><h1>Senzory a diagnostika</h1><p>Archivované údaje z meteostanice, jejich dostupnost a kontrola kvality posledního měření.</p></div>
+ <SensorChannels />
+ <div class="sensor-foot-grid">
+  <section class="section">
+   <div class="section-heading"><h2>Signál a baterie</h2><span class="status-chip">Údaje zatím nedostupné</span></div>
+   <div class="sensor-diagnostic-placeholder"><span aria-hidden="true">▮▮▮▯</span><strong>Telemetrie GW3000</strong><p>RSSI, stav baterií a typy jednotlivých senzorů zpřístupníme až po ověřeném napojení telemetrického API.</p></div>
+  </section>
+  <section class="section">
+   <div class="section-heading"><h2>Poslední diagnostická události</h2><span class="status-chip">Nepřipojeno</span></div>
+   <p class="lead">Samostatný diagnostický protokol stanice není součástí aktuálního archivu WeeWX. Nezobrazujeme smyšlená upozornění nebo historii výpadků.</p>
+   <p class="source-note">Podklad pro budoucí modul monitoringu GW3000.</p>
+  </section>
+ </div>
 </BaseLayout>

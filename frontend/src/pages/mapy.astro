@@ -1,7 +1,14 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import RadarPanel from '../features/maps/RadarPanel.astro';
 ---
-<BaseLayout title="Mapy">
- <div class="page-intro"><span class="eyebrow">Radar · oblačnost · meteorologické vrstvy</span><h1>Meteorologické mapy</h1><p>Mapové podklady připojíme po ověření jejich podmínek používání, časových údajů a dostupnosti API.</p></div>
- <section class="section"><div class="section-heading"><h2>Srážkový radar</h2><span class="status-chip">Nenapojeno</span></div><div class="preview-visual"><span class="preview-icon" aria-hidden="true">⌖</span><strong>Aktuální radar není dostupný</strong><span>Bez časově ověřeného zdroje nezobrazujeme neaktuální mapový snímek.</span></div></section>
+<BaseLayout title="Meteorologické mapy" description="Meteorologická mapa Loučky a okolí, radarové snímky s časovou osou.">
+ <div class="page-intro"><span class="eyebrow">Meteorologické mapy a radar</span><h1>Meteorologické mapy</h1><p>Radarová historie nad mapou Loučky. Ostatní meteorologické vrstvy připojíme postupně, až bude ověřen jejich zdroj.</p></div>
+ <div class="map-tabs" aria-label="Dostupné mapové vrstvy"><span class="chart-tab is-active">Radarové srážky</span><span class="chart-tab muted">Satelit – nepřipojeno</span><span class="chart-tab muted">Blesky – nepřipojeno</span><span class="chart-tab muted">Teplota – nepřipojeno</span></div>
+ <RadarPanel />
+ <section class="section" style="margin-top:14px">
+  <div class="section-heading"><h2>O radarových údajích</h2><span class="status-chip">Externí zdroj</span></div>
+  <p class="lead">Snímky pocházejí ze služby RainViewer a představují historická radarová pozorování, nikoliv předpověď ani přímo data ČHMÚ. Poloha Loučky je na mapě vyznačena orientačně. Pokud zdroj snímky neposkytne, zobrazí se pouze podkladová mapa a informace o výpadku.</p>
+  <p class="source-note">Mapové podklady © OpenStreetMap contributors. Radar © RainViewer – použití pro osobní a komunitní projekty.</p>
+ </section>
 </BaseLayout>
