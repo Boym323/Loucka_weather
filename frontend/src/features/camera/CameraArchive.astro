@@ -87,7 +87,7 @@
    const total=Math.ceil(dayFrames.length/perPage);
    const current=dayFrames.slice(activePage*perPage,(activePage+1)*perPage);
    for(const frame of current){
-    if(!/^\\/api\\/v1\\/camera\\/frames\\/\\d{8}T\\d{6}Z\\.jpg$/.test(frame.url))continue;
+    if(!/^\/api\/v1\/camera\/frames\/\d{8}T\d{6}Z\.jpg$/.test(frame.url))continue;
     const a=document.createElement('a');a.href=frame.url;a.className='camera-archive-thumb';
     a.rel='noopener noreferrer';a.target='_blank';
     const img=document.createElement('img');img.src=frame.url;img.alt='Archivní snímek západní kamery';img.loading='lazy';
@@ -102,7 +102,7 @@
   async function loadDay(){
    if(!dateInput||!dayContainer||ctrl.signal.aborted)return;
    const date=dateInput.value;
-   if(!/^20\\d{2}-\\d{2}-\\d{2}$/.test(date))return;
+   if(!/^20\d{2}-\d{2}-\d{2}$/.test(date))return;
    if(dayStatus)dayStatus.textContent='Načítám uložené snímky…';
    try{
     const response=await fetch('/api/v1/camera/archive/day/'+date,{signal:ctrl.signal});
