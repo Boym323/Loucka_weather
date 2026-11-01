@@ -1,0 +1,59 @@
+name: Fastify API staging vertical slice
+on:
+  pull_request:
+    paths: ['api/**','.github/workflows/api-staging.yml']
+  push:
+    paths: ['api/**','.github/workflows/api-staging.yml']
+permissions:
+  contents: read
+jobs:
+  typecheck-and-inject:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24' }
+      - name: Check generated metric catalogue matches authoritative JSON
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          source=json.loads(Path('schemas/metrics.json').read_text())['columns']
+          expected={k: {'group':v['unitGroup'],'outputs':v['outputUnits'],
+                        'sources':v['sourceUnitsByWeeWX']}
+                    for k,v in source.items() if v['public']}
+          js=Path('api/src/metrics.ts').read_text()
+          raw=js.split('export const metrics=',1)[1].split(' as const;',1)[0]
+          assert json.loads(raw)==expected, 'Generated metrics.ts differs from schemas/metrics.json'
+          print('45 public metric conversions match catalog')
+          PY
+      - run: npm ci --no-audit --no-fund
+        working-directory: api
+      - run: npm test
+        working-directory: api
+
+  isolated-mariadb:
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:11.8
+        env:
+          MARIADB_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "healthcheck.sh --connect --innodb_initialized"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24' }
+      - run: npm ci --no-audit --no-fund
+        working-directory: api
+      - name: Validate SELECT-only queries on ephemeral MariaDB (not production)
+        run: npm test
+        working-directory: api
+        env:
+          WEATHER_TEST_LOCAL_FIXTURE: 'YES'
