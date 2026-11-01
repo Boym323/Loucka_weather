@@ -22,6 +22,10 @@ jobs:
           bash -n deploy/lxc/loucka-preview-api-activate.sh
           grep -Fqx 'ExecStart=/usr/bin/node dist/src/main.js' deploy/lxc/loucka-weather-api.service
           grep -Fqx 'ExecStartPost=+/usr/local/libexec/loucka-preview-api-activate.sh' deploy/lxc/loucka-preview-sync.service
+      - name: Validate collector and local CAP scope tests
+        run: |
+          python3 -m py_compile deploy/lxc/loucka-data-collector.py
+          python3 -m unittest discover -s deploy/lxc/tests -p 'test_*.py'
       - name: Validate Nginx syntax
         run: |
           sudo apt-get update -qq
