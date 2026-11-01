@@ -29,7 +29,7 @@ function responseEtag(body:unknown):string {
  return '"'+createHash('sha256').update(JSON.stringify(body)).digest('hex')+'"';
 }
 export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date()){
- const app=Fastify({logger:false});
+ const app=Fastify({logger:false,ajv:{customOptions:{removeAdditional:false,coerceTypes:false}}});
  const errorBody=(code:string,message:string,requestId:string)=>({
   schemaVersion:'1',error:{code,message,requestId}
  });

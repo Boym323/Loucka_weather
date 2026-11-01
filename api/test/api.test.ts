@@ -108,11 +108,11 @@ test('bounded history raw retains interval ends, actual null and explicit gaps',
  assert.equal(body.resolution,'raw');
  assert.equal(body.aggregation,'sample');
  assert.equal(body.truncated,false);
- assert.equal(body.points.length,4);
- assert.equal(body.points[1].quality,'missing');
- assert.equal(body.points[1].source,'derived');
- assert.equal(body.points[2].value,null);
- assert.equal(body.points[3].value,10);
+ assert.equal(body.points.length,5);
+ assert.equal(body.points[0].quality,'missing');
+ assert.equal(body.points[0].source,'derived');
+ assert.equal(body.points[3].value,null);
+ assert.equal(body.points[4].value,10);
  assert.equal(body.completeness.valid,2);
  assert.equal(body.completeness.expected,null);
 });
