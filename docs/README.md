@@ -4,6 +4,7 @@
 
 ## Audity a rozhodnutí
 - [ADR 001 – pracovní volba Astro/TypeScript/Node.js Fastify](ARCHITECTURE_DECISION_2026-10-31.md)
+- [Audit funkcí nového webu, webkamery, radaru, senzorů a výstrah](FRONTEND_FEATURES_CAMERA_AUDIT_2026-10-31.md)
 - [Návrh vyměnitelného API – OpenAPI kontrakt, provoz vedle Astro, testy a migrace](API_ARCHITECTURE_AND_MIGRATION_2026-10-31.md)
 - [Nginx Proxy Manager – 54 966 HTTP událostí a špičky](TRAFFIC_AUDIT_2026-10-31.md)
 - [Matomo – návštěvnost říjen 2026 a trend](MATOMO_AUDIT_2026-10-31.md)
