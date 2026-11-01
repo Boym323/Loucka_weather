@@ -38,10 +38,23 @@ S Chromium Playwright kontroluje všech osm URL na desktopu a mobilu, HTTP 200, 
 
 API v1 v repozitáři nyní implementuje `/current`, raw/hodinovou/denní `/history` s `resolution=auto`, denní/měsíční/roční statistiky a archivní SSE refresh. Denní SQL mapování bylo ověřeno SELECT-only proti připojené WeeWX databázi; API zatím není nasazené. Frontend klimatologii ještě na tyto endpointy nenapojuje. [Produktový kontrakt](../docs/API_V1_PRODUCT_CONTRACT.md) popisuje implementaci i otevřené provozní požadavky; metodika souhrnů a jejich meze jsou v [auditu](../WEEWX_DAILY_SUMMARIES_AUDIT.md).
 
+
+
+## Stav integrace po rozšíření API (1. 11. 2026)
+
+- **Klimatologie:** /klimatologie/ čte skutečné /api/v1/statistics/yearly a /monthly. Tabulka ročních souhrnů, průměrné měsíční teploty, srážky, vítr a výběr roku jsou napojené na API; dostupnost výsledků závisí na produkčních denních tabulkách archive_day_* a jejich SELECT oprávněních. Historické extrémy zůstávají před QC jen orientační. Neúplné údaje se nikdy nevymýšlejí.
+- **Grafy:** /grafy/ nabízí vlastní kalendářní rozsah, dvě veličiny na oddělených osách, časový zoom a CSV export skutečných bodů. Rozlišení raw/hourly/daily se vybírá podle rozsahu, hranice dnů jsou Europe/Prague včetně DST.
+- **Aktuálně:** na úvodu i detailu dnešní minimum/maximum teploty a dnešní srážky z denního statistického API; SSE reaguje na skutečné změny archivu (nikoliv sekundové LOOP živé vysílání).
+- **Senzory:** inventář /api/v1/sensors je oddělen od archivních kanálů /current; API dosud publikuje prázdný fyzický seznam, takže polohu, hloubky, baterie a RSSI nelze bez důkazů uvádět.
+- **Kamera:** frontend čte /api/v1/camera/status, avšak aktuální API vrací disabled; externí západní JPEG je dostupný samostatně. Archiv snímků, časosběr a ověřený čas pořízení zatím nejsou implementované v datovém zdroji.
+- **Neexistující zdroje:** sluneční svit v hodinách není totéž jako sluneční záření ve W/m²; sníh a oficiální výstrahy ČHMÚ nejsou dostupné v současném kontraktu a web je neprezentuje jako naměřené.
+- **Testy:** CI používá npm ci, astro check, unit testy, build a prohlížečový Playwright smoke všech 8 veřejných stránek; ten nyní diagnostikuje i roční statistiku. Automatický LXC deploy ukazuje faktický commit v /deployment.json.
+- **Bez zápisu do produkční DB:** web i API jsou read-only, případná rekonstrukce historických dat má vlastní oddělený postup.
+
 ## Důležitá otevřená práce
 
-- **Napojení klimatologie:** API již nabízí denní, měsíční a roční statistiky a hodinovou/denní historii; frontend je zatím nezobrazuje. Pro veřejné nasazení zůstává nutné dokončit provozní ověření API a implementovat klimatologický UI klient.
-- **Více současných veličin a libovolný rozsah grafů:** návrh je širší než současné přepínání 6/24/72 hodin.
+- **Provoz klimatologie:** UI je napojené; zbývá potvrdit nasazení agregovaného API v LXC, existence a SELECT granty tabulek archive_day_* a úplnost/QC historických dat.
+- **Víceřadé grafy:** dvě veličiny, datum a CSV nyní fungují; dlouhé souvislé období 2009–2026 zatím vyžaduje postupné stránkování dat.
 - **Senzorová diagnostika:** ověřit fyzické mapování, instalaci, údaje o bateriích, RSSI a čas výpadků.
 - **Kamera:** nezávislý čas snímku, archiv, časosběr.
 - **Výstrahy ČHMÚ a další mapové vrstvy:** přímé zdroje a jejich podmínky nejsou zatím zprovozněny. Neprezentujeme stav výstrah jako nulový bez ověření.

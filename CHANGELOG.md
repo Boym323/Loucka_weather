@@ -3,6 +3,17 @@
 Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místním kalendáři; commit v `main` automaticky neznamená, že je už nasazen na testovacím webu.
 
 ## 2026-11-01
+
+### Frontend integrace rozšířeného API
+- Klimatologie: roční a měsíční statistiky WeeWX, grafy ECharts, roční filtr a původní denní extrémy s upozorněním na neuzavřenou QC.
+- Historie: libovolný interval do dvou let, porovnání dvou veličin, časový zoom a CSV skutečně vrácených bodů.
+- Úvodní a aktuální stránka: statistické denní extrémy a srážky, archivní SSE auto-refresh.
+- Senzory: propojení s auditovaným fyzickým inventářem /sensors, archivní kanály bez domyšleného fyzického mapování.
+- Kamera: ověřování stavu proti /camera/status, při disabled žádné falešné datum nebo LIVE.
+- Testovací web: Playwright kontroluje aktuální veřejný release a validuje i roční statistický endpoint.
+- Trvají nezávislé zdrojové blokery: archiv a timestamp kamery, RSSI/baterie, sníh/sluneční svit a oficiální ČHMÚ výstrahy.
+
+
 - Set station, sensor-catalog, and camera-status update timestamps when the API process starts, keeping metadata ETags stable between requests.
 - Marked computed period statistics as derived and included the WeeWX daily aggregation in provenance.
 - Made API CI run when the authoritative metric catalog changes.
