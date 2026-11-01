@@ -4,8 +4,11 @@
 
 ## Audity a rozhodnutí
 - [ADR 001 – pracovní volba Astro/TypeScript/Node.js Fastify](ARCHITECTURE_DECISION_2026-10-31.md)
+- [Audit funkcí nového webu, webkamery, radaru, senzorů a výstrah](FRONTEND_FEATURES_CAMERA_AUDIT_2026-10-31.md)
 - [Návrh vyměnitelného API – OpenAPI kontrakt, provoz vedle Astro, testy a migrace](API_ARCHITECTURE_AND_MIGRATION_2026-10-31.md)
 - [OpenAPI v1 – audit sloupců, JSON schémata a testy parity](API_CONTRACT_AUDIT_2026-10-31.md)
+- [API v1 – produktový kontrakt, meteorologické výpočty a provoz](API_V1_PRODUCT_CONTRACT.md)
+- [Detekce 5min archivu a SSE archive-updated](ARCHIVE_REFRESH_CONTRACT.md)
 - [Nginx Proxy Manager – 54 966 HTTP událostí a špičky](TRAFFIC_AUDIT_2026-10-31.md)
 - [Matomo – návštěvnost říjen 2026 a trend](MATOMO_AUDIT_2026-10-31.md)
 - [Benchmarky Go, Rust, Python, Node.js, C++ a PHP](BENCHMARK_SYNTHESIS_2026-10-31.md)
@@ -20,7 +23,3 @@
 - [Draft PR #2](https://github.com/Boym323/Loucka_weather/pull/2)
 
 **Pravidlo:** Nezveřejňovat raw HTTP logy, IP adresy ani tajné údaje. Neměnit originální meteorologickou databázi. Nespouštět plné zátěžové benchmarky na produkční DB.
-
-- [API v1 – produktový kontrakt, meteorologické výpočty, provoz a otevřená rozhodnutí](API_V1_PRODUCT_CONTRACT.md)
-
-- [Detekce nového archivního záznamu a SSE archive-updated](ARCHIVE_REFRESH_CONTRACT.md) – aktualizace grafů, souhrnů a obnova po výpadku (návrh).

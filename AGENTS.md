@@ -2,11 +2,10 @@
 
 ## Povinný start pro každého nového agenta
 1. Přečti [docs/PROJECT_CONTEXT.md](docs/PROJECT_CONTEXT.md).
-2. Přečti [docs/API_CONTRACT_AUDIT_2026-10-31.md](docs/API_CONTRACT_AUDIT_2026-10-31.md) a formální návrh [openapi.yaml](openapi.yaml), [schemas/weather.schema.json](schemas/weather.schema.json), [schemas/metrics.json](schemas/metrics.json) (API v1 je zatím jen návrh, benchmarkové servery nejsou kompatibilní).
-3. Přečti [docs/ARCHITECTURE_DECISION_2026-10-31.md](docs/ARCHITECTURE_DECISION_2026-10-31.md), [docs/API_ARCHITECTURE_AND_MIGRATION_2026-10-31.md](docs/API_ARCHITECTURE_AND_MIGRATION_2026-10-31.md), [docs/TRAFFIC_AUDIT_2026-10-31.md](docs/TRAFFIC_AUDIT_2026-10-31.md), [docs/MATOMO_AUDIT_2026-10-31.md](docs/MATOMO_AUDIT_2026-10-31.md) a [docs/BENCHMARK_SYNTHESIS_2026-10-31.md](docs/BENCHMARK_SYNTHESIS_2026-10-31.md).
-4. Strojově čitelná data: [docs/data/observations_2026-10-31.json](docs/data/observations_2026-10-31.json), [docs/data/traffic_daily_2026-09-27_2026-10-31.csv](docs/data/traffic_daily_2026-09-27_2026-10-31.csv).
-5. Benchmark kód je v samostatné větvi `bench/go-rust-python`, návrh [PR #2](https://github.com/Boym323/Loucka_weather/pull/2) **je draft**; nikdy netvrď, že byl merge do main nebo že nový web už běží.
-6. Rozlišuj zdrojově ověřené hodnoty, orientační heuristiky, syntetická měření a návrhy. Nikdy netvrď, že benchmark numeriky použil skutečné meteo archive, ani že plné HTTP benchmarky byly na izolované DB.
+2. Přečti [docs/ARCHITECTURE_DECISION_2026-10-31.md](docs/ARCHITECTURE_DECISION_2026-10-31.md), [docs/API_ARCHITECTURE_AND_MIGRATION_2026-10-31.md](docs/API_ARCHITECTURE_AND_MIGRATION_2026-10-31.md), [docs/TRAFFIC_AUDIT_2026-10-31.md](docs/TRAFFIC_AUDIT_2026-10-31.md), [docs/MATOMO_AUDIT_2026-10-31.md](docs/MATOMO_AUDIT_2026-10-31.md) a [docs/BENCHMARK_SYNTHESIS_2026-10-31.md](docs/BENCHMARK_SYNTHESIS_2026-10-31.md).
+3. Strojově čitelná data: [docs/data/observations_2026-10-31.json](docs/data/observations_2026-10-31.json), [docs/data/traffic_daily_2026-09-27_2026-10-31.csv](docs/data/traffic_daily_2026-09-27_2026-10-31.csv).
+4. Benchmark kód je v samostatné větvi `bench/go-rust-python`, návrh [PR #2](https://github.com/Boym323/Loucka_weather/pull/2) **je draft**; nikdy netvrď, že byl merge do main nebo že nový web už běží.
+5. Rozlišuj zdrojově ověřené hodnoty, orientační heuristiky, syntetická měření a návrhy. Nikdy netvrď, že benchmark numeriky použil skutečné meteo archive, ani že plné HTTP benchmarky byly na izolované DB.
 
 ## Nepřekročitelné meze
 - **WeeWX + Belchertown, MariaDB a produkční měření musí zůstat funkční.** Původní `pocasi-loucka.eu.archive` měnit nesmíš. Pro aplikaci je read-only. Správa opravených hodnot patří do `loucka_reconstruction` přes výslovně schválený, auditovatelný proces.
@@ -24,7 +23,12 @@
 - Pokud se objeví rozpor mezi existujícími reporty a měřením, zaznamenej ho výslovně, nic potichu nepřepisuj.
 - Když uživatel žádá postup pro nový chat, odkazuj na `main/docs/PROJECT_CONTEXT.md` a tento `AGENTS.md`, nevyžaduj opakování už zdokumentovaných informací.
 
+## Doplněné odborné podklady
+- K meteo statistice čti `STATISTICS_SPEC.md` a `WEEWX_DAILY_SUMMARIES_AUDIT.md`, k průběhu rozhodnutí `DECISIONS.md`.
+- Audit `BACKEND_TECHNOLOGY_AUDIT.md` z 30.10. historicky navrhoval Go. **Aktuální pracovní preference pro staging zůstává Fastify/TypeScript** podle `docs/ARCHITECTURE_DECISION_2026-10-31.md`; konečný runtime nebyl potvrzen.
 
+## API v1 – pracovní kontrakt (PR #4)
+- Před zahájením implementace API čti `openapi.yaml`, `schemas/weather.schema.json`, `schemas/features.schema.json`, `schemas/metrics.json`, `schemas/aggregation-policy.json` a `docs/API_V1_PRODUCT_CONTRACT.md` (zatím dokumentační kontrakt).
 ## Pravidlo pro jednotky nového API v1 (návrh, PR #4)
 - Zdrojové `usUnits` čti **z každého záznamu**; podporuj pouze 1 (US), 16 (METRIC), 17 (METRICWX), neznámé odmítni, nic nehádaj.
 - Query `units=us|metric|metricwx` vybírá **výstupní** jednotky (default metricwx); zdrojový `usUnits` se tím nemění.
