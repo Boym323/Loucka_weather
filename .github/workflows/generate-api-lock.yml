@@ -1,0 +1,30 @@
+name: One-time API lockfile generation
+on:
+  push:
+    branches: [feat/fastify-api-v1-staging-vertical-slice]
+    paths: ['.github/workflows/generate-api-lock.yml']
+permissions:
+  contents: write
+jobs:
+  generate-lock:
+    if: github.repository == 'Boym323/Loucka_weather'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/fastify-api-v1-staging-vertical-slice
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Generate audited lockfile without running package scripts
+        working-directory: api
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Commit lockfile only to current draft branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add api/package-lock.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'build(api): pin resolved npm dependencies'
+          git push origin HEAD:feat/fastify-api-v1-staging-vertical-slice
