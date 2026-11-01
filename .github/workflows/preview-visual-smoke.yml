@@ -1,6 +1,11 @@
 name: Public dev website visual smoke
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "frontend/scripts/preview-visual-check.mjs"
+      - ".github/workflows/preview-visual-smoke.yml"
   schedule:
     - cron: "23 8 * * *"
 permissions:
