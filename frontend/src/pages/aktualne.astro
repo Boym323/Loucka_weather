@@ -1,9 +1,13 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CurrentPanel from '../features/current/CurrentPanel.astro';
+import WindCompass from '../features/current/WindCompass.astro';
 ---
 <BaseLayout title="Aktuální údaje">
  <div class="page-intro"><span class="eyebrow">Živá stránka nad archivními daty</span><h1>Aktuální údaje</h1><p>Poslední archivované měření GW3000 / WeeWX. Nejde o sekundová live data.</p></div>
  <CurrentPanel />
- <section class="section"><h2>Další senzory a stav stanice</h2><p class="lead">Teplotní půdní sondy, baterie a diagnostiku přiřadíme až podle ověřeného registru fyzických senzorů. Zatím nelze z názvů databázových sloupců spolehlivě odvozovat umístění čidel.</p><a class="panel-link" href="/senzory/">Otevřít diagnostiku senzorů ↗</a></section>
+ <div class="card-row">
+  <WindCompass />
+  <section class="section"><span class="eyebrow">Diagnostika</span><h2>Další senzory</h2><p class="lead">Teplotní půdní sondy, baterie a diagnostiku přiřadíme až podle ověřeného registru fyzických senzorů. Z názvů databázových sloupců nelze spolehlivě odvozovat umístění čidel.</p><a class="panel-link" href="/senzory/">Otevřít diagnostiku senzorů ↗</a></section>
+ </div>
 </BaseLayout>

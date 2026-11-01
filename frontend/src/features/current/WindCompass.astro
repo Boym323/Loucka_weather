@@ -1,0 +1,38 @@
+<section class="section" data-wind-compass aria-labelledby="wind-compass-title">
+ <div class="section-heading"><div><span class="eyebrow">Směr větru</span><h2 id="wind-compass-title">Větrná růžice</h2></div><span class="status-chip" data-wind-status role="status">Načítám</span></div>
+ <div class="wind-layout">
+  <div class="wind-gauge" aria-label="Směr větru">
+   <span class="wind-north">S</span><span class="wind-east">V</span><span class="wind-south">J</span><span class="wind-west">Z</span>
+   <div class="wind-needle" data-wind-needle aria-hidden="true"></div>
+   <span class="wind-center"></span>
+  </div>
+  <div>
+   <p class="wind-degrees"><strong data-wind-degrees>—</strong><span> °</span></p>
+   <p class="source-note" data-wind-description>Čeká na ověřený archivní směr větru.</p>
+  </div>
+ </div>
+</section>
+<script>
+ import {getCurrent} from '../../shared/api/client';
+ const root=document.querySelector<HTMLElement>('[data-wind-compass]');
+ const status=root?.querySelector<HTMLElement>('[data-wind-status]');
+ const number=root?.querySelector<HTMLElement>('[data-wind-degrees]');
+ const needle=root?.querySelector<HTMLElement>('[data-wind-needle]');
+ const description=root?.querySelector<HTMLElement>('[data-wind-description]');
+ if(root)void getCurrent().then(response=>{
+  const reading=response.readings.windDir;
+  if(!reading||reading.value===null||reading.quality==='missing'||reading.quality==='suspect'||!Number.isFinite(reading.value)){
+   if(status)status.textContent='Nedostupné';
+   if(description)description.textContent='Směr větru nemá platné měření.';
+   return;
+  }
+  const deg=((reading.value%360)+360)%360;
+  if(number)number.textContent=new Intl.NumberFormat('cs-CZ',{maximumFractionDigits:0}).format(deg);
+  if(needle)needle.style.transform='translate(-50%,-50%) rotate('+deg+'deg)';
+  if(status){status.textContent=response.stale?'Zastaralé měření':'Archivní měření';status.classList.add(response.stale?'warning':'ok');}
+  if(description)description.textContent='Směr odkud vítr vane · naměřeno ve WeeWX';
+ }).catch(()=>{
+  if(status){status.textContent='API nedostupné';status.classList.add('error');}
+  if(description)description.textContent='Směr větru se nepodařilo načíst.';
+ });
+</script>

@@ -1,36 +1,53 @@
-# Počasí Loučka – modulární Astro frontend
+# Počasí Loučka – Astro frontend (vizuální staging PR #7)
 
-První nezávislá vývojová implementace. Nejde o produkční nasazení, žádné demo číslo se nepředstírá jako skutečné měření. Zdroj měření je výhradně samostatné API v1 podle OpenAPI v kořeni repozitáře.
+První spustitelná implementace schváleného devítidílného tmavého meteorologického dashboardu. **Není to veřejná produkce.** Astro 7.4.4, TypeScript 6.0.3, Apache ECharts 6.1.0, Node.js 24.
 
-## Lokální start (Node.js 24)
+## Spuštění na testovacím LXC
 
-Přepni Git na větev feat/astro-frontend-modular-scaffold, přejdi do frontend/, spusť npm ci a poté npm run dev. Astro poslouchá jen na 127.0.0.1:4321. Prohlížeč připoj přes VS Code Remote SSH port forwarding na port 4321. Vývojové změny se aktualizují přes HMR bez build.
+Jako uživatel \`loucka\`:
+\`\`\`bash
+cd ~/Loucka_weather
+git fetch origin
+git switch feat/astro-frontend-modular-scaffold
+git pull --ff-only
+cd frontend
+npm ci
+npm run dev -- --host 0.0.0.0
+\`\`\`
+V prohlížeči v **důvěryhodné LAN**: \`http://192.168.0.131:4321/\`. Nezveřejňovat dev server do internetu. Standardní bind bez \`--host\` je pouze \`127.0.0.1\` a vyžaduje SSH port forwarding.
 
-Příkazy:
-- npm ci – reprodukovatelná instalace z commitnutého package-lock.json
-- npm run dev – vývojový server na 127.0.0.1:4321
-- npm run check – typová kontrola
-- npm test – doménové testy
-- npm run build – produkční statický výstup do dist/
+Hot Module Replacement (HMR) je aktivní. Vývojové změny jsou patrné po uložení bez buildu; produkční build se vytváří až pro release/CI.
 
-## API
+## Backend a data
 
-Development proxy /api/v1 -> http://127.0.0.1:3100 je nakonfigurovaná v astro.config.mjs. Backend PR #5 není součástí této větve ani main. Pokud neběží, stránka korektně píše, že data nejsou dostupná, a zobrazí prázdné hodnoty. Žádná přihlašovací hesla ani interní IP adresy nejsou v klientovi.
+Fastify API z PR #5 běží jako **samostatný** proces na \`127.0.0.1:3100\`, proxy ve \`astro.config.mjs\` přesměruje \`/api/v1\`. Při nedostupném API frontend zobrazuje výslovný stav offline a prázdné hodnoty. Browser se nepřipojuje k MariaDB, tajné klíče nikdy nejsou ve frontendu. Aktuální měření využívá \`/api/v1/current\`; ECharts a detailní tabulka čtou \`/api/v1/history\` s limity 6/24/72 hodin.
 
-Pro pozdější staging/prod: Nginx poskytuje statický dist/ a /api/v1 reverse-proxy na Fastify, oba na stejném původu. Frontend nemá přímé SQL spojení.
+Schéma meteorologických veličin a jednotek je v \`../schemas/metrics.json\` a \`../openapi.yaml\`. Tento první slice obsahuje pouze vybrané veřejné veličiny, v dalších krocích generujeme typy automaticky ze schématu.
 
-## Architektura
+## Funkce připravené vizuálně
 
-- src/pages/ – tenké Astro stránky
-- src/features/current – samostatné měření
-- src/features/history – samostatná tabulka historie, graf ECharts následuje po ověření
-- src/shared/api – jediný typed klient vůči /api/v1
-- src/shared/domain – model čtení metrik, čas a formátování
-- src/shared/ui – generické znovupoužitelné komponenty
-- src/styles – společné design tokeny
+- **/**: tmavý dashboard, hero grafika (označená ilustrace), aktuální hodnoty, skutečný archivní ECharts graf, transparentně nedostupné panely předpovědi/ČHMÚ/radaru/kamery.
+- **/aktualne/**: detailní měření a větrná růžice napojená na \`windDir\`.
+- **/grafy/**: interaktivní ECharts graf, přepínání teplota/vlhkost/tlak/vítr/intenzita srážek a 6/24/72 h, tabulka archivních bodů na vyžádání.
+- **/klimatologie/, /kamera/, /mapy/, /senzory/**: připravené responzivní obrazovky se správně označenými nedostupnými daty, **zatím bez skutečných zdrojů**.
+- **/o-stanici/**: informace o architektuře a meteo metodice.
+- **Mobilní menu, dark default, volitelný light theme** přes tlačítko v hlavičce.
 
-Modul senzorů zatím nezobrazuje vymyšlená metadata; /senzory je pouze výslovně označená stránka bez ověřeného registru. Produkce WeeWX/MariaDB/MCP není upravena.
+Grafy používají pouze uložené hodnoty, nedopočítávají imaginární body; \`null\` a \`suspect\` tvoří mezery. Časy jsou formátovány pro Europe/Prague. Minimální a maximální hodnoty v grafu jsou pouze za **vybraný klouzavý interval**, nikoliv automaticky kalendářní den.
 
-## Co tato verze neslibuje
+Kamera/radar/předpověď/ČHMÚ nejsou připojeny, protože jejich aktuální zdroj a licenci teprve ověříme. Ilustrační vektor v \`public/landscape.svg\` **není skutečný snímek Loučky**. Nezobrazujeme demo data jako reálná měření.
 
-Nemá živé SSE, QC integraci fyzických senzorů, ECharts agregace, archiv kamery, produkční CI/CD release, reálnou databázi ani hotový dlouhodobý frontend. Následující PR doplní generování DTO z OpenAPI, ECharts graf a E2E.
+## Testy
+
+\`\`\`bash
+npm ci
+npm run check
+npm test
+npm run build
+\`\`\`
+
+Před sloučením PR provést také reálnou prohlížečovou kontrolu na desktopu/mobilu a porovnání s uživatelským devítipanelovým vizuálním návrhem. CI zatím ověřuje typy, unit testy a statický build, nikoliv pixelovou shodu nebo přístupnost v browseru.
+
+## Další návaznosti
+
+Pro hloubkovou klimatologii jsou nutné kvalitní agregace (API PR #5 nyní vrací pro hourly/daily 422). Senzory vyžadují ověřené fyzické mapování. Kamera, radar, předpověď a výstrahy vyžadují schválení jednotlivých zdrojů. Produkční CI/CD release a automatický rollback na LXC ještě nejsou hotové.
