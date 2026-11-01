@@ -4,18 +4,41 @@ on:
     paths: ['api/**','.github/workflows/api-staging.yml']
   push:
     paths: ['api/**','.github/workflows/api-staging.yml']
+permissions:
+  contents: read
 jobs:
   typecheck-and-inject:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
+        with: { node-version: '24' }
       - run: npm install --no-audit --no-fund
         working-directory: api
       - run: npm test
         working-directory: api
-      - run: echo "No database access. Injection tests validate only four initial routes."
+  isolated-mariadb:
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:11.8
+        env:
+          MARIADB_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "healthcheck.sh --connect --innodb_initialized"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24' }
+      - run: npm install --no-audit --no-fund
+        working-directory: api
+      - name: Validate SELECT-only queries on ephemeral MariaDB (not production)
+        run: npm test
+        working-directory: api
+        env:
+          WEATHER_TEST_LOCAL_FIXTURE: 'YES'
