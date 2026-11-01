@@ -17,6 +17,13 @@ jobs:
         working-directory: api
       - run: npm test
         working-directory: api
+      - uses: actions/upload-artifact@v4
+        with:
+          name: staging-package-lock
+          path: api/package-lock.json
+          if-no-files-found: error
+          retention-days: 1
+
   isolated-mariadb:
     runs-on: ubuntu-latest
     services:
