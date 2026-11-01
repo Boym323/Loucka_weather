@@ -18,12 +18,15 @@ const channels=[
    <div class="sensor-head"><span aria-hidden="true">{item.symbol}</span><strong>{item.name}</strong></div>
    <p class="sensor-number"><span data-sensor-value={item.id}>—</span><small>{item.unit}</small></p>
    <span class="sensor-state" data-sensor-quality={item.id}>Čeká na měření</span>
+   <div class="sensor-mini-trend" data-sensor-trend={item.id} aria-label={'Průběh posledních 24 hodin: '+item.name}>
+    <span class="source-note">24h průběh se načítá…</span>
+   </div>
   </article>)}
  </div>
  <p class="source-note">Zelený stav znamená pouze platné poslední archivní měření, nikoliv potvrzené připojení fyzického senzoru.</p>
 </section>
 <script>
- import {getCurrent} from '../../shared/api/client';
+ import {getCurrent,getHistoryInterval} from '../../shared/api/client';
  import {formatValue} from '../../shared/domain/metrics';
  const root=document.querySelector<HTMLElement>('[data-sensor-channels]');
  if(root){
@@ -47,6 +50,54 @@ const channels=[
     }
    });
   }).catch(()=>{if(status){status.textContent='API nedostupné';status.classList.add('error');}});
+  const begin=new Date(Date.now()-24*3600_000).toISOString(),end=new Date().toISOString();
+  const channels=Object.keys(digits);
+  let cursor=0;
+  async function loadTrends(){
+   await Promise.all(Array.from({length:3},async()=>{
+    while(cursor<channels.length){
+     const id=channels[cursor++];
+     const container=root.querySelector<HTMLElement>('[data-sensor-trend="'+id+'"]');
+     if(!container)continue;
+     try{
+      const response=await getHistoryInterval(id,begin,end,'raw',controller.signal);
+      if(controller.signal.aborted)return;
+      const points=response.points.map(p=>{
+       const value=p.quality==='suspect'||p.quality==='missing'?null:p.value;
+       return {time:Date.parse(p.endTime),value:value!==null&&Number.isFinite(value)?value:null};
+      }).filter(p=>Number.isFinite(p.time));
+      const values=points.filter((p):p is {time:number;value:number}=>p.value!==null);
+      container.replaceChildren();
+      if(values.length<2){container.textContent='24h průběh není dostupný';continue;}
+      const t0=Date.parse(begin),t1=Date.parse(end);
+      const lo=Math.min(...values.map(p=>p.value)),hi=Math.max(...values.map(p=>p.value));
+      const range=hi-lo||1;
+      const x=(t:number)=>4+192*(t-t0)/(t1-t0);
+      const y=(v:number)=>32-28*(v-lo)/range;
+      let path='',penDown=false;
+      for(const p of points){
+       if(p.value===null){penDown=false;continue;}
+       path+=(penDown?' L ':' M ')+x(p.time).toFixed(1)+' '+y(p.value).toFixed(1);
+       penDown=true;
+      }
+      const ns='http://www.w3.org/2000/svg';
+      const svg=document.createElementNS(ns,'svg');
+      svg.setAttribute('viewBox','0 0 200 38');
+      svg.setAttribute('role','img');
+      svg.setAttribute('aria-label','Skutečná měření za 24 hodin, '+values.length+' platných intervalů');
+      const trace=document.createElementNS(ns,'path');
+      trace.setAttribute('d',path);trace.setAttribute('fill','none');
+      trace.setAttribute('stroke','currentColor');trace.setAttribute('stroke-width','1.8');
+      trace.setAttribute('stroke-linecap','round');trace.setAttribute('stroke-linejoin','round');
+      svg.append(trace);container.append(svg);
+     }catch{
+      if(controller.signal.aborted)return;
+      container.textContent='Historie senzoru nedostupná';
+     }
+    }
+   }));
+  }
+  void loadTrends();
   document.addEventListener('astro:before-swap',()=>controller.abort(),{once:true});
  }
 </script>
