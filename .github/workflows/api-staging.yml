@@ -1,0 +1,21 @@
+name: Fastify API staging vertical slice
+on:
+  pull_request:
+    paths: ['api/**','.github/workflows/api-staging.yml']
+  push:
+    paths: ['api/**','.github/workflows/api-staging.yml']
+jobs:
+  typecheck-and-inject:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm install --no-audit --no-fund
+        working-directory: api
+      - run: npm test
+        working-directory: api
+      - run: echo "No database access. Injection tests validate only four initial routes."
