@@ -5,9 +5,16 @@ export type ArchiveRow={
   usUnits:number;
   interval:number;
 } & Partial<Record<Metric,number|null>>;
+export type DailySummaryRow={dateTime:number;usUnits:number;min:number|null;mintime:number|null;max:number|null;
+  maxtime:number|null;sum:number|null;count:number|null;wsum:number|null;sumtime:number|null;
+  xsum?:number|null;ysum?:number|null;dirsumtime?:number|null;max_dir?:number|null};
 export interface ArchiveReader {
   latest(asOfEpoch:number):Promise<ArchiveRow|null>;
   history(metric:Metric,fromExclusive:number,toInclusive:number,limit:number):Promise<ArchiveRow[]>;
+  historyPage?(selectedMetrics:Metric[],fromExclusive:number,toInclusive:number,afterExclusive:number,limit:number):Promise<ArchiveRow[]>;
+  dailySummaries?(metric:Metric,fromInclusive:number,toExclusive:number,limit:number):Promise<DailySummaryRow[]>;
+  archiveWindow?(fromInclusive:number,toInclusive:number,limit:number):Promise<ArchiveRow[]>;
+  archiveAfter?(afterExclusive:number,toInclusive:number,limit:number):Promise<ArchiveRow[]>;
   ping():Promise<void>;
   close?():Promise<void>;
 }

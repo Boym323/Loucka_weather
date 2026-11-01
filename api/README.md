@@ -1,6 +1,6 @@
-# Loučka Weather API – Fastify/TypeScript staging (PR #5)
+# Loučka Weather API – Fastify/TypeScript staging
 
-**Stav: implementace části API v1, zatím pouze v draft PR; nic není nasazené.**
+**Stav: částečná staging implementace; změny v této pracovní větvi nejsou nasazené.**
 
 Implementované čtecí trasy:
 
@@ -12,9 +12,17 @@ Implementované čtecí trasy:
 | `GET /api/v1/sensors` | Vrací prázdný seznam, dokud není ověřeno mapování senzorů |
 | `GET /api/v1/camera/status` | Pravdivý stav `disabled` bez soukromých URL |
 | `GET /api/v1/current` | Poslední záznam archivu včetně všech 45 veřejných metrik a tří systémů jednotek |
-| `GET /api/v1/history` | Pouze `raw`, bounded (31 dnů; max 10 000 bodů včetně mezer), žádné tiché zkrácení |
+| `GET /api/v1/history` | `raw` (31 dnů), `hourly` (2 roky) a `daily` po místních dnech; `auto` volí rozlišení, limit 10 000 bodů, žádné tiché zkrácení |
+| `GET /api/v1/statistics/daily` | Výpočet z WeeWX `archive_day_*`; lokální den Europe/Prague a politika agregací |
+| `GET /api/v1/statistics/monthly` | Rollup denních WeeWX souhrnů; vážený průměr přes `wsum/sumtime` |
+| `GET /api/v1/statistics/yearly` | Rollup denních WeeWX souhrnů; nepoužívá nevážený průměr denních průměrů |
+| `GET /api/v1/live` | SSE snapshot archivního fallbacku a změny archivu; LOOP/MQTT není připojeno |
 
-`resolution=auto` použije `raw` jen pokud se vejde do mezí. `hourly` a `daily` zatím vrací kontrolovanou chybu `422`, nikoli neověřenou meteorologickou agregaci. Složité statistiky, streaming `/live`, archivní observer a reálná kamera jsou **nehotové**.
+`resolution=auto` zkouší raw, hodinové a denní rozlišení při zachování limitu a hranic lokálního dne. Statistiky čtou pouze read-only WeeWX denní souhrny a povolené dvojice metric/aggregation. Jednotkový systém souhrnů se odvodí z `usUnits` prvního archivního záznamu, jak jej definuje [WeeWX](https://www.weewx.com/docs/5.2/devnotes/#daily-summaries); při neznámém nebo nepodporovaném kódu dotaz bezpečně selže `503`. U denních minimum/maximum statistik zůstává `extremaSource=unknown`, protože souhrn může zachycovat LOOP extrém. Vektorový směr se počítá z `archive_day_wind.xsum/ysum`; směr při maximu poryvu se použije pouze tehdy, když čas a hodnota denního maxima souhlasí s odpovídajícím řádkem v `archive`. WeeWX uvádí `archive_day_wind.max_dir` jako směr maxima větru, proto se nepoužívá jako náhrada za směr poryvu.
+
+Archivní observer běží jako jediný read-only poller procesu: načte dvouhodinové překryvné okno po 15 s, dohání nové řádky stránkami a deduplikuje změny podle hashe všech publikovaných polí. SSE podporuje `Last-Event-ID`, omezený replay, reset při ztrátě historie, heartbeat po 15 s a odpojení pomalých klientů. Dokud není ověřena čerstvost `archive_day_*`, události mají `summaryStatus=unknown`; automaticky se nikdy neoznačí `ready`. Hodinové grafy používají UTC hodiny a denní rozlišení místní půlnoci `Europe/Prague`; auto přejde na denní rozlišení, když se hodinové nevejde do limitu a denní hranice jsou zarovnané. Skutečný LOOP/MQTT feed, kamera a katalog senzorů zůstávají vypnuté/neověřené.
+
+Proces při `SIGINT`/`SIGTERM` zavře Fastify, zastaví archivní observer a uzavře MariaDB pool; chyba při startu spustí stejný úklid.
 
 Zdrojový katalog metrik a jednotek: `../schemas/metrics.json`; `src/metrics.ts` je z něj generovaná kopie. Jednotky se interpretují **u každého řádku** podle původního `usUnits`; `NULL` zůstává `null` a neznámé usUnits se odmítne. Odpovědi `current` a `history` mají ETag / 304, `dataset=approved` je bez schválení nepřístupný (503).
 
@@ -38,4 +46,4 @@ WEATHER_DB_USER=... WEATHER_DB_PASSWORD=... npm start
 
 Doporučeno `systemd EnvironmentFile` s oprávněním 0600 mimo Git. Chybějící `WEATHER_STAGING_ENABLED=YES` zabrání startu DB adapteru. HTTP backend naslouchá standardně pouze na `127.0.0.1:3100`, přístup přes důvěryhodný Nginx Proxy Manager same-origin. DB adapter používá parametrizované SELECT, pevně vymezené identifikátory metrik a max. dvě databázová spojení.
 
-**Nenahrazuje bezpečnostní schválení produkce:** nutné přidat rate limiting, produkční cache a její invalidaci, ověřené QC senzory/rekonstrukce, autentizaci administrativních částí (pokud vzniknou), bezpečnostní audit, plných 11 endpointů, reálné srovnání s WeeWX `archive_day_*`, SSE/MQTT a zátěžové testy výhradně na izolovaném snapshotu. Dokumentovaný kontrakt v `../openapi.yaml` je širší než tato částečná implementace.
+**Nenahrazuje bezpečnostní schválení produkce:** náhledový Nginx má pouze základní limit 5 požadavků/s s burstem 12; chybí API limit na klienta a sdílená cache. Zbývá také ověřené QC senzorů/rekonstrukcí, bezpečnostní audit, validace SQL proti cílovému WeeWX schématu a zátěžové testy výhradně na izolovaném snapshotu. MQTT observation, ověřený katalog senzorů a fyzická telemetrie kamery nejsou dostupné; tyto výstupy zůstávají poctivě vypnuté nebo prázdné.

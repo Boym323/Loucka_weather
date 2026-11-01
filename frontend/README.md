@@ -36,9 +36,11 @@ GitHub Actions workflow [.github/workflows/preview-visual-smoke.yml](../.github/
 
 S Chromium Playwright kontroluje všech osm URL na desktopu a mobilu, HTTP 200, JavaScript výjimky, horizontální přetékání, /api/v1/readyz a /deployment.json. Z každého běhu vzniká artefakt **preview-screenshots** s 16 screenshoty, dostupný sedm dní. Externí Open-Meteo a RainViewer mají fallback a mohou být dočasně nedostupné; workflow loguje jejich stavy. Toto je skutečná prohlížečová kontrola **nasazeného webu**, nikoli pouze Astro build.
 
+API v1 v repozitáři nyní implementuje `/current`, raw/hodinovou/denní `/history` s `resolution=auto`, denní/měsíční/roční statistiky a archivní SSE refresh. Denní SQL mapování bylo ověřeno SELECT-only proti připojené WeeWX databázi; API zatím není nasazené. Frontend klimatologii ještě na tyto endpointy nenapojuje. [Produktový kontrakt](../docs/API_V1_PRODUCT_CONTRACT.md) popisuje implementaci i otevřené provozní požadavky; metodika souhrnů a jejich meze jsou v [auditu](../WEEWX_DAILY_SUMMARIES_AUDIT.md).
+
 ## Důležitá otevřená práce
 
-- **Klimatologie a historické agregace:** Fastify /api/v1/history zatím poskytuje RAW nejvýše 31 dní; hodinové/denní souhrny a úplné roční klimatologické statistiky nejsou implementovány. Vyžadují validaci historických dat a ověření DB SELECT přístupu k denním statistikám (viz [audit](../WEEWX_DAILY_SUMMARIES_AUDIT.md)).
+- **Napojení klimatologie:** API již nabízí denní, měsíční a roční statistiky a hodinovou/denní historii; frontend je zatím nezobrazuje. Pro veřejné nasazení zůstává nutné dokončit provozní ověření API a implementovat klimatologický UI klient.
 - **Více současných veličin a libovolný rozsah grafů:** návrh je širší než současné přepínání 6/24/72 hodin.
 - **Senzorová diagnostika:** ověřit fyzické mapování, instalaci, údaje o bateriích, RSSI a čas výpadků.
 - **Kamera:** nezávislý čas snímku, archiv, časosběr.

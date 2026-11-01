@@ -1,6 +1,6 @@
 # Loučka Weather API v1 – produktový kontrakt, provoz a rozhodnutí
 
-**31. 10. 2026. Stav: návrh připravený k revizi (NOT DEPLOYED).** Specifikuje čtecí API nezávislé na Fastify/Go/Rust. Pravidla uvedená jako **návrh** nejsou uživatelem potvrzeným rozhodnutím ani dokladem existujícího MQTT/kamery/rekonstrukcí.
+**31. 10. 2026. Stav: návrh kontraktu + částečná Fastify staging implementace (NOT DEPLOYED).** Kontrakt je nezávislý na Fastify/Go/Rust; lokální implementace je kandidátem k ověření, ne důkazem provozu ani meteorologické správnosti. Pravidla uvedená jako **návrh** nejsou uživatelem potvrzeným rozhodnutím ani dokladem existujícího MQTT/kamery/rekonstrukcí.
 
 ## 1. Účel a hranice
 
@@ -16,7 +16,7 @@
 | `GET /api/v1/station` | stabilní metadata, skutečně zapnuté schopnosti a dostupné datasety | konfigurace + stav zdrojů | `location` může být null |
 | `GET /api/v1/sensors` | aktivní/retired/unknown senzory, instalace a hloubky | ověřený katalog epoch | v1 vrací unknown, neodhaduje |
 | `GET /api/v1/current` | poslední dostupný archivní interval, staleness | archive/cache | není pravé LOOP live |
-| `GET /api/v1/live` | SSE aktuální LOOP; snapshot/status/reconnect/fallback | potvrzený sdílený adaptér | bez ověřeného brokera jen unavailable |
+| `GET /api/v1/live` | SSE snapshot, archivní změny a případná LOOP data | archivní observer; LOOP/MQTT adaptér až po ověření | staging publikuje archive fallback; LOOP/MQTT není připojeno |
 | `GET /api/v1/history` | raw/hodinová/denní historie v `(from,to]` | archive, denní souhrny | s QC a mezerami |
 | `GET /api/v1/statistics/daily` | denní agregace pro místní datum | archive_day_* nebo archive | LOOP extrémy rozlišit |
 | `GET /api/v1/statistics/monthly` | měsíční agregace z denních souhrnů | archive_day_* | žádné nevážené průměry průměrů |
@@ -51,21 +51,23 @@ Neexistuje jedna univerzální funkce pro všech 45 veličin. Vymahatelný sezna
 
 - Absolutní instants předávat UTC ISO 8601 se `Z`. Archivní `dateTime` je **konec intervalu**, jeho začátek `dateTime - interval×60`. Zohlednit historicky odlišné délky (nejde vždy o 5 min).
 - Výběr historie vychází z `(from,to]`. Hodinové bucket hranice jsou UTC; denní souhrny používají místní `Europe/Prague` den. Podzimní den může mít 25 hodin, jarní 23. Denní souhrny nelze zarovnat na mechanických 86400 sekund.
+- `archive_day_*` klíčuje datum začátkem lokálního dne; denní, měsíční a roční statistiky proto čtou kalendářní rozsah `[start,end)`. Raw archivní intervaly nadále používají `(from,to]` podle času konce WeeWX záznamu.
 - Pro raw vracet jednotlivé intervaly a zachovat `NULL`. Pro hourly/daily vytvořit agregáty **po metrice podle katalogu**, jasně uvést výsledné resolution/aggregation, čas začátku/konce bucketu, úplnost, min/max a čas extrémů, pokud existují. Nevyplňovat mezery lineární interpolací ve výchozím režimu.
 - `resolution=auto` vybere granularitu nejvýše do `limit` a přitom zohlední extrémy. Žádné tiché useknutí. Pokud požadované explicitní rozlišení limit nesplní, `422 LIMIT_EXCEEDED` s bezpečnou zprávou. Navržená výchozí hodnota `limit=2000`, hard cap 10000.
 - **Návrhový horní rozsah:** raw do 31 dnů; hodinová historie do 2 let; denní historie do rozsahu archivu. Tyto limity je nutné ověřit benchmarkem a skutečnou dostupností 78 denních tabulek, nikoliv spustit těžké dotazy bez měření.
 - `Completeness.expected` může být `null` kvůli známým mezerám, změnám intervalu a instalace senzorů; neodvozovat očekávaných 288 denních položek. Při `expected=0` je `fraction=null`.
 
-## 6. Live feed a degradované režimy – návrh
+## 6. Live feed a degradované režimy – cílový kontrakt a stav staging kódu
 
 - Pokud je prokázán existující LOOP/MQTT feed, backend může mít jeden interní subscribe a prohlížečům vystavit **SSE**; SSE je jednosměrné a nepotřebuje uživatelské přihlášení. Je to pracovní preference, nikoliv potvrzená vhodnost bez auditu brokera.
-- Události `snapshot`, `observation`, `status`, `reset` obsahují verzovaný JSON `LiveEvent`; nezveřejňovat MQTT topic/credentials ani privátní IP. SSE MIME `text/event-stream`, heartbeat komentář každých 15 s, `retry: 5000`, stav `stale` po 120 s bez platného měření. Čas `observedAt` je skutečné měření a může být starší než `emittedAt`.
-- Na reconnect zasílá EventSource `Last-Event-ID`. Replay pouze v omezeném bufferu, po ztrátě historie `reset` a nový snapshot. V proxy vypnout SSE buffering, limitovat klientskou frontu, při přetížení odpojit pomalý stream. Polling archive každou sekundu pro každého uživatele je zakázán.
+- Cílové události `snapshot`, `observation`, `status`, `reset` obsahují verzovaný JSON `LiveEvent`; nezveřejňovat MQTT topic/credentials ani privátní IP. SSE MIME `text/event-stream`, heartbeat komentář každých 15 s, `retry: 5000`, stav `stale` po 120 s bez platného měření. Čas `observedAt` je skutečné měření a může být starší než `emittedAt`.
+- Aktuální Fastify staging kód nepřipojuje LOOP/MQTT. Archivní fallback poskytuje `snapshot`/`reset` a samostatné `archive-updated`; nepublikuje falešné LOOP `observation` ani `status`. Observer kontroluje archiv zhruba po 15 s, používá dvouhodinový překryv a stránkované dohánění. Kód nebyl ověřen proti cílovému WeeWX schématu.
+- Na reconnect zasílá EventSource `Last-Event-ID`. Replay je omezený na posledních 256 událostí, po ztrátě historie posílá `reset` a nový snapshot. Pomalé klienty kód odpojí. V proxy vypnout SSE buffering. Polling archive každou sekundu pro každého uživatele je zakázán.
 - Při výpadku live lze zobrazit `archive_fallback` s pravdivým označením archivu; nikdy jej nevydávat za skutečné live. Stav kamery ani nelegální/nevěřený radar nesmí blokovat ostatní meteo endpointy.
 
 ### Archivní změny a cílená obnova klientských grafů
 
-Návrh pětiminutové obnovy není přesně načasovaný `setInterval(300s)`. Jeden read-only observer detekuje skutečně zapsané řádky `archive` (výchozí kandidátní kontrola každých 15 sekund), ošetřuje stránkovaný catch-up, překryvné okno pro opožděné zápisy a vysílá `archive-updated` přes již existující `/api/v1/live` SSE. Událost obsahuje dotčený časový rozsah, revizi a `summaryStatus`; grafy se revalidují po archivním commitu, denní/měsíční/roční statistiky až po ověření jejich souhrnů. Podrobný kontrakt a bezpečnostní limity: [ARCHIVE_REFRESH_CONTRACT.md](ARCHIVE_REFRESH_CONTRACT.md). Je to návrh, nikoli funkční watcher.
+Obnova není přesně načasovaný `setInterval(300s)`. Částečný read-only observer v `api/src/live.ts` a `api/src/db.ts` detekuje zapsané řádky `archive`, používá překryvné okno a stránkovaný catch-up a vysílá `archive-updated` přes `/api/v1/live` SSE. Událost obsahuje dotčený časový rozsah, revizi a `summaryStatus=unknown`; připravenost souhrnů se neodhaduje. Implementace není nasazená ani ověřená proti cílovému WeeWX schématu. Podrobný kontrakt a limity: [ARCHIVE_REFRESH_CONTRACT.md](ARCHIVE_REFRESH_CONTRACT.md).
 
 ## 7. Kamera, senzory a schopnosti stanice
 

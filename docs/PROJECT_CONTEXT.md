@@ -41,10 +41,10 @@ Navrhnout moderní portál **Počasí Loučka** pro veřejný web `https://pocas
 Doplněn `?units=us|metric|metricwx` (default metricwx); zdrojová normalizace podle `usUnits` každého řádku 1/16/17. Odpovědi musí uvádět skutečné jednotky; golden vektory v `tests/fixtures/unit-conversions.json` a referenční převodník `contracts/unit_conversion.py`. Detaily v [API auditu](API_CONTRACT_AUDIT_2026-10-31.md). Úplný kontrakt je návrh; část API v1 je implementovaná na testovacím webu.
 
 ## API v1 – aktuální zadání
-Draft PR #4 obsahuje OpenAPI 3.1, meteorologické a feature JSON Schema, pravidla agregací, metadata senzorů, denní/měsíční statistiky, SSE, status kamery a readiness. Viz [API_V1_PRODUCT_CONTRACT.md](API_V1_PRODUCT_CONTRACT.md). Část kontraktu implementuje staging Fastify; denní/měsíční/roční statistiky a live parita Fastify/Go/Rust zatím chybí.
+Kontrakt v [API_V1_PRODUCT_CONTRACT.md](API_V1_PRODUCT_CONTRACT.md) a OpenAPI 3.1 definují metadata, historii, statistiky, SSE a status kamery. Pracovní větev `codex/api-v1-completion` implementuje raw/hodinovou/denní historii s `resolution=auto`, denní/měsíční/roční statistiky z WeeWX denních souhrnů a read-only archivní SSE observer. MQTT observation, ověření SQL mapování na cílovou DB, úplná validace schémat a live parita Fastify/Go/Rust zůstávají nehotové; změny ve větvi nejsou nasazené.
 
-## Archivní refresh – návrh
-Návrhový read-only observer pro nové záznamy v `archive` (poller ~15s a overlap/catch-up) po zjištění commitu odešle `archive-updated` přes SSE. Dotčené grafy a statistiky se revalidují odděleně podle `summaryStatus`. Viz [ARCHIVE_REFRESH_CONTRACT.md](ARCHIVE_REFRESH_CONTRACT.md). Jde o kontrakt, nikoli produkční běžící proces.
+## Archivní refresh – staging implementace
+V pracovní větvi read-only observer kontroluje dvouhodinové překryvné okno každých 15 sekund, dohání nové řádky stránkovaně a publikuje deduplikované `archive-updated` přes SSE. Dokud není prokázána čerstvost denních souhrnů, `summaryStatus` zůstává `unknown`; MQTT pozorování není připojeno. Kontrakt a omezení jsou v [ARCHIVE_REFRESH_CONTRACT.md](ARCHIVE_REFRESH_CONTRACT.md). Implementace není nasazená a nebyla ověřena na cílovém DB schématu.
 
 ## Průběžná dokumentace
 

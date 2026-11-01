@@ -1,6 +1,6 @@
 # Archivní aktualizace a SSE událost `archive-updated` – návrh API v1
 
-**Stav: DRAFT, pouze kontrakt a offline referenční testy.** Nejde o skutečně nasazeného pozorovatele MariaDB ani o změnu WeeWX. Tento dokument konkretizuje oddělený archivní tok při typicky pětiminutovém intervalu.
+**Stav: kontrakt + částečná staging implementace v `api/src/live.ts` a `api/src/db.ts`; není nasazená ani ověřená na cílovém DB schématu.** Runtime používá pouze SELECT, dokud nejsou denní souhrny nezávisle ověřeny, posílá `summaryStatus=unknown` a není připojen k MQTT. Dokument popisuje zamýšlený archivní proud pro obvyklý pětiminutový interval.
 
 ## Cíl a dvě nezávislé datové cesty
 
@@ -30,7 +30,7 @@ Ve WeeWX `archive.dateTime` označuje **konec** intervalu `(start,end]`, `archiv
 
 ## Kdy je změna připravená pro grafy a kdy pro statistiky?
 
-- **První fáze – potvrzený archiv**: teprve když je nový řádek viditelný jako commitnutý z read-only spojení, observer odešle `archive-updated` s `summaryStatus=pending` (nebo rovnou `ready`, pokud jsou souhrny ověřené).
+- **Cílový kontrakt**: teprve když je nový řádek viditelný jako commitnutý z read-only spojení, observer odešle `archive-updated` s `summaryStatus=pending` (nebo rovnou `ready`, pokud jsou souhrny ověřené). **Současný staging kód** vysílá pouze `summaryStatus=unknown`, protože aktuálnost denních souhrnů zatím není prokázaná.
 - **Druhá fáze – denní souhrny**: `summaryStatus=ready` je dovoleno až po **ověření** příslušných `archive_day_*` tabulek pro dotčené místní dny a relevantní metriky, v konzistentním čtecím snímku; prostá změna `archive.MAX(dateTime)`, čekání pevného počtu sekund ani nezměněný denní součet nestačí.
 - Pokud konkrétní denní souhrn nemá dostupný prokazatelný indikátor dokončení, API jej označí `unknown` a **nepředstírá připravenost**. Výpočet přímo z `archive` může být alternativou jen u veličin, kde je vědecky ekvivalentní a výslovně povolený `aggregation-policy.json`; nesmí falešně reprodukovat LOOP extrémy.
 - Na stejné změně mohou vzniknout dvě SSE zprávy: `pending` při novém archivu a `ready` po potvrzení souhrnů. Druhá událost musí mít **nové** `eventId` / `dataRevision`, aby zneplatnila i cache statistik. Pokud souhrny nejsou potvrzené, opakované stejné dotazy nesmějí vracet „nové“ statistiky z neověřené cache.
@@ -38,7 +38,7 @@ Ve WeeWX `archive.dateTime` označuje **konec** intervalu `(start,end]`, `archiv
 
 ## SSE wire kontrakt
 
-SSE zůstává `GET /api/v1/live`, `Content-Type: text/event-stream`, bez bufferování v proxy. Nová událost má `event: archive-updated`, `id: <eventId>` a jedno JSON `data:` dle `schemas/features.schema.json#/$defs/ArchiveUpdatedEvent`. Stávající `snapshot/observation/status/reset` jsou zachované. Oba typy payloadů jsou pod `$defs/LiveMessage`.
+SSE zůstává `GET /api/v1/live`, `Content-Type: text/event-stream`, bez bufferování v proxy. Nová událost má `event: archive-updated`, `id: <eventId>` a jedno JSON `data:` dle `schemas/features.schema.json#/$defs/ArchiveUpdatedEvent`. Cílový `LiveMessage` připouští `snapshot/observation/status/reset` i `archive-updated`. Současný Fastify staging kód vysílá `snapshot/reset` a `archive-updated`; `observation/status` zůstávají pro budoucí LOOP/MQTT adaptér. Všechny varianty jsou pod `$defs/LiveMessage`.
 
 Příklad je v `tests/fixtures/archive-updated.json`. Povinná pole:
 - `affectedEndTimeFrom`, `affectedEndTimeTo`: nejmenší a největší **včetně** dotčené koncové časové značky v UTC; nejsou lokální časy ani přesné začátky sledovaných intervalů.
@@ -52,7 +52,7 @@ Příklad je v `tests/fixtures/archive-updated.json`. Povinná pole:
 
 ## Nezávislost archivního streamu na MQTT
 
-Události `archive-updated` jsou produkovány z read-only pozorování MariaDB, **ne z LOOP/MQTT**. SSE multiplex na `/api/v1/live` musí zůstat dostupný při výpadku MQTT, pokud je archivní observer funkční; úvodní `status` může oznámit `state=unavailable` pro LOOP, ale nesmí tím zakázat oznámení z archivu. Odpověď SSE `503` je vhodná až při nedostupnosti samotné streamovací vrstvy, ne při pouhém výpadku LOOP.
+Události `archive-updated` jsou produkovány z read-only pozorování MariaDB, **ne z LOOP/MQTT**. SSE multiplex na `/api/v1/live` musí zůstat dostupný při výpadku MQTT, pokud je archivní observer funkční; úvodní `status` může v cílové implementaci oznámit `state=unavailable` pro LOOP, ale nesmí tím zakázat oznámení z archivu. Současný Fastify kód žádnou LOOP `status` událost neposílá. Odpověď SSE `503` je vhodná až při nedostupnosti samotné streamovací vrstvy, ne při pouhém výpadku LOOP.
 
 Jestliže SSE spojení selže, frontend použije řízený **fallback na podmíněné GET s `If-None-Match`** (návrh: revalidace viditelných `current/history` přibližně každých 60 s, při skrytém tabu pozastavit nebo omezit; statistiky samostatně a méně často). Vše přes sdílenou backendovou cache, **ne SQL dotaz na každou otevřenou stránku**. Po opětovném připojení SSE přednostně provést `reset`/snapshot revalidaci a vypnout záložní polling, aby se data nestahovala dvakrát.
 
