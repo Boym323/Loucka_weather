@@ -153,6 +153,9 @@ try{
       errors.push(size.name+': missing real camera archive gallery');
      if(await page.locator('[data-archive-video]').count()!==1)
       errors.push(size.name+': missing timelapse video selection');
+     if(await page.locator('[data-archive-date]').count()!==1||
+      await page.locator('[data-archive-day-frames]').count()!==1)
+      errors.push(size.name+': missing date-filtered camera archive');
     }
     if(path==='/mapy/'){
      if(await page.locator('[data-model-temperature]').count()!==1||
