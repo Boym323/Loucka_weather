@@ -1,0 +1,50 @@
+---
+interface Props { detailed?: boolean }
+const { detailed = false } = Astro.props;
+---
+<div class:list={['deployment-info', { 'deployment-info-detailed': detailed }]} data-deployment-info>
+  <span class="deployment-info-label">Nasazená verze:</span>
+  <a data-deployment-commit class="deployment-version-link" href="#" hidden
+    target="_blank" rel="noopener noreferrer" title="Zobrazit commit na GitHubu"></a>
+  <span data-deployment-status role="status">Zjišťuji…</span>
+  <time data-deployment-date hidden></time>
+</div>
+<script>
+  import { parseDeploymentMetadata, formatDeploymentTime } from '../domain/deployment';
+  const blocks = document.querySelectorAll<HTMLElement>('[data-deployment-info]');
+  if (blocks.length) {
+    void fetch('/deployment.json?ts=' + Date.now(), {
+      cache: 'no-store',
+      headers: { Accept: 'application/json' }
+    }).then(async response => {
+      if (!response.ok) throw new Error('Metadata nejsou dostupná');
+      const metadata = parseDeploymentMetadata(await response.json() as unknown);
+      if (!metadata) throw new Error('Neplatný formát metadat');
+      for (const block of blocks) {
+        const link = block.querySelector<HTMLAnchorElement>('[data-deployment-commit]');
+        const status = block.querySelector<HTMLElement>('[data-deployment-status]');
+        const date = block.querySelector<HTMLTimeElement>('[data-deployment-date]');
+        if (link) {
+          link.href = 'https://github.com/Boym323/Loucka_weather/commit/' + metadata.commit;
+          link.textContent = metadata.commit.slice(0, 10);
+          link.title = 'GitHub commit ' + metadata.commit;
+          link.hidden = false;
+        }
+        if (date) {
+          date.dateTime = metadata.deployedAt;
+          date.textContent = 'Nasazeno ' + formatDeploymentTime(metadata.deployedAt);
+          date.hidden = false;
+        }
+        if (status) status.hidden = true;
+      }
+    }).catch(() => {
+      for (const block of blocks) {
+        const status = block.querySelector<HTMLElement>('[data-deployment-status]');
+        if (!status) continue;
+        const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname) ||
+          /^192\.168\./.test(window.location.hostname);
+        status.textContent = isLocal ? 'místní vývoj (bez publikované verze)' : 'nepodařilo se ověřit';
+      }
+    });
+  }
+</script>
