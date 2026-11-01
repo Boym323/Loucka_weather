@@ -1,6 +1,64 @@
 # GW3000 skutečně živá data a monitoring
 
-Stav: implementace připravená, ale provoz fyzického GW3000 není aktivován, dokud uživatel nezprovozní vlastní HTTP upload na LAN.
+Stav: čtení z existujícího LAN HTTP API připravené; stačí zapnout read-only poller na LXC po potvrzení IP a dostupnosti. Nastavení GW3000 se nemění.
+
+## Doporučená varianta: bez zásahu do GW3000 (read-only)
+
+Tato varianta je doporučená. **Na stanici se nic nenastavuje, žádný Customized server se nemění, WeeWX se nerestartuje.** Staging LXC pouze odešle pravidelný HTTP `GET /get_livedata_info?` na již existující lokální API brány, přijme odpověď a uloží poslední živý snímek do vlastního souboru. Nevydává žádné příkazy `set_*`, neotevírá veřejné porty a nevyužívá Ecowitt cloud.
+
+### Nejdříve pouze ověř síťovou dostupnost (bez změn)
+
+Získání IP stanice z DHCP nebo stávající konfigurace WeeWX není změna GW3000. Na staging LXC nastav dočasně skutečnou IP brány:
+
+```bash
+GW_IP=192.168.1.X      # dosaď známou existující IP, nikoliv novou
+curl --max-time 5 -fsS "http://${GW_IP}/get_livedata_info?" | jq '{common_list: (.common_list // [])[0:5],rain: (.rain // [])[0:2]}'
+```
+
+Tento požadavek je **pouze GET**. Pokud skončí timeoutem, 404, nebo nevrátí `common_list`, nic na GW3000 nepřepínej. Může být potřeba povolit spojení LXC → GW3000 TCP/80 v routeru nebo číst stávající WeeWX LOOP data, ale nejprve ověř bezpečný postup.
+
+### Aktivace výhradně na staging LXC
+
+1. Aktualizuj `main` a nainstaluj root-owned skript a dvě systemd jednotky. Žádné nové zařízení ani port 3102 se nenastavuje:
+
+```bash
+runuser -u loucka -- git -C /home/loucka/Loucka_weather pull --ff-only origin main
+install -D -o root -g root -m 0755 /home/loucka/Loucka_weather/deploy/lxc/loucka-gw3000-http-pull.py /usr/local/libexec/loucka-gw3000-http-pull.py
+for unit in loucka-gw3000-http-pull.service loucka-gw3000-http-pull.timer; do
+ install -o root -g root -m 0644 "/home/loucka/Loucka_weather/deploy/lxc/$unit" "/etc/systemd/system/$unit"
+done
+```
+
+2. Vytvoř root-only soubor `/etc/loucka-weather/gw3000-pull.env` s jediným řádkem `LOUCKA_GW3000_HTTP_IP=<skutečná LAN IPv4 stanice>` (bez `http://`, bez veřejné IP). Přístup `chmod 600`.
+
+3. Neaktivuj původní push přijímač `loucka-gw3000-live.service` současně s novým pull časovačem; oba zapisují do stejného souboru. Pokud je již zapnutý, nejprve jej vypni, aniž bys měnil GW3000.
+
+4. Spusť testovací jednorázové čtení a teprve poté timer:
+
+```bash
+systemctl daemon-reload
+systemctl start loucka-gw3000-http-pull.service
+systemctl status loucka-gw3000-http-pull.service --no-pager -l
+systemctl enable --now loucka-gw3000-http-pull.timer
+```
+
+5. V existujícím `/etc/loucka-weather/api.env` přidej `GW3000_LIVE_ENABLED=YES` a restartuj pouze `loucka-weather-api.service`. WeeWX, gateway, MariaDB ani NPM se nerestartují. Ověř:
+
+```bash
+curl -fsS http://127.0.0.1:3100/api/v1/live/current | jq '{source,state,observedAt,timestampMeaning,readings}'
+curl -fsS http://127.0.0.1:3100/api/v1/monitor/status | jq '.components.gw3000'
+journalctl -u loucka-gw3000-http-pull.service -n 20 --no-pager
+```
+
+Samotný odposlech serveru není nutný: každý běh polleru po 20 s provede **jediný GET** na privátní IPv4 a případně zapíše nový lokální snapshot. Výsledný `observedAt` znamená čas přečtení odpovědi, **nikoli potvrzený čas jednotlivého měření senzoru**. Přijímač nepřepisuje databázi a po 120 s bez nových platných odpovědí API opět upřednostní archivní režim.
+
+Lokální API může vracet jednotky zvolené na GW3000. Poller proto převádí pouze rozpoznané `°C/°F`, `m/s`, `km/h`, `mph`, `inHg`, `hPa`, `mm/h` a `in/h`. Veličiny bez jednoznačné jednotky vynechá, `lux` nevydává za `W/m²` a denní srážku nevydává za intervalový úhrn.
+
+**Alternativa níže s Customized POST je pouze pro jinou instalaci, kde uživatel výslovně chce změnit nastavení gateway. Pro Počasí Loučka ji nepoužívat.**
+
+---
+
+## Starší volitelná varianta: Customized PUSH (nedoporučená zde)
 
 ## Architektura
 
