@@ -1,0 +1,16 @@
+---
+const links=[
+ {href:'/',label:'Přehled',icon:'⌂'},
+ {href:'/aktualne/',label:'Aktuálně',icon:'◉'},
+ {href:'/grafy/',label:'Grafy',icon:'⌁'},
+ {href:'/mapy/',label:'Mapy',icon:'◎'},
+ {href:'/kamera/',label:'Kamera',icon:'▣'}
+];
+const active=Astro.url.pathname;
+---
+<nav class="mobile-dock" aria-label="Rychlá mobilní navigace">
+ {links.map(link=><a href={link.href} aria-current={active===link.href?'page':undefined}>
+  <span class="mobile-dock-icon" aria-hidden="true">{link.icon}</span>
+  <span>{link.label}</span>
+ </a>)}
+</nav>

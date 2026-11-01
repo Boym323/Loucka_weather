@@ -102,6 +102,10 @@ try{
       ]))
      }));
      console.log('CLIMATE VERIFIED',size.name,JSON.stringify(climate));
+     for(const metric of ['temperature','rain','wind']){
+      if(await page.locator('[data-climate-trend="'+metric+'"] svg').count()!==1)
+       errors.push(size.name+': missing six-year '+metric+' trend chart');
+     }
      if(!climate.overall.startsWith('Archivní souhrny'))
       errors.push(size.name+': climatology API failed: '+climate.overall);
      for(const [metric,status] of Object.entries(climate.statuses)){
@@ -125,6 +129,34 @@ try{
      viewport:window.innerWidth
     }));
     if(!state.brand||!state.main)errors.push(size.name+' '+path+': missing layout');
+    const dock=await page.evaluate(()=>{
+     const element=document.querySelector('.mobile-dock');
+     return {exists:!!element,display:element?getComputedStyle(element).display:'none'};
+    });
+    if(!dock.exists)errors.push(size.name+' '+path+': missing mobile dock markup');
+    else if(size.name==='mobil'&&dock.display==='none')errors.push('mobile dock hidden on '+path);
+    else if(size.name==='desktop'&&dock.display!=='none')errors.push('mobile dock visible on desktop '+path);
+    if(path==='/kamera/'){
+     const controls=await page.evaluate(()=>({
+      auto:!!document.querySelector('[data-camera-auto]'),
+      fullscreen:!!document.querySelector('[data-camera-fullscreen]'),
+      latest:!!document.querySelector('[data-camera-image]')
+     }));
+     if(!controls.auto||!controls.fullscreen||!controls.latest)
+      errors.push(size.name+': missing camera controls');
+    }
+    if(path==='/mapy/'){
+     const radarLayer=page.locator('[data-map-radar-visible]');
+     if(await radarLayer.count()!==1)errors.push(size.name+': missing map layer toggle');
+     else{
+      await radarLayer.uncheck();
+      const hidden=await page.locator('[data-radar-message]').first().textContent();
+      if(!hidden?.includes('vypnutá'))errors.push(size.name+': radar layer toggle did not hide imagery');
+      await radarLayer.check();
+     }
+    }
+    if(path==='/senzory/'&&await page.locator('[data-sensor-trend]').count()<8)
+     errors.push(size.name+': missing real sensor trend containers');
     if(state.width>state.viewport+3)errors.push(size.name+' '+path+': horizontal overflow '+state.width+'px > '+state.viewport+'px');
     await page.screenshot({path:out+'/'+size.name+'-'+name+'.png',fullPage:true});
     console.log('OK',size.name,path,state.title,'scrollWidth='+state.width);

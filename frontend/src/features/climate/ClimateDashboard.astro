@@ -69,6 +69,11 @@ const months=['Led','Úno','Bře','Dub','Kvě','Čvn','Čvc','Srp','Zář','Ří
    <div class="empty-state">Ověřená dlouhodobá měření výšky sněhu nejsou v aktuálním statistickém API dostupná.</div>
   </section>
  </div>
+ <div class="climate-trend-row" aria-label="Roční klimatologické trendy">
+  <section class="section climate-trend-card"><div class="section-heading"><h2>Roční průměr teploty</h2><span class="source-note">°C</span></div><div class="climate-trend-canvas" data-climate-trend="temperature" role="img" aria-label="Roční průměr teploty za posledních šest let"></div></section>
+  <section class="section climate-trend-card"><div class="section-heading"><h2>Roční úhrn srážek</h2><span class="source-note">mm</span></div><div class="climate-trend-canvas" data-climate-trend="rain" role="img" aria-label="Roční srážky za posledních šest let"></div></section>
+  <section class="section climate-trend-card"><div class="section-heading"><h2>Průměrná rychlost větru</h2><span class="source-note">m/s</span></div><div class="climate-trend-canvas" data-climate-trend="wind" role="img" aria-label="Roční vítr za posledních šest let"></div></section>
+ </div>
  <p class="source-note climate-footnote">Zdroj: původní denní souhrny WeeWX. Časové hranice: Europe/Prague včetně CET/CEST. Výpočty neodstraňují historické pochybné záznamy.</p>
 </div>
 <script>
@@ -90,6 +95,8 @@ const months=['Led','Úno','Bře','Dub','Kvě','Čvn','Čvc','Srp','Zář','Ří
   for(const metric of ['temperature','rain','wind']){
    const el=root.querySelector<HTMLElement>('[data-chart="'+metric+'"]');
    if(el){canvas[metric]=echarts.init(el,undefined,{renderer:'svg'});observer.observe(el);}
+   const trend=root.querySelector<HTMLElement>('[data-climate-trend="'+metric+'"]');
+   if(trend){canvas['annual-'+metric]=echarts.init(trend,undefined,{renderer:'svg'});observer.observe(trend);}
   }
   let controller:AbortController|undefined;
   const months=['Led','Úno','Bře','Dub','Kvě','Čvn','Čvc','Srp','Zář','Říj','Lis','Pro'];
@@ -111,6 +118,17 @@ const months=['Led','Úno','Bře','Dub','Kvě','Čvn','Čvc','Srp','Zář','Ří
     yAxis:{type:'value',name:unit,scale:name!=='rain',min:name==='rain'?0:undefined,
      axisLabel:{color:'#a2b7c7',fontSize:10},splitLine:{lineStyle:{color:'#224353',type:'dashed'}}},
     series},true);
+   chart.resize();
+  }
+  function setAnnualChart(name:string,years:number[],values:(number|null)[],color:string){
+   const chart=canvas['annual-'+name];if(!chart)return;
+   chart.setOption({animation:false,backgroundColor:'transparent',
+    grid:{top:8,left:34,right:8,bottom:24},tooltip:{trigger:'axis',confine:true},
+    xAxis:{type:'category',data:years.map(String),axisLine:{lineStyle:{color:'#3d6070'}},
+     axisLabel:{color:'#a2b7c7',fontSize:9,interval:0}},
+    yAxis:{type:'value',scale:name!=='rain',min:name==='rain'?0:undefined,
+     axisLabel:{color:'#a2b7c7',fontSize:9},splitLine:{lineStyle:{color:'#224353',type:'dashed'}}},
+    series:[{name:'Roční hodnoty',type:'bar',data:values,itemStyle:{color},barMaxWidth:28}]},true);
    chart.resize();
   }
   async function runLimited<T>(jobs:(()=>Promise<T>)[],max=4):Promise<PromiseSettledResult<T>[]>{
@@ -176,7 +194,8 @@ const months=['Led','Úno','Bře','Dub','Kvě','Čvn','Čvc','Srp','Zář','Ří
     const yrs=Array.from({length:Math.min(6,end-2008)},(_,i)=>end-i);
     const annual=await runLimited(yrs.flatMap(y=>[
      ()=>getStatistics('yearly','outTemp','mean',String(y),signal),
-     ()=>getStatistics('yearly','rain','sum',String(y),signal)
+     ()=>getStatistics('yearly','rain','sum',String(y),signal),
+     ()=>getStatistics('yearly','windSpeed','mean',String(y),signal)
     ]));
     if(signal.aborted)return;
     if(body){
@@ -184,11 +203,16 @@ const months=['Led','Úno','Bře','Dub','Kvě','Čvn','Čvc','Srp','Zář','Ří
      yrs.forEach((y,i)=>{
       const tr=body.insertRow();
       tr.insertCell().textContent=String(y);
-      for(let j=0;j<2;j++){const v=pick(annual[i*2+j]);tr.insertCell().textContent=v===null?'—':formatValue(v,1);}
+      for(let j=0;j<2;j++){const v=pick(annual[i*3+j]);tr.insertCell().textContent=v===null?'—':formatValue(v,1);}
       tr.insertCell().textContent='Neurčeno';
      });
     }
     badge('[data-years-status]','Souhrny WeeWX','ok');
+    const orderedYears=[...yrs].reverse();
+    for(const [name,offset,color] of [['temperature',0,'#f5b84e'],['rain',1,'#4ba9e6'],['wind',2,'#49dca8']] as const){
+     const values=yrs.map((_,i)=>pick(annual[i*3+offset])).reverse();
+     setAnnualChart(name,orderedYears,values,color);
+    }
     // Monthly values are queried directly from the API. No client-side unweighted averaging.
     const jobs=Array.from({length:12},(_,i)=>{
      const month=yearString+'-'+String(i+1).padStart(2,'0');

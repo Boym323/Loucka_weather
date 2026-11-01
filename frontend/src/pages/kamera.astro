@@ -10,7 +10,13 @@ import OverviewReadings from '../features/current/OverviewReadings.astro';
    <div class="camera-image camera-image-large"><img data-camera-image src="https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg" alt="Pohled webkamery na Loučku západním směrem" /></div>
    <p class="source-note" data-camera-message>Čas pořízení snímku není dostupný.</p>
    <nav class="camera-mode-tabs" aria-label="Dostupné pohledy"><span class="chart-tab is-active">Aktuální snímek</span><span class="chart-tab muted">Archiv snímků – nepřipojeno</span><span class="chart-tab muted">Časosběr – nepřipojeno</span></nav>
-   <div class="camera-actions"><button type="button" class="camera-refresh" data-camera-refresh>Obnovit snímek</button><a class="panel-link" href="https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg" target="_blank" rel="noopener noreferrer">Otevřít originál ↗</a></div>
+   <div class="camera-actions">
+    <button type="button" class="camera-refresh" data-camera-refresh>↻ Obnovit snímek</button>
+    <button type="button" class="chart-tab" data-camera-auto aria-pressed="false">Automatické obnovení: vypnuto</button>
+    <button type="button" class="chart-tab" data-camera-fullscreen>Celá obrazovka</button>
+    <a class="panel-link" href="https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg" target="_blank" rel="noopener noreferrer">Otevřít originál ↗</a>
+   </div>
+   <p class="source-note" data-camera-checked>Načtení se ještě neověřilo.</p>
   </section>
   <aside class="camera-sidebar">
    <section class="section camera-info">
@@ -48,6 +54,10 @@ import OverviewReadings from '../features/current/OverviewReadings.astro';
  .camera-direction-symbol{font-size:37px;color:var(--teal);display:flex;align-items:center;justify-content:center;height:80px;font-weight:800}
  .camera-direction-symbol span{font-size:18px;margin-left:10px;color:var(--muted)}
  .camera-archive-note{margin-top:12px}
+ .camera-image-large:fullscreen{background:#04121d;display:flex;align-items:center;justify-content:center;padding:12px}
+ .camera-image-large:fullscreen img{max-height:100%;max-width:100%;object-fit:contain}
+ .camera-actions [aria-pressed="true"]{color:#041b16;background:var(--teal);border-color:var(--teal)}
+ .camera-actions{margin-top:12px}
  @media(max-width:900px){.camera-layout-enhanced{grid-template-columns:1fr}.camera-sidebar{grid-template-columns:repeat(2,minmax(0,1fr))}.camera-sidebar .overview-readings{grid-column:1/-1}}
  @media(max-width:650px){.camera-sidebar{grid-template-columns:1fr}.camera-sidebar .overview-readings{grid-column:auto}}
 </style>
@@ -59,7 +69,19 @@ import OverviewReadings from '../features/current/OverviewReadings.astro';
  const status=root?.querySelector<HTMLElement>('[data-camera-status]');
  const message=root?.querySelector<HTMLElement>('[data-camera-message]');
  const refresh=root?.querySelector<HTMLButtonElement>('[data-camera-refresh]');
- function loaded(){if(status){status.textContent='Snímek načten';status.className='status-chip ok';}if(message)message.textContent='Čas pořízení snímku není dostupný.';}
+ const auto=root?.querySelector<HTMLButtonElement>('[data-camera-auto]');
+ const fullscreen=root?.querySelector<HTMLButtonElement>('[data-camera-fullscreen]');
+ const checked=root?.querySelector<HTMLElement>('[data-camera-checked]');
+ let timer:number|undefined;
+ const checkedFormatter=new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+ const checkedNow=()=>{if(checked)checked.textContent='Obrázek načten v '+checkedFormatter.format(new Date())+' (čas pořízení fotoaparátem není ověřen).';};
+ function reload(){
+  if(!img)return;
+  if(status){status.textContent='Načítám snímek';status.className='status-chip';}
+  img.src='https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg?t='+Date.now();
+ }
+
+ function loaded(){if(status){status.textContent='Snímek načten';status.className='status-chip ok';}if(message)message.textContent='Čas pořízení snímku není dostupný.';checkedNow();}
  function failed(){if(status){status.textContent='Kamera nedostupná';status.className='status-chip error';}if(message)message.textContent='Snímek se nepodařilo načíst. Zkuste jej obnovit.';}
  img?.addEventListener('load',loaded);img?.addEventListener('error',failed);
  if(img?.complete){if(img.naturalWidth)loaded();else failed();}
@@ -74,6 +96,20 @@ import OverviewReadings from '../features/current/OverviewReadings.astro';
   }
   // The current API explicitly reports disabled; do not imply verified LIVE data.
  }).catch(()=>{});
- document.addEventListener('astro:before-swap',()=>metaController.abort(),{once:true});
- refresh?.addEventListener('click',()=>{if(!img)return;if(status){status.textContent='Načítám snímek';status.className='status-chip';}img.src='https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg?t='+Date.now();});
+ refresh?.addEventListener('click',reload);
+ auto?.addEventListener('click',()=>{
+  if(timer!==undefined){window.clearInterval(timer);timer=undefined;}
+  else timer=window.setInterval(()=>{if(document.visibilityState==='visible')reload();},60000);
+  if(auto){const enabled=timer!==undefined;auto.setAttribute('aria-pressed',String(enabled));auto.textContent=enabled?'Automatické obnovení: 60 s':'Automatické obnovení: vypnuto';}
+ });
+ fullscreen?.addEventListener('click',()=>{
+  const target=root?.querySelector<HTMLElement>('.camera-image-large');
+  if(!target)return;
+  if(document.fullscreenElement)void document.exitFullscreen();
+  else void target.requestFullscreen().catch(()=>{});
+ });
+ document.addEventListener('astro:before-swap',()=>{
+  metaController.abort();
+  if(timer!==undefined)window.clearInterval(timer);
+ },{once:true});
 </script>
