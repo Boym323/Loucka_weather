@@ -19,10 +19,10 @@ function reader(row:ArchiveRow|null=fixture,rows:ArchiveRow[]=[]):ArchiveReader{
 /** Unit tests are hermetic even on an LXC with working camera and CAP collectors.
  * CI and production run the same assertions. No live state is modified.
  */
-async function isolatedSourceApp(t:TestContext){
+async function isolatedSourceApp(t:TestContext,clock:()=>Date=now){
  const root=await mkdtemp(join(tmpdir(),'loucka-source-tests-'));
  const files={cameraDir:join(root,'camera'),warningsFile:join(root,'chmi','alerts.json')};
- const app=buildApp(reader(),now,undefined,files);
+ const app=buildApp(reader(),clock,undefined,files);
  t.after(async()=>{await app.close();await rm(root,{recursive:true,force:true});});
  return {app,root,files};
 }
@@ -212,7 +212,9 @@ test('camera day browsing rejects traversal, invalid dates and future requests',
 });
 
 test('camera and CHMI report real validated collector files from explicit isolated paths',async t=>{
- const {app,files}=await isolatedSourceApp(t);
+ // Monitoring uses the same clock as collector fixtures; other contract tests
+ // intentionally keep their fixed historical clock.
+ const {app,files}=await isolatedSourceApp(t,()=>new Date());
  const stamp=new Date();
  const name=stamp.toISOString().slice(0,19).replace(/[-:]/g,'')+'Z.jpg';
  const fetchedAt=stamp.toISOString();
