@@ -2,6 +2,19 @@
  <div class="section-heading"><div><span class="eyebrow">Skutečně uložené záznamy</span><h2 id="camera-archive-title">Archiv západní kamery a časosběr</h2></div><span class="status-chip" data-archive-status role="status">Zjišťuji archiv</span></div>
  <p class="lead">Historie vzniká z veřejného snímku při archivaci na LXC. Čas pod fotografií znamená čas stažení, nikoli ověřený čas pořízení kamerou. Historii před zapnutím archivace nelze získat z jediného aktuálního JPEG.</p>
  <div class="camera-archive-grid" data-archive-frames></div>
+ <div class="camera-day-browser">
+  <div class="section-heading">
+   <h3>Procházet archiv podle dne</h3>
+   <label class="camera-day-choice">Den (UTC) <input type="date" data-archive-date /></label>
+  </div>
+  <p class="source-note" data-archive-day-status>Vyber datum od začátku archivace.</p>
+  <div class="camera-archive-grid" data-archive-day-frames></div>
+  <div class="camera-day-pagination" data-archive-page-controls hidden>
+   <button type="button" class="chart-tab" data-archive-previous>← Předchozí</button>
+   <span class="source-note" data-archive-page-label>1 / 1</span>
+   <button type="button" class="chart-tab" data-archive-next>Další →</button>
+  </div>
+ </div>
  <div class="camera-timelapse-block">
   <div class="section-heading"><h3>Denní časosběrné video</h3><select data-archive-video aria-label="Vybrat den časosběru" disabled><option>Žádné video</option></select></div>
   <video controls preload="none" playsinline data-archive-player hidden aria-label="Časosběr z kamerových archivních fotografií"></video>
@@ -50,6 +63,66 @@
    if(status)status.textContent='Archiv nedostupný';
    if(frames)frames.textContent='Historii fotografií se nepodařilo načíst.';
   });
+  const dateInput=root.querySelector<HTMLInputElement>('[data-archive-date]');
+  const dayContainer=root.querySelector<HTMLElement>('[data-archive-day-frames]');
+  const dayStatus=root.querySelector<HTMLElement>('[data-archive-day-status]');
+  const pagination=root.querySelector<HTMLElement>('[data-archive-page-controls]');
+  const prev=root.querySelector<HTMLButtonElement>('[data-archive-previous]');
+  const next=root.querySelector<HTMLButtonElement>('[data-archive-next]');
+  const label=root.querySelector<HTMLElement>('[data-archive-page-label]');
+  const dateNow=new Date();
+  const dateStr=(d:Date)=>d.toISOString().slice(0,10);
+  if(dateInput){
+   dateInput.max=dateStr(dateNow);
+   dateInput.min=dateStr(new Date(dateNow.getTime()-35*86400000));
+   dateInput.value=dateInput.max;
+  }
+  let dayFrames:Frame[]=[],activePage=0;
+  const perPage=20;
+  const dateFormatter=new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',
+   day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  function renderDay(){
+   if(!dayContainer)return;
+   dayContainer.replaceChildren();
+   const total=Math.ceil(dayFrames.length/perPage);
+   const current=dayFrames.slice(activePage*perPage,(activePage+1)*perPage);
+   for(const frame of current){
+    if(!/^\\/api\\/v1\\/camera\\/frames\\/\\d{8}T\\d{6}Z\\.jpg$/.test(frame.url))continue;
+    const a=document.createElement('a');a.href=frame.url;a.className='camera-archive-thumb';
+    a.rel='noopener noreferrer';a.target='_blank';
+    const img=document.createElement('img');img.src=frame.url;img.alt='Archivní snímek západní kamery';img.loading='lazy';
+    const date=document.createElement('span');date.textContent='Staženo '+dateFormatter.format(new Date(frame.fetchedAt));
+    a.append(img,date);dayContainer.append(a);
+   }
+   if(pagination)pagination.hidden=total<2;
+   if(label)label.textContent=(activePage+1)+' / '+Math.max(1,total);
+   if(prev)prev.disabled=activePage===0;
+   if(next)next.disabled=activePage>=total-1;
+  }
+  async function loadDay(){
+   if(!dateInput||!dayContainer||ctrl.signal.aborted)return;
+   const date=dateInput.value;
+   if(!/^20\\d{2}-\\d{2}-\\d{2}$/.test(date))return;
+   if(dayStatus)dayStatus.textContent='Načítám uložené snímky…';
+   try{
+    const response=await fetch('/api/v1/camera/archive/day/'+date,{signal:ctrl.signal});
+    if(!response.ok)throw Error('Archive day '+response.status);
+    const data=await response.json() as {status:string;frames:Frame[]};
+    if(ctrl.signal.aborted)return;
+    dayFrames=Array.isArray(data.frames)?data.frames:[];activePage=0;renderDay();
+    if(dayStatus)dayStatus.textContent=data.status==='ok'?
+     dayFrames.length+' skutečně uložených snímků za '+date+' (UTC)':
+     'Tento den není v dostupném archivu.';
+   }catch{
+    if(ctrl.signal.aborted)return;
+    dayFrames=[];activePage=0;renderDay();
+    if(dayStatus)dayStatus.textContent='Archiv se nepodařilo načíst.';
+   }
+  }
+  dateInput?.addEventListener('change',()=>void loadDay());
+  prev?.addEventListener('click',()=>{if(activePage>0){activePage--;renderDay();}});
+  next?.addEventListener('click',()=>{if((activePage+1)*perPage<dayFrames.length){activePage++;renderDay();}});
+  void loadDay();
   document.addEventListener('astro:before-swap',()=>{ctrl.abort();player?.pause();},{once:true});
  }
 </script>
