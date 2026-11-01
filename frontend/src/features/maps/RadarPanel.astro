@@ -20,7 +20,12 @@ const { compact = false } = Astro.props;
   <button type="button" class="chart-tab" data-radar-prev aria-label="Předchozí radarový snímek">◀</button>
   <button type="button" class="chart-tab" data-radar-play aria-label="Přehrát radarovou historii">▶ Přehrát</button>
   <button type="button" class="chart-tab" data-radar-next aria-label="Následující radarový snímek">▶</button>
+  <label class="radar-timeline-label" data-radar-timeline-label hidden>
+   <span>Historie radaru</span>
+   <input type="range" min="0" max="0" value="0" step="1" data-radar-timeline aria-label="Vybrat historický radarový snímek" />
+  </label>
   <span class="source-note" data-radar-time>Čas snímku neznámý</span>
+  <span class="source-note" data-radar-frame></span>
  </div>
  <div class="preview-footer">
   <span class="source-note">Historická radarová pozorování · nikoli předpověď</span>
@@ -61,6 +66,9 @@ const { compact = false } = Astro.props;
   const prev=root.querySelector<HTMLButtonElement>('[data-radar-prev]');
   const next=root.querySelector<HTMLButtonElement>('[data-radar-next]');
   const play=root.querySelector<HTMLButtonElement>('[data-radar-play]');
+  const scrub=root.querySelector<HTMLInputElement>('[data-radar-timeline]');
+  const scrubLabel=root.querySelector<HTMLElement>('[data-radar-timeline-label]');
+  const frameCount=root.querySelector<HTMLElement>('[data-radar-frame]');
   if(!base||!image)return;
   baseTiles(base);
   const scaleToContainer=()=>{
@@ -76,6 +84,8 @@ const { compact = false } = Astro.props;
   const stop=()=>{if(interval!==undefined){window.clearInterval(interval);interval=undefined;}if(play)play.textContent='▶ Přehrát';};
   const render=()=>{
    const frame=frames[i];if(!frame)return;
+   if(scrub)scrub.value=String(i);
+   if(frameCount)frameCount.textContent=(i+1)+' / '+frames.length;
    const path=frame.path;
    if(!/^\/v2\/radar\/[a-f0-9]{8,64}$/.test(path))return;
    image.hidden=true;
@@ -104,6 +114,8 @@ const { compact = false } = Astro.props;
    frames=data.radar.past.filter(f=>Number.isSafeInteger(f.time)&&/^\/v2\/radar\/[a-f0-9]{8,64}$/.test(f.path)).slice(-12);
    if(!frames.length)throw new Error('Žádné radarové snímky');
    host=data.host;i=frames.length-1;
+   if(scrub){scrub.max=String(frames.length-1);scrub.value=String(i);scrub.disabled=frames.length<2;}
+   if(scrubLabel)scrubLabel.hidden=frames.length<2;
    isStale=Date.now()/1000-frames[i].time>60*60;
    render();
   }).catch(()=>{
@@ -111,6 +123,7 @@ const { compact = false } = Astro.props;
    if(message){message.hidden=false;message.textContent='Radarový zdroj není dostupný. Podkladová mapa zůstává pouze orientační.';}
    if(status){status.textContent='Radar nedostupný';status.classList.add('warning');}
   });
+  scrub?.addEventListener('input',()=>{if(!frames.length)return;stop();i=Math.max(0,Math.min(frames.length-1,Number(scrub.value)));render();});
   prev?.addEventListener('click',()=>{if(!frames.length)return;stop();i=(i-1+frames.length)%frames.length;render();});
   next?.addEventListener('click',()=>{if(!frames.length)return;stop();i=(i+1)%frames.length;render();});
   play?.addEventListener('click',()=>{if(!frames.length)return;if(interval!==undefined){stop();return;}if(play)play.textContent='Ⅱ Pozastavit';interval=window.setInterval(()=>{i=(i+1)%frames.length;render();},1500);});
