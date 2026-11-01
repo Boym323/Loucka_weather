@@ -2,7 +2,7 @@
 
 Obsahuje **šest skutečně běžících HTTP serverů**: Go + database/sql, Rust + Axum + SQLx, Python + FastAPI + aiomysql + orjson, Node.js + Fastify, C++20 + libmicrohttpd a PHP CLI + PDO MySQL. Všechny používají stejná SQL nad skutečným schématem WeeWX `archive` a `archive_day_outTemp` + `archive_day_rain`. Nejde o simulaci HTTP ani SQL.
 
-**Zásadní pravidlo:** na produkční MariaDB pouze `probe`, `smoke` a mírný `light`; **`full` pouze proti izolované kopii na samostatném testovacím LXC**. Žádné zápisy do původního archivu a žádné změny WeeWX konfigurace. Nikdy nespouštěj buildy na produkčním LXC, které sbírá počasí nebo hostuje MariaDB.
+**Zásadní pravidlo:** na produkční MariaDB pouze kontrolovaný `probe`; build a provoz `smoke/light` provozuj přednostně na testovací kopii; **`full` pouze proti izolované kopii na samostatném testovacím LXC**. Žádné zápisy do původního archivu a žádné změny WeeWX konfigurace. Nikdy nespouštěj buildy na produkčním LXC, které sbírá počasí nebo hostuje MariaDB.
 
 ## 1. Na samostatném TESTOVACÍM Debian 13 LXC
 
@@ -36,20 +36,38 @@ Skript sám běží **jako běžný neprivilegovaný uživatel**, pouze `install
 
 Rozsah historie 30 dní obvykle obsahuje okolo 8 600 bodů. Roční statistika bere souhrny pro kalendářní rok `BENCH_YEAR` (výchozí 2025), s hranicemi v `Europe/Prague` (správně DST).
 
-## 3. Volitelná kopie na TESTOVACÍM LXC – teprve pak plný test
+## 3. Povinné ověření izolovaného snapshotu pro FULL
 
-Nejbezpečnější je samostatná MariaDB na jiném testovacím LXC než databáze WeeWX. Nainstaluj **jen na testovacím LXC** `mariadb-server mariadb-client openssl` a ověř lokální službu. Pro úplnou kopii je k dispozici **záměrně opt-in** skript `create-local-snapshot.sh`: vytvoří výhradně nové lokální schéma `weewx_bench_snapshot`, bez přepsání jakéhokoli existujícího, použije streamované `mariadb-dump --single-transaction --quick --skip-lock-tables` a vytvoří lokální `SELECT` účet. Zdrojový dump je pouze pro čtení. I tak je nutné kopírování naplánovat s ohledem na I/O zátěž produkční databáze.
+**Blokace je nyní technická, nikoliv pouze podle flagu.** FULL odmítá databázi,
+pokud nesplní zároveň všechny podmínky:
+
+- Je použita **samostatná MariaDB instance v samostatném testovacím LXC**, s nezávislým úložištěm. Bezpečné oddělení LXC potvrď nejprve mimo benchmark (správce infrastruktury).
+- Cílové schéma je vyhrazené `weewx_bench_*` (např. `weewx_bench_snapshot`), **nikoli** `pocasi-loucka.eu` ani `weewx`.
+- Na izolovaném cílovém schématu existuje jednořádková `bench_isolation_attestation` s unikátním náhodným `snapshot_id` a identifikátor je uveden jako `BENCH_EXPECTED_SNAPSHOT_ID` v lokálním `config.snapshot.env`. Měřící proces porovná marker **na skutečném připojeném serveru**, nikoli jen flag či název.
+- Stále se ověřuje `SHOW GRANTS`: benchmark používá jen SELECT-only DB účet.
+
+Po importu **ověřené kopie** do samostatného MariaDB LXC vytvoř marker **pouze na této kopii** jako její správce:
+
+```sql
+CREATE TABLE `weewx_bench_snapshot`.`bench_isolation_attestation` (
+  snapshot_id VARCHAR(64) NOT NULL PRIMARY KEY
+);
+INSERT INTO `weewx_bench_snapshot`.`bench_isolation_attestation`
+  VALUES ('nahrad_unikatnim_nahodnym_ID_delsim_nez_16');
+-- SELECT právo na marker přiděl pouze lokálnímu účtu benchmarku.
+```
+
+V `config.snapshot.env` nastav `BENCH_DB_NAME='weewx_bench_snapshot'`,
+`BENCH_ISOLATED_DB='YES'` a `BENCH_EXPECTED_SNAPSHOT_ID` na skutečný náhodný identifikátor z markeru. Konfigurace se **nesmí** commitovat, neukládej přihlašovací údaje do výstupů. Neodvozuj bezpečnost od stejných DB credentials jako původní WeeWX.
 
 ```bash
-# OPRAVDU jen na samostatném testovacím LXC s jeho vlastním MariaDB
-sudo apt install mariadb-server mariadb-client openssl
-sudo CONFIRM_ISOLATED_TEST_LXC=YES ./create-local-snapshot.sh
+BENCH_CONFIG=config.snapshot.env ./run.sh probe
 BENCH_CONFIG=config.snapshot.env ./run.sh full
 ```
 
-**Pozor:** příkaz sudo typicky zachová jen některé proměnné; `CONFIRM_ISOLATED_TEST_LXC=YES` předává explicitně, bez proměnné kopírování odmítne. `config.env` musí být existující a s validním SELECT-only přístupem ke zdroji. Kopírování neprováděj na existujícím MariaDB LXC – pro test je určený **jiný** kontejner.
-
-Pokud již máš samostatnou konzistentní kopii MariaDB, nic nedumpuj: vytvoř SELECT-only účet a vlastní `config.snapshot.env` s `BENCH_ISOLATED_DB='YES'` a spusť plný test přímo.
+**Dříve zmiňovaný `create-local-snapshot.sh` není součástí PR.** Tento PR záměrně
+nevytváří automatickou kopii: její bezpečné zřízení, kontrolu zdrojového hostitele
+a I/O dopad je nutné provést odděleně. Neexistující skript již není doporučován.
 
 ## 4. Co se měří
 

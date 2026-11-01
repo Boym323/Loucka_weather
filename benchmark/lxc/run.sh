@@ -40,8 +40,10 @@ set +a
 for v in BENCH_DB_HOST BENCH_DB_PORT BENCH_DB_NAME BENCH_DB_USER BENCH_DB_PASSWORD;do
  [[ -n "${!v:-}" ]] || { echo "Chybi $v" >&2;exit 2; }
 done
-if [[ "$MODE" == full && "${BENCH_ISOLATED_DB:-NO}" != YES ]]; then
- echo 'FULL je blokovan pro produkci. Pouzij oddelenou testovaci kopii a BENCH_ISOLATED_DB=YES.' >&2;exit 2
+if [[ "$MODE" == full ]]; then
+  if [[ "${BENCH_ISOLATED_DB:-NO}" != YES || ! "${BENCH_DB_NAME:-}" =~ ^weewx_bench_[A-Za-z0-9_]+$ || ! "${BENCH_EXPECTED_SNAPSHOT_ID:-}" =~ ^[A-Za-z0-9_-]{16,64}$ ]]; then
+    echo 'FULL odmítnut: vyžaduje oddělené schema weewx_bench_*, BENCH_ISOLATED_DB=YES a BENCH_EXPECTED_SNAPSHOT_ID. Identitu potvrdí dále DB marker.' >&2; exit 2
+  fi
 fi
 # Neinstalujeme nic na produkcni DB; vsechny zavislosti a kompilace zustavaji v testovacim LXC.
 if [[ ! -x .venv/bin/python ]]; then python3 -m venv .venv; fi

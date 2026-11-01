@@ -20,6 +20,7 @@ from zoneinfo import ZoneInfo
 import httpx
 import psutil
 import pymysql
+from isolation_guard import verify_full_snapshot
 
 ROOT = pathlib.Path(__file__).resolve().parent
 URL = 'http://127.0.0.1:18121'
@@ -42,6 +43,9 @@ def preflight():
         with db.cursor() as cur:
             cur.execute('SELECT DATABASE(), VERSION()')
             dbname,version = cur.fetchone()
+            if os.getenv("BENCH_RUN_MODE") == "full":
+                # Verify the actual DB target. The YES flag alone is NOT evidence.
+                verify_full_snapshot(cur)
             if dbname != os.environ['BENCH_DB_NAME']:
                 raise RuntimeError(f'Incorrect database: {dbname!r}')
             cur.execute('SHOW GRANTS')
@@ -73,7 +77,7 @@ def preflight():
     print('DB prava: kontrolovana, SELECT-only. Zadny SQL zapis.',flush=True)
     return {'schema':dbname,'version':version,'end_ts':end_ts,'year':year,'day_rows':day_count,
             'month_rows':month_count,'daily_rows':daily_count,
-            'isolated_copy':os.getenv('BENCH_ISOLATED_DB','NO')=='YES'}
+            'isolated_copy':os.getenv('BENCH_RUN_MODE')=='full' and os.getenv('BENCH_ISOLATED_DB')=='YES'}
 
 
 def same(a,b):
@@ -229,6 +233,7 @@ async def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('mode',choices=['probe','smoke','light','full'])
     args=parser.parse_args()
+    os.environ['BENCH_RUN_MODE']=args.mode
     if args.mode=='full' and os.getenv('BENCH_ISOLATED_DB')!='YES':
         raise RuntimeError('FULL povolen jen na IZOlOVANE kopii DB: BENCH_ISOLATED_DB=YES (nepouzivat na produkci!)')
     metadata=preflight()
