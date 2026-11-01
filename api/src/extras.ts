@@ -3,7 +3,7 @@
  */
 import type {FastifyInstance} from 'fastify';
 import {createReadStream} from 'node:fs';
-import {readFile,stat} from 'node:fs/promises';
+import {readFile,lstat} from 'node:fs/promises';
 import {join} from 'node:path';
 import type {ArchiveReader} from './store.js';
 
@@ -11,7 +11,7 @@ const cameraDir=process.env.LOUCKA_CAMERA_ARCHIVE_DIR||'/var/lib/loucka-camera';
 const warningsFile=process.env.LOUCKA_ALERTS_FILE||'/var/lib/loucka-alerts/alerts.json';
 const nowIso=()=>new Date().toISOString();
 const limitFile=async(path:string,max:number)=>{
- const info=await stat(path);
+ const info=await lstat(path);
  if(!info.isFile()||info.size>max)throw Error('Invalid archive file');
  return info;
 };
@@ -21,6 +21,26 @@ const loadJson=async(path:string,max=150000)=>{
 };
 const fileNameOk=(name:string,kind:'frame'|'video')=>kind==='frame'?
  /^\d{8}T\d{6}Z\.jpg$/.test(name):/^\d{4}-\d{2}-\d{2}\.mp4$/.test(name);
+export async function archiveCameraStatus(){
+ try{
+  const data=await loadJson(join(cameraDir,'index.json'),250000);
+  const frame=Array.isArray(data.frames)?data.frames[0] as {name?:unknown;fetchedAt?:unknown}:null;
+  if(!frame||typeof frame.name!=='string'||!fileNameOk(frame.name,'frame')||
+   typeof frame.fetchedAt!=='string')throw Error('No published frames');
+  const published=Date.parse(frame.fetchedAt);
+  if(!Number.isFinite(published)||published>Date.now()+60_000)throw Error('Invalid archive timestamp');
+  const age=Math.max(0,Math.floor((Date.now()-published)/1000));
+  return {schemaVersion:'1',cameraId:'west',status:age<=1200?'fresh':'stale',
+   capturedAt:null,publishedAt:new Date(published).toISOString(),
+   latestUrl:'/api/v1/camera/frames/'+frame.name,ageSeconds:age,
+   width:null,height:null,privacyMaskApplied:null,updatedAt:nowIso(),
+   timestampMeaning:'downloaded_not_captured'};
+ }catch{
+  return {schemaVersion:'1',cameraId:'west',status:'disabled',capturedAt:null,
+   publishedAt:null,latestUrl:null,ageSeconds:null,width:null,height:null,
+   privacyMaskApplied:null,updatedAt:nowIso(),timestampMeaning:'unknown'};
+ }
+}
 export function registerExtras(app:FastifyInstance,reader:ArchiveReader){
  app.get('/api/v1/diagnostics/sensors',async(_req,reply)=>{
   if(!reader.telemetrySnapshot)return reply.code(503).send({schemaVersion:'1',status:'unavailable',readings:[]});
