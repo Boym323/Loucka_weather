@@ -61,7 +61,6 @@ import CameraArchive from '../features/camera/CameraArchive.astro';
 </style>
 <script>
  import {getCameraStatus} from '../shared/api/client';
- import {formatTimestamp} from '../shared/domain/weather';
  const root=document.querySelector<HTMLElement>('[data-camera]');
  const img=root?.querySelector<HTMLImageElement>('[data-camera-image]');
  const status=root?.querySelector<HTMLElement>('[data-camera-status]');
