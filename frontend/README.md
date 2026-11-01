@@ -62,3 +62,14 @@ API v1 nyní implementuje `/current`, raw/hodinovou/denní `/history` s `resolut
 - **Bezpečnost:** preview je určeno k vývoji a má být chráněno přes NPM Access List. Není to produkčně hardenované API.
 
 Změny zapisuj i do [changelogu](../CHANGELOG.md). Vždy odliš stav v GitHubu, stav CI a verzi **fakticky nasazenou na LXC**.
+
+## Vizuální návrh – interakce doplněné 1. 11. 2026
+
+- **Mobil:** spodní navigační lišta pro pět hlavních sekcí, ostatní stránky zůstávají dostupné přes horní menu.
+- **Mapy:** časová osa dostupných snímků RainViewer a skutečně funkční přepínač radarové vrstvy. Nepřipojené meteorologické vrstvy nejsou falešně aktivní.
+- **Kamera:** ruční aktualizace nebo volitelné obnovování po 60 sekundách (pouze ve viditelné kartě), fullscreen. Čas stažení obrázku neznamená čas jeho pořízení.
+- **Senzory:** trendová SVG 24 h ze skutečných archivních bodů. Mezery se nepropojují. Bez měření se zobrazí nedostupný stav.
+- **Klimatologie:** vedle měsíčních grafů také tři menší šestileté souhrny založené na ročních statistikách API.
+- **Testy:** Playwright vyžaduje viditelnost mobilního menu, tři roční klimatologické grafy, prvky kamery, přepínač radarové vrstvy a trendové kontejnery senzorů.
+
+Nezávislé blokery před publikací jako kompletního produktu: ověřený archiv fotografií a časosběr, určení času vzniku JPEG, registry fyzických čidel a telemetrie RSSI/baterií, lokálně validované výstrahy CAP ČHMÚ, případně další licenčně a technicky ověřené mapové vrstvy.
