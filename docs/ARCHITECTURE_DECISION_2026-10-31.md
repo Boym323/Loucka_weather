@@ -39,6 +39,10 @@
 4. Při opravách v `loucka_reconstruction` ověřovat inkrementální invalidaci cache a přesnost agregátů na reálném **izolovaném snapshotu** (včetně 2009–2026, CET/CEST, zdrojových dat a výpadků).
 5. Po těchto měřeních **potvrdit Node.js**, nebo doloženě změnit rozhodnutí na Go či přidat Rust batch worker. Nenasazovat více runtime jen pro teoretické zlepšení.
 
+## Stabilní hranice vůči API
+
+Bez ohledu na finální volbu Fastify/Go musí frontend komunikovat přes **jazykově nezávislý, verzovaný API kontrakt**. API má být samostatná služba mimo WeeWX (v MVP může běžet v novém LXC společně s Astro, ale v odděleném procesu). Podrobný návrh endpointů, OpenAPI, testů parity a bezpečné migrace uvádí [Návrh vyměnitelného API](API_ARCHITECTURE_AND_MIGRATION_2026-10-31.md). Tento odkaz **neschvaluje definitivně Node/Go** ani neznamená existenci hotové implementace.
+
 ## Relevantní podklady
 - [Matomo](MATOMO_AUDIT_2026-10-31.md), [Nginx provoz](TRAFFIC_AUDIT_2026-10-31.md), [benchmarky](BENCHMARK_SYNTHESIS_2026-10-31.md).
 - [HTTP referenční report na benchmark větvi](https://github.com/Boym323/Loucka_weather/blob/bench/go-rust-python/benchmark/REAL_LXC_SIX_LANGUAGES_FULL_THREE_RUNS_2026-10-30.md).

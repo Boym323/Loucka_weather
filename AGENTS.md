@@ -2,7 +2,7 @@
 
 ## Povinný start pro každého nového agenta
 1. Přečti [docs/PROJECT_CONTEXT.md](docs/PROJECT_CONTEXT.md).
-2. Přečti [docs/ARCHITECTURE_DECISION_2026-10-31.md](docs/ARCHITECTURE_DECISION_2026-10-31.md), [docs/TRAFFIC_AUDIT_2026-10-31.md](docs/TRAFFIC_AUDIT_2026-10-31.md), [docs/MATOMO_AUDIT_2026-10-31.md](docs/MATOMO_AUDIT_2026-10-31.md) a [docs/BENCHMARK_SYNTHESIS_2026-10-31.md](docs/BENCHMARK_SYNTHESIS_2026-10-31.md).
+2. Přečti [docs/ARCHITECTURE_DECISION_2026-10-31.md](docs/ARCHITECTURE_DECISION_2026-10-31.md), [docs/API_ARCHITECTURE_AND_MIGRATION_2026-10-31.md](docs/API_ARCHITECTURE_AND_MIGRATION_2026-10-31.md), [docs/TRAFFIC_AUDIT_2026-10-31.md](docs/TRAFFIC_AUDIT_2026-10-31.md), [docs/MATOMO_AUDIT_2026-10-31.md](docs/MATOMO_AUDIT_2026-10-31.md) a [docs/BENCHMARK_SYNTHESIS_2026-10-31.md](docs/BENCHMARK_SYNTHESIS_2026-10-31.md).
 3. Strojově čitelná data: [docs/data/observations_2026-10-31.json](docs/data/observations_2026-10-31.json), [docs/data/traffic_daily_2026-09-27_2026-10-31.csv](docs/data/traffic_daily_2026-09-27_2026-10-31.csv).
 4. Benchmark kód je v samostatné větvi `bench/go-rust-python`, návrh [PR #2](https://github.com/Boym323/Loucka_weather/pull/2) **je draft**; nikdy netvrď, že byl merge do main nebo že nový web už běží.
 5. Rozlišuj zdrojově ověřené hodnoty, orientační heuristiky, syntetická měření a návrhy. Nikdy netvrď, že benchmark numeriky použil skutečné meteo archive, ani že plné HTTP benchmarky byly na izolované DB.
@@ -17,7 +17,12 @@
 
 ## Praktický postup v repozitáři
 - Před návrhem změny zkontroluj aktuální `main`, otevřené PR a pracovní dokumentaci, abys zbytečně nepřepisoval novější změny.
+- API provozuj odděleně od WeeWX (v MVP může běžet jako samostatná služba vedle Astro v novém LXC); frontend musí záviset jen na jazykově nezávislém verzovaném OpenAPI kontraktu, ne na Fastify nebo Go. Při výměně backendu vyžaduj paritní testy, staging a možnost rollbacku.
 - Pro Node API nejprve definuj čtecí kontrakty `/current`, `/history/24h`, `/history/30d`, `/statistics/yearly`, `/healthz` a jejich bezpečnostní omezení. Využívej cache a agregáty, náročné činnosti mimo HTTP.
 - Výsledky nových měření zapisuj do `docs/` včetně data, rozsahu, zdroje, metrik, metodiky, omezení, případných dostupných JSON výstupů a odkazu na relevantní PR.
 - Pokud se objeví rozpor mezi existujícími reporty a měřením, zaznamenej ho výslovně, nic potichu nepřepisuj.
 - Když uživatel žádá postup pro nový chat, odkazuj na `main/docs/PROJECT_CONTEXT.md` a tento `AGENTS.md`, nevyžaduj opakování už zdokumentovaných informací.
+
+## Doplněné odborné podklady
+- K meteo statistice čti `STATISTICS_SPEC.md` a `WEEWX_DAILY_SUMMARIES_AUDIT.md`, k průběhu rozhodnutí `DECISIONS.md`.
+- Audit `BACKEND_TECHNOLOGY_AUDIT.md` z 30.10. historicky navrhoval Go. **Aktuální pracovní preference pro staging zůstává Fastify/TypeScript** podle `docs/ARCHITECTURE_DECISION_2026-10-31.md`; konečný runtime nebyl potvrzen.
