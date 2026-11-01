@@ -75,9 +75,44 @@ const quickReadings = [
   if(status){status.textContent='API nedostupné';status.classList.add('error');}
   if(updated)updated.textContent='Nepodařilo se načíst archivní měření. Zkuste stránku obnovit.';
  });
+ // Live readings are displayed only for metrics present in the authenticated
+ // custom upload. Archive-only interval rain is never confused with gateway rain totals.
+ const applyLive=(event:Event)=>{
+  if(controller.signal.aborted)return;
+  const data=(event as CustomEvent<{state:string;receivedAt:string;observedAt:string;units:string;
+   readings:Record<string,{value:number;quality:string;source:string}>}>).detail;
+  const received=Date.parse(data?.receivedAt??'');
+  if(data?.state!=='live'||data.units!=='metricwx'||!Number.isFinite(received)||
+   Date.now()-received>120000)return;
+  const readings=data.readings??{};
+  const all=[...metrics,...quickReadings];
+  for(const metric of all){
+   const reading=readings[metric.id];
+   if(!reading||reading.source!=='gw3000_live'||reading.quality!=='measured'||
+    typeof reading.value!=='number'||!Number.isFinite(reading.value))continue;
+   const node=section.querySelector<HTMLElement>('[data-metric-value="'+metric.id+'"]')??
+    section.querySelector<HTMLElement>('[data-quick-value="'+metric.id+'"]');
+   const quality=section.querySelector<HTMLElement>('[data-metric-quality="'+metric.id+'"]')??
+    section.querySelector<HTMLElement>('[data-quick-quality="'+metric.id+'"]');
+   if(node)node.textContent=formatValue(reading.value,metric.digits);
+   if(quality){quality.textContent='Živé měření GW3000';quality.dataset.readingState='measured';}
+  }
+  if(status){status.textContent='GW3000 · živá měření';status.className='status-chip ok';}
+  if(updated)updated.textContent='GW3000 · naměřeno '+formatTimestamp(data.observedAt)+
+   ' · nezahrnuté veličiny z posledního archivu WeeWX';
+ };
+ const restoreArchive=()=>{
+  if(!controller.signal.aborted)void refresh();
+ };
  if(section){
   void refresh();
   window.addEventListener('loucka:archive-updated',()=>{if(!controller.signal.aborted)void refresh();});
+  window.addEventListener('loucka:live-observation',applyLive);
+  window.addEventListener('loucka:live-expired',restoreArchive);
  }
+ document.addEventListener('astro:before-swap',()=>{
+  window.removeEventListener('loucka:live-observation',applyLive);
+  window.removeEventListener('loucka:live-expired',restoreArchive);
+ },{once:true});
  document.addEventListener('astro:before-swap',()=>controller.abort(),{once:true});
 </script>
