@@ -70,6 +70,35 @@ try{
       annual:document.querySelector('[data-years-status]')?.textContent
      }));
      console.log('CLIMATE RUNTIME',size.name,JSON.stringify(info));
+     const climate=await page.evaluate(()=>({
+      overall:document.querySelector('[data-climate-status]')?.textContent?.trim()??'',
+      statuses:Object.fromEntries(['temperature','rain','wind'].map(name=>[
+       name,document.querySelector('[data-chart-status="'+name+'"]')?.textContent?.trim()??''
+      ])),
+      annual:document.querySelector('[data-years-status]')?.textContent?.trim()??'',
+      summary:{
+       temperature:document.querySelector('[data-summary="temperature"]')?.textContent?.trim()??'',
+       rain:document.querySelector('[data-summary="rain"]')?.textContent?.trim()??''
+      },
+      svgs:Object.fromEntries(['temperature','rain','wind'].map(name=>[
+       name,document.querySelector('[data-chart="'+name+'"] svg')!==null
+      ]))
+     }));
+     console.log('CLIMATE VERIFIED',size.name,JSON.stringify(climate));
+     if(!climate.overall.startsWith('Archivní souhrny'))
+      errors.push(size.name+': climatology API failed: '+climate.overall);
+     for(const [metric,status] of Object.entries(climate.statuses)){
+      if(status!=='Archivní souhrny')
+       errors.push(size.name+': '+metric+' climate chart missing data: '+status);
+      if(!climate.svgs[metric])
+       errors.push(size.name+': '+metric+' chart SVG not rendered');
+     }
+     if(climate.annual!=='Souhrny WeeWX')
+      errors.push(size.name+': annual climate table not ready: '+climate.annual);
+     for(const [metric,value] of Object.entries(climate.summary)){
+      if(!/\\d/.test(value)||value==='—')
+       errors.push(size.name+': '+metric+' annual summary missing: '+value);
+     }
     }
     const state=await page.evaluate(()=>({
      title:document.title,
@@ -125,6 +154,22 @@ try{
     valid:data?.completeness?.valid,error:data?.error}));
    if(!summary.ok)errors.push('Yearly statistics advertised but HTTP '+summary.status+
     ' – verify WeeWX archive_day_outTemp table and SELECT grants');
+   else if(data?.metric!=='outTemp'||data?.aggregation!=='mean'||
+    !Number.isFinite(data?.value)||!Number.isSafeInteger(data?.completeness?.valid)||
+    data.completeness.valid<=0)errors.push('Yearly temperature 2025 has invalid or missing data'); 
+   const rainQuery=new URLSearchParams({
+    metric:'rain',aggregation:'sum',year:'2025',units:'metricwx',dataset:'original'
+   });
+   const rainResponse=await fetch(base+'/api/v1/statistics/yearly?'+rainQuery,{
+    signal:AbortSignal.timeout(25000)
+   });
+   const rainData=await rainResponse.json().catch(()=>null);
+   console.log('YEARLY RAIN 2025 API',JSON.stringify({status:rainResponse.status,
+    value:rainData?.value,valid:rainData?.completeness?.valid,error:rainData?.error}));
+   if(!rainResponse.ok)errors.push('Yearly rain 2025: HTTP '+rainResponse.status);
+   else if(rainData?.metric!=='rain'||rainData?.aggregation!=='sum'||
+    !Number.isFinite(rainData?.value)||!Number.isSafeInteger(rainData?.completeness?.valid)||
+    rainData.completeness.valid<=0)errors.push('Yearly rain 2025 has invalid or missing data');
   }
  }
 
