@@ -28,7 +28,7 @@ jobs:
           npm ci --no-audit --no-fund
           npm install --no-save --no-audit --no-fund playwright@1.56.1
           npx playwright install --with-deps chromium
-      - name: Visit deployed dev website, check 8 routes, desktop and mobile
+      - name: Visit deployed dev website, check 9 routes, desktop and mobile
         working-directory: frontend
         run: node scripts/preview-visual-check.mjs
         env:
