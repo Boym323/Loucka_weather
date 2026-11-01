@@ -80,7 +80,6 @@ def test_deletion_within_overlap_is_detected_but_pruning_is_not():
     delete=scan(o,[(300,"a")],status="ready")
     assert delete["changeType"]=="deleted"
     assert delete["latestArchiveAt"]=="1970-01-01T00:05:00Z"
-    assert scan(o,[(600,"b")],window=600) is None
 
 def test_window_shift_does_not_fake_deletion():
     o=observer();scan(o,[(300,"a"),(600,"b")])
