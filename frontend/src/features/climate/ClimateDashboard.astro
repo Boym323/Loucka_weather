@@ -131,12 +131,25 @@ const months=['Led','Úno','Bře','Dub','Kvě','Čvn','Čvc','Srp','Zář','Ří
     series:[{name:'Roční hodnoty',type:'bar',data:values,itemStyle:{color},barMaxWidth:28}]},true);
    chart.resize();
   }
-  async function runLimited<T>(jobs:(()=>Promise<T>)[],max=4):Promise<PromiseSettledResult<T>[]>{
+  // One visitor's 58 statistics requests must not exhaust nginx's 5 r/s budget.
+  // Reserve a slot every 300 ms; API 429 is also retried by the shared client.
+  let nextRequestAt=0;
+  const quotaSlot=async()=>{
+   const now=Date.now(),reserved=Math.max(now,nextRequestAt);
+   nextRequestAt=reserved+300;
+   if(reserved>now)await new Promise(resolve=>setTimeout(resolve,reserved-now));
+  };
+  async function runLimited<T>(jobs:(()=>Promise<T>)[],max=3,signal?:AbortSignal):Promise<PromiseSettledResult<T>[]>{
    const results:PromiseSettledResult<T>[] =new Array(jobs.length);
    let cursor=0;
    await Promise.all(Array.from({length:Math.min(max,jobs.length)},async()=>{
-    while(cursor<jobs.length){const idx=cursor++;try{results[idx]={status:'fulfilled',value:await jobs[idx]()};}
-     catch(e){results[idx]={status:'rejected',reason:e};}}
+    while(cursor<jobs.length&&!signal?.aborted){
+     const idx=cursor++;
+     await quotaSlot();
+     if(signal?.aborted)return;
+     try{results[idx]={status:'fulfilled',value:await jobs[idx]()};}
+     catch(e){results[idx]={status:'rejected',reason:e};}
+    }
    }));
    return results;
   }
@@ -179,7 +192,7 @@ const months=['Led','Úno','Bře','Dub','Kvě','Čvn','Čvc','Srp','Zář','Ří
      ()=>getStatistics('yearly','windSpeed','mean',yearString,signal),
      ()=>getStatistics('yearly','outTemp','max',yearString,signal)
     ];
-    const summaryResults=await runLimited(summary);
+    const summaryResults=await runLimited(summary,3,signal);
     if(signal.aborted)return;
     display('[data-summary="temperature"]',pick(summaryResults[0]),1,'°C');
     display('[data-summary="rain"]',pick(summaryResults[1]),1,'mm');
@@ -196,7 +209,7 @@ const months=['Led','Úno','Bře','Dub','Kvě','Čvn','Čvc','Srp','Zář','Ří
      ()=>getStatistics('yearly','outTemp','mean',String(y),signal),
      ()=>getStatistics('yearly','rain','sum',String(y),signal),
      ()=>getStatistics('yearly','windSpeed','mean',String(y),signal)
-    ]));
+    ]),3,signal);
     if(signal.aborted)return;
     if(body){
      body.replaceChildren();
@@ -222,7 +235,7 @@ const months=['Led','Úno','Bře','Dub','Kvě','Čvn','Čvc','Srp','Zář','Ří
       ()=>getStatistics('monthly','windSpeed','mean',month,signal)
      ];
     }).flat();
-    const monthly=await runLimited(jobs);
+    const monthly=await runLimited(jobs,3,signal);
     if(signal.aborted)return;
     const temps=Array.from({length:12},(_,i)=>pick(monthly[i*3]));
     const rain=Array.from({length:12},(_,i)=>pick(monthly[i*3+1]));
@@ -246,7 +259,11 @@ const months=['Led','Úno','Bře','Dub','Kvě','Čvn','Čvc','Srp','Zář','Ří
     setGraph('wind',wind,'#49dca8','m/s');
     (['temperature','rain','wind'] as const).forEach((n,j)=>{
      const list=[temps,rain,wind][j];
-     badge('[data-chart-status="'+n+'"]',list.some(v=>v!==null)?'Archivní souhrny':'Bez měření',list.some(v=>v!==null)?'ok':'warning');
+     const validMonths=list.filter(v=>v!==null).length;
+     const chartElement=root.querySelector<HTMLElement>('[data-chart="'+n+'"]');
+     if(chartElement)chartElement.dataset.validMonths=String(validMonths);
+     badge('[data-chart-status="'+n+'"]',validMonths===12?'Archivní souhrny':validMonths?
+      'Dostupné '+validMonths+'/12 měsíců':'Bez měření',validMonths===12?'ok':'warning');
     });
    }catch(error){
     if(signal.aborted)return;

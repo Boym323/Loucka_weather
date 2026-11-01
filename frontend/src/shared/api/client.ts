@@ -2,10 +2,28 @@ import { isCurrentResponse, isHistoryResponse } from '../domain/weather';
 import type { CurrentResponse, HistoryResponse } from '../domain/weather';
 import { getMetric } from '../domain/metrics';
 
+// Staging nginx explicitly limits /api/v1 to 5 requests/s and returns 429 with Retry-After.
+// Retry that transient response, but never silently retry other API errors.
+async function retryDelay(ms:number,signal?:AbortSignal):Promise<void>{
+ if(signal?.aborted)throw new DOMException('Požadavek přerušen','AbortError');
+ await new Promise<void>((resolve,reject)=>{
+  const cancel=()=>{clearTimeout(timeout);reject(new DOMException('Požadavek přerušen','AbortError'));};
+  const timeout=setTimeout(()=>{signal?.removeEventListener('abort',cancel);resolve();},ms);
+  signal?.addEventListener('abort',cancel,{once:true});
+ });
+}
 async function request(path: string, signal?: AbortSignal): Promise<unknown> {
- const response=await fetch(path,{signal,headers:{Accept:'application/json'},credentials:'same-origin'});
- if(!response.ok)throw new Error('API HTTP '+response.status);
- return response.json() as Promise<unknown>;
+ for(let attempt=0;attempt<3;attempt++){
+  const response=await fetch(path,{signal,headers:{Accept:'application/json'},credentials:'same-origin'});
+  if(response.status===429&&attempt<2){
+   const retryAfter=Number(response.headers.get('Retry-After'));
+   await retryDelay(Math.max(1000,Math.min(3000,Number.isFinite(retryAfter)?retryAfter*1000:1000))*(attempt+1),signal);
+   continue;
+  }
+  if(!response.ok)throw new Error('API HTTP '+response.status);
+  return response.json() as Promise<unknown>;
+ }
+ throw new Error('API HTTP 429');
 }
 export async function getCurrent(signal?:AbortSignal):Promise<CurrentResponse>{
  const data=await request('/api/v1/current?units=metricwx&dataset=original',signal);
