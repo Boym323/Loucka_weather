@@ -184,3 +184,16 @@ test('camera archive and CHMI warning fail closed when collectors not installed'
  assert.equal((await app.inject('/api/v1/camera/frames/invalid.jpg')).statusCode,404);
  assert.equal((await app.inject('/api/v1/camera/timelapse/unknown.mp4')).statusCode,404);
 });
+
+test('camera day browsing rejects traversal, invalid dates and future requests',async t=>{
+ const app=buildApp(reader(),now);t.after(()=>app.close());
+ assert.equal((await app.inject('/api/v1/camera/archive/day/2026-02-30')).statusCode,400);
+ assert.equal((await app.inject('/api/v1/camera/archive/day/bad')).statusCode,400);
+ const distant=await app.inject('/api/v1/camera/archive/day/2020-01-01');
+ assert.equal(distant.statusCode,200);
+ assert.equal(distant.json().status,'outside_retention');
+ const today=await app.inject('/api/v1/camera/archive/day/'+new Date().toISOString().slice(0,10));
+ assert.equal(today.statusCode,200);
+ assert.equal(today.json().status,'unavailable');
+ assert.deepEqual(today.json().frames,[]);
+});
