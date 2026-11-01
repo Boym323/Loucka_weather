@@ -117,6 +117,39 @@ export function createMariaDbReader():ArchiveReader{
        WHERE dateTime > ? AND dateTime <= ? ORDER BY dateTime ASC LIMIT ?`,
        [afterExclusive,toInclusive,limit]) as ArchiveRow[];
    },
+   async telemetrySnapshot(asOfEpoch:number){
+     await ensureReadOnly();
+     // Only explicitly allowlisted columns actually present in production may be read.
+     const candidate=['ws80_sig','wh31_ch1_sig','wh31_ch2_sig','wh51_ch1_sig',
+       'ws80_batt','pm25_Batt1','soilMoistBatt1','lightning_Batt','batteryStatus1','batteryStatus2',
+       'ws80_rssi','wh57_rssi','wh40_rssi','wh41_ch1_rssi','wh51_ch1_rssi','wh31_ch1_rssi','wh26_rssi'];
+     const available=await pool.query(`SELECT COLUMN_NAME AS name FROM information_schema.COLUMNS
+       WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'archive'`,[schema]) as {name:string}[];
+     const known=new Set(available.map(item=>String(item.name)));
+     const selected=candidate.filter(c=>known.has(c));
+     if(!selected.length)return [];
+     const columns=selected.map(c=>'`'+c+'`').join(', ');
+     const rows=await pool.query(`SELECT dateTime, ${columns} FROM ${table}
+       WHERE dateTime > ? AND dateTime <= ? ORDER BY dateTime DESC LIMIT 500`,
+       [asOfEpoch-86400,asOfEpoch]) as Record<string,number|null>[];
+     return selected.flatMap(column=>{
+       const row=rows.find(r=>r[column]!==null&&r[column]!==undefined&&Number.isFinite(Number(r[column])));
+       return row?[{column,dateTime:Number(row.dateTime),value:Number(row[column])}]:[];
+     });
+   },
+   async solarYear(startExclusive:number,endInclusive:number){
+     await ensureReadOnly();
+     const rows=await pool.query(`SELECT COUNT(*) AS records,
+       SUM(CASE WHEN radiation BETWEEN 0 AND 1600 AND \`interval\` BETWEEN 1 AND 120 THEN 1 ELSE 0 END) AS validRecords,
+       SUM(CASE WHEN radiation BETWEEN 0 AND 1600 AND \`interval\` BETWEEN 1 AND 120 THEN \`interval\` ELSE 0 END) AS validMinutes,
+       SUM(CASE WHEN radiation BETWEEN 0 AND 1600 AND \`interval\` BETWEEN 1 AND 120 THEN radiation * \`interval\` ELSE 0 END) / 60000 AS energyKwhM2
+       FROM ${table} WHERE dateTime > ? AND dateTime <= ? AND usUnits IN (1,16,17)`,
+       [startExclusive,endInclusive]) as Record<string,number|null>[];
+     const first=rows[0]??{};
+     return {records:Number(first.records||0),validRecords:Number(first.validRecords||0),
+       validMinutes:Number(first.validMinutes||0),energyKwhM2:Number(first.validRecords||0)>0?
+       Number(first.energyKwhM2):null};
+   },
    async ping():Promise<void>{
      await ensureReadOnly();
      await pool.query(`SELECT dateTime FROM ${table} ORDER BY dateTime DESC LIMIT 1`);
