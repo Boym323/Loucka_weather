@@ -26,9 +26,7 @@ jobs:
         with:
           node-version: '24'
       - name: Install pinned dependencies
-        run: npm install --no-audit --no-fund
-      - name: Temporary lockfile export
-        run: node -e "const fs=require('fs');console.log('LOUCKA_LOCK_V2_START'+JSON.stringify(fs.readFileSync('package-lock.json','utf8'))+'LOUCKA_LOCK_V2_END')"
+        run: npm ci --no-audit --no-fund
       - name: Type and Astro diagnostics
         run: npm run check
       - name: Unit tests
