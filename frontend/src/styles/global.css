@@ -690,3 +690,11 @@ h1,h2,h3,p{margin-top:0}h1{font-size:clamp(26px,3vw,42px);line-height:1.2;letter
 .camera-day-pagination{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:13px}
 .camera-day-pagination[hidden]{display:none}
 @media(max-width:650px){.camera-day-browser .section-heading{align-items:flex-start}.camera-day-choice{width:100%}.camera-day-choice input{flex:1;max-width:none}}
+
+/* GW3000 source monitoring: reference-style dense diagnostic cards. */
+.monitor-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:12px 0}
+.monitor-card{background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:15px;min-width:0}
+.monitor-card .section-heading{gap:7px;align-items:center;flex-wrap:wrap}
+.monitor-card h3{font-size:14px;margin:0}
+.monitor-card .source-note{display:block;margin:9px 0 0}
+.monitor-card [data-monitor-detail]{font-variant-numeric:tabular-nums}
