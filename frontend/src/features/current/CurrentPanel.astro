@@ -85,7 +85,7 @@ const quickReadings = [
   if(data?.state!=='live'||data.units!=='metricwx'||!Number.isFinite(received)||
    Date.now()-received>120000)return;
   const readings=data.readings??{};
-  const all=[...metrics,...quickReadings];
+  const all=[...metrics,{id:'rain',digits:1},{id:'radiation',digits:0},{id:'UV',digits:1}];
   for(const metric of all){
    const reading=readings[metric.id];
    if(!reading||reading.source!=='gw3000_live'||reading.quality!=='measured'||
