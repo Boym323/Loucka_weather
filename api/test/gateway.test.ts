@@ -33,6 +33,17 @@ test('garbled or unexpected gateway fields do not become public readings',()=>{
  assert.equal(validatedSnapshot({...fixture,readings:{x:12,y:15}},Date.parse(now)),null);
  assert.equal(validatedSnapshot({...fixture,readings:{...fixture.readings,unknown:33}},Date.parse(now))?.readings.unknown,undefined);
 });
+test('read-only LAN source has source-specific timestamp provenance',()=>{
+ const v=validatedSnapshot({...fixture,source:'ecowitt_gw3000_lan_http',
+  timestampMeaning:'gateway_polled_at'},Date.parse(now));
+ assert.ok(v);
+ assert.equal(v?.source,'ecowitt_gw3000_lan_http');
+ assert.equal(v?.timestampMeaning,'gateway_polled_at');
+ const hub=new LiveHub();
+ hub.enableGateway();
+ hub.publishGateway(v!);
+ assert.equal(hub.getGateway(Date.parse(now))?.timestampMeaning,'gateway_polled_at');
+});
 test('file observer sends exactly one live observation for the same captured upload',async()=>{
  const folder=await mkdtemp(join(tmpdir(),'loucka-gw3000-test-'));
  const file=join(folder,'latest.json'),hub=new LiveHub();
