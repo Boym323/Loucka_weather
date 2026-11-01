@@ -1,0 +1,123 @@
+---
+interface Props { compact?: boolean }
+const { compact = false } = Astro.props;
+const tabs = [
+ { id:'outTemp',label:'Teplota' },
+ { id:'outHumidity',label:'Vlhkost' },
+ { id:'barometer',label:'Tlak' },
+ { id:'windSpeed',label:'Vítr' },
+ { id:'rainRate',label:'Srážky' }
+];
+---
+<section class="section" data-history-chart data-compact={compact ? 'true' : 'false'} aria-labelledby={compact?'home-chart-title':'history-chart-title'}>
+ <div class="section-heading">
+  <div><span class="eyebrow">◷ Skutečná archivní data</span><h2 id={compact?'home-chart-title':'history-chart-title'}>{compact?'Posledních 24 hodin':'Interaktivní meteorologický graf'}</h2></div>
+  <span class="status-chip" data-chart-status role="status">Načítání grafu</span>
+ </div>
+ <div class="chart-toolbar" role="group" aria-label="Vybrat veličinu">
+  {tabs.map((tab,index)=><button class="chart-tab" data-select-metric={tab.id} type="button" aria-pressed={index===0?'true':'false'}>{tab.label}</button>)}
+ </div>
+ {!compact && <div class="chart-toolbar" role="group" aria-label="Časový rozsah" style="margin-top:10px">
+  <span class="source-note">Období:</span>
+  <button class="chart-tab" data-select-hours="6" aria-pressed="false" type="button">6 hodin</button>
+  <button class="chart-tab" data-select-hours="24" aria-pressed="true" type="button">24 hodin</button>
+  <button class="chart-tab" data-select-hours="72" aria-pressed="false" type="button">3 dny</button>
+ </div>}
+ <figure class="chart-figure">
+  <div class:list={['chart-box',{'large':!compact}]} data-chart-canvas role="img" aria-label="Graf meteorologických měření v čase"></div>
+  <figcaption class="chart-message" data-chart-message>Načítají se ověřené archivní intervaly. Chybějící data nepropojujeme.</figcaption>
+ </figure>
+ <div class="chart-summary" data-chart-summary aria-live="polite"></div>
+ <p class="history-legend">Zdroj: WeeWX / MariaDB přes API · Europe/Prague · graf nerozlišuje intervaly nepodložené zdrojovými daty.</p>
+</section>
+<script>
+ import { getHistoryRange } from '../../shared/api/client';
+ import { getMetric, formatValue } from '../../shared/domain/metrics';
+ import type { HistoryResponse } from '../../shared/domain/weather';
+ import * as echarts from 'echarts/core';
+ import { LineChart, BarChart } from 'echarts/charts';
+ import { GridComponent, TooltipComponent, DataZoomComponent } from 'echarts/components';
+ import { SVGRenderer } from 'echarts/renderers';
+
+ echarts.use([LineChart, BarChart, GridComponent, TooltipComponent, DataZoomComponent, SVGRenderer]);
+ const formatTime=(value:number)=>new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',hour:'2-digit',minute:'2-digit',day:'numeric',month:'numeric'}).format(new Date(value));
+ const colorByMetric:Record<string,string>={outTemp:'#ff6674',outHumidity:'#5dc1ee',barometer:'#b39cff',windSpeed:'#4de0a5',rainRate:'#56baf0'};
+ document.querySelectorAll<HTMLElement>('[data-history-chart]').forEach(root=>{
+  const element=root.querySelector<HTMLElement>('[data-chart-canvas]');
+  const message=root.querySelector<HTMLElement>('[data-chart-message]');
+  const status=root.querySelector<HTMLElement>('[data-chart-status]');
+  const summary=root.querySelector<HTMLElement>('[data-chart-summary]');
+  if(!element)return;
+  const chart=echarts.init(element,undefined,{renderer:'svg'});
+  const observer=new ResizeObserver(()=>chart.resize());observer.observe(element);
+  let controller:AbortController|undefined;
+  let activeMetric='outTemp',hours=24;
+  async function update(){
+   controller?.abort();controller=new AbortController();const signal=controller.signal;
+   if(status){status.textContent='Načítání…';status.className='status-chip';}
+   if(summary)summary.replaceChildren();
+   if(message)message.textContent='Načítání archivních měření…';
+   try{
+    const result:HistoryResponse=await getHistoryRange(activeMetric,hours,signal);
+    if(signal.aborted)return;
+    const known=getMetric(activeMetric);
+    if(!known)throw new Error('Nepodporovaná veličina');
+    const plotted=result.points.map(point=>[
+     Date.parse(point.endTime),
+     point.value===null||point.quality==='missing'||point.quality==='suspect'?null:point.value
+    ] as [number,number|null]);
+    const valid=plotted.filter((point):point is [number,number]=>point[1]!==null&&Number.isFinite(point[1]));
+    const color=colorByMetric[activeMetric]??'#4de0a5';
+    chart.clear();
+    chart.setOption({
+     backgroundColor:'transparent',
+     animation:false,
+     grid:{top:20,right:15,bottom:38,left:46,containLabel:false},
+     tooltip:{trigger:'axis',confine:true},
+     xAxis:{type:'time',axisLine:{lineStyle:{color:'#476176'}},axisLabel:{
+      color:'#99b4c6',fontSize:10,formatter:(value:number)=>formatTime(value)
+     },axisTick:{show:false},splitLine:{show:false}},
+     yAxis:{type:'value',scale:true,name:result.unit,nameTextStyle:{color:'#9bb2c3'},axisLabel:{color:'#99b4c6',fontSize:10},
+      splitLine:{lineStyle:{color:'#264357',type:'dashed'}}},
+     series:[{
+      name:known.label,type:activeMetric==='rainRate'?'bar':'line',data:plotted,
+      showSymbol:false,connectNulls:false,smooth:false,lineStyle:{width:2,color},
+      itemStyle:{color},areaStyle:activeMetric==='rainRate'?undefined:{color,opacity:.13},
+      barMaxWidth:16
+     }]
+    });
+    if(status){status.textContent=valid.length+' naměřených bodů';status.classList.add('ok');}
+    if(message)message.textContent=valid.length?'Časy na ose v Europe/Prague. Neplatná a chybějící měření nejsou vykreslena.':'Pro vybraný rozsah nejsou platná měření.';
+    if(summary&&valid.length){
+     const values=valid.map(point=>point[1]);
+     const min=Math.min(...values),max=Math.max(...values);
+     // Do not label min/max as calendar-day extrema; it is a sliding selected interval.
+     const lowest=document.createElement('span');
+     const highest=document.createElement('span');
+     lowest.textContent='Minimum ('+hours+' h): '+formatValue(min,known.digits)+' '+known.unit;
+     highest.textContent='Maximum ('+hours+' h): '+formatValue(max,known.digits)+' '+known.unit;
+     summary.append(lowest,highest);
+    }
+    chart.resize();
+   }catch(error){
+    if(signal.aborted)return;
+    chart.clear();
+    if(status){status.textContent='Historie nedostupná';status.classList.add('error');}
+    if(message)message.textContent='Historická data se nepodařilo načíst. '+
+     (error instanceof Error&&error.message.startsWith('API HTTP')?error.message:'Zkuste to znovu.');
+   }
+  }
+  root.querySelectorAll<HTMLButtonElement>('[data-select-metric]').forEach(btn=>btn.addEventListener('click',()=>{
+   activeMetric=btn.dataset.selectMetric??'outTemp';
+   root.querySelectorAll<HTMLButtonElement>('[data-select-metric]').forEach(b=>b.setAttribute('aria-pressed',String(b===btn)));
+   void update();
+  }));
+  root.querySelectorAll<HTMLButtonElement>('[data-select-hours]').forEach(btn=>btn.addEventListener('click',()=>{
+   hours=Number(btn.dataset.selectHours??'24');
+   root.querySelectorAll<HTMLButtonElement>('[data-select-hours]').forEach(b=>b.setAttribute('aria-pressed',String(b===btn)));
+   void update();
+  }));
+  document.addEventListener('astro:before-swap',()=>{controller?.abort();observer.disconnect();chart.dispose();},{once:true});
+  void update();
+ });
+</script>
