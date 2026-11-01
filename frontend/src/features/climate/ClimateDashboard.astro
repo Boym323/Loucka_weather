@@ -81,7 +81,7 @@ const months=['Led','Úno','Bře','Dub','Kvě','Čvn','Čvc','Srp','Zář','Ří
  import {SVGRenderer} from 'echarts/renderers';
  import type {StatisticsResult} from '../../shared/domain/statistics';
  echarts.use([BarChart,LineChart,GridComponent,TooltipComponent,LegendComponent,SVGRenderer]);
- const root=document.querySelector<HTMLElement>('[data-climate-dashboard]');
+ const root=document.querySelector<HTMLElement>('[data-climate-dashboard]')!;
  if(root){
   const yearSelect=root.querySelector<HTMLSelectElement>('[data-climate-year]');
   const overall=root.querySelector<HTMLElement>('[data-climate-status]');
