@@ -16,7 +16,7 @@ export function createMariaDbReader(): ArchiveReader {
     database:schema,user:envRequired('WEATHER_DB_USER'),password:envRequired('WEATHER_DB_PASSWORD'),
     connectionLimit:2,connectTimeout:3000,acquireTimeout:5000
   });
-  const table=`\`${schema}\`.`archive``;
+  const table='`'+schema+'`.`archive`';
   return {
     async latest(asOfEpoch:number):Promise<ArchiveRow|null>{
       const rows=await pool.query(
