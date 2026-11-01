@@ -214,7 +214,7 @@ test('camera day browsing rejects traversal, invalid dates and future requests',
 test('camera and CHMI report real validated collector files from explicit isolated paths',async t=>{
  const {app,files}=await isolatedSourceApp(t);
  const stamp=new Date();
- const name=stamp.toISOString().replace(/[-:]/g,'').replace(/\\.\\d{3}Z$/,'Z')+'.jpg';
+ const name=stamp.toISOString().slice(0,19).replace(/[-:]/g,'')+'Z.jpg';
  const fetchedAt=stamp.toISOString();
  await mkdir(files.cameraDir,{recursive:true});
  await mkdir(join(files.cameraDir,'frames'),{recursive:true});
