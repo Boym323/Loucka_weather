@@ -1,39 +1,49 @@
-# Počasí Loučka – testovací frontend
+# Počasí Loučka – testovací Astro frontend
 
-Stav k 1. 11. 2026: rozpracovaný Astro frontend podle dodaného tmavého devítipanelového návrhu. Testovací web je dostupný na https://dev.pocasi-loucka.eu/; nejde o náhradu veřejné produkce. Další změny zaznamenávej do [changelogu](../CHANGELOG.md).
+**Aktuální vývoj: 1. 11. 2026.** Web vzniká podle uživatelem schváleného devítipanelového tmavého vizuálního návrhu. Testovací náhled: https://dev.pocasi-loucka.eu/. Není to veřejná produkce. Všechny změny do main se sestavují a nasazují přes LXC automaticky; přesná zveřejněná revize je vidět ve webové patičce a v /deployment.json.
 
-## Spuštění a ověření
+## Příkazy a nasazení
 
-Použij Node.js 24 a checkout aktuální větve `main`:
+Použij Node.js 24. Pro lokální vývoj:
 
-```bash
-cd frontend
-npm ci
-npm run check
-npm test
-npm run build
-npm run dev
-```
+    cd frontend
+    npm ci
+    npm run check
+    npm test
+    npm run build
+    npm run dev
 
-Vývojový server je standardně dostupný lokálně. Automatický testovací deploy, API a konfigurace proxy jsou popsány v [deploy/lxc/README.md](../deploy/lxc/README.md). GitHub CI kontroluje frontend, ale samo o sobě nepotvrzuje, jaký commit LXC skutečně servíruje.
+Služby LXC, atomické vydávání, časovač a Nginx jsou v [deploy/lxc/README.md](../deploy/lxc/README.md). Skript je read-only vůči produkční WeeWX MariaDB. Pro nasazení nejsou potřebné ruční restarty.
 
-## Současné stránky a data
+## Funkční moduly na testovacím webu
 
-- **Přehled:** aktuální archivní hodnoty a graf přes API; kamera používá dodaný západní snímek. Předpověď, výstrahy a radar zatím nemají ověřený připojený zdroj.
-- **Aktuálně:** poslední dostupný archivní záznam a směr větru. Není to sekundový živý LOOP.
-- **Grafy:** jedna zvolená veličina, 6/24/72 hodin a tabulka archivních bodů. Grafy pro libovolné datum, více současných veličin a dlouhá agregovaná období z předlohy zatím chybí.
-- **Klimatologie:** rozvržení přehledu bez zveřejněných statistik. Výběr období a grafy čekají na implementaci API a ověření dat.
-- **Kamera:** snímek z uživatelem dodaného zdroje. Stránka obsahuje ruční obnovení a oznámení chyby načtení. Čas pořízení, automatická obnova, archiv a funkce v nasazeném prohlížeči vyžadují ověření.
-- **Mapy a senzory:** stavy nepřipojených zdrojů; radar, vrstvy a ověřený registr fyzických senzorů zatím nejsou hotové.
-- **O projektu:** přehled stanice a dat. Krajina v `public/landscape.svg` je ilustrace.
-- **Mobilní zobrazení:** CSS obsahuje responzivní pravidla a mobilní menu. Kompletní vizuální a funkční kontrola všech stránek v reálném mobilním viewportu zůstává otevřená.
+- **Přehled:** fotografie ze západní webkamery; meteorologické karty z Fastify /api/v1/current (poslední archivní měření), kompaktní historie z /api/v1/history, šesti­denní **modelová** předpověď Open-Meteo, RainViewer historické radarové snímky nad OpenStreetMap, informace o posledním zveřejněném commitu.
+- **Aktuálně:** podrobné metriky GW3000/WeeWX, větrná růžice z archivního windDir, graf nárazů větru, doplňková data a přehled dalších **archivních kanálů** (bez neověřeného fyzického mapování).
+- **Grafy:** ECharts s volbou teploty, vlhkosti, tlaku, rychlosti/nárazů větru a intenzity srážek, období 6/24/72 hodin. Samostatný sloupcový graf **intervalových srážek**, tabulka archivních intervalů.
+- **Klimatologie:** plně responzivní vizuální šablona podle návrhu. Denní/měsíční/roční souhrny a ověřené extrémy **ještě nejsou připojeny**. Frontend nezobrazuje demonstrační údaje jako skutečná měření.
+- **Kamera:** aktuální JPEG západní kamery, ruční obnova, informace o směru a archivních měřeních. Stáří snímku **není potvrzeno**, archiv snímků a časosběr zatím nejsou připojeny.
+- **Mapy:** časová osa nedávných historických radarových snímků RainViewer, ovládání snímků, podklad OpenStreetMap. Ostatní mapové vrstvy zatím nejsou připojené.
+- **Senzory:** přehled osmice skutečných archivních kanálů z API. Názvy a čísla jsou pouze sloupce WeeWX, **nepotvrzují fyzické umístění, model, RSSI, baterii ani online stav jednotlivých čidel**.
+- **O projektu:** meteorologická stanice, zdroj a vlastnosti dat, skutečně nasazená revize a čas.
+- **Mobilní zobrazení:** vlastní menu, responzivní gridy podle návrhu. Testováno přes Playwright 390×844, desktop 1440×900.
 
-Barvy, hustota a obsah obrazovek zatím plně neodpovídají přiloženému návrhu. Chybějící data se nezobrazují jako nula ani jako skutečná demo měření.
+## Nezávislé ověřování aktuálně nasazeného webu
 
-## API a statistiky
+GitHub Actions workflow [.github/workflows/preview-visual-smoke.yml](../.github/workflows/preview-visual-smoke.yml):
+- po push do main s frontend změnou (čeká na odpovídající SHA v /deployment.json),
+- denně v 08:23 UTC,
+- ručně přes workflow_dispatch.
 
-Současný Fastify slice nabízí mimo jiné `/api/v1/current` a surovou `/api/v1/history`; hourly/daily historie a endpointy denních, měsíčních a ročních statistik nejsou implementované. [Produktový kontrakt](../docs/API_V1_PRODUCT_CONTRACT.md) je širší než implementace. Denní souhrny WeeWX jsou popsány v [auditu](../WEEWX_DAILY_SUMMARIES_AUDIT.md); práva stagingového DB účtu pro konkrétní denní tabulky dosud nebyla ověřena.
+S Chromium Playwright kontroluje všech osm URL na desktopu a mobilu, HTTP 200, JavaScript výjimky, horizontální přetékání, /api/v1/readyz a /deployment.json. Z každého běhu vzniká artefakt **preview-screenshots** s 16 screenshoty, dostupný sedm dní. Externí Open-Meteo a RainViewer mají fallback a mohou být dočasně nedostupné; workflow loguje jejich stavy. Toto je skutečná prohlížečová kontrola **nasazeného webu**, nikoli pouze Astro build.
 
-## Nasazená verze
+## Důležitá otevřená práce
 
-Parser a komponenta pro validovaná metadata `/deployment.json` byly doplněny v `65691ea`; commit `62e8917` je zapojuje do layoutu a stránky projektu a upravuje deploy skript pro publikování metadat. Skutečnou dostupnost a správnost metadat na testovacím webu je nutné ověřit po nasazení. Úspěšné vytvoření commitu neprokazuje jeho nasazení.
+- **Klimatologie a historické agregace:** Fastify /api/v1/history zatím poskytuje RAW nejvýše 31 dní; hodinové/denní souhrny a úplné roční klimatologické statistiky nejsou implementovány. Vyžadují validaci historických dat a ověření DB SELECT přístupu k denním statistikám (viz [audit](../WEEWX_DAILY_SUMMARIES_AUDIT.md)).
+- **Více současných veličin a libovolný rozsah grafů:** návrh je širší než současné přepínání 6/24/72 hodin.
+- **Senzorová diagnostika:** ověřit fyzické mapování, instalaci, údaje o bateriích, RSSI a čas výpadků.
+- **Kamera:** nezávislý čas snímku, archiv, časosběr.
+- **Výstrahy ČHMÚ a další mapové vrstvy:** přímé zdroje a jejich podmínky nejsou zatím zprovozněny. Neprezentujeme stav výstrah jako nulový bez ověření.
+- **Zdrojové podmínky:** Open-Meteo a RainViewer mají omezení licencí a typu použití; před veřejným komerčním provozem je nutné ověřit práva a kvóty, případně přejít na autorizované poskytovatele.
+- **Bezpečnost:** preview je určeno k vývoji a má být chráněno přes NPM Access List. Není to produkčně hardenované API.
+
+Změny zapisuj i do [changelogu](../CHANGELOG.md). Vždy odliš stav v GitHubu, stav CI a verzi **fakticky nasazenou na LXC**.

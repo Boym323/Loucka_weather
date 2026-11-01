@@ -4,16 +4,19 @@ on:
   push:
     branches: [main]
     paths:
-      - "frontend/scripts/preview-visual-check.mjs"
+      - "frontend/**"
       - ".github/workflows/preview-visual-smoke.yml"
   schedule:
     - cron: "23 8 * * *"
 permissions:
   contents: read
+concurrency:
+  group: loucka-public-preview
+  cancel-in-progress: true
 jobs:
   preview:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 18
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -30,6 +33,7 @@ jobs:
         run: node scripts/preview-visual-check.mjs
         env:
           LOUCKA_PREVIEW_URL: https://dev.pocasi-loucka.eu
+          LOUCKA_EXPECT_COMMIT: ${{ github.event_name == 'push' && github.sha || '' }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:

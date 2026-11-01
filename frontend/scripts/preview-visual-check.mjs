@@ -18,6 +18,31 @@ const sizes=[
  {name:'mobil',width:390,height:844}
 ];
 const errors=[];
+const expectedCommit=process.env.LOUCKA_EXPECT_COMMIT || '';
+const waitForPublishedCommit=async () => {
+ if(!expectedCommit)return;
+ const deadline=Date.now()+6*60_000;
+ let last='metadata not yet available';
+ while(Date.now()<deadline){
+  try{
+   const response=await fetch(base+'/deployment.json?verify='+Date.now(),{
+    cache:'no-store',
+    signal:AbortSignal.timeout(8000)
+   });
+   if(response.ok){
+    const body=await response.json();
+    last=String(body.commit ?? 'unknown');
+    if(body.commit===expectedCommit){
+     console.log('Confirmed public deploy:',expectedCommit);
+     return;
+    }
+   } else last='HTTP '+response.status;
+  }catch(e){last=String(e);}
+  await new Promise(resolve=>setTimeout(resolve,12000));
+ }
+ throw new Error('Staging did not deploy expected '+expectedCommit+' within 6 minutes. Last: '+last);
+};
+await waitForPublishedCommit();
 await mkdir(out,{recursive:true});
 const browser=await chromium.launch({headless:true});
 try{
