@@ -1,0 +1,174 @@
+<section class="section advanced-history" data-advanced-history aria-labelledby="advanced-history-heading">
+ <div class="section-heading">
+  <div><span class="eyebrow">Prohlížeč archivu · WeeWX</span><h2 id="advanced-history-heading">Podrobný historický graf</h2></div>
+  <span class="status-chip" data-advanced-status role="status">Načítám</span>
+ </div>
+ <div class="history-presets" role="group" aria-label="Rychlý výběr časového období">
+  <button type="button" class="chart-tab" data-period="24h">24 hodin</button>
+  <button type="button" class="chart-tab" data-period="7d" aria-pressed="true">7 dní</button>
+  <button type="button" class="chart-tab" data-period="30d">30 dní</button>
+  <button type="button" class="chart-tab" data-period="year">Rok</button>
+ </div>
+ <form class="advanced-history-form" data-history-form>
+  <label>Od <input type="date" name="from" required min="2009-01-01" /></label>
+  <label>Do <input type="date" name="to" required min="2009-01-01" /></label>
+  <label>Veličina
+   <select name="metric">
+    <option value="outTemp">Teplota (°C)</option>
+    <option value="outHumidity">Vlhkost (%)</option>
+    <option value="barometer">Tlak (hPa)</option>
+    <option value="windSpeed">Vítr (m/s)</option>
+    <option value="windGust">Nárazy větru (m/s)</option>
+    <option value="rain">Srážky (mm)</option>
+    <option value="rainRate">Intenzita srážek (mm/h)</option>
+    <option value="radiation">Sluneční záření (W/m²)</option>
+    <option value="pm25_1">PM2,5 (µg/m³)</option>
+   </select>
+  </label>
+  <label>Porovnat s
+   <select name="compare">
+    <option value="">Bez porovnání</option>
+    <option value="outTemp">Teplota</option>
+    <option value="outHumidity">Vlhkost</option>
+    <option value="barometer">Tlak</option>
+    <option value="windSpeed">Rychlost větru</option>
+    <option value="windGust">Nárazy</option>
+    <option value="rain">Srážky</option>
+    <option value="radiation">Záření</option>
+   </select>
+  </label>
+  <button class="history-apply" type="submit">Zobrazit</button>
+  <button class="history-export" type="button" data-history-export disabled>Stáhnout CSV</button>
+ </form>
+ <div class="advanced-history-chart" data-advanced-canvas role="img" aria-label="Dynamický časový graf archivních měření"></div>
+ <div class="chart-summary" data-advanced-summary aria-live="polite"></div>
+ <p class="source-note">Pro období do 2 dnů původní intervaly, do 40 dnů hodinové agregace, delší období denní agregace. Graf respektuje mezery, místní kalendářní dny a změny CET/CEST. CSV obsahuje pouze data skutečně vrácená API.</p>
+</section>
+<script>
+ import {getHistoryInterval} from '../../shared/api/client';
+ import {pragueMidnightIso,nextDate} from '../../shared/domain/statistics';
+ import {formatValue} from '../../shared/domain/metrics';
+ import type {HistoryResponse,HistoryPoint} from '../../shared/domain/weather';
+ import * as echarts from 'echarts/core';
+ import {LineChart,BarChart} from 'echarts/charts';
+ import {GridComponent,TooltipComponent,LegendComponent,DataZoomComponent} from 'echarts/components';
+ import {SVGRenderer} from 'echarts/renderers';
+ echarts.use([LineChart,BarChart,GridComponent,TooltipComponent,LegendComponent,DataZoomComponent,SVGRenderer]);
+ const root=document.querySelector<HTMLElement>('[data-advanced-history]')!;
+ if(root){
+  const form=root.querySelector<HTMLFormElement>('[data-history-form]')!;
+  const canvas=root.querySelector<HTMLElement>('[data-advanced-canvas]')!;
+  const status=root.querySelector<HTMLElement>('[data-advanced-status]');
+  const summary=root.querySelector<HTMLElement>('[data-advanced-summary]');
+  const exportButton=root.querySelector<HTMLButtonElement>('[data-history-export]');
+  const chart=echarts.init(canvas,undefined,{renderer:'svg'});
+  const observer=new ResizeObserver(()=>chart.resize());observer.observe(canvas);
+  const formatter=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Prague',year:'numeric',month:'2-digit',day:'2-digit'});
+  const localDate=(date:Date)=>formatter.format(date);
+  const now=new Date();
+  let activeRange='7d',controller:AbortController|undefined,results:HistoryResponse[]=[];
+  const valid=(p:HistoryPoint)=>p.value!==null&&Number.isFinite(p.value)&&p.quality!=='missing'&&p.quality!=='suspect';
+  const names:Record<string,string>={
+   outTemp:'Teplota',outHumidity:'Vlhkost',barometer:'Tlak',windSpeed:'Vítr',
+   windGust:'Nárazy větru',rain:'Srážky',rainRate:'Intenzita srážek',
+   radiation:'Sluneční záření',pm25_1:'PM2,5'
+  };
+  const units:Record<string,string>={
+   outTemp:'°C',outHumidity:'%',barometer:'hPa',windSpeed:'m/s',
+   windGust:'m/s',rain:'mm',rainRate:'mm/h',radiation:'W/m²',pm25_1:'µg/m³'
+  };
+  const colors:Record<string,string>={
+   outTemp:'#fa6776',outHumidity:'#57bded',barometer:'#a598fc',
+   windSpeed:'#41d8a7',windGust:'#4bd6ad',rain:'#54b4eb',
+   rainRate:'#459bde',radiation:'#f5c15c',pm25_1:'#c89cf8'
+  };
+  const dateInput=(key:string)=>form.elements.namedItem(key) as HTMLInputElement;
+  const metricInput=(key:string)=>form.elements.namedItem(key) as HTMLSelectElement;
+  function setPreset(preset:string){
+   activeRange=preset;
+   const days=preset==='24h'?1:preset==='7d'?7:preset==='30d'?30:365;
+   const end=localDate(now);
+   const start=localDate(new Date(now.getTime()-(days-1)*86400000));
+   dateInput('from').value=preset==='year'?String(Number(end.slice(0,4))-1)+'-01-01':start;
+   dateInput('to').value=preset==='year'?String(Number(end.slice(0,4))-1)+'-12-31':end;
+   root.querySelectorAll<HTMLButtonElement>('[data-period]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.period===preset)));
+   void refresh();
+  }
+  async function refresh(){
+   controller?.abort();controller=new AbortController();
+   const signal=controller.signal;results=[];
+   if(exportButton)exportButton.disabled=true;
+   if(summary)summary.replaceChildren();
+   const fromDate=dateInput('from').value,toDate=dateInput('to').value;
+   const metric=metricInput('metric').value,compare=metricInput('compare').value;
+   try{
+    const from=pragueMidnightIso(fromDate),to=pragueMidnightIso(nextDate(toDate));
+    const days=Math.round((Date.parse(toDate+'T00:00:00Z')-Date.parse(fromDate+'T00:00:00Z'))/86400000)+1;
+    if(!Number.isFinite(days)||days<1||days>731)throw new Error('Vyber období od 1 dne do 2 let.');
+    const resolution=days<=2?'raw':days<=40?'hourly':'daily';
+    if(status){status.textContent='Načítám '+resolution+'…';status.className='status-chip';}
+    const keys=[...new Set([metric,compare].filter(Boolean))];
+    results=await Promise.all(keys.map(k=>getHistoryInterval(k,from,to,resolution,signal)));
+    if(signal.aborted)return;
+    const series=results.map((result,index)=>{
+     const id=result.metric;
+     return {
+      name:names[id]??id,type:id==='rain'?'bar':'line',
+      yAxisIndex:index,data:result.points.map(p=>[
+       Date.parse(p.endTime),valid(p)?p.value:null
+      ] as [number,number|null]),
+      showSymbol:false,smooth:false,connectNulls:false,barMaxWidth:14,
+      itemStyle:{color:colors[id]??'#4de6b0'},lineStyle:{width:2,color:colors[id]??'#4de6b0'}
+     };
+    });
+    const yAxis=results.map((result,index)=>({
+     type:'value',scale:result.metric!=='rain',min:result.metric==='rain'?0:undefined,
+     name:units[result.metric]??result.unit,position:index===0?'left':'right',
+     axisLabel:{color:'#a8bdcb'},splitLine:{show:index===0,lineStyle:{color:'#244657',type:'dashed'}}
+    }));
+    chart.setOption({animation:false,backgroundColor:'transparent',
+     legend:{show:series.length>1,top:0,textStyle:{color:'#b1c6d3'}},
+     tooltip:{trigger:'axis',confine:true},
+     grid:{left:55,right:series.length>1?55:20,top:40,bottom:64},
+     xAxis:{type:'time',axisLabel:{color:'#a9c0cd'},splitLine:{show:false},axisLine:{lineStyle:{color:'#35576a'}}},
+     yAxis,series,
+     dataZoom:[{type:'inside'},{type:'slider',height:15,bottom:13,textStyle:{color:'#a9c0cd'},borderColor:'#294c5d'}]},true);
+    const total=results.reduce((n,r)=>n+r.points.filter(valid).length,0);
+    if(status){status.textContent=total+' měření · '+resolution;status.className='status-chip '+(total?'ok':'warning');}
+    if(summary){
+     for(const result of results){
+      const vals=result.points.filter(valid).map(p=>p.value as number);
+      const span=document.createElement('span');
+      if(vals.length){
+       span.textContent=(names[result.metric]??result.metric)+': min '+formatValue(Math.min(...vals),1)+' / max '+formatValue(Math.max(...vals),1)+' '+(units[result.metric]??result.unit);
+      }else span.textContent=(names[result.metric]??result.metric)+': bez měření';
+      summary.append(span);
+     }
+    }
+    if(exportButton)exportButton.disabled=!total;
+    chart.resize();
+   }catch(e){
+    if(signal.aborted)return;
+    chart.clear();
+    if(status){status.textContent='Historie nedostupná';status.className='status-chip error';}
+    if(summary)summary.textContent=e instanceof Error?e.message:'Historické API není dostupné.';
+   }
+  }
+  root.querySelectorAll<HTMLButtonElement>('[data-period]').forEach(b=>b.addEventListener('click',()=>setPreset(b.dataset.period??'7d')));
+  form.addEventListener('submit',event=>{event.preventDefault();activeRange='custom';root.querySelectorAll<HTMLButtonElement>('[data-period]').forEach(b=>b.setAttribute('aria-pressed','false'));void refresh();});
+  exportButton?.addEventListener('click',()=>{
+   if(!results.length)return;
+   const escapeCsv=(value:string)=>'"'+value.replace(/"/g,'""')+'"';
+   const lines=['"veli\u010dina";"konec intervalu UTC";"hodnota";"jednotka";"kvalita";"rozlišení"'];
+   for(const result of results)for(const p of result.points){
+    lines.push([result.metric,p.endTime,valid(p)?String(p.value):'',units[result.metric]??result.unit,p.quality,result.resolution].map(escapeCsv).join(';'));
+   }
+   const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
+   const url=URL.createObjectURL(blob);
+   const a=document.createElement('a');a.href=url;a.download='loucka-historie-'+dateInput('from').value+'-'+dateInput('to').value+'.csv';a.click();
+   setTimeout(()=>URL.revokeObjectURL(url),1000);
+  });
+  document.addEventListener('astro:before-swap',()=>{controller?.abort();observer.disconnect();chart.dispose();},{once:true});
+  setPreset(activeRange);
+ }
+</script>
