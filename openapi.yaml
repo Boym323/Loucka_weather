@@ -4,7 +4,8 @@ info:
   version: 0.2.0-draft
   description: |
     Language-neutral DRAFT; no production endpoint currently exists.
-    UTC instants, WeeWX interval end (start,end], Europe/Prague for calendar periods.
+    UTC instants; WeeWX archive intervals are (start,end], while calendar period
+    ranges such as yearly statistics include the local start and exclude the local end.
     Source records are normalized per-row by WeeWX usUnits (1=US,16=METRIC,17=METRICWX).
     The optional query 'units' selects presentation units; default metricwx (degC, mm, m/s).
     Unknown source systems fail closed; custom sensor units are never guessed. Null is not zero.

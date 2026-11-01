@@ -6546,7 +6546,9 @@
             "min",
             "max",
             "sum",
-            "count"
+            "count",
+            "vecdir",
+            "dir_at_max"
           ]
         },
         "value": {
@@ -6601,7 +6603,7 @@
               "pattern": "Z$"
             },
             "boundary": {
-              "const": "(start,end]"
+              "const": "[start,end)"
             },
             "calendarTimezone": {
               "const": "Europe/Prague"

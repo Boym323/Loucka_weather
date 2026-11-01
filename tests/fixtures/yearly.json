@@ -5,13 +5,13 @@
   "year": 2025,
   "aggregation": "sum",
   "value": 540.2,
-  "quality": "measured",
+  "quality": "derived",
   "source": "weewx_daily",
-  "provenance": null,
+  "provenance": "weewx-daily-sum",
   "range": {
     "from": "2024-12-31T23:00:00Z",
     "to": "2025-12-31T23:00:00Z",
-    "boundary": "(start,end]",
+    "boundary": "[start,end)",
     "calendarTimezone": "Europe/Prague"
   },
   "completeness": {

@@ -1,9 +1,9 @@
 name: Fastify API staging vertical slice
 on:
   pull_request:
-    paths: ['api/**','.github/workflows/api-staging.yml']
+    paths: ['api/**','schemas/metrics.json','schemas/aggregation-policy.json','.github/workflows/api-staging.yml']
   push:
-    paths: ['api/**','.github/workflows/api-staging.yml']
+    paths: ['api/**','schemas/metrics.json','schemas/aggregation-policy.json','.github/workflows/api-staging.yml']
 permissions:
   contents: read
 jobs:
@@ -26,6 +26,19 @@ jobs:
           raw=js.split('export const metrics=',1)[1].split(' as const;',1)[0]
           assert json.loads(raw)==expected, 'Generated metrics.ts differs from schemas/metrics.json'
           print('45 public metric conversions match catalog')
+          PY
+      - name: Check generated aggregation policy matches authoritative JSON
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          source=json.loads(Path('schemas/aggregation-policy.json').read_text())['metrics']
+          expected={k: {'allowed':v['allowed'],'default':v['default'],'statsEnabled':v['statsEnabled']}
+                    for k,v in source.items()}
+          js=Path('api/src/aggregation.ts').read_text()
+          raw=js.split('export const aggregationPolicy=',1)[1].split(' as const;',1)[0]
+          assert json.loads(raw)==expected, 'Generated aggregationPolicy differs from schema'
+          print(f'{len(expected)} metric aggregation policies match catalog')
           PY
       - run: npm ci --no-audit --no-fund
         working-directory: api
