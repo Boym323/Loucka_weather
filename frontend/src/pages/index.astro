@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CurrentPanel from '../features/current/CurrentPanel.astro';
+import DailySummaryStrip from '../features/current/DailySummaryStrip.astro';
 import HistoryChart from '../features/history/HistoryChart.astro';
 import OverviewReadings from '../features/current/OverviewReadings.astro';
 import ForecastPanel from '../features/forecast/ForecastPanel.astro';
@@ -15,6 +16,7 @@ import RadarPanel from '../features/maps/RadarPanel.astro';
  <div class="dashboard-top">
   <div class="dashboard-primary">
    <CurrentPanel variant="dashboard" />
+   <DailySummaryStrip />
    <div class="home-quick-links" aria-label="Další údaje">
     <a href="/aktualne/"><span aria-hidden="true">◉</span> Podrobné aktuální údaje <span aria-hidden="true">↗</span></a>
     <a href="/grafy/"><span aria-hidden="true">⌁</span> Historie a grafy <span aria-hidden="true">↗</span></a>

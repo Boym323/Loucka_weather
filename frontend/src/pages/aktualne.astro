@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CurrentPanel from '../features/current/CurrentPanel.astro';
+import DailySummaryStrip from '../features/current/DailySummaryStrip.astro';
 import WindCompass from '../features/current/WindCompass.astro';
 import OverviewReadings from '../features/current/OverviewReadings.astro';
 import HistoryChart from '../features/history/HistoryChart.astro';
@@ -15,6 +16,7 @@ import SensorMiniPanel from '../features/sensors/SensorMiniPanel.astro';
  <div class="actual-layout">
   <div class="actual-main">
    <CurrentPanel />
+   <DailySummaryStrip />
    <div class="actual-wind-row">
     <WindCompass />
     <HistoryChart compact defaultMetric="windGust" />

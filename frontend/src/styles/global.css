@@ -551,3 +551,16 @@ h1,h2,h3,p{margin-top:0}h1{font-size:clamp(26px,3vw,42px);line-height:1.2;letter
 .live-archive-indicator.live-connected .live-archive-dot{background:#4ce3a6;box-shadow:0 0 0 3px #4ce3a621}
 .live-archive-indicator.live-connected{color:#76ecc6}
 @media(max-width:950px){.live-archive-indicator{display:none}}
+
+
+/* Real daily min/max/rain values, with a truthful unavailable state. */
+.daily-brief{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:7px;align-items:center}
+.daily-brief-item{display:flex;align-items:baseline;gap:7px;min-width:0;background:var(--panel-2);border:1px solid var(--line);padding:8px 10px;border-radius:6px}
+.daily-brief-item>span{font-size:10px;color:var(--muted)}
+.daily-brief-item>strong{font-size:17px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.daily-brief-item>small{font-size:10px;color:var(--muted)}
+.daily-brief-status{font-size:10px;color:var(--muted);max-width:130px;line-height:1.2}
+.actual-main>.daily-brief{grid-template-columns:repeat(3,minmax(0,1fr))}
+.actual-main>.daily-brief .daily-brief-status{grid-column:1/-1;max-width:none}
+@media(max-width:1050px){.daily-brief{grid-template-columns:repeat(3,minmax(0,1fr))}.daily-brief-status{grid-column:1/-1;max-width:none}}
+@media(max-width:650px){.daily-brief{grid-template-columns:repeat(2,minmax(0,1fr))}.daily-brief-item{flex-wrap:wrap}.daily-brief-item>span{width:100%}}
