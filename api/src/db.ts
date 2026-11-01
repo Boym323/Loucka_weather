@@ -20,7 +20,7 @@ export function createMariaDbReader():ArchiveReader{
   connectionLimit:2,connectTimeout:3000,acquireTimeout:5000
  });
  const table='`'+schema+'`.`archive`';
- const forbidden=/\\b(?:ALL PRIVILEGES|INSERT|UPDATE|DELETE|ALTER|CREATE|DROP|TRIGGER|EVENT|FILE|SUPER|RELOAD|GRANT OPTION|REFERENCES|LOCK TABLES|PROCESS|EXECUTE)\\b/i;
+ const forbidden=/\b(?:ALL PRIVILEGES|INSERT|UPDATE|DELETE|ALTER|CREATE|DROP|TRIGGER|EVENT|FILE|SUPER|RELOAD|GRANT OPTION|REFERENCES|LOCK TABLES|PROCESS|EXECUTE)\b/i;
  let grantCheck:Promise<void>|undefined;
  function ensureReadOnly():Promise<void>{
   if(grantCheck!==undefined)return grantCheck;
@@ -28,7 +28,7 @@ export function createMariaDbReader():ArchiveReader{
    const rows=await pool.query('SHOW GRANTS') as Record<string,unknown>[];
    const grants=rows.flatMap(row=>Object.values(row)).filter((v):v is string=>typeof v==='string');
    if(!grants.length||grants.some(grant=>forbidden.test(grant))
-       ||!grants.some(grant=>/\\bSELECT\\b/i.test(grant)))
+       ||!grants.some(grant=>/\bSELECT\b/i.test(grant)))
     throw new Error('Staging database credentials must be SELECT-only');
   })();
   return grantCheck;
