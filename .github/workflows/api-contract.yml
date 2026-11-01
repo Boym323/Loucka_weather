@@ -3,7 +3,7 @@ on:
   push:
     paths: ['openapi.yaml', 'schemas/**', 'contracts/**', 'tests/**', 'docs/ARCHIVE_REFRESH_CONTRACT.md', '.github/workflows/api-contract.yml']
   pull_request:
-    paths: ['openapi.yaml', 'schemas/**', 'tests/**', '.github/workflows/api-contract.yml']
+    paths: ['openapi.yaml', 'schemas/**', 'contracts/**', 'tests/**', 'docs/ARCHIVE_REFRESH_CONTRACT.md', '.github/workflows/api-contract.yml']
 jobs:
   offline-contract:
     runs-on: ubuntu-latest

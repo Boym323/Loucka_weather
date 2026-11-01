@@ -125,3 +125,15 @@ def test_dst_epoch_is_utc_not_local_clock_repeated_hour():
     assert event["latestArchiveAt"].endswith("Z")
     assert event["affectedEndTimeFrom"]==event["affectedEndTimeTo"]
 
+
+def test_openapi_declares_archive_event_but_not_as_live_sensor_event():
+    import yaml
+    document=yaml.safe_load((ROOT/"openapi.yaml").read_text())
+    op=document["paths"]["/api/v1/live"]["get"]
+    description=op["description"]
+    assert "archive-updated" in description
+    assert "MQTT/LOOP" in description
+    event=op["responses"]["200"]["content"]["text/event-stream"]
+    assert event["x-event-data-schema"].endswith("#/$defs/LiveMessage")
+    assert {"LiveEvent","ArchiveUpdatedEvent","LiveMessage"}.issubset(FEATURES["$defs"])
+

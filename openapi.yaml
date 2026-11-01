@@ -192,6 +192,9 @@ paths:
         Archive events declare affected end-time range, dataRevision and
         summaryStatus=pending|ready|unknown. Do not refresh published
         daily/monthly/yearly statistics until summaryStatus=ready.
+        The SSE hub MUST continue to transmit archive-updated when MQTT/LOOP
+        is offline; 503 describes an unavailable SSE service, not merely a
+        disconnected live sensor. Frontend may fallback to conditional HTTP GET.
         First event is snapshot/status; heartbeat comment every 15s.
         retry 5000ms; bounded replay on Last-Event-ID or reset+snapshot.
         Event IDs are process-scoped. No MQTT credentials or private URL in browser.
