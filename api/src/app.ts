@@ -99,7 +99,7 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date()){
    properties:{...commonQuery.properties,
     metric:{type:'string'},from:{type:'string'},to:{type:'string'},
     resolution:{type:'string',enum:['auto','raw','hourly','daily']},
-    limit:{type:'string',pattern:'^[0-9]{1,5}}}}
+     limit:{type:'string',pattern:'^[0-9]{1,5}$'}}}
  },async(req,reply)=>{
   const {metric,from,to,resolution='auto',limit:limitText,units='metricwx',dataset='original'}=req.query;
   const limit=limitText===undefined?2000:Number(limitText);
