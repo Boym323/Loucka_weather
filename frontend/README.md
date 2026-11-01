@@ -19,11 +19,11 @@ Služby LXC, atomické vydávání, časovač a Nginx jsou v [deploy/lxc/README.
 
 - **Přehled:** fotografie ze západní webkamery; meteorologické karty z Fastify /api/v1/current (poslední archivní měření), kompaktní historie z /api/v1/history, šesti­denní **modelová** předpověď Open-Meteo, RainViewer historické radarové snímky nad OpenStreetMap, informace o posledním zveřejněném commitu.
 - **Aktuálně:** podrobné metriky GW3000/WeeWX, větrná růžice z archivního windDir, graf nárazů větru, doplňková data a přehled dalších **archivních kanálů** (bez neověřeného fyzického mapování).
-- **Grafy:** ECharts s volbou teploty, vlhkosti, tlaku, rychlosti/nárazů větru a intenzity srážek, období 6/24/72 hodin. Samostatný sloupcový graf **intervalových srážek**, tabulka archivních intervalů.
-- **Klimatologie:** plně responzivní vizuální šablona podle návrhu. Denní/měsíční/roční souhrny a ověřené extrémy **ještě nejsou připojeny**. Frontend nezobrazuje demonstrační údaje jako skutečná měření.
+- **Grafy:** interaktivní ECharts s libovolným kalendářním obdobím do dvou let, dvěma porovnávanými veličinami, zoomem a CSV exportem; rychlý graf 24 h, intervalové srážky a archivní tabulka.
+- **Klimatologie:** skutečný klient /statistics/yearly a /monthly, výběr roku, roční souhrny, měsíční teploty/srážky/vítr a orientační denní extrémy. Výsledky závisí na dostupnosti denních souhrnných tabulek; datum a úplnost jsou vždy uvedeny.
 - **Kamera:** aktuální JPEG západní kamery, ruční obnova, informace o směru a archivních měřeních. Stáří snímku **není potvrzeno**, archiv snímků a časosběr zatím nejsou připojeny.
 - **Mapy:** časová osa nedávných historických radarových snímků RainViewer, ovládání snímků, podklad OpenStreetMap. Ostatní mapové vrstvy zatím nejsou připojené.
-- **Senzory:** přehled osmice skutečných archivních kanálů z API. Názvy a čísla jsou pouze sloupce WeeWX, **nepotvrzují fyzické umístění, model, RSSI, baterii ani online stav jednotlivých čidel**.
+- **Senzory:** archivní kanály z /current a oddělený auditovaný fyzický inventář /sensors. Současný inventář je prázdný; archivní hodnoty **nepotvrzují polohu, model, RSSI, baterie ani online stav jednotlivých čidel**.
 - **O projektu:** meteorologická stanice, zdroj a vlastnosti dat, skutečně nasazená revize a čas.
 - **Mobilní zobrazení:** vlastní menu, responzivní gridy podle návrhu. Testováno přes Playwright 390×844, desktop 1440×900.
 
@@ -36,7 +36,7 @@ GitHub Actions workflow [.github/workflows/preview-visual-smoke.yml](../.github/
 
 S Chromium Playwright kontroluje všech osm URL na desktopu a mobilu, HTTP 200, JavaScript výjimky, horizontální přetékání, /api/v1/readyz a /deployment.json. Z každého běhu vzniká artefakt **preview-screenshots** s 16 screenshoty, dostupný sedm dní. Externí Open-Meteo a RainViewer mají fallback a mohou být dočasně nedostupné; workflow loguje jejich stavy. Toto je skutečná prohlížečová kontrola **nasazeného webu**, nikoli pouze Astro build.
 
-API v1 v repozitáři nyní implementuje `/current`, raw/hodinovou/denní `/history` s `resolution=auto`, denní/měsíční/roční statistiky a archivní SSE refresh. Denní SQL mapování bylo ověřeno SELECT-only proti připojené WeeWX databázi; API zatím není nasazené. Frontend klimatologii ještě na tyto endpointy nenapojuje. [Produktový kontrakt](../docs/API_V1_PRODUCT_CONTRACT.md) popisuje implementaci i otevřené provozní požadavky; metodika souhrnů a jejich meze jsou v [auditu](../WEEWX_DAILY_SUMMARIES_AUDIT.md).
+API v1 nyní implementuje `/current`, raw/hodinovou/denní `/history` s `resolution=auto`, denní/měsíční/roční statistiky a archivní SSE refresh. Frontend tyto endpointy využívá; dostupnost každého souhrnu je ověřována zvlášť. Ke skutečným statistickým výsledkům musí mít runtime read-only účet oprávnění SELECT také k příslušným tabulkám `archive_day_*`. Připojení a výsledky kontroluje samostatný veřejný Playwright test. [Produktový kontrakt](../docs/API_V1_PRODUCT_CONTRACT.md) popisuje implementaci i otevřené provozní požadavky; metodika souhrnů a jejich meze jsou v [auditu](../WEEWX_DAILY_SUMMARIES_AUDIT.md).
 
 
 
