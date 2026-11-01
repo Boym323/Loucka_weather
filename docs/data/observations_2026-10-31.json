@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "as_of": "2026-10-31",
+  "language": "cs",
+  "scope": "sanitized_aggregated_no_ip_addresses",
+  "source_notes": "See docs/SOURCES_AND_REPRODUCIBILITY.md",
+  "nginx": {
+    "first_request": "2026-09-27T01:46:05+02:00",
+    "last_request": "2026-10-31T08:29:23+01:00",
+    "files": 5,
+    "requests": 54966,
+    "parse_ok": 54966,
+    "distinct_ips_cardinality_only": 4815,
+    "bytes_reported": 333674580,
+    "status_counts": {
+      "101": 250,
+      "200": 22100,
+      "206": 267,
+      "301": 6912,
+      "304": 333,
+      "400": 500,
+      "403": 256,
+      "404": 24255,
+      "405": 24,
+      "499": 68,
+      "502": 1
+    },
+    "median_full_inner_days_requests": 1476,
+    "full_inner_days": 33,
+    "top_second_redirect": {
+      "timestamp": "2026-10-26T11:55:33+01:00",
+      "requests": 359,
+      "status301": 359
+    },
+    "top_second_upstream": {
+      "timestamp": "2026-10-08T21:09:03+02:00",
+      "requests": 247,
+      "status404": 244,
+      "status200": 3
+    },
+    "top_minute": {
+      "timestamp": "2026-10-29T14:50+01:00",
+      "requests": 530
+    },
+    "mqtt": {
+      "requests": 251,
+      "status101": 250,
+      "status502": 1
+    },
+    "paths": {
+      "/": 7229,
+      "/graphs/": 1345,
+      "/json/weewx_data.json": 663,
+      "/json/homepage.json": 274,
+      "/json/forecast.json": 272,
+      "/mqtt": 251
+    },
+    "declared_agents": {
+      "WEDOS OnLine monitoring": {
+        "requests": 2591
+      },
+      "webcam-atlas": {
+        "requests": 1979
+      }
+    },
+    "heuristic_prior_estimate_unvalidated": {
+      "scanner": 31638,
+      "other_bots": 8567,
+      "monitoring": 4570,
+      "remainder": 10191
+    }
+  },
+  "matomo": {
+    "site_id": 1,
+    "time_zone": "Europe/Prague",
+    "period": "2026-10",
+    "period_status": "partial_as_of_2026-10-31",
+    "visits": 216,
+    "unique_visitors": 73,
+    "actions": 314,
+    "bounce_rate": 0.71,
+    "avg_visit_duration_seconds": 72,
+    "returning_visits": 155,
+    "new_visits": 61,
+    "page_views": {
+      "home": 186,
+      "graphs": 107,
+      "reports": 15,
+      "records": 4,
+      "other": 2
+    },
+    "device_visits": {
+      "desktop": 102,
+      "smartphone": 79,
+      "phablet": 35
+    },
+    "traffic_sources_visits": {
+      "direct": 191,
+      "search": 18,
+      "referrals": 7
+    },
+    "monthly_visits": {
+      "2026-01": 53,
+      "2026-02": 0,
+      "2026-03": 119,
+      "2026-04": 132,
+      "2026-05": 187,
+      "2026-06": 196,
+      "2026-07": 214,
+      "2026-08": 321,
+      "2026-09": 214,
+      "2026-10": 216
+    }
+  },
+  "http_benchmark": {
+    "tests": 216,
+    "requests": 39096,
+    "http_errors": 0,
+    "warning": "Three runs on LIVE production MariaDB, despite isolated_copy=true JSON field. NEVER repeat full load against production.",
+    "case": "30d,c10,median_RPS",
+    "rps": {
+      "Go": 31.34,
+      "Cpp": 21.8,
+      "PHP": 19.89,
+      "Node": 17.37,
+      "Rust": 15.85,
+      "Python": 6.05
+    },
+    "limit": "30d,c50 generated only 24 total requests"
+  },
+  "compute_benchmark": {
+    "cases": 72,
+    "numeric_parity_pass": 72,
+    "synthetic_rows": 1680000,
+    "timed_pipeline": "in-memory TSV parse + aggregation; excludes disk, SQL, HTTP, JSON",
+    "median_seconds": {
+      "Rust": 4.1,
+      "Go": 5.26,
+      "Cpp": 9.13,
+      "Node": 15.36,
+      "PHP": 19.54,
+      "Python": 37.82
+    },
+    "median_rss_mib": {
+      "Rust": 107.23,
+      "Go": 422.54,
+      "Cpp": 112.32,
+      "Node": 272.25,
+      "PHP": 304.59,
+      "Python": 318.69
+    }
+  },
+  "architecture": {
+    "status": "proposed_not_approved",
+    "frontend": "Astro TypeScript ECharts",
+    "api_candidate": "Node.js Fastify TypeScript",
+    "batch_candidate": "Rust only if needed",
+    "data_policy": "production archive read-only; corrections separately in loucka_reconstruction",
+    "prod_load_tests_allowed": false
+  }
+}

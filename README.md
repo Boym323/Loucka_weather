@@ -1,61 +1,45 @@
 # Loučka Weather
 
-> **NOVÉ OVĚŘENÉ ARCHITEKTONICKÉ PODKLADY (31. 10. 2026):** [Dokumentace v hlavní větvi main](https://github.com/Boym323/Loucka_weather/blob/main/docs/PROJECT_CONTEXT.md), [ADR Node.js / Go / Rust](https://github.com/Boym323/Loucka_weather/blob/main/docs/ARCHITECTURE_DECISION_2026-10-31.md), [Nginx audit 54 966 requestů](https://github.com/Boym323/Loucka_weather/blob/main/docs/TRAFFIC_AUDIT_2026-10-31.md), [Matomo](https://github.com/Boym323/Loucka_weather/blob/main/docs/MATOMO_AUDIT_2026-10-31.md), [benchmarková syntéza](https://github.com/Boym323/Loucka_weather/blob/main/docs/BENCHMARK_SYNTHESIS_2026-10-31.md). **Předběžně preferován Node.js + Fastify pro API v1**, nikoliv bezpodmínečné Go. Tato benchmarková větev je stále **draft PR #2**. Pro budoucí práci používej `main/docs/` jako zdroj nejnovějšího kontextu.
+Moderní meteorologický portál pro **https://pocasi-loucka.eu/**. **Stav 31. 10. 2026: návrh a vyhodnocování architektury; nový web ještě není postavený ani nasazený.** Původní WeeWX + Belchertown běží dál.
 
+> **Pro nový chat / Codex / jiné AI:** začni v [docs/PROJECT_CONTEXT.md](docs/PROJECT_CONTEXT.md), následně načti [AGENTS.md](AGENTS.md). Základní dokumenty jsou už v **main**, nikoliv pouze ve větvi benchmarků.
 
-Nový meteorologický portál pro https://pocasi-loucka.eu/ – **návrhová fáze**.
+## Návrh řešení (čeká na finální schválení)
 
-Tento repozitář se inicializuje dokumentací; zatím **neobsahuje běžící web** ani automatizované změny produkce.
+- **Frontend:** Astro + TypeScript, grafy ECharts, preferovat statické stránky a kvalitní mobilní UX.
+- **Datová vrstva v1:** předběžně **Node.js + Fastify + TypeScript**, po ověření reálného provozu, Matomo a šesti jazyků. Go je alternativou pro náročné historické endpointy, Rust případným dávkovým workerem – **zatím je nenasazovat bez prokázané potřeby**.
+- **Zdroje:** Ecowitt GW3000 → stávající WeeWX → historická MariaDB. Aplikace pracuje vůči původní DB **read-only**. Rekonstruované hodnoty spravovat zvlášť přes auditované postupy a jejich provenienci.
+- **Datové dotazy:** krátké aktualizace aktuálního počasí; dlouhé historie z cache/agregovaných časových řad; inkrementální přepočítávání dotčených statistik.
+- **Živý režim:** sdílený MQTT/WebSocket feed, nikoli opakovaný SQL dotaz pro každý prohlížeč.
+- **Provoz:** samostatný staging, Nginx Proxy Manager, ochrana proti automatizovaným skenerům, monitoring latencí a otevřených spojení. Produkční WeeWX a Belchertown ponechat.
 
-## Směr projektu
-- Ecowitt GW3000 a stávající WeeWX zůstávají sběrnou vrstvou.
-- Stávající MariaDB s historickými daty zůstává; původní archiv je bez zásahů.
-- Web: Astro + TypeScript; grafy ECharts; statický build mimo produkci.
-- Oddělené read-only API nad stávající MariaDB: **pro v1 preferováno Go** na základě [skutečného LXC benchmarku](benchmark/REAL_LXC_FULL_2026-10-30.md) a [syntetického CI benchmarku](benchmark/BENCHMARK_RESULTS_2026-10-30.md). Rust a Python zůstávají podložené alternativy; produkční API ještě není implementováno.
-- Tři LXC: stávající WeeWX, MariaDB a nový frontend + datová vrstva.
-- Nový web nejprve pouze na stagingu. Produkční Belchertown zůstává dostupný.
+## Dokumentace a podklady (31. 10. 2026)
 
-Rozpracovaná specifikace bude ve větvi `docs/frontend-audit-v1`. Rozhodnutí s otevřenými variantami je třeba odsouhlasit před implementací.
+| Dokument | Co obsahuje |
+|---|---|
+| [Kontext pro AI a nové chaty](docs/PROJECT_CONTEXT.md) | Technologie, původ dat, skutečná data, pracovní stav, otevřené úkoly |
+| [ADR – rozhodování Node.js / Go / Rust](docs/ARCHITECTURE_DECISION_2026-10-31.md) | Návrh stacku, výhody/nevýhody, provozní rizika, testy před schválením |
+| [Vyměnitelné API – hranice služeb a migrace](docs/API_ARCHITECTURE_AND_MIGRATION_2026-10-31.md) | Oddělení WeeWX / API / Astro, OpenAPI v1, paritní testy, Fastify → Go/Rust, rollback |
+| [Nginx provozní audit](docs/TRAFFIC_AUDIT_2026-10-31.md) | **54 966 HTTP požadavků / 5 logů / ~35 dní**, špičky, roboti, chyby, MQTT |
+| [Matomo audit](docs/MATOMO_AUDIT_2026-10-31.md) | Říjen: **216 návštěv**, nejčastější stránky, zařízení, zdroje návštěv |
+| [Šestijazyčné benchmarky](docs/BENCHMARK_SYNTHESIS_2026-10-31.md) | 216 HTTP scénářů / 39 096 requestů; 72 offline výpočetních pokusů |
+| [Zdroje a reprodukovatelnost](docs/SOURCES_AND_REPRODUCIBILITY.md) | Co je doloženo, co heuristika, omezení, soukromí |
+| [Souhrn metrik pro AI (JSON)](docs/data/observations_2026-10-31.json) | Strojově čitelná čísla bez osobních identifikátorů |
+| [Počty požadavků po dnech (CSV)](docs/data/traffic_daily_2026-09-27_2026-10-31.csv) | 35 dní provozu bez IP adres |
 
-## Zásadní bezpečnostní pravidla
-- Žádné zápisy do produkčních databází ani změny WeeWX bez výslovného schválení.
-- Nevystavovat přihlašovací údaje, interní adresy ani kamerová URL.
-- Nepokládat chybějící měření za 0, nevydávat rekonstruované hodnoty za původní.
+Referenční implementace a reporty šestijazyčného benchmarku jsou v [`benchmark/`](benchmark/) a pocházejí z [PR #2](https://github.com/Boym323/Loucka_weather/pull/2). Nejde o produkční API. **Plný benchmark je blokován bez ověření skutečného cílového DB snapshotu** (samostatné testovací LXC, test-only schéma, unikátní marker na cílovém serveru). Viz [bezpečnostní postup](benchmark/lxc/README.md).
 
-## Ověření backendu (30. 10. 2026)
+## Bezpečnostní zásady
 
-Na testovacím LXC `zl-dev-AuditMeteo` byly spuštěny Go, Rust a Python servery proti **živé produkční MariaDB WeeWX 11.8.6** s účtem pouze `SELECT`. `./run.sh full`: 36/36 scénářů, 0 HTTP chyb, shodné výsledky endpointů. Pool každého serveru omezen na **1 spojení** kvůli účtovému limitu `max_user_connections=4`. U historie 30 dní / 10 klientů: Go 24,32 RPS, Rust 15,84 RPS, Python 6,81 RPS; Python vycházel lépe u malých odpovědí, Rust měl nejnižší RSS. Číselné výsledky pocházejí z terminálového výpisu, nikoliv ze stažených souborů LXC. Nejde o potvrzení nulového vlivu na WeeWX writer ani maximální výkon při 50 klientských spojeních.
+- **Žádné zásahy do původních produkčních meteorologických dat**, žádné plošné čištění či domnělé doplňování chybějících hodnot.
+- **Žádné plné load testy na živé MariaDB.** Historický benchmark proti produkci už jednou proběhl omylem – hodnotu `isolated_copy=true` v JSON nelze považovat za důkaz izolace.
+- Veřejný repozitář **nesmí obsahovat syrové access logy, osobní IP adresy návštěvníků, interní adresy, přístupové údaje nebo URL kamer**. Publikovány jsou pouze agregáty.
+- Chybějící meteodata nejsou `0`; opravené/rekonstruované hodnoty musí být jasně označené a dohledatelné.
+- Před prvním nasazením ověřit bezpečnost, read-only přístup aplikace, správnost numeriky, přechody CET/CEST a HTTP/MQTT zátěž na stagingu.
 
-[Úplný report z reálného LXC](benchmark/REAL_LXC_FULL_2026-10-30.md) · [Benchmarkové PR #2](https://github.com/Boym323/Loucka_weather/pull/2)
+**Pozor:** README před audity uvádělo jako první kandidát datové vrstvy Python. Tento návrh je v roce 2026 nahrazen **pracovní preferencí Node.js/Fastify** popsanou v [ADR](docs/ARCHITECTURE_DECISION_2026-10-31.md), nikoli hotovým schválením.
 
-
-## Rozšířené ověření všech šesti backendů (30. 10. 2026)
-
-Na testovacím LXC proti skutečné produkční MariaDB WeeWX proběhl další read-only `light` benchmark se **šesti** implementacemi: Go, Rust, Python, Node.js, C++ a PHP CLI. **24/24 scénářů PASS, 0 HTTP chyb**. C++ vedlo u krátkých odpovědí (`current` 59,26 RPS); Go mírně vedlo u historie 30 dní s 8 638 měřeními (19,92 RPS oproti 18,78 C++ a 18,08 Rust). Rust měl nejnižší zaznamenanou RSS. Preferovaná volba pro API v1 **zatím zůstává Go**, ale C++ je důležitá změřená alternativa.
-
-[Úplné výsledky a metodická omezení](benchmark/REAL_LXC_SIX_LANGUAGES_LIGHT_2026-10-30.md). Tento konkrétní `light` běh měl jen 1 souběžného klienta a pro 30denní historii pouze 3 requesty na backend. Pro finální kapacitní rozhodnutí je nutné opakování na izolované DB kopii; PHP bylo měřeno vestavěným CLI HTTP serverem, ne PHP-FPM.
-
-
-## Analýza původního JSON – šestijazyčný full benchmark (2026-10-30)
-
-[Úplný rozbor skutečného exportovaného JSON](benchmark/REAL_LXC_SIX_LANGUAGES_FULL_2026-10-30.md): nahraný ZIP obsahoval **jeden**, nikoliv tři kompletní full běhy (72/72 scénářů bez HTTP chyb, celkem 13 032 požadavků). Ověřená konfigurace: **DB pool=3**; metadata nesprávně tvrdí `isolated_copy=true`, ale uživatel potvrdil, že běžela **produkční MariaDB**. Scénář `30d c=50` provádí jen 24 requestů celkem, takže nešlo o 50 skutečně současných požadavků. Naměřené výkony jsou podnětné, ale nerozhodují definitivně o backendu. Další plné testy pouze na izolovaném staging snapshotu.
-
-
-## Dvě skutečná šestijazyčná FULL měření – vyhodnocení původních JSON (2026-10-30)
-
-[Úplná analýza dvou běhů](benchmark/REAL_LXC_SIX_LANGUAGES_FULL_TWO_RUNS_2026-10-30.md) ověřila **144/144 scénářů, 26 064 úspěšných HTTP požadavků, 0 chyb**. Oba běhy měly `pool_max=3` a proběhly proti **živé produkční MariaDB**, ač jejich chybně nastavená metadata uvádějí `isolated_copy=true`. Třetí běh v nahraném ZIP nebyl. Go vedlo u historie 30 dní a c=10 v obou měřeních (24,89/31,34 RPS). C++ vedlo u 24h/c=10; Node.js výrazně kolísal při delší historii a vyšší souběžnosti. `30d c=50` odesílá jen **24 požadavků celkem**: nejde o ověřenou souběžnost 50. Další plné zátěžové testy patří na izolovanou kopii MariaDB.
-
-
-## Tři plné šestijazyčné benchmarky – konečná agregace 2026-10-30
-
-Po doplnění třetího JSON proběhla kontrola **216/216 scénářů**, celkem **39 096 HTTP požadavků bez chyby**. [Agregace všech tří běhů](benchmark/REAL_LXC_SIX_LANGUAGES_FULL_THREE_RUNS_2026-10-30.md) počítá medián RPS/p95 ze tří měření, maximum RAM a variabilitu. Pro `30d c10` Go vedlo ve všech bězích (24,89 / 31,34 / 36,67 RPS; medián 31,34), před C++ (medián 21,80), PHP CLI (19,89), Node.js (17,37), Rust (15,85) a Pythonem (6,05). C++ vedlo u mediánů krátkých odpovědí. **Všechny tři testy běžely proti produkční DB s `pool_max=3`, přestože `isolated_copy=true` v JSON uvádí opak.** Dále `30d c50` není skutečných 50 klientů – jen 24 požadavků celkem. Další full jen na samostatné kopii MariaDB. Go zůstává předběžně doporučené pro API v1.
-
-
-## Offline benchmark přepočtu vlastních meteorologických statistik (2026-10-31)
-
-K původnímu HTTP/SQL benchmarku přibyl [samostatný výpočetní benchmark šesti backendů](benchmark/compute/README.md): **Go, Rust, Python, Node.js, C++20, PHP**. Na normalizovaném lokálním TSV počítá denní/měsíční/roční/celohistorické souhrny, časově váženou teplotu a vlhkost, srážky, vektorový vítr, extrémy a identifikaci rekonstruovaných měření. Kontroluje úplnou numerickou shodu všech jazyků včetně všech dnů a měsíců. **Neobsahuje spojení k MariaDB; všechny výkonnostní běhy jsou offline.** Reálná data lze importovat pouze z **existujícího lokálního CSV/TSV exportu** pomocí normalizátoru (WeeWX US/METRIC/METRICWX, Europe/Prague, intervalové hranice). Syntetické profily: 288 / 10 000 / 105 120 / 1 680 000 záznamů. GitHub Actions provádí parity smoke/light; výkonové výsledky je třeba změřit na cílovém testovacím LXC. Původní rozhodnutí o Go z HTTP testů tím zatím není potvrzeno ani vyvráceno.
-
-
-## Offline benchmark vlastních meteorologických statistik (2026-10-31)
-
-[Šestijazyčné měření na reálném testovacím LXC](benchmark/compute/REAL_LXC_OFFLINE_RESULTS_2026-10-31.md): **72/72 výpočetních pokusů PARITY PASS**, offline syntetická data (žádný DB load). U 1 680 000 řádků **Rust medián 4,10 s a 107,23 MiB RAM**, Go **5,26 s a 422,54 MiB**. Zatímco Go vycházelo vhodně pro HTTP API a historické grafy, Rust je v aktuálních implementacích nejrychlejší a nejúspornější pro celohistorický dávkový přepočet. Rozhodnutí o Rust workeru odložit do porovnání optimalizovaného Go a reálného lokálního exportu WeeWX.
+## Doplňující historické audity a specifikace (PR #1)
+- [Rozhodovací log a původní varianty](DECISIONS.md) – historické závěry doplněné o současný pracovní směr Fastify.
+- [Audit MariaDB a denních souhrnů](WEEWX_DAILY_SUMMARIES_AUDIT.md) a [pravidla statistik](STATISTICS_SPEC.md) – pro první verzi preferovat L1 archive + L2 archive_day_*, bez L3 zápisů.
+- [Původní audit Go backendu](BACKEND_TECHNOLOGY_AUDIT.md) a [komponenty frontendu](FRONTEND_SPEC.md) – metodické podklady, nikoli potvrzené nasazení.
