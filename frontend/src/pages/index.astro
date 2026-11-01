@@ -7,9 +7,10 @@ import ForecastPanel from '../features/forecast/ForecastPanel.astro';
 import RadarPanel from '../features/maps/RadarPanel.astro';
 ---
 <BaseLayout title="Přehled" description="Počasí Loučka: skutečná data meteostanice, aktuální předpověď, grafy, webkamera a radar.">
- <section class="site-banner" aria-label="Ilustrační krajina v podvečerním světle">
+ <section class="site-banner" aria-label="Pohled západní kamerou na Loučku; čas pořízení snímku nebyl ověřen">
+  <img class="banner-scene" src="https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg" alt="" aria-hidden="true" loading="eager" />
   <div class="banner-copy"><strong>Počasí Loučka</strong><span>Aktuální měření · lokální meteostanice ve Zlínském kraji</span></div>
-  <small class="illustration-label">Ilustrace okolní krajiny</small>
+  <small class="illustration-label">Kamera Loučka · čas snímku neověřen</small>
  </section>
  <div class="dashboard-top">
   <div class="dashboard-primary">

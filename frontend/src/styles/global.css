@@ -453,3 +453,17 @@ h1,h2,h3,p{margin-top:0}h1{font-size:clamp(26px,3vw,42px);line-height:1.2;letter
  .actual-intro{align-items:flex-start;flex-direction:column}
  .dashboard-bottom>.section{min-height:0}
 }
+
+
+/* Scenic home banner uses the real west-camera picture with the SVG as fallback.
+   Capture time is unknown; do not describe the JPEG as a live verified view. */
+.site-banner .banner-scene{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 48%;filter:saturate(1.2) contrast(1.02) brightness(.81)}
+.site-banner .banner-copy{z-index:2}
+.site-banner::before{z-index:1;pointer-events:none;background:
+ linear-gradient(180deg,#03172822,#0417229c),linear-gradient(90deg,#00151fb5,transparent 66%),
+ radial-gradient(ellipse at 78% 30%,#f9925244,transparent 45%)}
+.site-banner .illustration-label{z-index:2}
+.rain-detail-chart{height:240px;min-width:0}
+[data-rain-detail]{margin-top:12px}
+[data-rain-detail] .chart-summary{margin-block:10px}
+@media(max-width:650px){.rain-detail-chart{height:195px}.site-banner .banner-scene{object-position:center}}

@@ -1,20 +1,55 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import OverviewReadings from '../features/current/OverviewReadings.astro';
 ---
 <BaseLayout title="Webkamera">
  <div class="page-intro"><span class="eyebrow">Pohled na Loučku a okolí</span><h1>Webkamera Loučka – západ</h1><p>Aktuální snímek západní kamery.</p></div>
- <div class="camera-layout">
+ <div class="camera-layout camera-layout-enhanced">
   <section class="section camera-panel" data-camera>
    <div class="section-heading"><h2>Aktuální snímek</h2><span class="status-chip" data-camera-status role="status">Načítám snímek</span></div>
    <div class="camera-image camera-image-large"><img data-camera-image src="https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg" alt="Pohled webkamery na Loučku západním směrem" /></div>
    <p class="source-note" data-camera-message>Čas pořízení snímku není dostupný.</p>
+   <nav class="camera-mode-tabs" aria-label="Dostupné pohledy"><span class="chart-tab is-active">Aktuální snímek</span><span class="chart-tab muted">Archiv snímků – nepřipojeno</span><span class="chart-tab muted">Časosběr – nepřipojeno</span></nav>
    <div class="camera-actions"><button type="button" class="camera-refresh" data-camera-refresh>Obnovit snímek</button><a class="panel-link" href="https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg" target="_blank" rel="noopener noreferrer">Otevřít originál ↗</a></div>
   </section>
-  <aside class="section camera-info"><h2>Informace o kameře</h2><dl><div><dt>Směr pohledu</dt><dd>Západ</dd></div><div><dt>Čas pořízení</dt><dd>Neznámý</dd></div><div><dt>Archiv snímků</dt><dd>Nedostupný</dd></div></dl><p class="source-note">Úspěšné načtení souboru samo o sobě nepotvrzuje stáří snímku.</p></aside>
+  <aside class="camera-sidebar">
+   <section class="section camera-info">
+    <div class="section-heading"><h2>Informace o kameře</h2><span class="status-chip">Západ</span></div>
+    <dl>
+     <div><dt>Směr pohledu</dt><dd>Západ</dd></div>
+     <div><dt>Zdroj</dt><dd>Počasí Loučka</dd></div>
+     <div><dt>Čas pořízení</dt><dd>Neověřený</dd></div>
+     <div><dt>Interval aktualizace</dt><dd>Neověřený</dd></div>
+     <div><dt>Archiv snímků</dt><dd>Nepřipojen</dd></div>
+    </dl>
+    <p class="source-note">Úspěšné načtení fotografie nezaručuje, že jde o čerstvý snímek.</p>
+   </section>
+   <section class="section camera-direction">
+    <h2>Směr pohledu</h2>
+    <div class="camera-direction-symbol" aria-hidden="true">← <span>Z</span></div>
+    <p class="lead">Kamera sleduje západní směr z oblasti Loučky. Přesnou polohu ani úhel záběru bez ověření nezobrazujeme.</p>
+   </section>
+   <OverviewReadings />
+  </aside>
  </div>
+<section class="section camera-archive-note">
+ <div class="section-heading"><div><span class="eyebrow">Galerie</span><h2>Archiv snímků</h2></div><span class="status-chip">Čeká na propojení</span></div>
+ <p class="lead">Momentálně máme ověřenou jen adresu aktuálního snímku. Historické fotografie, náhledy po hodinách a časosběrný záznam se objeví až po napojení skutečného archivu.</p>
+</section>
 </BaseLayout>
 <style>
  .camera-layout{display:grid;grid-template-columns:minmax(0,3fr) minmax(220px,1fr);gap:12px;align-items:start}.camera-panel{min-width:0}.camera-actions{display:flex;gap:16px;align-items:center;flex-wrap:wrap}.camera-refresh{padding:8px 12px;color:#052119;background:#43e6ab;border:0;border-radius:6px;font-weight:700}.camera-info dl{margin:12px 0}.camera-info dl div{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:10px 0;font-size:12px}.camera-info dt{color:var(--muted)}.camera-info dd{margin:0;text-align:right}.camera-panel [data-camera-message]{margin:10px 0}@media(max-width:750px){.camera-layout{grid-template-columns:1fr}}
+
+ .camera-layout-enhanced{grid-template-columns:minmax(0,2.2fr) minmax(250px,.8fr)}
+ .camera-sidebar{display:grid;gap:12px;align-content:start}
+ .camera-mode-tabs{display:flex;flex-wrap:wrap;gap:7px;margin:13px 0 0}
+ .camera-mode-tabs .is-active{background:var(--teal);color:#043328;border-color:var(--teal)}
+ .camera-mode-tabs .muted{opacity:.58}
+ .camera-direction-symbol{font-size:37px;color:var(--teal);display:flex;align-items:center;justify-content:center;height:80px;font-weight:800}
+ .camera-direction-symbol span{font-size:18px;margin-left:10px;color:var(--muted)}
+ .camera-archive-note{margin-top:12px}
+ @media(max-width:900px){.camera-layout-enhanced{grid-template-columns:1fr}.camera-sidebar{grid-template-columns:repeat(2,minmax(0,1fr))}.camera-sidebar .overview-readings{grid-column:1/-1}}
+ @media(max-width:650px){.camera-sidebar{grid-template-columns:1fr}.camera-sidebar .overview-readings{grid-column:auto}}
 </style>
 <script>
  const root=document.querySelector<HTMLElement>('[data-camera]');
