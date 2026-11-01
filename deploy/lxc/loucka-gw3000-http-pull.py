@@ -28,7 +28,7 @@ FIELDS = {
     0x17: ("UV", 0, 20),
 }
 TEMP = {"inTemp", "outTemp"}
-HUMIDITY = {"inHumidity", "outHumidity"}
+HUMIDITY = {"inHumidity", "outHumidity", "soilMoisture1"}
 WIND = {"windSpeed", "windGust"}
 PRESSURE = {"pressure", "barometer"}
 VALUE = re.compile(r"^\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+))\s*(.*?)\s*$")
@@ -91,6 +91,51 @@ def parse_live_payload(data: object, fetched: datetime) -> dict:
         value = convert(metric, *parsed)
         if value is not None and math.isfinite(value) and minimum <= value <= maximum:
             readings[metric] = round(value, 5)
+    # The actual GW3000 replies with WH25 indoor readings in a separate object.
+    # Do not overwrite an already valid value from common_list.
+    wh25 = data.get("wh25")
+    if isinstance(wh25, list):
+        for entry in wh25[:1]:
+            if not isinstance(entry, dict): continue
+            for key, metric, bounds in (
+                ("intemp", "inTemp", (-40, 80)),
+                ("inhumi", "inHumidity", (0, 100)),
+                ("abs", "pressure", (650, 1150)),
+                ("rel", "barometer", (750, 1150)),
+            ):
+                if metric in readings: continue
+                unit = entry.get("unit") if metric == "inTemp" else None
+                parsed = number_and_unit(entry.get(key), unit)
+                if parsed is None: continue
+                value = convert(metric, *parsed)
+                if value is not None and math.isfinite(value) and bounds[0] <= value <= bounds[1]:
+                    readings[metric] = round(value, 5)
+
+    # PM2.5 and soil humidity are tied to the explicitly numbered sensor channel.
+    # Other channels have separate identities and must not be mapped to channel 1.
+    pm25 = data.get("ch_pm25")
+    if isinstance(pm25, list):
+        for entry in pm25:
+            if not isinstance(entry, dict) or str(entry.get("channel", "")) != "1":
+                continue
+            parsed = number_and_unit(entry.get("PM25"), entry.get("unit"))
+            if parsed is None: continue
+            value, unit = parsed
+            # Ecowitt's ch_pm25 PM25 field is in ug/m3; do not treat AQI as PM2.5.
+            if unit in {"", "ug/m3", "µg/m3", "μg/m3", "ug/m³", "µg/m³"} and 0 <= value <= 1000:
+                readings["pm25_1"] = round(value, 5)
+            break
+    soil = data.get("ch_soil")
+    if isinstance(soil, list):
+        for entry in soil:
+            if not isinstance(entry, dict) or str(entry.get("channel", "")) != "1":
+                continue
+            parsed = number_and_unit(entry.get("humidity"), entry.get("unit"))
+            if parsed is None: continue
+            value = convert("soilMoisture1", *parsed)
+            if value is not None and math.isfinite(value) and 0 <= value <= 100:
+                readings["soilMoisture1"] = round(value, 5)
+            break
     # Some firmware puts the tipping-bucket rain rate in a separate "rain" array.
     # Do not substitute piezo rain or daily totals for interval rain.
     if "rainRate" not in readings and isinstance(data.get("rain"), list):
