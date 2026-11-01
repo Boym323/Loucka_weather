@@ -6528,6 +6528,99 @@
           }
         }
       }
+    },
+    "ArchiveUpdatedEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "eventId",
+        "eventType",
+        "emittedAt",
+        "stationId",
+        "dataset",
+        "dataRevision",
+        "changeType",
+        "affectedEndTimeFrom",
+        "affectedEndTimeTo",
+        "latestArchiveAt",
+        "changedRecords",
+        "summaryStatus"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1"
+        },
+        "eventId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "eventType": {
+          "const": "archive-updated"
+        },
+        "emittedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$"
+        },
+        "stationId": {
+          "const": "loucka"
+        },
+        "dataset": {
+          "const": "original"
+        },
+        "dataRevision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "changeType": {
+          "enum": [
+            "appended",
+            "backfilled",
+            "revised",
+            "deleted"
+          ]
+        },
+        "affectedEndTimeFrom": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$"
+        },
+        "affectedEndTimeTo": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$"
+        },
+        "latestArchiveAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$"
+        },
+        "changedRecords": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "summaryStatus": {
+          "enum": [
+            "pending",
+            "ready",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "LiveMessage": {
+      "title": "One JSON data payload from /api/v1/live SSE",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/LiveEvent"
+        },
+        {
+          "$ref": "#/$defs/ArchiveUpdatedEvent"
+        }
+      ]
     }
   }
 }
