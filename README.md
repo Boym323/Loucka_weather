@@ -1,6 +1,6 @@
 # Loučka Weather
 
-Moderní meteorologický portál pro **https://pocasi-loucka.eu/**. **Stav 31. 10. 2026: návrh a vyhodnocování architektury; nový web ještě není postavený ani nasazený.** Původní WeeWX + Belchertown běží dál.
+Moderní meteorologický portál pro **https://pocasi-loucka.eu/**. **Stav 1. 11. 2026: rozpracovaný Astro frontend a částečné Fastify API běží na testovacím webu; veřejná produkce nahrazena nebyla.** Původní WeeWX + Belchertown běží dál.
 
 > **Pro nový chat / Codex / jiné AI:** začni v [docs/PROJECT_CONTEXT.md](docs/PROJECT_CONTEXT.md), následně načti [AGENTS.md](AGENTS.md). Základní dokumenty jsou už v **main**, nikoliv pouze ve větvi benchmarků.
 
@@ -13,7 +13,11 @@ Moderní meteorologický portál pro **https://pocasi-loucka.eu/**. **Stav 31. 1
 - **Živý režim:** sdílený MQTT/WebSocket feed, nikoli opakovaný SQL dotaz pro každý prohlížeč.
 - **Provoz:** samostatný staging, Nginx Proxy Manager, ochrana proti automatizovaným skenerům, monitoring latencí a otevřených spojení. Produkční WeeWX a Belchertown ponechat.
 
-## Dokumentace a podklady (31. 10. 2026)
+## Dokumentace a podklady
+
+Změny průběžně zaznamenává [CHANGELOG.md](CHANGELOG.md). Stav funkcí a nevyřešené úkoly jsou ve [frontend/README.md](frontend/README.md).
+
+### Historické audity (31. 10. 2026)
 
 | Dokument | Co obsahuje |
 |---|---|
@@ -45,4 +49,4 @@ Referenční implementace a reporty šestijazyčného benchmarku jsou v [`benchm
 - [Audit MariaDB a denních souhrnů](WEEWX_DAILY_SUMMARIES_AUDIT.md) a [pravidla statistik](STATISTICS_SPEC.md) – pro první verzi preferovat L1 archive + L2 archive_day_*, bez L3 zápisů.
 - [Původní audit Go backendu](BACKEND_TECHNOLOGY_AUDIT.md) a [komponenty frontendu](FRONTEND_SPEC.md) – metodické podklady, nikoli potvrzené nasazení.
 
-Podrobný [produktový kontrakt API v1](docs/API_V1_PRODUCT_CONTRACT.md) a [pětiminutové archivní aktualizace](docs/ARCHIVE_REFRESH_CONTRACT.md) jsou součástí specifikace. **API dosud není nasazená služba**; offline kontraktové testy nejsou integračním ověřením skutečné implementace.
+Podrobný [produktový kontrakt API v1](docs/API_V1_PRODUCT_CONTRACT.md) a [pětiminutové archivní aktualizace](docs/ARCHIVE_REFRESH_CONTRACT.md) jsou součástí specifikace. **Testovací API implementuje část kontraktu**; offline kontraktové testy nejsou integračním ověřením všech endpointů.

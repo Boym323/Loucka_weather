@@ -1,6 +1,6 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
-**Aktualizace: 31. 10. 2026.** Tento dokument je vstupní rozcestník. Zdroj pravdy je `main/docs/` a původní výkonnostní implementace jsou ve větvi `bench/go-rust-python` (draft [PR #2](https://github.com/Boym323/Loucka_weather/pull/2)). Nepleť si větev PR s produkčním kódem; projekt je stále v návrhu a nový portál zatím není v provozu.
+**Aktualizace: 1. 11. 2026.** Tento dokument je vstupní rozcestník. Zdroj pravdy je `main/docs/` a původní výkonnostní implementace jsou ve větvi `bench/go-rust-python` (draft [PR #2](https://github.com/Boym323/Loucka_weather/pull/2)). Nepleť si větev PR s produkčním kódem; portál je rozpracovaný a běží testovací náhled; původní veřejný web zůstává samostatný.
 
 ## Cíl
 Navrhnout moderní portál **Počasí Loučka** pro veřejný web `https://pocasi-loucka.eu/`, s mobilním rozhraním, živými údaji, historickými grafy, statistikami a přehledem kvality dat. Původní **WeeWX + Belchertown** nadále provozovat, neměnit beze schválení produkční sběr dat. Meteorologická stanice Ecowitt GW3000, WeeWX a historický MariaDB archiv. Součástí většího projektu je historický audit a rekonstrukce chybějících/anomálních měření.
@@ -28,7 +28,7 @@ Navrhnout moderní portál **Počasí Loučka** pro veřejný web `https://pocas
 7. [Branch benchmarků](https://github.com/Boym323/Loucka_weather/tree/bench/go-rust-python/benchmark/) a [offline compute](https://github.com/Boym323/Loucka_weather/tree/bench/go-rust-python/benchmark/compute/).
 
 ## Co není hotové
-- Nový portál zatím není postavený ani nasazený. Předchozí UI návrhy nejsou schválený produkt.
+- Testovací frontend a částečné Fastify API jsou nasazené na dev.pocasi-loucka.eu. Původní devítipanelový návrh je vizuální předloha; jeho úplná realizace a ověření na mobilu dosud nejsou dokončeny.
 - V repozitáři nejsou původní surové HTTP logy ani osobní IP adresy a nejsou zde originální soubory Matomo; reporty uvádějí agregáty ověřené read-only konektorem.
 - Zbývá ověřit zátěž **všech** požadovaných API endpointů na testovací kopii DB, efekt aktivních MQTT spojení, správnost statistik nad reálnou rekonstruovanou historií a reálný dopad na DB a WeeWX writer.
 - Neexistuje ještě finální přijetí stacku v produkci. Před samotnou implementací schválit přesné moduly, provozní hranice a bezpečnostní pravidla.
@@ -38,10 +38,14 @@ Navrhnout moderní portál **Počasí Loučka** pro veřejný web `https://pocas
 
 
 ## Jednotky v návrhu API v1
-Doplněn `?units=us|metric|metricwx` (default metricwx); zdrojová normalizace podle `usUnits` každého řádku 1/16/17. Odpovědi musí uvádět skutečné jednotky; golden vektory v `tests/fixtures/unit-conversions.json` a referenční převodník `contracts/unit_conversion.py`. Detaily v [API auditu](API_CONTRACT_AUDIT_2026-10-31.md). Tato dokumentace je návrh, API v1 dosud není nasazeno.
+Doplněn `?units=us|metric|metricwx` (default metricwx); zdrojová normalizace podle `usUnits` každého řádku 1/16/17. Odpovědi musí uvádět skutečné jednotky; golden vektory v `tests/fixtures/unit-conversions.json` a referenční převodník `contracts/unit_conversion.py`. Detaily v [API auditu](API_CONTRACT_AUDIT_2026-10-31.md). Úplný kontrakt je návrh; část API v1 je implementovaná na testovacím webu.
 
 ## API v1 – aktuální zadání
-Draft PR #4 obsahuje OpenAPI 3.1, meteorologické a feature JSON Schema, pravidla agregací, metadata senzorů, denní/měsíční statistiky, SSE, status kamery a readiness. Viz [API_V1_PRODUCT_CONTRACT.md](API_V1_PRODUCT_CONTRACT.md). Není to nasazená služba a live parita Fastify/Go/Rust neproběhla.
+Draft PR #4 obsahuje OpenAPI 3.1, meteorologické a feature JSON Schema, pravidla agregací, metadata senzorů, denní/měsíční statistiky, SSE, status kamery a readiness. Viz [API_V1_PRODUCT_CONTRACT.md](API_V1_PRODUCT_CONTRACT.md). Část kontraktu implementuje staging Fastify; denní/měsíční/roční statistiky a live parita Fastify/Go/Rust zatím chybí.
 
 ## Archivní refresh – návrh
 Návrhový read-only observer pro nové záznamy v `archive` (poller ~15s a overlap/catch-up) po zjištění commitu odešle `archive-updated` přes SSE. Dotčené grafy a statistiky se revalidují odděleně podle `summaryStatus`. Viz [ARCHIVE_REFRESH_CONTRACT.md](ARCHIVE_REFRESH_CONTRACT.md). Jde o kontrakt, nikoli produkční běžící proces.
+
+## Průběžná dokumentace
+
+Aktuální změny zapisovat do [CHANGELOG.md](../CHANGELOG.md), stav rozhraní a otevřené problémy udržovat ve [frontend/README.md](../frontend/README.md). Nové nasazení ověřovat samostatně, GitHub `main` ani úspěšné CI nejsou důkazem nasazeného commitu.

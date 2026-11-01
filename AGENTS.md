@@ -44,3 +44,7 @@
 - Povinně čti [docs/ARCHIVE_REFRESH_CONTRACT.md](docs/ARCHIVE_REFRESH_CONTRACT.md) pro `archive-updated`, `summaryStatus`, deduplikaci, backfill, cache a návrat po výpadku.
 - Jeden centrální read-only poller, žádný SQL dotaz per návštěvník, žádný slib přesného času 5min zápisu. Schémata v `schemas/features.schema.json`, referenční model `contracts/archive_refresh.py`, testy `tests/test_archive_refresh.py`.
 - Dokud nejsou prokazatelně aktuální `archive_day_*` souhrny, nepublikuj `summaryStatus=ready` ani jejich údajně čerstvé statistiky.
+
+## Průběžný changelog a dokumentace
+- Při každé věcné změně doplň `CHANGELOG.md` datem, popisem a případnými omezeními. Aktualizuj související README a `docs/PROJECT_CONTEXT.md`, pokud se změnil stav funkcí nebo provozu.
+- Rozlišuj stav zdrojového kódu v `main`, výsledek testů a skutečně ověřenou nasazenou verzi. Neoznačuj návrhové endpointy a nepotvrzené zdroje za hotové.

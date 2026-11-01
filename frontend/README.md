@@ -1,53 +1,39 @@
-# Počasí Loučka – Astro frontend (vizuální staging PR #7)
+# Počasí Loučka – testovací frontend
 
-První spustitelná implementace schváleného devítidílného tmavého meteorologického dashboardu. **Není to veřejná produkce.** Astro 7.4.4, TypeScript 6.0.3, Apache ECharts 6.1.0, Node.js 24.
+Stav k 1. 11. 2026: rozpracovaný Astro frontend podle dodaného tmavého devítipanelového návrhu. Testovací web je dostupný na https://dev.pocasi-loucka.eu/; nejde o náhradu veřejné produkce. Další změny zaznamenávej do [changelogu](../CHANGELOG.md).
 
-## Spuštění na testovacím LXC
+## Spuštění a ověření
 
-Jako uživatel `loucka`:
+Použij Node.js 24 a checkout aktuální větve `main`:
+
 ```bash
-cd ~/Loucka_weather
-git fetch origin
-git switch feat/astro-frontend-modular-scaffold
-git pull --ff-only
 cd frontend
-npm ci
-npm run dev -- --host 0.0.0.0
-```
-V prohlížeči v **důvěryhodné LAN**: `http://192.168.0.131:4321/`. Nezveřejňovat dev server do internetu. Standardní bind bez `--host` je pouze `127.0.0.1` a vyžaduje SSH port forwarding.
-
-Hot Module Replacement (HMR) je aktivní. Vývojové změny jsou patrné po uložení bez buildu; produkční build se vytváří až pro release/CI.
-
-## Backend a data
-
-Fastify API z PR #5 běží jako **samostatný** proces na `127.0.0.1:3100`, proxy ve `astro.config.mjs` přesměruje `/api/v1`. Při nedostupném API frontend zobrazuje výslovný stav offline a prázdné hodnoty. Browser se nepřipojuje k MariaDB, tajné klíče nikdy nejsou ve frontendu. Aktuální měření využívá `/api/v1/current`; ECharts a detailní tabulka čtou `/api/v1/history` s limity 6/24/72 hodin.
-
-Schéma meteorologických veličin a jednotek je v `../schemas/metrics.json` a `../openapi.yaml`. Tento první slice obsahuje pouze vybrané veřejné veličiny, v dalších krocích generujeme typy automaticky ze schématu.
-
-## Funkce připravené vizuálně
-
-- **/**: tmavý dashboard, hero grafika (označená ilustrace), aktuální hodnoty, skutečný archivní ECharts graf, transparentně nedostupné panely předpovědi/ČHMÚ/radaru/kamery.
-- **/aktualne/**: detailní měření a větrná růžice napojená na `windDir`.
-- **/grafy/**: interaktivní ECharts graf, přepínání teplota/vlhkost/tlak/vítr/intenzita srážek a 6/24/72 h, tabulka archivních bodů na vyžádání.
-- **/klimatologie/, /kamera/, /mapy/, /senzory/**: připravené responzivní obrazovky se správně označenými nedostupnými daty, **zatím bez skutečných zdrojů**.
-- **/o-stanici/**: informace o architektuře a meteo metodice.
-- **Mobilní menu, dark default, volitelný light theme** přes tlačítko v hlavičce.
-
-Grafy používají pouze uložené hodnoty, nedopočítávají imaginární body; `null` a `suspect` tvoří mezery. Časy jsou formátovány pro Europe/Prague. Minimální a maximální hodnoty v grafu jsou pouze za **vybraný klouzavý interval**, nikoliv automaticky kalendářní den.
-
-Kamera/radar/předpověď/ČHMÚ nejsou připojeny, protože jejich aktuální zdroj a licenci teprve ověříme. Ilustrační vektor v `public/landscape.svg` **není skutečný snímek Loučky**. Nezobrazujeme demo data jako reálná měření.
-
-## Testy
-
-```bash
 npm ci
 npm run check
 npm test
 npm run build
+npm run dev
 ```
 
-Před sloučením PR provést také reálnou prohlížečovou kontrolu na desktopu/mobilu a porovnání s uživatelským devítipanelovým vizuálním návrhem. CI zatím ověřuje typy, unit testy a statický build, nikoliv pixelovou shodu nebo přístupnost v browseru.
+Vývojový server je standardně dostupný lokálně. Automatický testovací deploy, API a konfigurace proxy jsou popsány v [deploy/lxc/README.md](../deploy/lxc/README.md). GitHub CI kontroluje frontend, ale samo o sobě nepotvrzuje, jaký commit LXC skutečně servíruje.
 
-## Další návaznosti
+## Současné stránky a data
 
-Pro hloubkovou klimatologii jsou nutné kvalitní agregace (API PR #5 nyní vrací pro hourly/daily 422). Senzory vyžadují ověřené fyzické mapování. Kamera, radar, předpověď a výstrahy vyžadují schválení jednotlivých zdrojů. Produkční CI/CD release a automatický rollback na LXC ještě nejsou hotové.
+- **Přehled:** aktuální archivní hodnoty a graf přes API; kamera používá dodaný západní snímek. Předpověď, výstrahy a radar zatím nemají ověřený připojený zdroj.
+- **Aktuálně:** poslední dostupný archivní záznam a směr větru. Není to sekundový živý LOOP.
+- **Grafy:** jedna zvolená veličina, 6/24/72 hodin a tabulka archivních bodů. Grafy pro libovolné datum, více současných veličin a dlouhá agregovaná období z předlohy zatím chybí.
+- **Klimatologie:** rozvržení přehledu bez zveřejněných statistik. Výběr období a grafy čekají na implementaci API a ověření dat.
+- **Kamera:** snímek z uživatelem dodaného zdroje. Čas pořízení, automatická obnova, archiv, dostupnost zdroje a chování při chybě vyžadují ověření.
+- **Mapy a senzory:** stavy nepřipojených zdrojů; radar, vrstvy a ověřený registr fyzických senzorů zatím nejsou hotové.
+- **O projektu:** přehled stanice a dat. Krajina v `public/landscape.svg` je ilustrace.
+- **Mobilní zobrazení:** CSS obsahuje responzivní pravidla a mobilní menu. Kompletní vizuální a funkční kontrola všech stránek v reálném mobilním viewportu zůstává otevřená.
+
+Barvy, hustota a obsah obrazovek zatím plně neodpovídají přiloženému návrhu. Chybějící data se nezobrazují jako nula ani jako skutečná demo měření.
+
+## API a statistiky
+
+Současný Fastify slice nabízí mimo jiné `/api/v1/current` a surovou `/api/v1/history`; hourly/daily historie a endpointy denních, měsíčních a ročních statistik nejsou implementované. [Produktový kontrakt](../docs/API_V1_PRODUCT_CONTRACT.md) je širší než implementace. Denní souhrny WeeWX jsou popsány v [auditu](../WEEWX_DAILY_SUMMARIES_AUDIT.md); práva stagingového DB účtu pro konkrétní denní tabulky dosud nebyla ověřena.
+
+## Nasazená verze
+
+Parser a komponenta pro validovaná metadata `/deployment.json` byly doplněny v `65691ea`; commit `62e8917` je zapojuje do layoutu a stránky projektu a upravuje deploy skript pro publikování metadat. Skutečnou dostupnost a správnost metadat na testovacím webu je nutné ověřit po nasazení. Úspěšné vytvoření commitu neprokazuje jeho nasazení.
