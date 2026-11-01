@@ -1,0 +1,9 @@
+[Unit]
+Description=Verify official local CHMI CAP warnings every ten minutes
+[Timer]
+OnCalendar=*:2/10
+Persistent=true
+RandomizedDelaySec=15
+Unit=loucka-alerts-collect.service
+[Install]
+WantedBy=timers.target
