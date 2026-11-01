@@ -6,7 +6,7 @@
 - Timer každé cca 2 minuty načte GitHub main pomocí fetch + merge --ff-only. Odmítne přepsat lokálně upravené sledované soubory.
 - Před publikováním spustí npm ci, Fastify testy, Astro check, frontend unit testy a Astro build.
 - Výstup dist/ kopíruje do release složky označené celým commit SHA. Symlink current se změní až po úspěšném buildu. Předchozí build zůstává.
-- Fastify z /api běží jako neprivilegovaná systemd služba na 127.0.0.1:3100. Node --watch pro testovací prostředí restartuje API při změně JS po novém buildu.
+- Fastify z /api běží jako neprivilegovaná systemd služba na 127.0.0.1:3100. Produkční proces Node běží **bez `--watch`**: při pádu jej restartuje systemd. Po úspěšném sestavení a zveřejnění nového commitu root-owned aktivační helper restartuje API, počká na `/healthz` a `/readyz` a uloží poslední úspěšně aktivovaný commit. Při každém běhu timeru zdravé API se stejným commitem nerestartuje.
 - nginx na TCP 8080 obsluhuje statický web a proxy /api/v1 na localhost 3100. Vnější TLS + Access List nastav v již existujícím Nginx Proxy Manageru. **Nesmí být otevřený přímo do internetu port 8080, 3100 nebo 4321.**
 
 ## Jednorázová instalace
@@ -23,6 +23,7 @@ Jako root:
     apt update && apt install -y nginx util-linux
     install -d -o loucka -g www-data -m 2755 /srv/loucka-preview /srv/loucka-preview/releases
     install -d -o root -g root -m 0700 /etc/loucka-weather
+    install -D -o root -g root -m 0755 /home/loucka/Loucka_weather/deploy/lxc/loucka-preview-api-activate.sh /usr/local/libexec/loucka-preview-api-activate.sh
     install -o root -g root -m 0644 /home/loucka/Loucka_weather/deploy/lxc/loucka-preview-sync.service /etc/systemd/system/
     install -o root -g root -m 0644 /home/loucka/Loucka_weather/deploy/lxc/loucka-preview-sync.timer /etc/systemd/system/
     install -o root -g root -m 0644 /home/loucka/Loucka_weather/deploy/lxc/loucka-weather-api.service /etc/systemd/system/
@@ -56,6 +57,7 @@ Ukonči ručně spuštěné API na portu 3100 (Ctrl+C), pak root:
     curl -I http://127.0.0.1:8080/
     curl -sS http://127.0.0.1:3100/api/v1/healthz
     curl -sS http://127.0.0.1:3100/api/v1/readyz
+    curl -i http://127.0.0.1:8080/api/v1/readyz
     systemctl list-timers --all | grep loucka
     journalctl -u loucka-preview-sync.service -n 50 --no-pager
 
@@ -102,3 +104,27 @@ Frontend načítá metadata bez cache (včetně query parametru).
 Během lokálního Astro HMR (bez vydaného release) se zobrazí
 informace o místním vývoji, nikoliv smyšlené číslo verze.
 Neukládej do deployment.json žádné přístupové údaje ani interní adresy.
+
+## Aktualizace běžící instalace (oprava 502 z listopadu 2026)
+
+Po sloučení opravy aktualizuj obě systemd jednotky **i** root-owned aktivační helper společně. Starou službu `node --watch` nesmíš nechat běžet společně s novou konfigurací. Jako root:
+
+```bash
+cd /home/loucka/Loucka_weather
+# Pokud git pull nemá práva v účtu root, proveď jej pod uživatelem loucka:
+runuser -u loucka -- git -C /home/loucka/Loucka_weather pull --ff-only origin main
+install -D -o root -g root -m 0755 deploy/lxc/loucka-preview-api-activate.sh /usr/local/libexec/loucka-preview-api-activate.sh
+install -o root -g root -m 0644 deploy/lxc/loucka-weather-api.service /etc/systemd/system/loucka-weather-api.service
+install -o root -g root -m 0644 deploy/lxc/loucka-preview-sync.service /etc/systemd/system/loucka-preview-sync.service
+systemctl daemon-reload
+systemctl restart loucka-weather-api.service
+systemctl start loucka-preview-sync.service
+systemctl status loucka-weather-api.service loucka-preview-sync.service --no-pager -l
+curl --fail --silent --show-error http://127.0.0.1:3100/api/v1/healthz
+curl --fail --silent --show-error http://127.0.0.1:3100/api/v1/readyz
+curl -i http://127.0.0.1:8080/api/v1/readyz
+```
+
+Aktivační helper musí být root-owned právě v `/usr/local/libexec/`: systemd ho spouští s vyššími právy přes `ExecStartPost=+`. Nikdy nespouštěj skript přímo z uživatelem `loucka` upravitelného pracovního repozitáře s root právy. API restartuje pouze po nové úspěšné publikaci nebo při nefunkční službě; při selhání readiness se poslední úspěšný stav nepotvrdí a systemd sync označí jako neúspěšný.
+
+Pokud `/healthz` odpovídá 200, ale `/readyz` 503, není to už chyba proxy: ověř `WEATHER_DB_HOST`, spojení k MariaDB, účet se skutečně pouze `SELECT` a přístup k `archive`. Pokud roční klimatologie přesto selže, ověř existenci tabulek WeeWX `archive_day_*` a práva `SELECT` také k nim. Diagnostické výstupy a hesla neukládej do repozitáře.
