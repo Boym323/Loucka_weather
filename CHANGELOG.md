@@ -4,6 +4,17 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ## 2026-11-02
 
+### Schválený redesign Atlas Minimal — první implementace na skutečných datech
+- Světlý režim je novým výchozím motivem; tmavý režim zůstává volitelný a ukládá se jen do místního prohlížeče.
+- Přehled není kopií starého devítipanelového dashboardu: velká aktuální teplota, zvlášť denní archivní extrémy, úzká výstražná lišta, graf skutečných archivních hodnot, oddělená modelová předpověď, kamera, radar a šest cílů pro další průzkum.
+- Přidána samostatně označená *ilustrační* krajina; nikdy se nevydává za živou kameru. Živá kamera má vlastní náhled s výslovně neověřeným časem pořízení.
+- Nové sdílené rozložení, design tokeny, responzivita a přehlednější horní navigace v `atlas-minimal.css`; stávající specializované stránky využívají stejnou světlou paletu.
+- ECharts automaticky přizpůsobuje osy a řady světlému/tmavému režimu, bez vyplňování děr v měřeních.
+- Veřejné screenshotové testy upravené na nový schválený layout.
+- Bez zásahu do MariaDB, rekonstrukce, QC, WeeWX, GW3000, API nebo backendového cachování.
+
+## 2026-11-02
+
 ### Galerie kamery: oprava vizuálního regresního testu po nasazení
 - Veřejný screenshotový smoke odhalil, že lazy-loaded miniatura skrytá během čekání se nemusela vůbec načíst; obrázky ve frontě nyní používají `loading=eager` s původní rychlostní limitací.
 - Test rozlišuje tři stavy: dekódovaný snímek, bezpečný klikací fallback při nedostupnosti JPEG a chybný neukončený spinner/rozbitý obrázek.
