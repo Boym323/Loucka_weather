@@ -11,6 +11,7 @@ import {readingsFromRow,converted,outputUnit} from './units.js';
 import {gatewayReadings} from './gateway.js';
 import {readFile} from 'node:fs/promises';
 import {climateRecordsFromDaily} from './records.js';
+import {sensorChannels} from './sensor-evidence.js';
 import type {Metric} from './metrics.js';
 import type {OutputUnits} from './units.js';
 
@@ -382,6 +383,42 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
   schemaVersion:'1',stationId:'loucka',updatedAt:metadataCheckedAt,
   sensors:[] // Verified physical mapping and installation epochs are not supplied.
  }));
+ // This is a channel inventory, not the still-unverified physical
+ // installation inventory exposed by /api/v1/sensors.
+ let sensorPresenceCache:{at:number;rows:Awaited<ReturnType<NonNullable<ArchiveReader['sensorPresence']>>>}|null=null;
+ app.get('/api/v1/sensors/channels',async(req,reply)=>{
+  const timestamp=Math.floor(now().getTime()/1000);
+  let rows:Awaited<ReturnType<NonNullable<ArchiveReader['sensorPresence']>>>|null=null;
+  let availability:'archive_recent'|'source_unavailable'|'metadata_only'=
+   reader.sensorPresence?'archive_recent':'metadata_only';
+  if(reader.sensorPresence){
+   try{
+    if(sensorPresenceCache&&timestamp-sensorPresenceCache.at>=0&&timestamp-sensorPresenceCache.at<60){
+     rows=sensorPresenceCache.rows;
+    }else{
+     rows=await reader.sensorPresence(timestamp-86400,timestamp);
+     sensorPresenceCache={at:timestamp,rows};
+    }
+   }catch{availability='source_unavailable';}
+  }
+  const channels=sensorChannels.map(c=>{
+   const item=rows?.find(r=>r.metric===c.metric);
+   const count=item?.count??null;
+   return {metric:c.metric,title:c.title,liveKey:c.liveKey,
+    liveRelation:c.liveRelation,physicalIdentity:'unverified',
+    source:'weewx_original_archive',confidence:'provisional',
+    note:c.hint,windowHours:24,
+    archiveStatus:count===null?'unknown':count>0?'observed_recently':'not_observed_recently',
+    nonNullSamples:count,
+    lastObservedAt:item?.lastObservedAt===null||item?.lastObservedAt===undefined?null:
+      new Date(item.lastObservedAt*1000).toISOString()};
+  });
+  reply.header('Cache-Control','private, max-age=30');
+  return conditional(req,reply,{schemaVersion:'1',status:availability,
+    checkedAt:new Date(timestamp*1000).toISOString(),sampleWindowHours:24,
+    interpretation:'A non-null archive sample is evidence of a field, not sensor installation or validated quality.',
+    channels});
+ });
  app.get('/api/v1/camera/status',async()=>archiveCameraStatus(sourceFiles));
  // Read-only provisional records for completed calendar days, never silently
  // promote original data to audited historical records.
