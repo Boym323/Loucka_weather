@@ -1,0 +1,267 @@
+/* Visual polish across all 11 routes, 2026-11-02.
+   Loaded after global.css. Keep source/quality wording and data logic untouched.
+   Dark and light palettes use the existing semantic design tokens. */
+
+html{scroll-padding-top:84px}
+body{font-feature-settings:"tnum" 1}
+main{min-width:0}
+.section,.monitor-card,.sensor-inventory-card,.sensor-channel,.climate-summary-metric{
+ box-shadow:0 3px 16px #00101d12
+}
+.section-heading{min-width:0}
+.section-heading h2,.section-heading h3{overflow-wrap:anywhere}
+.section-heading .panel-title{min-width:0}
+.page-intro{padding-block:10px 20px}
+.page-intro h1{max-width:24ch;font-size:clamp(27px,2.9vw,41px);letter-spacing:-.035em;line-height:1.13}
+.page-intro p{max-width:75ch;font-size:clamp(13px,1vw,15px);line-height:1.6}
+.eyebrow{letter-spacing:.095em}
+.lead,.source-note{overflow-wrap:break-word}
+.lead{line-height:1.6}
+.section>.source-note:last-child{margin-bottom:0}
+.status-chip{display:inline-flex;align-items:center;max-width:100%;line-height:1.3;gap:5px;white-space:normal;border-radius:7px}
+.panel-link{display:inline-flex;align-items:center;gap:4px;min-height:28px;font-weight:650;text-underline-offset:3px}
+.panel-link:focus-visible{text-decoration:underline}
+.chart-tab,.camera-refresh,.theme-toggle{min-height:35px;line-height:1.3}
+.chart-tab{border-radius:8px}
+.chart-tab:hover:not(:disabled){border-color:var(--teal);color:var(--text)}
+.chart-tab[aria-pressed="true"],.chart-tab.is-active{font-weight:700}
+.section-heading .status-chip{flex:0 1 auto}
+.table-scroll{border-radius:9px;scrollbar-color:var(--line) transparent;scrollbar-width:thin}
+.history-table th{z-index:1;white-space:normal}
+.history-table td{font-variant-numeric:tabular-nums}
+.history-table tbody tr:hover{background:var(--panel-2)}
+input,select,button{max-width:100%}
+input[type="date"]{color-scheme:dark}
+:root[data-theme="light"] input[type="date"]{color-scheme:light}
+:root[data-theme="light"] .site-header{background:var(--panel);border-color:var(--line)}
+:root[data-theme="light"] .site-header .brand,
+:root[data-theme="light"] .site-header .nav a,
+:root[data-theme="light"] .header-actions,
+:root[data-theme="light"] .theme-toggle,
+:root[data-theme="light"] .mobile-nav>summary{color:var(--text)}
+:root[data-theme="light"] .mobile-nav nav{background:var(--panel)}
+:root[data-theme="light"] .mobile-nav nav a{color:var(--text)}
+:root[data-theme="light"] .site-footer{background:var(--bg);color:var(--muted)}
+:root[data-theme="light"] .forecast-day:first-child{background:#d4f3e8;border-color:#72b49f}
+:root[data-theme="light"] .forecast-day strong{color:var(--text)}
+:root[data-theme="light"] .forecast-day small{color:var(--muted)}
+:root[data-theme="light"] .forecast-rain{color:var(--blue)}
+
+/* Homepage: give the three lower cards similarly useful content height.
+   Avoid blank camera/radar floors beneath the chart. */
+@media(min-width:1101px){
+ .dashboard-bottom{align-items:stretch}
+ .dashboard-bottom>.section{min-height:445px}
+ .dashboard-bottom [data-history-chart] .chart-box{height:305px}
+ .dashboard-bottom .home-camera-image{
+  flex:1 1 270px;
+  min-height:260px;
+  max-height:380px;
+  aspect-ratio:auto
+ }
+ .dashboard-bottom .radar-panel .radar-map{
+  flex:1 1 270px;
+  height:auto;
+  min-height:260px;
+  max-height:380px
+ }
+ .dashboard-bottom .radar-controls{flex:0 0 auto}
+ .dashboard-bottom .camera-preview-panel .preview-footer,
+ .dashboard-bottom .radar-panel .preview-footer{flex:0 0 auto}
+}
+@media(min-width:651px) and (max-width:1100px){
+ .dashboard-bottom>.section{min-height:0}
+ .dashboard-bottom .home-camera-image{min-height:260px}
+ .dashboard-bottom .radar-panel .radar-map{min-height:260px}
+}
+.dashboard-bottom .camera-preview-panel .home-camera-image{
+ border-radius:11px;
+ background:var(--panel-2)
+}
+.dashboard-bottom .home-camera-image img{object-position:center}
+.dashboard-bottom .radar-map{border-radius:11px}
+.dashboard-bottom .radar-controls{gap:7px;flex-wrap:wrap}
+.dashboard-bottom .radar-timeline-label{min-width:95px}
+.dashboard-bottom [data-history-chart] .chart-summary{margin-top:10px}
+.dashboard-bottom [data-history-chart] .history-legend{line-height:1.55}
+.home-quick-links a{outline-offset:3px}
+
+/* Graphs: consistent form spacing and controls, readable results on all widths. */
+.advanced-history,.rain-detail-panel{min-width:0}
+.advanced-history-form{gap:11px}
+.advanced-history-form input,.advanced-history-form select{
+ border-radius:9px;min-height:41px;padding:9px 11px
+}
+.advanced-history-form button{min-height:41px;border-radius:9px}
+.advanced-history-chart{min-height:310px}
+.advanced-history .chart-summary{line-height:1.5}
+.chart-summary{gap:8px}
+.chart-summary span{border-radius:7px}
+
+/* Climatology / records: consistent cards and data hierarchy. */
+.climate-filter{border-radius:13px}
+.climate-summary-strip{gap:11px}
+.climate-summary-metric{border-radius:10px;min-width:0}
+.climate-summary-metric strong{font-variant-numeric:tabular-nums}
+.climate-grid,.climate-trend-row,.soil-air-grid{gap:14px}
+.climate-card,.climate-trend-card{min-width:0}
+.climate-real-chart{height:270px}
+.climate-trend-canvas{height:165px}
+.climate-tabs{scrollbar-width:thin;scroll-margin-top:84px}
+.climate-tabs a{min-height:43px;display:inline-flex;align-items:center;white-space:nowrap}
+.climate-tabs a:focus-visible{outline-offset:-3px}
+.climate-extreme-values strong{font-variant-numeric:tabular-nums}
+.records-grid .climate-summary-metric{display:flex;flex-direction:column;gap:6px}
+.records-grid .climate-summary-metric small{line-height:1.45}
+[data-climate-records] h2:not(.section-heading h2){margin-top:24px}
+
+/* Sensors: reduce visual noise without hiding metadata or provenance. */
+.sensor-inventory-grid{gap:12px}
+.sensor-inventory-card{padding:15px;border-radius:11px}
+.sensor-inventory-card h3{font-size:15px;margin-bottom:9px}
+.sensor-inventory-card .status-chip{margin-bottom:8px}
+.sensor-inventory-card dl>div{padding-block:7px;align-items:flex-start;gap:10px}
+.sensor-inventory-card dt{line-height:1.4;flex:1 1 45%}
+.sensor-inventory-card dd{line-height:1.4;flex:1 1 55%;white-space:normal;overflow-wrap:anywhere}
+.sensor-inventory-card .source-note{font-size:11px;line-height:1.5;margin-top:10px}
+.sensor-channel{border-radius:10px;min-width:0}
+.sensor-channel h3{overflow-wrap:anywhere}
+.sensor-mini-trend{overflow:hidden}
+.soil-air-card{border-radius:11px}
+.soil-air-card h3{line-height:1.4}
+
+/* Camera: thumbnail network errors are presented as deliberate fallback cards,
+   not browser broken-image icons. Images have real aspect-ratio when available. */
+.camera-archive-grid{gap:11px}
+.camera-archive-thumb{
+ display:flex;flex-direction:column;
+ min-width:0;min-height:130px;
+ border-radius:10px;
+ transition:border-color .15s ease
+}
+.camera-archive-thumb:hover{border-color:var(--teal)}
+.camera-archive-thumb img{
+ aspect-ratio:16/9;
+ min-height:0;max-height:225px;
+ width:100%;object-fit:cover
+}
+.camera-archive-thumb img[hidden]{display:none!important}
+.camera-archive-thumb .camera-thumb-message{
+ flex:1 0 80px;
+ display:flex;flex-direction:column;
+ justify-content:center;align-items:center;
+ gap:7px;min-height:80px;
+ margin:0;background:linear-gradient(130deg,var(--panel-2),var(--panel));
+ padding:12px;color:var(--muted);text-align:center;
+ font-size:11px;line-height:1.45
+}
+.camera-archive-thumb .camera-thumb-message::before{
+ content:"▧";display:block;color:var(--teal);font-size:25px;line-height:1
+}
+.camera-archive-thumb .camera-thumb-message[hidden]{display:none}
+.camera-archive-thumb>span:last-child:not(.camera-thumb-message){
+ margin-top:auto;line-height:1.5
+}
+.camera-mode-tabs .chart-tab{min-height:36px;display:inline-flex;align-items:center}
+.camera-actions{gap:10px}
+.camera-actions button{min-height:39px}
+.camera-direction-symbol{color:var(--teal)}
+.camera-day-choice input{min-height:39px}
+.camera-timelapse-block video{border:1px solid var(--line)}
+
+/* Maps and state / about: align informational panels with dynamic panels. */
+.map-tabs{gap:8px}
+.map-tabs .chart-tab{min-height:37px;display:inline-flex;align-items:center}
+.map-page-layout,.map-page-sidebar{gap:14px}
+.map-page-primary,.map-page-sidebar,.camera-sidebar{min-width:0}
+.map-page-sidebar .section{min-width:0}
+.map-layer-option{gap:10px}
+.map-layer-option small{overflow-wrap:anywhere}
+.map-page-primary .radar-map{border-radius:11px}
+.monitor-grid{gap:13px}
+.monitor-card{border-radius:11px;min-height:145px}
+.monitor-card .section-heading{align-items:flex-start}
+.monitor-card h3{line-height:1.35}
+.monitor-card p{line-height:1.5}
+.about-facts>div,.about-tech-grid>div{border-radius:10px}
+.about-tech-grid p{line-height:1.55}
+.status-explainer{margin-top:15px}
+.status-explainer-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.status-explainer-grid a{
+ display:flex;flex-direction:column;gap:7px;
+ padding:16px;border:1px solid var(--line);border-radius:10px;
+ color:var(--text);text-decoration:none;background:var(--panel-2);
+ min-width:0
+}
+.status-explainer-grid a strong{font-size:14px}
+.status-explainer-grid a span{font-size:12px;color:var(--muted);line-height:1.5}
+.status-explainer-grid a:hover,.status-explainer-grid a:focus-visible{border-color:var(--teal)}
+
+/* Mobile and small tablet: layout must not rely on clipping long Czech labels. */
+@media(max-width:1050px){
+ .status-explainer-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .climate-trend-canvas{height:170px}
+}
+@media(max-width:760px){
+ .page-intro{padding-block:7px 14px}
+ .page-intro h1{font-size:clamp(27px,7vw,35px);max-width:none}
+ .page-intro p{font-size:13px;line-height:1.55}
+ .climate-grid{gap:11px}
+ .climate-real-chart{height:255px}
+ .advanced-history-chart{min-height:270px}
+ .map-tabs{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:thin;padding-bottom:5px}
+ .map-tabs .chart-tab{white-space:nowrap;flex:0 0 auto}
+ .camera-archive-grid{gap:9px}
+ .status-explainer-grid{grid-template-columns:1fr}
+ .monitor-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .monitor-card{min-height:0}
+}
+@media(max-width:650px){
+ html{scroll-padding-top:67px}
+ .page-intro h1{font-size:clamp(25px,7vw,33px);line-height:1.14}
+ .section{border-radius:12px}
+ .section-heading{align-items:flex-start}
+ .section-heading h2{font-size:17px}
+ .section-heading h3{font-size:14px}
+ .status-chip{font-size:10px;padding:5px 7px}
+ .page-intro .eyebrow{font-size:10px}
+ .dashboard-bottom [data-history-chart] .chart-box{height:245px}
+ .dashboard-bottom .home-camera-image{min-height:210px;max-height:340px}
+ .dashboard-bottom .radar-panel .radar-map{height:265px;min-height:265px}
+ .advanced-history-form{gap:8px}
+ .advanced-history-form label{font-size:12px}
+ .advanced-history-form input,.advanced-history-form select{min-height:43px;font-size:13px}
+ .advanced-history-form button{min-height:44px}
+ .advanced-history-chart{height:300px}
+ .climate-summary-strip{gap:9px}
+ .climate-summary-metric{padding:13px}
+ .climate-summary-metric strong{overflow-wrap:anywhere}
+ .climate-trend-canvas{height:180px}
+ .climate-tabs{scroll-margin-top:68px}
+ .sensor-inventory-card{padding:13px}
+ .sensor-inventory-card h3{font-size:14px}
+ .sensor-inventory-card dl>div{gap:7px;padding:6px 0}
+ .sensor-inventory-card dt,.sensor-inventory-card dd{font-size:11px}
+ .camera-archive-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .camera-archive-thumb{min-height:135px}
+ .camera-archive-thumb .camera-thumb-message{min-height:88px;font-size:11px}
+ .camera-archive-thumb>span:last-child:not(.camera-thumb-message){font-size:11px}
+ .camera-day-browser .section-heading{gap:8px}
+ .camera-day-choice{flex-wrap:wrap}
+ .camera-day-choice input{min-width:0}
+ .camera-actions{gap:8px}
+ .camera-mode-tabs{gap:6px}
+ .map-page-sidebar{gap:11px}
+ .monitor-grid{grid-template-columns:1fr}
+ .monitor-card{padding:14px}
+ .site-footer{padding-bottom:calc(14px + env(safe-area-inset-bottom))}
+ .mobile-dock{padding-bottom:max(5px,env(safe-area-inset-bottom))}
+}
+@media(max-width:359px){
+ .camera-archive-grid{grid-template-columns:1fr}
+ .climate-summary-strip{grid-template-columns:1fr}
+ .daily-brief{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(prefers-reduced-motion:reduce){
+ .camera-archive-thumb{transition:none}
+}
