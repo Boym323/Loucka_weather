@@ -214,3 +214,17 @@ Zjištění `FFmpeg not installed` znamená, že časosběrné MP4 zatím nemů�
 Na staging LXC spustit `python3 /home/loucka/Loucka_weather/deploy/lxc/preview-performance-check.py`.
 Skript provádí pouze 32 postupných GET na **127.0.0.1:3100** přibližně 3,3 požadavku/s, nemá žádný přístup ke GW3000, WeeWX ani databázovému zápisu. Reportuje p50/p95 lokálního API, chyby, cache ETag a HTTP 304 u kanálů.
 **Není to skutečný souběžný zátěžový test ani důkaz dlouhodobé stability**; tu už monitoruje lokální systemd timer. Archivní 7denní hodinové dotazy mohou kvůli historickým překryvům vracet 503; přehled půdy používá přímo sedmidenní denní souhrny. Výsledek reportu lze bezpečně předat k dalšímu ladění.
+
+## Cache statického Astro webu
+
+Nginx vrací `Cache-Control: public, max-age=31536000, immutable` jen pro verzované soubory v `/_astro/`, kde Astro používá fingerprint v názvu. HTML používá `no-cache` (umožňuje 304, ale kontroluje novou verzi) a `/deployment.json` používá `no-store`, aby verze nebyla zpožděná. API a živá data zůstávají pod samostatnými pravidly.
+
+Po automatickém nasazení ověřit:
+```bash
+curl -sSI https://dev.pocasi-loucka.eu/deployment.json | grep -i cache-control
+curl -sSI https://dev.pocasi-loucka.eu/ | grep -i cache-control
+# pro konkrétní fingerprintovaný soubor z HTML:
+ASSET="$(curl -fsS https://dev.pocasi-loucka.eu/ | grep -oE '/_astro/[^"]+\\.(css|js)' | head -1)"
+[ -n "$ASSET" ] && curl -sSI "https://dev.pocasi-loucka.eu$ASSET" | grep -i cache-control
+```
+Uživatelé nesmí dostat dlouhou cache na HTML, API nebo obsah generovaný v `/deployment.json`. Nginx stále blokuje přístup k tečkovým souborům. Cache sama neprokazuje p95 ani dlouhodobou stabilitu.
