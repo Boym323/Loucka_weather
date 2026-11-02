@@ -227,6 +227,25 @@ try{
       .catch(()=>errors.push(size.name+': soil-air history still loading after 30s'));
      const states=await page.locator('[data-soil-trend-status]').allTextContents();
      console.log('SOIL AIR HISTORY',size.name,JSON.stringify(states));
+     if(states.some(state=>state.includes('Nedostupné'))){
+      const diag=await page.evaluate(async()=>{
+       const now=new Date(),from=new Date(now.getTime()-7*86400000);
+       const fields=new URLSearchParams({metric:'pm25_1',from:from.toISOString(),to:now.toISOString(),
+        resolution:'hourly',units:'metricwx',dataset:'original',limit:'1000'});
+       const out=[];
+       for(const [label,route] of [['7d pm25', '/api/v1/history?'+fields],
+        ['24h pm25','/api/v1/history?'+new URLSearchParams({metric:'pm25_1',
+         from:new Date(now.getTime()-86400000).toISOString(),to:now.toISOString(),
+         resolution:'raw',units:'metricwx',dataset:'original',limit:'1000'})]]){
+        try{
+         const response=await fetch(route,{cache:'no-store'});
+         out.push({label,status:response.status,body:(await response.text()).slice(0,350)});
+        }catch(error){out.push({label,error:String(error)});}
+       }
+       return out;
+      });
+      console.log('SOIL HISTORY DIAGNOSTICS',size.name,JSON.stringify(diag));
+     }
      if(states.every(v=>v.includes('Nedostupné')))
       errors.push(size.name+': all three source-backed soil-air history graphs unavailable');
     }

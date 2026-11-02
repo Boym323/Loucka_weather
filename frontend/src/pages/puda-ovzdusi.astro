@@ -21,7 +21,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
    </div>)}
   </div>
   <p class="source-note" data-soil-time>Čas posledního přečtení GW3000 se ověřuje.</p>
-  <h2>Posledních 7 dní · skutečný archiv</h2>
+  <h2>Archivní průběhy · 7 dní nebo 24h záložní rozsah</h2>
   <div class="soil-air-grid">
    {[
     {key:'pm25_1',title:'PM2,5 · archivní kanál',unit:'µg/m³'},
@@ -29,7 +29,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     {key:'soilTemp2',title:'Teplota půdy · archivní kanál 2',unit:'°C'}
    ].map(item=><article class="section soil-air-card">
     <div class="section-heading"><h3>{item.title}</h3><span class="status-chip" data-soil-trend-status={item.key}>Načítám</span></div>
-    <div class="sensor-mini-trend" data-soil-trend={item.key} role="img" aria-label={'Archivní průběh '+item.title+' za 7 dní'}></div>
+    <div class="sensor-mini-trend" data-soil-trend={item.key} role="img" aria-label={'Archivní průběh '+item.title+' za 7 dní nebo posledních 24 hodin'}></div>
     <p class="source-note" data-soil-summary={item.key}>Archivní hodnoty se připravují · {item.unit}</p>
    </article>)}
   </div>
@@ -37,7 +37,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
  </section>
 </BaseLayout>
 <script>
- import {getHistoryInterval} from '../shared/api/client';
+ import {getHistoryInterval,getHistoryRange} from '../shared/api/client';
  import {formatValue} from '../shared/domain/metrics';
  const root=document.querySelector<HTMLElement>('[data-soil-air]');
  if(root){
@@ -81,7 +81,20 @@ import BaseLayout from '../layouts/BaseLayout.astro';
    const status=root?.querySelector<HTMLElement>('[data-soil-trend-status="'+metric.key+'"]');
    const description=root?.querySelector<HTMLElement>('[data-soil-summary="'+metric.key+'"]');
    try{
-    const response=await getHistoryInterval(metric.key,from,to,'hourly',ctrl.signal);
+    // Weekly hourly aggregation can fail closed when historic intervals overlap
+    // or the endpoint is temporarily rate-limited. Do not remove server-side QC.
+    // Use bounded, recent raw archive data instead, preserving source and range.
+    let response;
+    let shownRange='7 dní';
+    try{
+     response=await getHistoryInterval(metric.key,from,to,'hourly',ctrl.signal);
+    }catch(error){
+     if(ctrl.signal.aborted)return;
+     console.info('Sedmidenní historie '+metric.key+' není dostupná, přecházím na 24h archiv.',
+      error instanceof Error?error.message:'API error');
+     response=await getHistoryRange(metric.key,24,ctrl.signal);
+     shownRange='24 hodin';
+    }
     if(ctrl.signal.aborted||!panel)return;
     const values=response.points.map(p=>({
      x:Date.parse(p.endTime),y:p.value!==null&&p.quality!=='suspect'&&p.quality!=='missing'?p.value:null
@@ -90,7 +103,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     panel.replaceChildren();
     if(good.length<2){
      if(status){status.textContent='Málo dat';status.className='status-chip warning';}
-     if(description)description.textContent='Pro sedmidenní průběh nejsou dostatečná archivní měření.';
+     if(description)description.textContent='Pro '+shownRange+' nejsou dostatečná platná archivní měření; chybějící hodnoty nenahrazujeme.';
      return;
     }
     const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg'),path=document.createElementNS(ns,'path');
@@ -100,15 +113,17 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     let d='',pen=false;
     for(const point of values){
      if(point.y===null){pen=false;continue;}
-     const x=12+576*(point.x-Date.parse(from))/(Date.parse(to)-Date.parse(from));
+     const start=Date.parse(response.points[0]?.startTime??from);
+     const end=Date.parse(response.points.at(-1)?.endTime??to);
+     const x=12+576*(point.x-start)/Math.max(1,end-start);
      const y=106-92*(point.y-min)/span;
      d+=(pen?'L':'M')+x.toFixed(2)+','+y.toFixed(2)+' ';pen=true;
     }
     path.setAttribute('d',d);path.setAttribute('fill','none');path.setAttribute('stroke','currentColor');
     path.setAttribute('stroke-width','2.4');path.setAttribute('stroke-linejoin','round');
     svg.append(path);panel.append(svg);
-    if(status){status.textContent=good.length+' platných bodů';status.className='status-chip ok';}
-    if(description)description.textContent='Minimum '+formatValue(min,metric.digits)+
+    if(status){status.textContent=good.length+' platných bodů · '+shownRange;status.className='status-chip ok';}
+    if(description)description.textContent='Rozsah '+shownRange+' · minimum '+formatValue(min,metric.digits)+
      ' · maximum '+formatValue(max,metric.digits)+' '+metric.unit+
      ' · mezery v datech nejsou propojovány.';
    }catch{

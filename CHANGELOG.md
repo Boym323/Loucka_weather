@@ -4,6 +4,12 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ## 2026-11-02
 
+### Diagnostika půdních a PM2,5 grafů
+- Přísnější veřejný test odhalil, že tři sedmidenní hourly křivky půdy/ovzduší selhaly na desktopu i mobilu.
+- Frontend nyní respektuje původní ochranu historického hourly API a při neúspěchu zkusí ověřený 24hodinový syrový archiv; explicitně uvádí, jaký rozsah a zdroj skutečně zobrazuje.
+- Playwright nově loguje stav a stručný formát skutečné HTTP odpovědi pro 7d hodinovou a 24h raw variantu; nikdy neprovádí zápis.
+- Nejsou doplňována chybějící měření ani měněna databáze.
+
 ### Provozní audit bez zásahů do meteorologické infrastruktury
 - Read-only deploy/lxc/site-readiness-audit.sh ověřuje reálné běžící služby, veřejné i lokální API, stav MP4/FFmpeg, prostor a paměť, síťovou expozici a aktuální commit.
 - Kontrola výslovně odděluje provozní health od Proxmox/PBS záloh, restore testů, NPM pravidel a skutečné zátěže, které nelze ověřit uvnitř LXC bez přístupu k hostiteli.
