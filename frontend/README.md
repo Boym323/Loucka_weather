@@ -2,6 +2,29 @@
 
 **Aktuální vývoj: 1. 11. 2026.** Web vzniká podle uživatelem schváleného devítipanelového tmavého vizuálního návrhu. Testovací náhled: https://dev.pocasi-loucka.eu/. Není to veřejná produkce. Všechny změny do main se sestavují a nasazují přes LXC automaticky; přesná zveřejněná revize je vidět ve webové patičce a v /deployment.json.
 
+## Vizuální stabilizace – 2. 11. 2026
+
+Poslední celoplošné doladění pracuje s **11 stránkami** v šířkách 1440 px a
+390 px. Barevná paleta a původní komponenty zůstávají v `src/styles/global.css`;
+nové sjednocené responzivní korekce jsou izolované v
+`src/styles/refinement.css`, importovaném po globálním CSS v BaseLayout.
+
+Zaměření:
+- přehledné spodní tři panely úvodu (graf / kamera / radar) bez nevyužité výšky;
+- čitelné ovládání grafů a legendy, konzistentní klimatické a senzorové karty;
+- kamera: chybový/pending stav miniatur, který neskrývá původní odkaz na JPEG;
+- sjednocení mapových vrstev a informačních panelů a přístupné doplňující
+  odkazy na stavové stránce;
+- kontrola responzivity, horizontálního přetékání, runtime JS výjimek a
+  lokálního načítání všech obrazovek v `scripts/preview-visual-check.mjs`.
+
+Referenční návrh je slovně popsán v `FRONTEND_SPEC.md`. Originální schválené
+screenshoty návrhu nejsou v repozitáři, proto **nelze deklarovat pixelovou
+shodu**. GitHub Actions ukládá screenshoty nasazeného webu; dynamické
+meteorologické hodnoty se v pixelových regresích neporovnávají.
+Vizuální změny nemění původní DB, QC, GW3000 ani API; čerstvost archivního
+snímku zůstává explicitně neověřená.
+
 ## Příkazy a nasazení
 
 Použij Node.js 24. Pro lokální vývoj:
