@@ -1,16 +1,27 @@
 ---
 interface Props { compact?: boolean }
 const { compact = false } = Astro.props;
+import SiteIcon from '../../shared/ui/SiteIcon.astro';
 ---
 <section class:list={['section','forecast-panel',{ 'forecast-compact':compact }]} data-forecast-panel aria-labelledby="forecast-heading">
  <div class="section-heading">
-  <div class="panel-title"><span class="panel-mark" aria-hidden="true">☀</span><h2 id="forecast-heading">Předpověď pro Loučku</h2></div>
+  <div class="panel-title"><SiteIcon name="weather" size={18}/><h2 id="forecast-heading">Předpověď pro Loučku</h2></div>
   <span class="status-chip" data-forecast-status role="status">Načítám model</span>
  </div>
  <div class="forecast-tabs" aria-label="Následující dny">
   {Array.from({length:6},(_,i)=><div class="forecast-day" data-forecast-day={i}>
     <strong data-forecast-label={i}>—</strong>
-    <span class="forecast-symbol" data-forecast-icon={i} aria-hidden="true">◌</span>
+    <span class="forecast-symbol" data-forecast-icon={i} data-weather-kind="unknown" aria-hidden="true">
+     <svg viewBox="0 0 32 32" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+      <g class="forecast-glyph glyph-clear"><circle cx="16" cy="16" r="5"/><path d="M16 3v4M16 25v4M3 16h4M25 16h4M7 7l3 3m12 12 3 3M25 7l-3 3M10 22l-3 3"/></g>
+      <g class="forecast-glyph glyph-partly"><circle cx="11" cy="11" r="4"/><path d="M11 2v3M3 11h3M5 5l2 2"/><path d="M9 25h16a5 5 0 0 0-2-9.5 7 7 0 0 0-13 2A4 4 0 0 0 9 25Z"/></g>
+      <g class="forecast-glyph glyph-cloud"><path d="M8 24h17a5 5 0 0 0-2-9.5 8 8 0 0 0-15 2A4 4 0 0 0 8 24Z"/></g>
+      <g class="forecast-glyph glyph-fog"><path d="M8 20h17a5 5 0 0 0-2-9.5 8 8 0 0 0-15 2A4 4 0 0 0 8 20ZM5 25h22M9 29h14"/></g>
+      <g class="forecast-glyph glyph-rain"><path d="M8 20h17a5 5 0 0 0-2-9.5 8 8 0 0 0-15 2A4 4 0 0 0 8 20ZM11 24l-2 4M17 24l-2 4M23 24l-2 4"/></g>
+      <g class="forecast-glyph glyph-snow"><path d="M8 20h17a5 5 0 0 0-2-9.5 8 8 0 0 0-15 2A4 4 0 0 0 8 20ZM10 25v5m-2.5-2.5h5M21 25v5m-2.5-2.5h5"/></g>
+      <g class="forecast-glyph glyph-storm"><path d="M8 19h17a5 5 0 0 0-2-9.5 8 8 0 0 0-15 2A4 4 0 0 0 8 19ZM16 20l-4 6h5l-2 5 7-9h-5l2-2"/></g>
+     </svg>
+    </span><span class="sr-only" data-forecast-description={i}>Počasí se načítá</span>
     <span class="forecast-temp" data-forecast-max={i}>—</span>
     <small data-forecast-min={i}>—</small>
     <span class="forecast-rain" data-forecast-rain={i}>—</span>
@@ -24,7 +35,18 @@ const { compact = false } = Astro.props;
 </section>
 <script>
  type Daily = {time:string[];weather_code:number[];temperature_2m_max:number[];temperature_2m_min:number[];precipitation_sum:number[]};
- const icon=(code:number)=>code===0?'☀️':code<=3?'⛅':code<=48?'🌫️':code<=67?'🌧️':code<=77?'🌨️':code<=82?'🌦️':code<=86?'❄️':code>=95?'⛈️':'☁️';
+ const condition=(code:number):{kind:string;description:string}=>{
+  if(code===0)return {kind:'clear',description:'Jasno'};
+  if(code<=2)return {kind:'partly',description:'Polojasno'};
+  if(code===3)return {kind:'cloud',description:'Zataženo'};
+  if(code<=48)return {kind:'fog',description:'Mlha'};
+  if(code<=67)return {kind:'rain',description:'Déšť'};
+  if(code<=77)return {kind:'snow',description:'Sníh'};
+  if(code<=82)return {kind:'rain',description:'Přeháňky'};
+  if(code<=86)return {kind:'snow',description:'Sněhové přeháňky'};
+  if(code>=95)return {kind:'storm',description:'Bouřky'};
+  return {kind:'cloud',description:'Oblačno'};
+ };
  const fmt=(n:number)=>new Intl.NumberFormat('cs-CZ',{maximumFractionDigits:0}).format(n);
  const timeFmt=new Intl.DateTimeFormat('cs-CZ',{weekday:'short',day:'numeric',month:'numeric',timeZone:'Europe/Prague'});
  const url='https://api.open-meteo.com/v1/forecast?latitude=49.170035&longitude=17.876076&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Europe%2FPrague&forecast_days=6';
@@ -46,7 +68,10 @@ const { compact = false } = Astro.props;
      if(node)node.textContent=value;
     };
     put('label',timeFmt.format(new Date(d.time[i]+'T12:00:00Z')));
-    put('icon',icon(d.weather_code[i]));
+    const weather=condition(d.weather_code[i]);
+    const pictogram=root.querySelector<HTMLElement>('[data-forecast-icon="'+i+'"]');
+    if(pictogram)pictogram.dataset.weatherKind=weather.kind;
+    put('description',weather.description);
     put('max',fmt(d.temperature_2m_max[i])+'°');
     put('min',fmt(d.temperature_2m_min[i])+'°');
     put('rain',fmt(d.precipitation_sum[i])+' mm');

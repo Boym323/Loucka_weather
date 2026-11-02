@@ -1,5 +1,8 @@
+---
+import SiteIcon from '../../shared/ui/SiteIcon.astro';
+---
 <section class="section overview-readings" data-overview-readings aria-labelledby="overview-title">
- <div class="section-heading"><div class="panel-title"><span class="panel-mark" aria-hidden="true">≋</span><h2 id="overview-title">Další měření</h2></div><span class="status-chip" data-overview-status role="status">Načítám</span></div>
+ <div class="section-heading"><div class="panel-title"><SiteIcon name="sensors" size={17}/><h2 id="overview-title">Další měření</h2></div><span class="status-chip" data-overview-status role="status">Načítám</span></div>
  <dl class="overview-list">
   <div><dt>Pocitová teplota</dt><dd data-overview-value="appTemp">—</dd></div>
   <div><dt>Rosný bod</dt><dd data-overview-value="dewpoint">—</dd></div>

@@ -12,7 +12,7 @@ const tabs = [
 ---
 <section class="section" data-history-chart data-compact={compact ? 'true' : 'false'} data-default-metric={defaultMetric} aria-labelledby={compact?'home-chart-title':'history-chart-title'}>
  <div class="section-heading">
-  <div><span class="eyebrow">◷ Skutečná archivní data</span><h2 id={compact?'home-chart-title':'history-chart-title'}>{compact?(defaultMetric==='windGust'?'Nárazy větru · 24 hodin':'Posledních 24 hodin'):'Interaktivní meteorologický graf'}</h2></div>
+  <div><span class="eyebrow">Archivní měření · WeeWX</span><h2 id={compact?'home-chart-title':'history-chart-title'}>{compact?(defaultMetric==='windGust'?'Nárazy větru · 24 hodin':'Posledních 24 hodin'):'Interaktivní meteorologický graf'}</h2></div>
   <span class="status-chip" data-chart-status role="status">Načítání grafu</span>
  </div>
  <div class="chart-toolbar" role="group" aria-label="Vybrat veličinu">

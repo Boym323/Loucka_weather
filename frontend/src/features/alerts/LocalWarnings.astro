@@ -1,9 +1,10 @@
 ---
 interface Props { compact?:boolean }
 const {compact=false}=Astro.props;
+import SiteIcon from '../../shared/ui/SiteIcon.astro';
 ---
 <section class:list={['section','local-warnings',{compact}]} data-local-warnings aria-label="Výstrahy ČHMÚ pro Loučku">
- <div class="section-heading"><div class="panel-title"><span aria-hidden="true">⚠</span><h2>Výstrahy ČHMÚ</h2></div><span class="status-chip" data-alert-status role="status">Ověřuji ORP 7209</span></div>
+ <div class="section-heading"><div class="panel-title"><SiteIcon name="alert" size={17}/><h2>Výstrahy ČHMÚ</h2></div><span class="status-chip" data-alert-status role="status">Ověřuji ORP 7209</span></div>
  <div data-alert-body class="source-note">Načítám oficiální CAP pro ORP Valašské Klobouky…</div>
  <p class="source-note">Obec Loučka (okres Zlín) · ORP Valašské Klobouky. Zdroj <a href="https://vystrahy-cr.chmi.cz/" target="_blank" rel="noopener noreferrer">ČHMÚ</a> · nezávislé zpracování. V nebezpečí sledujte přímo pokyny ČHMÚ.</p>
 </section>

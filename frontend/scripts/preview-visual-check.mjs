@@ -96,6 +96,9 @@ try{
        destinationColumns:columns('.atlas-home-destinations'),
        cameraImage:document.querySelector('.atlas-media-image img')!==null,
        radar:document.querySelector('.atlas-radar-tile [data-radar-map]')!==null,
+       pictogramCount:document.querySelectorAll('.atlas-forecast [data-forecast-icon] svg').length,
+       hasDecorativeHero:document.querySelector('.atlas-hero-backdrop')!==null,
+       heroBackground:getComputedStyle(document.querySelector('.atlas-hero')).backgroundImage,
        svgIcons:document.querySelectorAll('.mobile-dock > a svg, .atlas-mobile-more > summary svg').length,
        moreLinks:document.querySelectorAll('.atlas-mobile-more-menu a').length,
        mobileTargetHeight:firstNav?.getBoundingClientRect().height??0,
@@ -106,6 +109,8 @@ try{
      if(layout.defaultTheme!=='light')errors.push(size.name+': fresh visit must default to light theme');
      if(!layout.temperature||!layout.dataStatus)errors.push(size.name+': missing live/archive reading source in hero');
      if(!layout.cameraImage||!layout.radar)errors.push(size.name+': camera or radar is missing');
+     if(layout.hasDecorativeHero||layout.heroBackground!=='none')errors.push(size.name+': measurement hero should not have decorative artwork');
+     if(layout.pictogramCount!==6)errors.push(size.name+': forecast must have six consistent SVG pictograms');
      if(layout.destinations!==6)errors.push(size.name+': expected six meaningful destination links');
      if(layout.heroHeight<290)errors.push(size.name+': weather hero is too short');
      if(size.name==='mobil'){
