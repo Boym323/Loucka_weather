@@ -429,7 +429,8 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
     // WeeWX day_<metric>.sumtime is the time-weighted number of VALID
     // observation seconds. Do not infer this from row counts or assume 5 min.
     timeCoverage:(period==='year'&&aggregation==='mean'&&
-     rows.every(r=>r.sumtime===null||Number.isFinite(r.sumtime)&&r.sumtime>=0))?(()=>{
+     rows.length>0&&rows.every(r=>(r.count??0)===0||
+      (r.sumtime!==null&&Number.isFinite(r.sumtime)&&r.sumtime>=0)))?(()=>{
       const validSeconds=rows.reduce((n,r)=>n+(r.sumtime??0),0);
       const expectedSeconds=end-start;
       return validSeconds<=expectedSeconds*1.01&&expectedSeconds>0?
