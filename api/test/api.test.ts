@@ -33,6 +33,7 @@ test('healthz, readiness, station, camera and sensors do not fabricate capabilit
  const ready=(await app.inject('/api/v1/readyz')).json();
  assert.equal(ready.ready,true);
  assert.equal(ready.components.live,'disabled');
+ assert.equal(ready.components.camera,'disabled');
  const station=(await app.inject('/api/v1/station')).json();
  assert.deepEqual(station.capabilities,['current','history','sensors']);
  assert.deepEqual(station.availableDatasets,['original']);
@@ -231,6 +232,9 @@ test('camera and CHMI report real validated collector files from explicit isolat
  }));
  const camera=(await app.inject('/api/v1/camera/status')).json();
  assert.equal(camera.status,'fresh');
+ const ready=(await app.inject('/api/v1/readyz')).json();
+ assert.equal(ready.ready,true);
+ assert.equal(ready.components.camera,'ok');
  assert.equal(camera.latestUrl,'/api/v1/camera/frames/'+name);
  const listing=(await app.inject('/api/v1/camera/archive')).json();
  assert.equal(listing.status,'ok');
