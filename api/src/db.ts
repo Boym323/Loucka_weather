@@ -2,6 +2,7 @@ import mariadb from 'mariadb';
 import {metricNames} from './metrics.js';
 import type {Metric} from './metrics.js';
 import type {ArchiveReader,ArchiveRow,DailySummaryRow} from './store.js';
+import {sensorMetricNames} from './sensor-evidence.js';
 
 const required=(key:string):string=>{
  const val=process.env[key];
@@ -116,6 +117,25 @@ export function createMariaDbReader():ArchiveReader{
      return await pool.query(`SELECT ${cols} FROM ${table}
        WHERE dateTime > ? AND dateTime <= ? ORDER BY dateTime ASC LIMIT ?`,
        [afterExclusive,toInclusive,limit]) as ArchiveRow[];
+   },
+   async sensorPresence(fromExclusive:number,toInclusive:number){
+     if(!Number.isSafeInteger(fromExclusive)||!Number.isSafeInteger(toInclusive)||
+        toInclusive<=fromExclusive||toInclusive-fromExclusive>172800)
+      throw new Error('Sensor presence request must be at most 48h');
+     await ensureReadOnly();
+     const names=sensorMetricNames;
+     const columns=names.flatMap((metric,index)=>{
+      const field='`'+metric+'`';
+      return [`COUNT(${field}) AS c${index}`,
+       `MAX(CASE WHEN ${field} IS NOT NULL THEN dateTime ELSE NULL END) AS t${index}`];
+     }).join(', ');
+     const rows=await pool.query(`SELECT ${columns} FROM ${table}
+       WHERE dateTime > ? AND dateTime <= ?`,[fromExclusive,toInclusive]) as Record<string,unknown>[];
+     const row=rows[0]??{};
+     return names.map((metric,index)=>({
+      metric,count:Number(row['c'+index]??0),
+      lastObservedAt:row['t'+index]===null||row['t'+index]===undefined?null:Number(row['t'+index])
+     }));
    },
    async telemetrySnapshot(asOfEpoch:number){
      await ensureReadOnly();
