@@ -38,7 +38,7 @@ const months=['Led','Úno','Bře','Dub','Kvě','Čvn','Čvc','Srp','Zář','Ří
     <thead><tr><th scope="col">Rok</th><th scope="col">Teplota °C</th><th scope="col">Srážky mm</th><th scope="col">Pokrytí</th></tr></thead>
     <tbody data-year-table><tr><td colspan="4">Načítám roční souhrny…</td></tr></tbody>
    </table></div>
-   <p class="source-note">Posledních šest dokončených let. Chybějící údaje zůstávají nevyplněné. Úplnost nemusí být u historických dat známá.</p>
+   <p class="source-note">Posledních šest dokončených let. Chybějící údaje zůstávají nevyplněné. Pokrytí znamená časový podíl platných archivních měření teploty podle souhrnů WeeWX; nevypovídá o kvalitě srážek ani o opravách historických chyb.</p>
   </section>
   <section class="section climate-card" id="teploty" aria-labelledby="climate-temp-title">
    <div class="section-heading"><div><span class="eyebrow">Měsíční průběh</span><h2 id="climate-temp-title">Průměrné měsíční teploty</h2></div><span class="status-chip" data-chart-status="temperature">Načítám</span></div>
@@ -211,7 +211,12 @@ const months=['Led','Úno','Bře','Dub','Kvě','Čvn','Čvc','Srp','Zář','Ří
       const tr=body.insertRow();
       tr.insertCell().textContent=String(y);
       for(let j=0;j<2;j++){const v=pick(annual[i*3+j]);tr.insertCell().textContent=v===null?'—':formatValue(v,1);}
-      tr.insertCell().textContent='Neurčeno';
+      const temperatureResult=annual[i*3];
+      const coverage=temperatureResult?.status==='fulfilled'?temperatureResult.value.timeCoverage:null;
+      const cell=tr.insertCell();
+      cell.textContent=coverage&&Number.isFinite(coverage.fraction)?
+       formatValue(coverage.fraction*100,1)+' %':'Neověřeno';
+      cell.title='Pokrytí času platnými měřeními venkovní teploty; neznamená kvalitu nebo úplnost srážek.';
      });
     }
     badge('[data-years-status]','Souhrny WeeWX','ok');
