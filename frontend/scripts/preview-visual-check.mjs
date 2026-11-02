@@ -92,7 +92,10 @@ try{
        bannerHeight:hero?.getBoundingClientRect().height??0,
        svgIcons:document.querySelectorAll('.mobile-dock a svg').length,
        mobileTargetHeight:firstLink?.getBoundingClientRect().height??0,
-       quickLinks:document.querySelectorAll('.home-quick-links a').length
+       quickLinks:document.querySelectorAll('.home-quick-links a').length,
+       radarHeight:document.querySelector('.dashboard-bottom .radar-map')?.getBoundingClientRect().height??0,
+       cameraHeight:document.querySelector('.dashboard-bottom .home-camera-image')?.getBoundingClientRect().height??0,
+       chartHeight:document.querySelector('.dashboard-bottom .chart-box')?.getBoundingClientRect().height??0
       };
      });
      console.log('HOME VISUAL GEOMETRY',size.name,JSON.stringify(layout));
@@ -106,6 +109,44 @@ try{
       if(layout.mobileTargetHeight<44)errors.push('Mobile dock touch targets must be at least 44px');
      }else{
       if(layout.bottomColumns!==3)errors.push('Desktop dashboard requires three lower panels');
+      if(layout.radarHeight<260)errors.push('Desktop radar map remains too short: '+layout.radarHeight);
+      if(layout.cameraHeight<260)errors.push('Desktop camera preview remains too short: '+layout.cameraHeight);
+      if(layout.chartHeight<290)errors.push('Desktop chart remains too short: '+layout.chartHeight);
+     }
+    }
+    // Shared layout regression assertions across non-homepage routes.
+    if(['/klimatologie/','/mapy/','/senzory/','/puda-ovzdusi/','/stav/','/kamera/'].includes(path)){
+     const geometry=await page.evaluate(()=>{
+      const columns=(selector)=>{
+       const el=document.querySelector(selector);
+       return el?getComputedStyle(el).gridTemplateColumns.split(' ').filter(Boolean).length:0;
+      };
+      const broken=[...document.querySelectorAll('.camera-archive-thumb img')].filter(img=>
+       img.complete && img.naturalWidth===0 && !img.hidden && getComputedStyle(img).display!=='none'
+      ).length;
+      return {
+       climate:columns('.climate-grid'),
+       map:columns('.map-page-layout'),
+       channel:columns('.sensor-inventory-grid'),
+       soil:columns('.soil-air-grid'),
+       monitor:columns('.monitor-grid'),
+       statusLinks:document.querySelectorAll('.status-explainer-grid a').length,
+       brokenCameraThumbnails:broken
+      };
+     });
+     console.log('SECONDARY VISUAL GEOMETRY',size.name,path,JSON.stringify(geometry));
+     if(geometry.brokenCameraThumbnails)errors.push(size.name+' '+path+': broken-image thumbnails visible');
+     if(path==='/stav/'&&geometry.statusLinks!==3)errors.push('Status page needs 3 diagnostic links');
+     if(size.name==='mobil'){
+      if(path==='/klimatologie/'&&geometry.climate!==1)errors.push('Mobile climate dashboard must stack cards');
+      if(path==='/mapy/'&&geometry.map!==1)errors.push('Mobile map sidebar must stack');
+      if(path==='/senzory/'&&geometry.channel!==1)errors.push('Mobile sensor evidence must be readable in one column');
+      if(path==='/puda-ovzdusi/'&&geometry.soil!==1)errors.push('Mobile soil/air charts must use one column');
+      if(path==='/stav/'&&geometry.monitor!==1)errors.push('Mobile monitoring cards must stack');
+     }else{
+      if(path==='/klimatologie/'&&geometry.climate!==2)errors.push('Desktop climate cards must form two columns');
+      if(path==='/senzory/'&&geometry.channel!==3)errors.push('Desktop sensor evidence must form three columns');
+      if(path==='/stav/'&&geometry.monitor<3)errors.push('Desktop monitoring cards too narrow');
      }
     }
     if(path==='/klimatologie/'){
