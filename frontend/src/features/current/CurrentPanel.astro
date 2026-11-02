@@ -29,7 +29,7 @@ const quickReadings = [
    <span class="sr-only" data-quick-quality={metric.id}>Čeká na měření</span>
   </div>)}
  </div>}
- <p class="source-note source-note-bottom">Původní archiv WeeWX · METRICWX · podezřelé a chybějící údaje se nezobrazují jako nula.</p>
+ <p class="source-note source-note-bottom" data-current-provenance>Původní archiv WeeWX · METRICWX · podezřelé a chybějící údaje se nezobrazují jako nula.</p>
 </section>
 <script>
  import { getCurrent } from '../../shared/api/client';
@@ -38,6 +38,7 @@ const quickReadings = [
  const section=document.querySelector<HTMLElement>('[data-current-panel]')!;
  const status=section?.querySelector<HTMLElement>('[data-current-status]');
  const updated=section?.querySelector<HTMLElement>('[data-current-updated]');
+ const provenance=section?.querySelector<HTMLElement>('[data-current-provenance]');
  const controller=new AbortController();
  let lastLiveEvent:Event|undefined;
  const refresh=()=>getCurrent(controller.signal).then(response=>{
@@ -46,6 +47,7 @@ const quickReadings = [
    status.classList.add(response.stale?'warning':'ok');
   }
   if(updated)updated.textContent='Naměřeno '+formatTimestamp(response.observedAt)+' · původní archiv';
+  if(provenance)provenance.textContent='Původní archiv WeeWX · METRICWX · podezřelé a chybějící údaje se nezobrazují jako nula.';
   for(const metric of metrics){
    const node=section.querySelector<HTMLElement>('[data-metric-value="'+metric.id+'"]');
    const quality=section.querySelector<HTMLElement>('[data-metric-quality="'+metric.id+'"]');
@@ -76,6 +78,7 @@ const quickReadings = [
   if(controller.signal.aborted)return;
   if(status){status.textContent='API nedostupné';status.classList.add('error');}
   if(updated)updated.textContent='Nepodařilo se načíst archivní měření. Zkuste stránku obnovit.';
+  if(provenance)provenance.textContent='Zdroj WeeWX nedostupný; živé měření zůstává označené pouze při platných datech GW3000.';
  });
  // Live readings are displayed only for metrics present in the authenticated
  // custom upload. Archive-only interval rain is never confused with gateway rain totals.
@@ -101,6 +104,7 @@ const quickReadings = [
    if(quality){quality.textContent='Živé měření GW3000';quality.dataset.readingState='measured';}
   }
   if(status){status.textContent='GW3000 · živá měření';status.className='status-chip ok';}
+  if(provenance)provenance.textContent='Živá data GW3000 přes lokální API · pouze právě dostupné veličiny; ostatní hodnoty z archivu WeeWX.';
   if(updated)updated.textContent=(data.timestampMeaning==='gateway_polled_at'?'GW3000 · přečteno ':'GW3000 · naměřeno ')+formatTimestamp(data.observedAt)+
    ' · nezahrnuté veličiny z posledního archivu WeeWX';
  };
