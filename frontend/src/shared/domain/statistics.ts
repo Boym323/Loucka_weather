@@ -12,6 +12,7 @@ export interface StatisticsResult {
  provenance: string | null;
  dataRevision: string;
  completeness: { expected: number | null; valid: number; fraction: number | null };
+ timeCoverage?: {validSeconds:number;expectedSeconds:number;fraction:number;basis:string;scope:string}|null;
  extremaObservedAt: string | null;
  extremaSource: string;
 }
