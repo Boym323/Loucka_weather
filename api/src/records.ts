@@ -28,9 +28,12 @@ function extract(metric:Metric,row:DailySummaryRow,type:'min'|'max'|'sum',range:
   return value!==null&&Number.isFinite(value)&&value>=range[0]&&value<=range[1]?value:null;
  }catch{return null;}
 }
-const localDate=(epoch:number)=>new Intl.DateTimeFormat('en-CA',{
+// Reuse ICU's native formatter for all historical days. Creating one per row
+// was expensive and left a large amount of anonymous memory committed to Node.
+const localDateFormatter=new Intl.DateTimeFormat('en-CA',{
  timeZone:'Europe/Prague',year:'numeric',month:'2-digit',day:'2-digit'
-}).format(new Date(epoch*1000));
+});
+const localDate=(epoch:number)=>localDateFormatter.format(new Date(epoch*1000));
 function choose(value:number|null,unit:string,day:string,existing:EvidenceRecord|null,compare:'min'|'max'):EvidenceRecord|null{
  if(value===null)return existing;
  if(existing&&(compare==='min'?value>=existing.value:value<=existing.value))return existing;
