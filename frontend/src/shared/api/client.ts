@@ -15,15 +15,19 @@ async function retryDelay(ms:number,signal?:AbortSignal):Promise<void>{
 async function request(path: string, signal?: AbortSignal): Promise<unknown> {
  for(let attempt=0;attempt<3;attempt++){
   const response=await fetch(path,{signal,headers:{Accept:'application/json'},credentials:'same-origin'});
-  if(response.status===429&&attempt<2){
-   const retryAfter=Number(response.headers.get('Retry-After'));
-   await retryDelay(Math.max(1000,Math.min(3000,Number.isFinite(retryAfter)?retryAfter*1000:1000))*(attempt+1),signal);
+  // Shared proxy rate limit and brief DB-read revision overlaps are transient.
+  // Do not retry invalid requests (400/422), and bound extra traffic.
+  if([429,503,504].includes(response.status)&&attempt<2){
+   const raw=response.headers.get('Retry-After');
+   const parsed=raw===null?NaN:Number(raw);
+   const base=Number.isFinite(parsed)?Math.max(1000,Math.min(3000,parsed*1000)):1200;
+   await retryDelay(base*(attempt+1),signal);
    continue;
   }
   if(!response.ok)throw new Error('API HTTP '+response.status);
   return response.json() as Promise<unknown>;
  }
- throw new Error('API HTTP 429');
+ throw new Error('API retry exhausted');
 }
 export async function getCurrent(signal?:AbortSignal):Promise<CurrentResponse>{
  const data=await request('/api/v1/current?units=metricwx&dataset=original',signal);

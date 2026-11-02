@@ -5,7 +5,7 @@
  <div class="camera-day-browser">
   <div class="section-heading">
    <h3>Procházet archiv podle dne</h3>
-   <label class="camera-day-choice">Den (UTC) <input type="date" data-archive-date /></label>
+   <label class="camera-day-choice">Den (UTC) <input type="date" data-archive-date /></label><button type="button" class="chart-tab" data-archive-load-day>Načíst den</button>
   </div>
   <p class="source-note" data-archive-day-status>Vyber datum od začátku archivace.</p>
   <div class="camera-archive-grid" data-archive-day-frames></div>
@@ -29,6 +29,33 @@
   const select=root.querySelector<HTMLSelectElement>('[data-archive-video]');
   const player=root.querySelector<HTMLVideoElement>('[data-archive-player]');
   const ctrl=new AbortController();
+  // The public reverse proxy limits concurrent requests. Scheduling thumbnails
+  // prevents dozens of JPEG requests from triggering HTTP 429 and blank cards.
+  const thumbnailQueue:Array<()=>void>=[];
+  const scheduler=setInterval(()=>{
+   if(ctrl.signal.aborted){thumbnailQueue.length=0;return;}
+   thumbnailQueue.shift()?.();
+  },450);
+  function makeThumb(url:string,description:string):HTMLImageElement{
+   const img=document.createElement('img');
+   img.alt=description;img.loading='eager';img.decoding='async';
+   const loading=document.createElement('span');
+   loading.className='camera-thumb-message';
+   loading.textContent='Náhled se načítá…';
+   img.addEventListener('load',()=>loading.remove(),{once:true});
+   let failed=0;
+   img.addEventListener('error',()=>{
+    failed++;
+    if(failed===1&&!ctrl.signal.aborted){
+     loading.textContent='Opakuji načtení…';
+     setTimeout(()=>{if(!ctrl.signal.aborted)thumbnailQueue.push(()=>{img.src=url+'?retry=1';});},3000);
+    }else loading.textContent='Náhled není dostupný · otevři snímek';
+   });
+   thumbnailQueue.push(()=>{img.src=url;});
+   // The image and loading message are siblings. The caller appends img to a link.
+   queueMicrotask(()=>img.insertAdjacentElement('afterend',loading));
+   return img;
+  }
   type Frame={fetchedAt:string;url:string};
   type Video={date:string;url:string};
   void fetch('/api/v1/camera/archive',{signal:ctrl.signal}).then(r=>r.json() as Promise<{status:string;frames:Frame[];videos:Video[]}>).then(data=>{
@@ -41,10 +68,10 @@
    }else{
     if(status){status.textContent=data.frames.length+' dostupných snímků';status.className='status-chip ok';}
     const formatter=new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-    for(const f of data.frames.slice(0,12)){
+    for(const f of data.frames.slice(0,8)){
      if(!/^\/api\/v1\/camera\/frames\/\d{8}T\d{6}Z\.jpg$/.test(f.url))continue;
      const link=document.createElement('a');link.className='camera-archive-thumb';link.href=f.url;link.target='_blank';link.rel='noopener noreferrer';
-     const img=document.createElement('img');img.src=f.url;img.alt='Archivní snímek ze západní kamery';img.loading='lazy';
+     const img=makeThumb(f.url,'Archivní snímek ze západní kamery');
      const label=document.createElement('span');label.textContent='Staženo '+formatter.format(new Date(f.fetchedAt));
      link.append(img,label);frames.append(link);
     }
@@ -54,9 +81,14 @@
     const videos=data.videos.filter(v=>/^\/api\/v1\/camera\/timelapse\/\d{4}-\d{2}-\d{2}\.mp4$/.test(v.url));
     for(const v of videos){const option=document.createElement('option');option.value=v.url;option.textContent=v.date;select.append(option);}
     if(videos.length){
+     const note=root.querySelector<HTMLElement>('[data-archive-video-note]');
+     if(note)note.textContent='Uložené MP4 je dostupné; časosběr se sestavuje z archivovaných fotografií.';
      select.disabled=false;player.hidden=false;player.src=videos[0].url;
      select.addEventListener('change',()=>{player.src=select.value;player.load();});
     }
+   } else {
+    const note=root.querySelector<HTMLElement>('[data-archive-video-note]');
+    if(note)note.textContent='Zatím není dostupné žádné časosběrné MP4. Převod probíhá až po uzavření dne, pokud existuje alespoň šest snímků a funguje FFmpeg.';
    }
   }).catch(()=>{
    if(ctrl.signal.aborted)return;
@@ -90,7 +122,7 @@
     if(!/^\/api\/v1\/camera\/frames\/\d{8}T\d{6}Z\.jpg$/.test(frame.url))continue;
     const a=document.createElement('a');a.href=frame.url;a.className='camera-archive-thumb';
     a.rel='noopener noreferrer';a.target='_blank';
-    const img=document.createElement('img');img.src=frame.url;img.alt='Archivní snímek západní kamery';img.loading='lazy';
+    const img=makeThumb(frame.url,'Archivní snímek západní kamery');
     const date=document.createElement('span');date.textContent='Staženo '+dateFormatter.format(new Date(frame.fetchedAt));
     a.append(img,date);dayContainer.append(a);
    }
@@ -120,9 +152,11 @@
    }
   }
   dateInput?.addEventListener('change',()=>void loadDay());
+  root.querySelector<HTMLButtonElement>('[data-archive-load-day]')?.addEventListener('click',()=>void loadDay());
   prev?.addEventListener('click',()=>{if(activePage>0){activePage--;renderDay();}});
   next?.addEventListener('click',()=>{if((activePage+1)*perPage<dayFrames.length){activePage++;renderDay();}});
-  void loadDay();
-  document.addEventListener('astro:before-swap',()=>{ctrl.abort();player?.pause();},{once:true});
+  // Date selection is opt-in; avoid doubling immediate JPEG traffic on page load.
+  if(dayStatus)dayStatus.textContent='Zvol datum a klikni na Načíst den.';
+  document.addEventListener('astro:before-swap',()=>{ctrl.abort();clearInterval(scheduler);thumbnailQueue.length=0;player?.pause();},{once:true});
  }
 </script>

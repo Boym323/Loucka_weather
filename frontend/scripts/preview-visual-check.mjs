@@ -141,6 +141,27 @@ try{
     if(!dock.exists)errors.push(size.name+' '+path+': missing mobile dock markup');
     else if(size.name==='mobil'&&dock.display==='none')errors.push('mobile dock hidden on '+path);
     else if(size.name==='desktop'&&dock.display!=='none')errors.push('mobile dock visible on desktop '+path);
+    if(path==='/grafy/'){
+     await page.waitForFunction(()=>{
+      const state=document.querySelector('[data-rain-status]')?.textContent??'';
+      return state.includes('platných intervalů')||state.includes('Bez potvrzených intervalů')||
+       state.includes('Historie nedostupná');
+     },null,{timeout:30000});
+     let rain=(await page.locator('[data-rain-status]').textContent())?.trim()??'';
+     if(rain==='Historie nedostupná'){
+      await page.locator('[data-rain-retry]').click();
+      await page.waitForFunction(()=>{
+       const state=document.querySelector('[data-rain-status]')?.textContent??'';
+       return state.includes('platných intervalů')||state.includes('Bez potvrzených intervalů')||
+        state.includes('Historie nedostupná');
+      },null,{timeout:30000});
+      rain=(await page.locator('[data-rain-status]').textContent())?.trim()??'';
+     }
+     console.log('RAIN HISTORY',size.name,rain);
+     if(rain==='Historie nedostupná')errors.push(size.name+': rain detail chart failed after user retry');
+     if(await page.locator('[data-rain-chart] svg').count()===0)
+      errors.push(size.name+': rain chart missing SVG after history load');
+    }
     if(path==='/kamera/'){
      const controls=await page.evaluate(()=>({
       auto:!!document.querySelector('[data-camera-auto]'),
@@ -149,6 +170,16 @@ try{
      }));
      if(!controls.auto||!controls.fullscreen||!controls.latest)
       errors.push(size.name+': missing camera controls');
+     await page.waitForFunction(()=>{
+      const image=document.querySelector('[data-archive-frames] img');
+      return !image||image.complete&&image.naturalWidth>0;
+     },null,{timeout:24000}).catch(()=>errors.push(size.name+': first camera preview not decoded; check image 429/404'));
+     const preview=await page.evaluate(()=>{
+      const image=document.querySelector('[data-archive-frames] img');
+      return {exists:!!image,complete:image?.complete??false,width:image?.naturalWidth??0};
+     });
+     console.log('CAMERA THUMB',size.name,JSON.stringify(preview));
+     if(preview.exists&&preview.width===0)errors.push(size.name+': camera image failed to decode');
      if(await page.locator('[data-camera-archive] [data-archive-status]').count()!==1)
       errors.push(size.name+': missing real camera archive gallery');
      if(await page.locator('[data-archive-video]').count()!==1)
@@ -275,4 +306,4 @@ finally{await browser.close();}
 if(errors.length){
  console.error('VISUAL SMOKE FAILED:\n'+errors.join('\n'));
  process.exitCode=1;
-}else console.log('Visual preview smoke passed for 8 routes and both viewports.');
+}else console.log('Visual preview smoke passed for 9 routes and both viewports.');

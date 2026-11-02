@@ -4,6 +4,13 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ## 2026-11-02
 
+### Opravy webu podle vizuálního a runtime auditu (2. 11.)
+- Graf 24h srážek se načítá s odstupem od těžkého historického grafu, přechodné 429/503/504 API odpovědi podléhají omezenému opakování a uživatel má tlačítko Obnovit; prázdné nebo chybující grafy se neskrývají.
+- Archiv kamery stahuje miniatury postupně místo 30 souběžných požadavků (limity NPM), zobrazuje načítání a nedostupnost; denní galerii načítá až na vyžádání a počet nejnovějších náhledů je 8.
+- Popisky GW3000 nyní odlišují lokální read-only GET od HTTP uploadů, stav API již nepředstírá poslední meteorologické měření.
+- Mobilní banner má samostatný řádek pro původ fotografie, větší čitelné popisky; galerie a diagnostika jsou přehlednější.
+- Veřejný Playwright kontroluje dostupnost dekódovaného JPEG a reálné vykreslení srážkového grafu včetně jeho opakovaného načtení.
+
 ### Mobilní failover při dočasném omezení API (2. 11.)
 - Veřejný test potvrdil skutečné GW3000 pakety do prohlížeče bez reloadu a desktopovou obnovu archivu. Mobilní failover při prvním průchodu neobnovil archiv do 16 sekund.
 - Klient nyní při neúspěšném archivním GET automaticky provede maximálně tři další pokusy po 4/8/12 sekundách, bez znovunačtení stránky a s korektním označením nedostupného zdroje.
