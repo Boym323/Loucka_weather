@@ -16,7 +16,7 @@ test('synthetic WeeWX archive on ephemeral MariaDB, SELECT-only adapter and time
    user:'root',password:'root',connectionLimit:1});
  t.after(async()=>{await admin.end();});
  await admin.query('CREATE DATABASE IF NOT EXISTS `weewx_api_ci_fixture`');
- const columns=metricNames.map(x=>'`'+x+'` DOUBLE NULL').join(', ');
+ const columns=[...metricNames,'soilMoist1'].map(x=>'`'+x+'` DOUBLE NULL').join(', ');
  await admin.query(`CREATE TABLE IF NOT EXISTS \`weewx_api_ci_fixture\`.\`archive\` (
   dateTime INT PRIMARY KEY, usUnits INT NOT NULL, \`interval\` INT NOT NULL, ${columns}
  )`);
@@ -48,6 +48,11 @@ test('synthetic WeeWX archive on ephemeral MariaDB, SELECT-only adapter and time
  assert.equal(current.json().readings.windSpeed.value,10);
  assert.equal(current.json().readings.rain.value,1);
  assert.equal(Object.keys(current.json().readings).length,45);
+ const sensorEvidence=await app.inject('/api/v1/sensors/channels');
+ assert.equal(sensorEvidence.statusCode,200,sensorEvidence.body);
+ assert.equal(sensorEvidence.json().status,'archive_recent');
+ assert.equal(sensorEvidence.json().channels.length,11);
+ assert.equal(sensorEvidence.json().channels.find((x:any)=>x.metric==='soilMoist1').nonNullSamples,0);
  const from=new Date(1793519400*1000).toISOString();
  const to=new Date(1793520000*1000).toISOString();
  const url='/api/v1/history?metric=outTemp&from='+encodeURIComponent(from)+

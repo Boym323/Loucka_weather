@@ -82,33 +82,23 @@ import BaseLayout from '../layouts/BaseLayout.astro';
    const status=root?.querySelector<HTMLElement>('[data-soil-trend-status="'+metric.key+'"]');
    const description=root?.querySelector<HTMLElement>('[data-soil-summary="'+metric.key+'"]');
    try{
-    // Weekly hourly aggregation can fail closed when historic intervals overlap
-    // or the endpoint is temporarily rate-limited. Do not remove server-side QC.
-    // Use bounded, recent raw archive data instead, preserving source and range.
+    // Use seven original daily summaries for overview instead of repeatedly
+    // scanning irregular legacy hourly intervals (which may return 503).
+    // Read-only fallback preserves recent 24h source data and its own label.
     let response;
-    let shownRange='7 dní';
+    let shownRange='7 dokončených dní · denní souhrny';
     try{
-     response=await getHistoryInterval(metric.key,from,to,'hourly',ctrl.signal);
+     const localDay=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Prague',
+      year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+     response=await getHistoryInterval(metric.key,
+      pragueMidnightIso(nextDate(localDay,-7)),pragueMidnightIso(localDay),'daily',ctrl.signal);
     }catch(error){
      if(ctrl.signal.aborted)return;
-     console.info('Sedmidenní hodinová historie '+metric.key+' není dostupná.',
+     console.info('Sedmidenní denní souhrny '+metric.key+' nejsou dostupné.',
       error instanceof Error?error.message:'API error');
-     try{
-      // Daily summaries are original WeeWX data, independent of the malformed
-      // historical raw intervals that can invalidate the 7-day hourly scan.
-      const localDay=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Prague',
-       year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
-      response=await getHistoryInterval(metric.key,
-       pragueMidnightIso(nextDate(localDay,-7)),pragueMidnightIso(localDay),'daily',ctrl.signal);
-      shownRange='7 dokončených dní · denní souhrny';
-     }catch(dailyError){
-      if(ctrl.signal.aborted)return;
-      console.info('Sedmidenní denní souhrny '+metric.key+' nejsou dostupné.',
-       dailyError instanceof Error?dailyError.message:'API error');
-      const rawEnd=new Date(),rawFrom=new Date(rawEnd.getTime()-86400000);
-      response=await getHistoryInterval(metric.key,rawFrom.toISOString(),rawEnd.toISOString(),'raw',ctrl.signal);
-      shownRange='24 hodin · původní intervaly';
-     }
+     const rawEnd=new Date(),rawFrom=new Date(rawEnd.getTime()-86400000);
+     response=await getHistoryInterval(metric.key,rawFrom.toISOString(),rawEnd.toISOString(),'raw',ctrl.signal);
+     shownRange='24 hodin · původní intervaly';
     }
     if(ctrl.signal.aborted||!panel)return;
     const values=response.points.map(p=>({
@@ -123,14 +113,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     }
     const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg'),path=document.createElementNS(ns,'path');
     svg.setAttribute('viewBox','0 0 600 120');svg.setAttribute('role','img');
-    svg.setAttribute('aria-label',metric.key+' · '+good.length+' platných hodinových souhrnů');
+    svg.setAttribute('aria-label',metric.key+' · '+good.length+' platných archivních bodů · '+shownRange);
     const min=Math.min(...good.map(p=>p.y)),max=Math.max(...good.map(p=>p.y)),span=max-min||1;
     let d='',pen=false;
+    const plotStart=Date.parse(response.points[0]?.startTime??from);
+    const plotEnd=Date.parse(response.points.at(-1)?.endTime??to);
     for(const point of values){
      if(point.y===null){pen=false;continue;}
-     const start=Date.parse(response.points[0]?.startTime??from);
-     const end=Date.parse(response.points.at(-1)?.endTime??to);
-     const x=12+576*(point.x-start)/Math.max(1,end-start);
+     const x=12+576*(point.x-plotStart)/Math.max(1,plotEnd-plotStart);
      const y=106-92*(point.y-min)/span;
      d+=(pen?'L':'M')+x.toFixed(2)+','+y.toFixed(2)+' ';pen=true;
     }

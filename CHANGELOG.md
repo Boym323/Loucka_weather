@@ -4,6 +4,11 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ## 2026-11-02
 
+### Evidence senzorů, úspornější historie a lehký test výkonu
+- Nové `/api/v1/sensors/channels`: 11 explicitních archivních kanálů, výhradně počet neprázdných měření za 24 h a poslední timestamp; fyzická identita a propojení s GW3000 nejsou tvrzeny jako ověřené.
+- Jeden indexovaný agregovaný SELECT pro všechny kanály, 60s paměťová cache a 30s privátní HTTP cache, podporované ETag/304 a regresní i MariaDB CI testy.
+- Stránka senzorů nyní čitelně označuje neaktivní/neověřené archivní kanály; půda/ovzduší primárně načítá 7 dokončených lokálních dnů z denních WeeWX souhrnů místo opakovaně chybujících hodinových skenů.
+- Read-only lokální skript pro lehkou sekvenční kontrolu odezev p50/p95 a ETag cache. Neprovádí zátěžový test ani restart, bez monitoringu v ChatGPT.
 ### Oprava sedmidenních grafů půdy a PM2,5
 - Skutečné veřejné 7d hourly API vrací 503 (neplatný nebo nedostupný hodinový archiv); ověřený 24h raw endpoint PM2,5 vrací 200 a skutečných 288 měření.
 - Graf nyní zkouší sedmidenní hodinový archiv, poté 7 dokončených dnů v původních WeeWX daily summaries a nakonec 24h syrové intervaly, vždy se zobrazením reálně použitého rozsahu.

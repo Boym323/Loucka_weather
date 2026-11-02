@@ -1,0 +1,69 @@
+<section class="section" data-channel-availability aria-labelledby="channel-availability-title">
+ <div class="section-heading">
+  <div><span class="eyebrow">Skutečná archivní data · 24 hodin</span>
+   <h2 id="channel-availability-title">Dostupnost a původ měřicích kanálů</h2></div>
+  <span class="status-chip" data-channel-status role="status">Zjišťuji údaje</span>
+ </div>
+ <p class="lead">Počítáme nenulové i nulové <em>existující hodnoty</em> z posledních 24 hodin v původním WeeWX archivu. To neověřuje správnost čidla, jeho fyzické umístění ani kalibraci.</p>
+ <div class="sensor-inventory-grid" data-channel-cards>
+  <div class="empty-state">Načítám jednotlivé kanály…</div>
+ </div>
+ <p class="source-note">Živé kanály GW3000 a historická pole WeeWX mohou pocházet z jiného senzoru; jejich fyzické ztotožnění vyžaduje dokumentaci instalace. „Žádná hodnota“ není 0 a neznamená automaticky odpojený senzor.</p>
+</section>
+<script>
+ const root=document.querySelector<HTMLElement>('[data-channel-availability]');
+ if(root){
+  const ctrl=new AbortController();
+  const status=root.querySelector<HTMLElement>('[data-channel-status]');
+  const container=root.querySelector<HTMLElement>('[data-channel-cards]');
+  type Channel={metric:string;title:string;liveKey:string|null;liveRelation:string;
+   physicalIdentity:string;confidence:string;note:string;
+   archiveStatus:'observed_recently'|'not_observed_recently'|'unknown';
+   nonNullSamples:number|null;lastObservedAt:string|null;windowHours:number};
+  type Payload={schemaVersion:string;status:string;channels:Channel[];checkedAt:string};
+  const stamp=(s:string)=>new Intl.DateTimeFormat('cs-CZ',{
+   timeZone:'Europe/Prague',dateStyle:'short',timeStyle:'short'
+  }).format(new Date(s));
+  void fetch('/api/v1/sensors/channels',{signal:ctrl.signal})
+   .then(async r=>{if(!r.ok)throw Error('API '+r.status);return r.json() as Promise<Payload>;})
+   .then(data=>{
+    if(ctrl.signal.aborted||!container)return;
+    if(data.schemaVersion!=='1'||!Array.isArray(data.channels))throw Error('Invalid channel evidence');
+    container.replaceChildren();
+    for(const c of data.channels){
+     const article=document.createElement('article');article.className='sensor-inventory-card';
+     const h=document.createElement('h3');h.textContent=c.title;article.append(h);
+     const badge=document.createElement('span');badge.className='status-chip '+
+      (c.archiveStatus==='observed_recently'?'ok':'warning');
+     badge.textContent=c.archiveStatus==='observed_recently'?'Archivní data dostupná':
+      c.archiveStatus==='not_observed_recently'?'Bez hodnot za 24 h':'Nedostupnost nebyla ověřena';
+     article.append(badge);
+     const info=document.createElement('dl');
+     const rows=[
+      ['Sloupec WeeWX',c.metric],
+      ['Neprázdných archivních hodnot',c.nonNullSamples===null?'Nezjištěno':
+       c.nonNullSamples.toLocaleString('cs-CZ')+' za 24 h'],
+      ['Poslední záznam',c.lastObservedAt?stamp(c.lastObservedAt):'Nezjištěno'],
+      ['GW3000 live',c.liveKey?
+       c.liveKey+' · vztah k archivnímu čidlu neověřen':'Bez potvrzeného mapování'],
+      ['Fyzická identita','Neověřená']
+     ];
+     for(const [name,value] of rows){
+      const row=document.createElement('div'),dt=document.createElement('dt'),dd=document.createElement('dd');
+      dt.textContent=name;dd.textContent=value;row.append(dt,dd);info.append(row);
+     }
+     article.append(info);
+     const note=document.createElement('p');note.className='source-note';note.textContent=c.note;article.append(note);
+     container.append(article);
+    }
+    if(status){status.className='status-chip '+(data.status==='archive_recent'?'ok':'warning');
+     status.textContent=data.status==='archive_recent'?'Čerstvost archivu ověřena':
+      'Čerstvost archivu nedostupná';}
+   }).catch(()=>{
+    if(ctrl.signal.aborted)return;
+    if(status){status.textContent='Dostupnost se nepodařilo ověřit';status.className='status-chip warning';}
+    if(container)container.textContent='Archivní dostupnost kanálů se nepodařilo načíst. Historie není automaticky ztracena.';
+   });
+  document.addEventListener('astro:before-swap',()=>ctrl.abort(),{once:true});
+ }
+</script>

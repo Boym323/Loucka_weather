@@ -9,6 +9,7 @@ export type DailySummaryRow={dateTime:number;usUnits:number;min:number|null;mint
   maxtime:number|null;sum:number|null;count:number|null;wsum:number|null;sumtime:number|null;
   xsum?:number|null;ysum?:number|null;dirsumtime?:number|null;max_dir?:number|null};
 export type TelemetryReading={column:string;dateTime:number;value:number};
+export type SensorPresence={metric:string;count:number;lastObservedAt:number|null};
 export type SolarYear={records:number;validRecords:number;validMinutes:number;energyKwhM2:number|null};
 export interface ArchiveReader {
   latest(asOfEpoch:number):Promise<ArchiveRow|null>;
@@ -18,6 +19,7 @@ export interface ArchiveReader {
   archiveWindow?(fromInclusive:number,toInclusive:number,limit:number):Promise<ArchiveRow[]>;
   archiveAfter?(afterExclusive:number,toInclusive:number,limit:number):Promise<ArchiveRow[]>;
   telemetrySnapshot?(asOfEpoch:number):Promise<TelemetryReading[]>;
+  sensorPresence?(fromExclusive:number,toInclusive:number):Promise<SensorPresence[]>;
   solarYear?(startExclusive:number,endInclusive:number):Promise<SolarYear>;
   ping():Promise<void>;
   close?():Promise<void>;

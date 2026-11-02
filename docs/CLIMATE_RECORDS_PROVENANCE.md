@@ -11,3 +11,7 @@ Fyzický inventář čidel zůstává neověřený. Lokální GW3000 potvrzuje p
 Endpoint je pouze GET, čte existující read-only ArchiveReader.dailySummaries, maximálně 7500 dní, cache 20 minut. Nikdy nemění původní ani rekonstruovaná data.
 
 Pro definitivní rekordy je nutné dokončit kontrolu historických mezer, původu, jednotek a problémových srážek a schválené publikování opravených dat. Zatím není dovoleno označit výstup jako ověřené historické rekordy.
+
+## Nový audit 2. 11. 2026
+
+Aktuální evidence rekonstrukce a seznam povinných podmínek jsou v repozitáři Meteo_audit: `reports/2026-11-02-publication-readiness.md`, `reports/data/2026-11-02-reconstruction-evidence.json`. Přístup Weather MCP v tomto běhu umožnil read-only pracovní rekonstrukci, ale odmítl názvy dalších produkčních DB s tečkami/pomlčkami. Nejde tedy o novou kompletní certifikaci. Veřejné historické rekordy nadále musí být označeny za **předběžné** a nepřepínáme dataset na approved bez skutečné revize a QC.

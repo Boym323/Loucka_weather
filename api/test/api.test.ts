@@ -40,9 +40,44 @@ test('healthz, readiness, station, camera and sensors do not fabricate capabilit
  assert.equal(station.location.verified,false);
  const sensors=(await app.inject('/api/v1/sensors')).json();
  assert.deepEqual(sensors.sensors,[]);
+ const channels=(await app.inject('/api/v1/sensors/channels')).json();
+ assert.equal(channels.status,'metadata_only');
+ assert.equal(channels.channels.length,11);
+ assert.equal(channels.channels.find((x:any)=>x.metric==='soilMoist1').physicalIdentity,'unverified');
+ assert.equal(channels.channels.find((x:any)=>x.metric==='soilTemp2').archiveStatus,'unknown');
  const camera=(await app.inject('/api/v1/camera/status')).json();
  assert.equal(camera.status,'disabled');
  assert.equal(camera.latestUrl,null);
+});
+test('24h sensor evidence is batched, presence-only and cached for 60 seconds',async t=>{
+ let requests=0;
+ const fake=reader();
+ fake.sensorPresence=async(from,to)=>{
+  requests++;
+  assert.equal(to-from,86400);
+  return [{metric:'soilTemp1',count:287,lastObservedAt:to-60},
+   {metric:'soilTemp2',count:0,lastObservedAt:null},
+   {metric:'soilMoist1',count:280,lastObservedAt:to-600}];
+ };
+ const app=buildApp(fake,now);t.after(()=>app.close());
+ const first=await app.inject('/api/v1/sensors/channels');
+ const second=await app.inject('/api/v1/sensors/channels');
+ assert.equal(first.statusCode,200,first.body);
+ assert.equal(requests,1);
+ assert.deepEqual(first.json(),second.json());
+ assert.equal(first.headers['cache-control'],'private, max-age=30');
+ const etag=first.headers.etag;
+ assert.equal(typeof etag,'string');
+ const conditional=await app.inject({method:'GET',url:'/api/v1/sensors/channels',headers:{'if-none-match':etag}});
+ assert.equal(conditional.statusCode,304);
+ assert.equal(requests,1);
+ const item=first.json().channels.find((x:any)=>x.metric==='soilTemp1');
+ assert.equal(item.nonNullSamples,287);
+ assert.equal(item.archiveStatus,'observed_recently');
+ assert.equal(item.physicalIdentity,'unverified');
+ const missing=first.json().channels.find((x:any)=>x.metric==='soilTemp2');
+ assert.equal(missing.archiveStatus,'not_observed_recently');
+ assert.equal(missing.nonNullSamples,0);
 });
 test('current converts METRIC archive by source system and reports all 45 public metrics',async t=>{
  const app=buildApp(reader(),now);t.after(()=>app.close());

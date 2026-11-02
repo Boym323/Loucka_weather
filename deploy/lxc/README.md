@@ -208,3 +208,9 @@ Zjištění `FFmpeg not installed` znamená, že časosběrné MP4 zatím nemů�
 
 Úspěch této kontroly **není důkazem zálohování**. Proxmox/PBS snapshoty, test obnovy LXC, pravidla NPM a firewall a zátěž musí být nezávisle doloženy na hostiteli. Do žádné produkční DB se při této kontrole nezapisuje. Přímý port GW3000 není potřeba.
 
+
+## Ověření výkonu bez zátěže (2. 11. 2026)
+
+Na staging LXC spustit `python3 /home/loucka/Loucka_weather/deploy/lxc/preview-performance-check.py`.
+Skript provádí pouze 32 postupných GET na **127.0.0.1:3100** přibližně 3,3 požadavku/s, nemá žádný přístup ke GW3000, WeeWX ani databázovému zápisu. Reportuje p50/p95 lokálního API, chyby, cache ETag a HTTP 304 u kanálů.
+**Není to skutečný souběžný zátěžový test ani důkaz dlouhodobé stability**; tu už monitoruje lokální systemd timer. Archivní 7denní hodinové dotazy mohou kvůli historickým překryvům vracet 503; přehled půdy používá přímo sedmidenní denní souhrny. Výsledek reportu lze bezpečně předat k dalšímu ladění.
