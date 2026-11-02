@@ -7,7 +7,7 @@ import type {Metric} from './metrics.js';
 
 export type EvidenceRecord={value:number;unit:string;localDate:string;source:'weewx_daily_original';
  quality:'unverified_original'};
-const bounds:Record<string,[number,number]>={
+const bounds:{minTemp:[number,number];maxTemp:[number,number];maxRain:[number,number];maxWindGust:[number,number]}={
  minTemp:[-55,45],maxTemp:[-45,55],maxRain:[0,500],maxWindGust:[0,90]
 };
 export type ClimateRecords={
@@ -22,7 +22,7 @@ export type ClimateRecords={
 };
 function extract(metric:Metric,row:DailySummaryRow,type:'min'|'max'|'sum',range:[number,number]):number|null{
  const raw=row[type];
- if(raw===null||typeof raw!=='number'||!Number.isFinite(raw)||!Number.isFinite(row.count)||row.count<=0)return null;
+ if(raw===null||typeof raw!=='number'||!Number.isFinite(raw)||row.count===null||!Number.isFinite(row.count)||row.count<=0)return null;
  try{
   const value=converted(metric,raw,row.usUnits,'metricwx').value;
   return value!==null&&Number.isFinite(value)&&value>=range[0]&&value<=range[1]?value:null;
