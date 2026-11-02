@@ -426,6 +426,16 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
     quality:result.value===null?'missing':'derived',source:'weewx_daily',
     provenance:result.value===null?null:`weewx-daily-${aggregation}`,dataset,
     dataRevision:`daily-${fingerprint}`,completeness:{expected:null,valid:result.valid,fraction:null},
+    // WeeWX day_<metric>.sumtime is the time-weighted number of VALID
+    // observation seconds. Do not infer this from row counts or assume 5 min.
+    timeCoverage:(period==='year'&&aggregation==='mean'&&
+     rows.every(r=>r.sumtime===null||Number.isFinite(r.sumtime)&&r.sumtime>=0))?(()=>{
+      const validSeconds=rows.reduce((n,r)=>n+(r.sumtime??0),0);
+      const expectedSeconds=end-start;
+      return validSeconds<=expectedSeconds*1.01&&expectedSeconds>0?
+       {validSeconds,expectedSeconds,fraction:Math.min(1,validSeconds/expectedSeconds),
+        basis:'weewx_daily_sumtime_seconds',scope:'metric_only'}:null;
+     })():null,
     extremaObservedAt:result.extremaObservedAt===null?null:utcIso(result.extremaObservedAt),
     extremaSource:aggregation==='dir_at_max'?(result.value===null?'unknown':'archive'):
      extremaApplies?'unknown':'not_applicable'};
