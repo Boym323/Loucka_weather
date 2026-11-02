@@ -4,6 +4,16 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ## 2026-11-02
 
+### Unslop revize Atlas Minimal — přehlednost a specifická identita meteostanice
+- Proveden návrhový audit podle projektu `heydamir/unslop` (Damir Sokolovsky, CC BY 4.0); evidence a doporučení: `docs/design/UNSLOP_ATLAS.md`.
+- Zredukovány barevné plochy, stíny, pilulkové aktivní odkazy, nejednotné mezery a zbytečně tučné nadpisy. Zůstal jeden věcný akcent a světlý výchozí režim.
+- Z úvodní části odstraněna dekorativní krajina a její gradient: prostor patří naměřeným hodnotám a času. Nepoužívaná ilustrace smazána.
+- Komponenta `SiteIcon.astro` nahrazuje dekorativní textové symboly v navigaci, informacích, radaru a výstrahách.
+- Modelová předpověď používá sedm sjednocených vektorových meteorologických piktogramů namísto emoji, přístupný popis podmínek a původní bezpečné chybové stavy.
+- Zachována skutečná kamera, radar, časová řada WeeWX, živé GW3000, zdroj Open-Meteo, kvalita měření i všechny odborné podstránky.
+- Přidány jednotkové regresní testy a vizuální Playwright aserce pro nové UI; bez změny API, MariaDB a rekonstrukce dat.
+
+
 ### Schválený redesign Atlas Minimal — první implementace na skutečných datech
 - Světlý režim je novým výchozím motivem; tmavý režim zůstává volitelný a ukládá se jen do místního prohlížeče.
 - Přehled není kopií starého devítipanelového dashboardu: velká aktuální teplota, zvlášť denní archivní extrémy, úzká výstražná lišta, graf skutečných archivních hodnot, oddělená modelová předpověď, kamera, radar a šest cílů pro další průzkum.
