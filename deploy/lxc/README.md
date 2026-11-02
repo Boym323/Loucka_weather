@@ -193,3 +193,18 @@ curl -fsS http://127.0.0.1:3100/api/v1/camera/status | jq .
 ```
 
 Nevypínej funkční ČHMÚ timer. Pokud fotografie již před chybou existuje, nový běh ji zachová; při shodném snímku nevytvoří duplicitu, pouze opraví index. Po prvním úspěchu nemá smysl očekávat nové MP4, dokud nejsou nasbírány aspoň šest snímků z předchozího dne.
+
+## Read-only produkční připravenost a MP4
+
+Než se vývojová verze publikuje na hlavní doménu, spusť na staging LXC jako root (jen READ-ONLY):
+
+```bash
+bash /home/loucka/Loucka_weather/deploy/lxc/site-readiness-audit.sh
+```
+
+Audit používá pouze GET na lokální a veřejné API a systémové diagnostické příkazy. **Nemění GW3000, WeeWX, MariaDB, ani systemd**, neprovádí zápis nebo obnovu ze zálohy. Ověřuje verzi nasazení, veřejné a lokální API, časovače, aktuálnost zdrojů, MP4 a FFmpeg, místo na disku, paměť a neočekávané vystavení portu 3102.
+
+Zjištění `FFmpeg not installed` znamená, že časosběrné MP4 zatím nemůže vznikat, i když JPEG archiv běží. Nesnaž se to řešit změnou stanice. V případě přítomnosti FFmpeg zkontroluj logy `journalctl -u loucka-camera-collect.service --no-pager -n 70` a integritu již vytvořeného MP4 `ffprobe`, pokud je dostupné. Nedotýkej se archivních snímků ani je nemaž při auditu.
+
+Úspěch této kontroly **není důkazem zálohování**. Proxmox/PBS snapshoty, test obnovy LXC, pravidla NPM a firewall a zátěž musí být nezávisle doloženy na hostiteli. Do žádné produkční DB se při této kontrole nezapisuje. Přímý port GW3000 není potřeba.
+
