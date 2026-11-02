@@ -21,7 +21,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
    </div>)}
   </div>
   <p class="source-note" data-soil-time>Čas posledního přečtení GW3000 se ověřuje.</p>
-  <h2>Archivní průběhy · 7 dní nebo 24h záložní rozsah</h2>
+  <h2>Archivní průběhy · sedmidenní souhrny nebo posledních 24 hodin</h2>
   <div class="soil-air-grid">
    {[
     {key:'pm25_1',title:'PM2,5 · archivní kanál',unit:'µg/m³'},
@@ -38,6 +38,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 </BaseLayout>
 <script>
  import {getHistoryInterval} from '../shared/api/client';
+ import {pragueMidnightIso,nextDate} from '../shared/domain/statistics';
  import {formatValue} from '../shared/domain/metrics';
  const root=document.querySelector<HTMLElement>('[data-soil-air]');
  if(root){
@@ -90,11 +91,24 @@ import BaseLayout from '../layouts/BaseLayout.astro';
      response=await getHistoryInterval(metric.key,from,to,'hourly',ctrl.signal);
     }catch(error){
      if(ctrl.signal.aborted)return;
-     console.info('Sedmidenní historie '+metric.key+' není dostupná, přecházím na 24h archiv.',
+     console.info('Sedmidenní hodinová historie '+metric.key+' není dostupná.',
       error instanceof Error?error.message:'API error');
-     const rawEnd=new Date(),rawFrom=new Date(rawEnd.getTime()-86400000);
-     response=await getHistoryInterval(metric.key,rawFrom.toISOString(),rawEnd.toISOString(),'raw',ctrl.signal);
-     shownRange='24 hodin';
+     try{
+      // Daily summaries are original WeeWX data, independent of the malformed
+      // historical raw intervals that can invalidate the 7-day hourly scan.
+      const localDay=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Prague',
+       year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+      response=await getHistoryInterval(metric.key,
+       pragueMidnightIso(nextDate(localDay,-7)),pragueMidnightIso(localDay),'daily',ctrl.signal);
+      shownRange='7 dokončených dní · denní souhrny';
+     }catch(dailyError){
+      if(ctrl.signal.aborted)return;
+      console.info('Sedmidenní denní souhrny '+metric.key+' nejsou dostupné.',
+       dailyError instanceof Error?dailyError.message:'API error');
+      const rawEnd=new Date(),rawFrom=new Date(rawEnd.getTime()-86400000);
+      response=await getHistoryInterval(metric.key,rawFrom.toISOString(),rawEnd.toISOString(),'raw',ctrl.signal);
+      shownRange='24 hodin · původní intervaly';
+     }
     }
     if(ctrl.signal.aborted||!panel)return;
     const values=response.points.map(p=>({
