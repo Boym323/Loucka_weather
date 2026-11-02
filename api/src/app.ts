@@ -11,6 +11,7 @@ import {readingsFromRow,converted,outputUnit} from './units.js';
 import {gatewayReadings} from './gateway.js';
 import {readFile} from 'node:fs/promises';
 import {climateRecordsFromDaily} from './records.js';
+import {DayScopedCache} from './records-cache.js';
 import {sensorChannels} from './sensor-evidence.js';
 import type {Metric} from './metrics.js';
 import type {OutputUnits} from './units.js';
@@ -293,6 +294,10 @@ function aggregateSummaryRows(metric:Metric,aggregation:string,rows:DailySummary
 export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHub?:LiveHub,
  sourceFiles:ExtraSourceFiles={}){
  const app=Fastify({logger:false,ajv:{customOptions:{removeAdditional:false,coerceTypes:false}}});
+ // SSE sockets stay open indefinitely: drain them before server.close(), not
+ // in onClose, which is only invoked after in-flight connections have drained.
+ const sseConnections=new Set<()=>void>();
+ app.addHook('preClose',async()=>{for(const close of sseConnections)close();});
  const metadataCheckedAt=now().toISOString();
  const errorBody=(code:string,message:string,requestId:string)=>({
   schemaVersion:'1',error:{code,message,requestId}
@@ -421,37 +426,56 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
  app.get('/api/v1/camera/status',async()=>archiveCameraStatus(sourceFiles));
  // Read-only provisional records for completed calendar days, never silently
  // promote original data to audited historical records.
- let recordsCache:{at:number;result:ReturnType<typeof climateRecordsFromDaily>}|null=null;
+ const recordsCache=new DayScopedCache<ReturnType<typeof climateRecordsFromDaily>>(20*60_000,60*60_000);
  app.get('/api/v1/climate/records',async(req,reply)=>{
   if(!reader.dailySummaries)return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Daily summary tables unavailable',503);
   const nowMs=now().getTime();
-  if(recordsCache&&nowMs-recordsCache.at>=0&&nowMs-recordsCache.at<1200000)
-   return conditional(req,reply,{schemaVersion:'1',...recordsCache.result});
+  // A result for yesterday must not be presented as today's calendar record.
   const from='2009-01-01',toExclusive=localDateAt(Math.floor(nowMs/1000));
   const start=localMidnight(from),end=localMidnight(toExclusive);
   if(start===null||end===null||end<=start)return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Calendar range unavailable',503);
   const calendarDays=Math.round((Date.parse(toExclusive+'T00:00:00Z')-Date.parse(from+'T00:00:00Z'))/86400000);
   if(calendarDays<1||calendarDays>7500)return bad(reply,req.id,'LIMIT_EXCEEDED','Historical period exceeds bounded reader range',422);
   try{
-   const rows=await Promise.all([
-    reader.dailySummaries('outTemp',start,end,calendarDays+1),
-    reader.dailySummaries('rain',start,end,calendarDays+1),
-    reader.dailySummaries('windGust',start,end,calendarDays+1)
-   ]);
-   if(rows.some(a=>a.length>calendarDays))throw new Error('Day-summary result truncated');
-   for(const items of rows){
-    let previous=-1;
-    for(const record of items){
-     if(record.dateTime<=previous||record.dateTime<start||record.dateTime>=end||
-      localMidnight(localDateAt(record.dateTime))!==record.dateTime)throw new Error('Invalid daily boundary');
-     previous=record.dateTime;
+   const result=await recordsCache.get(toExclusive,nowMs,async()=>{
+    const refreshStart=performance.now(),times:Record<'outTemp'|'rain'|'windGust',number>={
+     outTemp:0,rain:0,windGust:0
+    };
+    const read=async(metric:'outTemp'|'rain'|'windGust')=>{
+     const started=performance.now();
+     try{return await reader.dailySummaries!(metric,start,end,calendarDays+1);}
+     finally{times[metric]=Math.round((performance.now()-started)*100)/100;}
+    };
+    const rows=await Promise.all([read('outTemp'),read('rain'),read('windGust')]);
+    const sqlWallMs=performance.now()-refreshStart;
+    if(rows.some(a=>a.length>calendarDays))throw new Error('Day-summary result truncated');
+    for(const items of rows){
+     let previous=-1;
+     for(const record of items){
+      if(record.dateTime<=previous||record.dateTime<start||record.dateTime>=end||
+       localMidnight(localDateAt(record.dateTime))!==record.dateTime)throw new Error('Invalid daily boundary');
+      previous=record.dateTime;
+     }
     }
-   }
-   const result=climateRecordsFromDaily({temperature:rows[0],rain:rows[1],
-    gust:rows[2],from,toExclusive,calendarDays,todayMonthDay:toExclusive.slice(5)});
-   recordsCache={at:nowMs,result};
+    const computed=climateRecordsFromDaily({temperature:rows[0],rain:rows[1],
+     gust:rows[2],from,toExclusive,calendarDays,todayMonthDay:toExclusive.slice(5)});
+    if(process.env.WEATHER_API_PERF_LOG==='YES'){
+     const memory=process.memoryUsage();
+     const mib=(bytes:number)=>Math.round(bytes/1048576*10)/10;
+     console.info(JSON.stringify({event:'climate_records_refresh',day:toExclusive,
+      durationMs:Math.round((performance.now()-refreshStart)*100)/100,
+      queryWallMs:Math.round(sqlWallMs*100)/100,queryMs:times,
+      processingMs:Math.round((performance.now()-refreshStart-sqlWallMs)*100)/100,
+      rssMiB:mib(memory.rss),heapUsedMiB:mib(memory.heapUsed),
+      heapTotalMiB:mib(memory.heapTotal),externalMiB:mib(memory.external),
+      arrayBuffersMiB:mib(memory.arrayBuffers)}));
+    }
+    return computed;
+   });
    return conditional(req,reply,{schemaVersion:'1',...result});
-  }catch{return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Preliminary records unavailable',503);}
+  }catch{
+   return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Preliminary records unavailable',503);
+  }
  });
  const statisticsRoute=(period:'day'|'month'|'year')=>async(req:any,reply:any)=>{
   const {metric,aggregation,units='metricwx',dataset='original'}=req.query as StatisticsQuery;
@@ -538,11 +562,13 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
    'Cache-Control':'no-cache, no-transform','Connection':'keep-alive','X-Accel-Buffering':'no'});
   let closed=false,heartbeat:ReturnType<typeof setInterval>|undefined;
   let unsubscribe=()=>{};
-  const close=()=>{if(closed)return;closed=true;if(heartbeat)clearInterval(heartbeat);unsubscribe();if(!raw.destroyed)raw.end();};
+  const close=()=>{if(closed)return;closed=true;if(heartbeat)clearInterval(heartbeat);unsubscribe();sseConnections.delete(close);if(!raw.destroyed)raw.end();};
   const write=(event:Parameters<typeof serializeSse>[0])=>{
    if(closed)return;
    try{if(!raw.write(serializeSse(event)))close();}catch{close();}
   };
+  raw.once('close',close);
+  sseConnections.add(close);
   unsubscribe=liveHub.subscribe(write);
   const snapshot=(eventType:'snapshot'|'reset')=>{
    const gateway=units==='metricwx'?liveHub.getGateway(now().getTime()):null;
@@ -562,9 +588,10 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
   if(replay.reset){write(snapshot('reset'));write(snapshot('snapshot'));}
   else if(lastEventId){for(const event of replay.events)write(event);}
   else write(snapshot('snapshot'));
-  heartbeat=setInterval(()=>{if(!closed&&!raw.write(`: heartbeat ${now().toISOString()}\n\n`))close();},15000);
-  heartbeat.unref();
-  raw.on('close',close);
+  if(!closed){
+   heartbeat=setInterval(()=>{if(!closed&&!raw.write(`: heartbeat ${now().toISOString()}\n\n`))close();},15000);
+   heartbeat.unref();
+  }
  });
  app.get<{Querystring:CurrentQuery}>('/api/v1/current',{
   schema:{querystring:{...commonQuery,properties:{...commonQuery.properties,
