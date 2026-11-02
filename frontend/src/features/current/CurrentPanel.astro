@@ -41,7 +41,13 @@ const quickReadings = [
  const provenance=section?.querySelector<HTMLElement>('[data-current-provenance]');
  const controller=new AbortController();
  let lastLiveEvent:Event|undefined;
+ let archiveRetryCount=0;
+ let archiveRetryTimer:ReturnType<typeof setTimeout>|undefined;
+ // Archive GET can transiently hit the public reverse-proxy rate limit during
+ // live->archive failover. Retry a bounded number of times without page reload.
  const refresh=()=>getCurrent(controller.signal).then(response=>{
+  archiveRetryCount=0;
+  if(archiveRetryTimer){clearTimeout(archiveRetryTimer);archiveRetryTimer=undefined;}
   if(status){
    status.textContent=response.stale?'Zastaralé měření':'Archivní měření';
    status.classList.add(response.stale?'warning':'ok');
@@ -77,8 +83,17 @@ const quickReadings = [
  }).catch(()=>{
   if(controller.signal.aborted)return;
   if(status){status.textContent='API nedostupné';status.classList.add('error');}
-  if(updated)updated.textContent='Nepodařilo se načíst archivní měření. Zkuste stránku obnovit.';
-  if(provenance)provenance.textContent='Zdroj WeeWX nedostupný; živé měření zůstává označené pouze při platných datech GW3000.';
+  if(updated)updated.textContent='Archivní měření se znovu načítá; živý zdroj není dostupný.';
+  if(provenance)provenance.textContent='Přechod na původní archiv WeeWX · opakované načtení při dočasné nedostupnosti API.';
+  if(archiveRetryCount<3&&!archiveRetryTimer){
+   const delay=4000*(++archiveRetryCount);
+   archiveRetryTimer=setTimeout(()=>{
+    archiveRetryTimer=undefined;
+    if(!controller.signal.aborted)void refresh();
+   },delay);
+  }else if(archiveRetryCount>=3&&updated){
+   updated.textContent='Archivní API je dočasně nedostupné. Zkuste stránku obnovit.';
+  }
  });
  // Live readings are displayed only for metrics present in the authenticated
  // custom upload. Archive-only interval rain is never confused with gateway rain totals.
@@ -110,6 +125,8 @@ const quickReadings = [
  };
  const restoreArchive=()=>{
   lastLiveEvent=undefined;
+  archiveRetryCount=0;
+  if(archiveRetryTimer){clearTimeout(archiveRetryTimer);archiveRetryTimer=undefined;}
   if(!controller.signal.aborted)void refresh();
  };
  if(section){
@@ -121,6 +138,7 @@ const quickReadings = [
  document.addEventListener('astro:before-swap',()=>{
   window.removeEventListener('loucka:live-observation',applyLive);
   window.removeEventListener('loucka:live-expired',restoreArchive);
+  if(archiveRetryTimer){clearTimeout(archiveRetryTimer);archiveRetryTimer=undefined;}
  },{once:true});
  document.addEventListener('astro:before-swap',()=>controller.abort(),{once:true});
 </script>

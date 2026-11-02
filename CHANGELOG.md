@@ -4,6 +4,12 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ## 2026-11-02
 
+### Mobilní failover při dočasném omezení API (2. 11.)
+- Veřejný test potvrdil skutečné GW3000 pakety do prohlížeče bez reloadu a desktopovou obnovu archivu. Mobilní failover při prvním průchodu neobnovil archiv do 16 sekund.
+- Klient nyní při neúspěšném archivním GET automaticky provede maximálně tři další pokusy po 4/8/12 sekundách, bez znovunačtení stránky a s korektním označením nedostupného zdroje.
+- Browser test akceptuje jak čerstvé archivní měření, tak pravdivě označený zastaralý archiv, a při neúspěchu vypíše diagnostiku skutečného DOM stavu.
+- Testovací výpadky nadále běží výhradně v izolovaném Playwright prohlížeči.
+
 ### Živé přepínání prohlížeče a nezávislý provozní dohled (2. 11.)
 - Prohlížeč zobrazuje explicitní zdroj živých hodnot GW3000 versus původní archiv WeeWX, bez zavádějícího archivního popisku pod živými kartami.
 - Playwright ověřuje skutečný GW3000 stream v otevřené stránce bez reloadu a odděleně simuluje front-end výpadek a návrat na archiv pouze v testovacím browseru (desktop i mobil).

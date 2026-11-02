@@ -133,11 +133,23 @@ try{
    if((await page.locator('[data-metric-value="outTemp"]').textContent())?.trim()!==fmt(43.21,1))
     issues.push(viewport.name+': stale event displaced a fresh live reading');
    await page.evaluate(()=>window.dispatchEvent(new Event('loucka:live-expired')));
-   await page.waitForFunction(()=>{
-    const chip=document.querySelector('[data-current-status]')?.textContent??'';
-    const provenance=document.querySelector('[data-current-provenance]')?.textContent??'';
-    return chip.includes('Archivní měření')&&provenance.includes('Původní archiv WeeWX');
-   },null,{timeout:16000});
+   try{
+    await page.waitForFunction(()=>{
+     const chip=document.querySelector('[data-current-status]')?.textContent??'';
+     const provenance=document.querySelector('[data-current-provenance]')?.textContent??'';
+     return (chip.includes('Archivní měření')||chip.includes('Zastaralé měření'))&&
+      provenance.includes('Původní archiv WeeWX');
+    },null,{timeout:35000});
+   }catch(error){
+    const diag=await page.evaluate(()=>({
+     chip:document.querySelector('[data-current-status]')?.textContent,
+     updated:document.querySelector('[data-current-updated]')?.textContent,
+     provenance:document.querySelector('[data-current-provenance]')?.textContent,
+     metric:document.querySelector('[data-metric-value="outTemp"]')?.textContent
+    }));
+    console.error('BROWSER FAILOVER DIAGNOSTICS',viewport.name,JSON.stringify(diag));
+    throw error;
+   }
    const restored=(await page.locator('[data-metric-value="outTemp"]').textContent())?.trim();
    if(restored===fmt(43.21,1))issues.push(viewport.name+': stale GW3000 value survived archive fallback');
    console.log('BROWSER FAILOVER PASS',viewport.name,JSON.stringify({archiveTemp:restored}));
