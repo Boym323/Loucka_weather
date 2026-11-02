@@ -16,6 +16,7 @@ export type ClimateRecords={
  records:{minTemp:EvidenceRecord|null;maxTemp:EvidenceRecord|null;
    maxDailyRain:EvidenceRecord|null;maxWindGust:EvidenceRecord|null};
  dayTypes:{frost:number;ice:number;summer:number;tropical:number;validTempDays:number};
+ todayCalendar:{monthDay:string;minTemp:EvidenceRecord|null;maxTemp:EvidenceRecord|null;sampleYears:number};
  coverage:{temperatureDays:number;rainDays:number;windDays:number;calendarDays:number};
  notes:string[];
 };
@@ -37,12 +38,13 @@ function choose(value:number|null,unit:string,day:string,existing:EvidenceRecord
 }
 export function climateRecordsFromDaily(input:{
  temperature:DailySummaryRow[];rain:DailySummaryRow[];gust:DailySummaryRow[];
- from:string;toExclusive:string;calendarDays:number;
+ from:string;toExclusive:string;calendarDays:number;todayMonthDay?:string;
 }):ClimateRecords{
  let minTemp:EvidenceRecord|null=null,maxTemp:EvidenceRecord|null=null;
  let maxDailyRain:EvidenceRecord|null=null,maxWindGust:EvidenceRecord|null=null;
  let frost=0,ice=0,summer=0,tropical=0,validTempDays=0;
  let tempDays=0,rainDays=0,windDays=0;
+ let todayMin:EvidenceRecord|null=null,todayMax:EvidenceRecord|null=null,sampleYears=0;
  for(const row of input.temperature){
   const min=extract('outTemp',row,'min',bounds.minTemp);
   const max=extract('outTemp',row,'max',bounds.maxTemp);
@@ -50,6 +52,11 @@ export function climateRecordsFromDaily(input:{
   if(min!==null||max!==null)tempDays++;
   minTemp=choose(min,'°C',date,minTemp,'min');
   maxTemp=choose(max,'°C',date,maxTemp,'max');
+  if(input.todayMonthDay&&date.slice(5)===input.todayMonthDay){
+   if(min!==null||max!==null)sampleYears++;
+   todayMin=choose(min,'°C',date,todayMin,'min');
+   todayMax=choose(max,'°C',date,todayMax,'max');
+  }
   // Day classification requires both physically plausible min and max.
   if(min===null||max===null||min>max)continue;
   validTempDays++;
@@ -73,6 +80,7 @@ export function climateRecordsFromDaily(input:{
   calendarTimezone:'Europe/Prague',range:{from:input.from,toExclusive:input.toExclusive},
   records:{minTemp,maxTemp,maxDailyRain,maxWindGust},
   dayTypes:{frost,ice,summer,tropical,validTempDays},
+  todayCalendar:{monthDay:input.todayMonthDay??'',minTemp:todayMin,maxTemp:todayMax,sampleYears},
   coverage:{temperatureDays:tempDays,rainDays,windDays,calendarDays:input.calendarDays},
   notes:[
    'Předběžná maxima a minima z původních denních souhrnů WeeWX bez dokončené historické QC.',
