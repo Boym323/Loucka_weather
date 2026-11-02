@@ -184,6 +184,10 @@ try{
       errors.push(size.name+': missing real camera archive gallery');
      if(await page.locator('[data-archive-video]').count()!==1)
       errors.push(size.name+': missing timelapse video selection');
+     const mp4=await page.locator('[data-archive-video] option').allTextContents();
+     const videoNote=(await page.locator('[data-archive-video-note]').textContent())??'';
+     console.log('CAMERA TIMELAPSE',size.name,JSON.stringify({days:mp4.length,available:mp4[0]!=='Žádné video',note:videoNote}));
+     if(!videoNote.trim())errors.push(size.name+': camera timelapse status lacks explicit availability explanation');
      if(await page.locator('[data-archive-date]').count()!==1||
       await page.locator('[data-archive-day-frames]').count()!==1)
       errors.push(size.name+': missing date-filtered camera archive');
@@ -218,6 +222,13 @@ try{
       errors.push(size.name+': missing live soil-air readings');
      if(await page.locator('[data-soil-trend]').count()!==3)
       errors.push(size.name+': missing distinct archive soil-air graphs');
+     await page.waitForFunction(()=>[...document.querySelectorAll('[data-soil-trend-status]')]
+      .every(el=>!(el.textContent??'').includes('Načítám')),{},{timeout:30000})
+      .catch(()=>errors.push(size.name+': soil-air history still loading after 30s'));
+     const states=await page.locator('[data-soil-trend-status]').allTextContents();
+     console.log('SOIL AIR HISTORY',size.name,JSON.stringify(states));
+     if(states.every(v=>v.includes('Nedostupné')))
+      errors.push(size.name+': all three source-backed soil-air history graphs unavailable');
     }
     if(path==='/senzory/'){
      if(await page.locator('[data-sensor-trend]').count()<8)
