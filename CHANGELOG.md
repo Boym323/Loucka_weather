@@ -4,6 +4,13 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ## 2026-11-02
 
+### Rekordy, kvalita historických dat a měření půdy/ovzduší
+- Nová read-only API /api/v1/climate/records využívá maximálně tři původní denní souhrnné tabulky (teplota, srážky, nárazy); omezený časový rozsah, fyzikální meze, 20min cache, žádný zápis do DB. Výstup je vždy označený „předběžný z původního archivu“.
+- Stránka /rekordy/ zobrazuje orientační minima/maxima, charakteristické teplotní dny, počty podložených kalendářních dnů a rekordy k dnešnímu datu. Chybějící dny ani skutečnou QC nenahrazuje odhadem.
+- Roční klimatologie zobrazuje časový podíl platných teplotních měření z WeeWX day_outTemp.sumtime, když je tento podklad dostatečný a konzistentní; nejde o potvrzení správnosti srážek.
+- Stránka /puda-ovzdusi/ zobrazuje živé čtení GW3000 půdní vlhkosti, PM2,5, UV a záření a oddělené sedmidenní archivní průběhy pro dostupné kanály WeeWX.
+- Veřejný smoke test zahrnuje celkem 11 stránek a prověřuje status rekordů a živých čidel; syntetické testy API ověřují původ i meze historických rekordů.
+
 ### Opravy webu podle vizuálního a runtime auditu (2. 11.)
 - Graf 24h srážek se načítá s odstupem od těžkého historického grafu, přechodné 429/503/504 API odpovědi podléhají omezenému opakování a uživatel má tlačítko Obnovit; prázdné nebo chybující grafy se neskrývají.
 - Archiv kamery stahuje miniatury postupně místo 30 souběžných požadavků (limity NPM), zobrazuje načítání a nedostupnost; denní galerii načítá až na vyžádání a počet nejnovějších náhledů je 8.
