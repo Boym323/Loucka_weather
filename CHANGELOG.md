@@ -14,7 +14,7 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 - Prohlížeč zobrazuje explicitní zdroj živých hodnot GW3000 versus původní archiv WeeWX, bez zavádějícího archivního popisku pod živými kartami.
 - Playwright ověřuje skutečný GW3000 stream v otevřené stránce bez reloadu a odděleně simuluje front-end výpadek a návrat na archiv pouze v testovacím browseru (desktop i mobil).
 - Informační `readyz` hlásí skutečný stav kamery a vypnutý versus chybující live zdroj, ale nezávisí na nich připravenost DB.
-- Pětiminutový LXC watchdog běží od 2. 11. 2026, doplněné samostatné hodinové kondicionální upozornění v ChatGPT na potvrzené výpadky a obnovu.
+- Pětiminutový LXC watchdog běží od 2. 11. 2026; původně založená hodinová úloha v ChatGPT byla na výslovné přání uživatele deaktivována. Monitoring zůstává lokálně na LXC.
 
 ## 2026-11-01
 
