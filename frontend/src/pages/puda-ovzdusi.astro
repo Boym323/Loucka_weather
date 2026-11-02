@@ -113,14 +113,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     }
     const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg'),path=document.createElementNS(ns,'path');
     svg.setAttribute('viewBox','0 0 600 120');svg.setAttribute('role','img');
-    svg.setAttribute('aria-label',metric.key+' · '+good.length+' platných hodinových souhrnů');
+    svg.setAttribute('aria-label',metric.key+' · '+good.length+' platných archivních bodů · '+shownRange);
     const min=Math.min(...good.map(p=>p.y)),max=Math.max(...good.map(p=>p.y)),span=max-min||1;
     let d='',pen=false;
+    const plotStart=Date.parse(response.points[0]?.startTime??from);
+    const plotEnd=Date.parse(response.points.at(-1)?.endTime??to);
     for(const point of values){
      if(point.y===null){pen=false;continue;}
-     const start=Date.parse(response.points[0]?.startTime??from);
-     const end=Date.parse(response.points.at(-1)?.endTime??to);
-     const x=12+576*(point.x-start)/Math.max(1,end-start);
+     const x=12+576*(point.x-plotStart)/Math.max(1,plotEnd-plotStart);
      const y=106-92*(point.y-min)/span;
      d+=(pen?'L':'M')+x.toFixed(2)+','+y.toFixed(2)+' ';pen=true;
     }
