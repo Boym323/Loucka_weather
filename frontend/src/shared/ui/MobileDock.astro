@@ -1,16 +1,24 @@
 ---
 const links=[
- {href:'/',label:'Přehled',icon:'⌂'},
- {href:'/aktualne/',label:'Aktuálně',icon:'◉'},
- {href:'/grafy/',label:'Grafy',icon:'⌁'},
- {href:'/mapy/',label:'Mapy',icon:'◎'},
- {href:'/kamera/',label:'Kamera',icon:'▣'}
-];
+ {href:'/',label:'Přehled',icon:'home'},
+ {href:'/aktualne/',label:'Aktuálně',icon:'weather'},
+ {href:'/grafy/',label:'Grafy',icon:'chart'},
+ {href:'/mapy/',label:'Mapy',icon:'map'},
+ {href:'/kamera/',label:'Kamera',icon:'camera'}
+] as const;
 const active=Astro.url.pathname;
 ---
 <nav class="mobile-dock" aria-label="Rychlá mobilní navigace">
  {links.map(link=><a href={link.href} aria-current={active===link.href?'page':undefined}>
-  <span class="mobile-dock-icon" aria-hidden="true">{link.icon}</span>
+  <span class="mobile-dock-icon" aria-hidden="true">
+   <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    {link.icon==='home'&&<><path d="m3 10 9-7 9 7"/><path d="M5 9v12h14V9"/><path d="M10 21v-7h4v7"/></>}
+    {link.icon==='weather'&&<><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/><path d="M12 1v2M12 21v2M1 12h2M21 12h2"/></>}
+    {link.icon==='chart'&&<><path d="M3 3v18h18"/><path d="m6 15 4-5 4 3 5-8"/></>}
+    {link.icon==='map'&&<><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></>}
+    {link.icon==='camera'&&<><path d="M4 7h4l2-3h4l2 3h4a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></>}
+   </svg>
+  </span>
   <span>{link.label}</span>
  </a>)}
 </nav>
