@@ -38,22 +38,30 @@
   },450);
   function makeThumb(url:string,description:string):HTMLImageElement{
    const img=document.createElement('img');
-   img.alt=description;img.loading='eager';img.decoding='async';
+   img.alt=description;img.loading='lazy';img.decoding='async';
+   // Never expose the browser's broken-image icon while a frame is pending or
+   // when the camera server responds with 429/502. Preserve the clickable link.
+   img.hidden=true;
    const loading=document.createElement('span');
    loading.className='camera-thumb-message';
    loading.textContent='Náhled se načítá…';
-   img.addEventListener('load',()=>loading.remove(),{once:true});
+   img.addEventListener('load',()=>{img.hidden=false;loading.remove();},{once:true});
    let failed=0;
    img.addEventListener('error',()=>{
+    img.hidden=true;
     failed++;
     if(failed===1&&!ctrl.signal.aborted){
      loading.textContent='Opakuji načtení…';
-     setTimeout(()=>{if(!ctrl.signal.aborted)thumbnailQueue.push(()=>{img.src=url+'?retry=1';});},3000);
-    }else loading.textContent='Náhled není dostupný · otevři snímek';
+     setTimeout(()=>{
+      if(!ctrl.signal.aborted&&img.isConnected){
+       thumbnailQueue.push(()=>{if(img.isConnected)img.src=url+'?retry=1';});
+      }
+     },3000);
+    }else loading.textContent='Náhled není dostupný · otevřít originál';
    });
-   thumbnailQueue.push(()=>{img.src=url;});
+   thumbnailQueue.push(()=>{if(img.isConnected)img.src=url;});
    // The image and loading message are siblings. The caller appends img to a link.
-   queueMicrotask(()=>img.insertAdjacentElement('afterend',loading));
+   queueMicrotask(()=>{if(img.isConnected)img.insertAdjacentElement('afterend',loading);});
    return img;
   }
   type Frame={fetchedAt:string;url:string};
