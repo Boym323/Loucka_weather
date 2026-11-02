@@ -25,7 +25,27 @@ if [[ -r /srv/loucka-preview/current/deployment.json ]]; then
  jq -c '{branch,commit,deployedAt}' /srv/loucka-preview/current/deployment.json || true
 else critical 'staging deployment metadata missing';fi
 if [[ -d /home/loucka/Loucka_weather/.git ]]; then
- git -C /home/loucka/Loucka_weather log -1 --format='Repository %h %cs' || true
+ # Git 2.35+ correctly refuses a root read of an untrusted user's worktree.
+ # Run the read-only command as the repository owner, not via safe.directory.
+ if [[ "$(id -u)" -eq 0 ]]; then
+  repo_commit="$(runuser -u loucka -- git -C /home/loucka/Loucka_weather rev-parse HEAD)" ||
+   warning 'Cannot read repository revision as loucka'
+  runuser -u loucka -- git -C /home/loucka/Loucka_weather log -1 --format='Repository %h %cs' ||
+   warning 'Cannot read repository metadata as loucka'
+ else
+  repo_commit="$(git -C /home/loucka/Loucka_weather rev-parse HEAD)" ||
+   warning 'Repository is not accessible to the current user'
+  git -C /home/loucka/Loucka_weather log -1 --format='Repository %h %cs' ||
+   warning 'Cannot read repository metadata'
+ fi
+ if [[ -n "${repo_commit:-}" && -r /srv/loucka-preview/current/deployment.json ]]; then
+  deployed_commit="$(jq -r '.commit // empty' /srv/loucka-preview/current/deployment.json)"
+  if [[ "$repo_commit" != "$deployed_commit" ]]; then
+   warning 'Checked-out repository differs from the version currently deployed (may be a pending sync)'
+  else
+   printf 'Repository and deployment commit match\n'
+  fi
+ fi
 fi
 section "Local API, sources and recent readings"
 checked_json 'API readiness' "$API/api/v1/readyz" || critical 'local readiness unreachable'
