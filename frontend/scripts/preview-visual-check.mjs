@@ -11,7 +11,7 @@ const out='test-results/preview-screenshots';
 const routes=[
  ['prehled','/'],['aktualne','/aktualne/'],['grafy','/grafy/'],
  ['klimatologie','/klimatologie/'],['kamera','/kamera/'],
- ['mapy','/mapy/'],['senzory','/senzory/'],['stav','/stav/'],['o-stanici','/o-stanici/']
+ ['mapy','/mapy/'],['senzory','/senzory/'],['rekordy','/rekordy/'],['puda-ovzdusi','/puda-ovzdusi/'],['stav','/stav/'],['o-stanici','/o-stanici/']
 ];
 const sizes=[
  {name:'desktop',width:1440,height:900},
@@ -203,6 +203,22 @@ try{
     }
     if(path==='/stav/'&&await page.locator('[data-monitor-card]').count()!==5)
      errors.push(size.name+': monitoring dashboard must list five independent sources');
+    if(path==='/rekordy/'){
+     await page.waitForFunction(()=>{
+      const state=document.querySelector('[data-records-status]')?.textContent??'';
+      return state.includes('Původní data')||state.includes('Rekordy nedostupné');
+     },null,{timeout:42000});
+     const state=(await page.locator('[data-records-status]').textContent())?.trim()??'';
+     if(!state.includes('Původní data'))errors.push(size.name+': provisional climatology records missing: '+state);
+     const coverage=await page.locator('[data-records-coverage]').textContent();
+     if(!coverage?.includes('teplota'))errors.push(size.name+': records coverage not disclosed');
+    }
+    if(path==='/puda-ovzdusi/'){
+     if(await page.locator('[data-soil-live]').count()!==4)
+      errors.push(size.name+': missing live soil-air readings');
+     if(await page.locator('[data-soil-trend]').count()!==3)
+      errors.push(size.name+': missing distinct archive soil-air graphs');
+    }
     if(path==='/senzory/'){
      if(await page.locator('[data-sensor-trend]').count()<8)
       errors.push(size.name+': missing real sensor trend containers');
@@ -306,4 +322,4 @@ finally{await browser.close();}
 if(errors.length){
  console.error('VISUAL SMOKE FAILED:\n'+errors.join('\n'));
  process.exitCode=1;
-}else console.log('Visual preview smoke passed for 9 routes and both viewports.');
+}else console.log('Visual preview smoke passed for 11 routes and both viewports.');
