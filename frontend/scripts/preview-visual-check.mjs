@@ -220,8 +220,8 @@ try{
     if(path==='/puda-ovzdusi/'){
      if(await page.locator('[data-soil-live]').count()!==4)
       errors.push(size.name+': missing live soil-air readings');
-     if(await page.locator('[data-soil-trend]').count()!==3)
-      errors.push(size.name+': missing distinct archive soil-air graphs');
+     if(await page.locator('[data-soil-trend]').count()!==5)
+      errors.push(size.name+': expected five separate PM2.5 and soil-temperature history graphs');
      await page.waitForFunction(()=>[...document.querySelectorAll('[data-soil-trend-status]')]
       .every(el=>!(el.textContent??'').includes('Načítám')),{},{timeout:30000})
       .catch(()=>errors.push(size.name+': soil-air history still loading after 30s'));
