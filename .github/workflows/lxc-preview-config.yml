@@ -19,6 +19,7 @@ jobs:
       - name: Validate Bash syntax
         run: |
           bash -n deploy/lxc/auto-deploy-preview.sh
+          bash -n deploy/lxc/site-readiness-audit.sh
           bash -n deploy/lxc/loucka-preview-api-activate.sh
           grep -Fqx 'ExecStart=/usr/bin/node dist/src/main.js' deploy/lxc/loucka-weather-api.service
           grep -Fqx 'ExecStartPost=+/usr/local/libexec/loucka-preview-api-activate.sh' deploy/lxc/loucka-preview-sync.service
