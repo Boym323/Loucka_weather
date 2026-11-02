@@ -29,6 +29,7 @@ jobs:
           python3 -m py_compile deploy/lxc/loucka-gw3000-live.py
           python3 -m py_compile deploy/lxc/loucka-gw3000-http-pull.py
           python3 -m py_compile deploy/lxc/loucka-monitor.py
+          python3 -m py_compile deploy/lxc/preview-performance-check.py
           python3 -m unittest discover -s deploy/lxc/tests -p 'test_*.py'
       - name: Validate Nginx syntax
         run: |
