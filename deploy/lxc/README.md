@@ -202,7 +202,7 @@ Než se vývojová verze publikuje na hlavní doménu, spusť na staging LXC jak
 bash /home/loucka/Loucka_weather/deploy/lxc/site-readiness-audit.sh
 ```
 
-Audit používá pouze GET na lokální a veřejné API a systémové diagnostické příkazy. **Nemění GW3000, WeeWX, MariaDB, ani systemd**, neprovádí zápis nebo obnovu ze zálohy. Ověřuje verzi nasazení, veřejné a lokální API, časovače, aktuálnost zdrojů, MP4 a FFmpeg, místo na disku, paměť a neočekávané vystavení portu 3102.
+Audit používá pouze GET na lokální a veřejné API a systémové diagnostické příkazy. Revizi Git repozitáře zjišťuje při spuštění jako root bezpečně pod účtem `loucka` (`runuser`), takže není nutné měnit `git safe.directory` ani vlastnictví. Současně kontroluje, zda nasazený `deployment.json` odpovídá revizi lokálního repozitáře. **Nemění GW3000, WeeWX, MariaDB, ani systemd**, neprovádí zápis nebo obnovu ze zálohy. Ověřuje verzi nasazení, veřejné a lokální API, časovače, aktuálnost zdrojů, MP4 a FFmpeg, místo na disku, paměť a neočekávané vystavení portu 3102.
 
 Zjištění `FFmpeg not installed` znamená, že časosběrné MP4 zatím nemůže vznikat, i když JPEG archiv běží. Nesnaž se to řešit změnou stanice. V případě přítomnosti FFmpeg zkontroluj logy `journalctl -u loucka-camera-collect.service --no-pager -n 70` a integritu již vytvořeného MP4 `ffprobe`, pokud je dostupné. Nedotýkej se archivních snímků ani je nemaž při auditu.
 
