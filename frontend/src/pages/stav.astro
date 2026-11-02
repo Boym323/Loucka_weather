@@ -27,6 +27,25 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   </div>
   <p class="source-note">Stav „není zapnuto“ není výpadek. Zastaralá měření nejsou živá. Připravenost databáze je oddělená od dostupnosti kamery a externího ČHMÚ.</p>
  </section>
+ <section class="section status-explainer" aria-labelledby="status-explainer-title">
+  <div class="section-heading">
+   <div><span class="eyebrow">Další informace</span><h2 id="status-explainer-title">Podrobnosti o měření</h2></div>
+  </div>
+  <div class="status-explainer-grid">
+   <a href="/aktualne/">
+    <strong>Aktuální hodnoty</strong>
+    <span>Poslední naměřené veličiny a označení živých nebo archivních údajů.</span>
+   </a>
+   <a href="/senzory/">
+    <strong>Stav senzorů</strong>
+    <span>Dostupnost jednotlivých archivních kanálů bez neověřeného fyzického mapování.</span>
+   </a>
+   <a href="/kamera/">
+    <strong>Webkamera</strong>
+    <span>Aktuální snímek, archiv skutečně stažených fotografií a informace o čerstvosti.</span>
+   </a>
+  </div>
+ </section>
 </BaseLayout>
 <script>
  const root=document.querySelector<HTMLElement>('[data-monitor-dashboard]');
