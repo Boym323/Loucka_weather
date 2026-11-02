@@ -74,6 +74,40 @@ try{
      continue;
     }
     await page.waitForTimeout(900);
+    // Geometry assertions prevent future desktop/mobile visual drift without
+    // comparing live weather images or dynamic values pixel-by-pixel.
+    if(path==='/'){
+     const layout=await page.evaluate(()=>{
+      const columns=(selector)=> {
+       const el=document.querySelector(selector);
+       return el?getComputedStyle(el).gridTemplateColumns.split(' ').filter(Boolean).length:0;
+      };
+      const hero=document.querySelector('.site-banner');
+      const navLinks=[...document.querySelectorAll('.mobile-dock a')];
+      const firstLink=navLinks[0];
+      return {
+       forecastColumns:columns('.forecast-tabs'),
+       briefColumns:columns('.daily-brief'),
+       bottomColumns:columns('.dashboard-bottom'),
+       bannerHeight:hero?.getBoundingClientRect().height??0,
+       svgIcons:document.querySelectorAll('.mobile-dock a svg').length,
+       mobileTargetHeight:firstLink?.getBoundingClientRect().height??0,
+       quickLinks:document.querySelectorAll('.home-quick-links a').length
+      };
+     });
+     console.log('HOME VISUAL GEOMETRY',size.name,JSON.stringify(layout));
+     if(layout.quickLinks!==3)errors.push(size.name+': expected 3 homepage navigation links');
+     if(size.name==='mobil'){
+      if(layout.forecastColumns!==3)errors.push('Mobile forecast must use three readable columns, got '+layout.forecastColumns);
+      if(layout.briefColumns!==3)errors.push('Mobile day summary must use three columns at 390px');
+      if(layout.bottomColumns!==1)errors.push('Mobile dashboard panels must stack vertically');
+      if(layout.bannerHeight<130)errors.push('Mobile camera banner is too short');
+      if(layout.svgIcons!==5)errors.push('Mobile dock must contain five SVG icons');
+      if(layout.mobileTargetHeight<44)errors.push('Mobile dock touch targets must be at least 44px');
+     }else{
+      if(layout.bottomColumns!==3)errors.push('Desktop dashboard requires three lower panels');
+     }
+    }
     if(path==='/klimatologie/'){
      await page.waitForFunction(()=>{
       const status=document.querySelector('[data-climate-status]')?.textContent??'';
