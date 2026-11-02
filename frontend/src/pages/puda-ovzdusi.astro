@@ -1,0 +1,127 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="Půda a ovzduší">
+ <div class="page-intro">
+  <span class="eyebrow">Senzory · půda · ovzduší</span>
+  <h1>Půdní měření a kvalita ovzduší</h1>
+  <p>Živá data z pasivního čtení GW3000 a oddělené archivní průběhy WeeWX. Kanály označují veličiny, nikoliv automaticky ověřené umístění čidla.</p>
+ </div>
+ <section class="section" data-soil-air>
+  <div class="section-heading"><h2>Aktuální měření</h2><span class="status-chip" data-soil-live-status role="status">Zjišťuji živá data</span></div>
+  <div class="climate-summary-strip records-grid">
+   {[
+    {key:'soilMoisture1',title:'Půdní vlhkost · kanál 1',unit:'%'},
+    {key:'pm25_1',title:'PM2,5 · kanál 1',unit:'µg/m³'},
+    {key:'radiation',title:'Sluneční záření',unit:'W/m²'},
+    {key:'UV',title:'UV index',unit:''}
+   ].map(item=><div class="climate-summary-metric">
+    <span>{item.title}</span><strong data-soil-live={item.key}>—</strong>
+    <small data-soil-live-quality={item.key}>{item.unit} · čerstvé měření se zjišťuje</small>
+   </div>)}
+  </div>
+  <p class="source-note" data-soil-time>Čas posledního přečtení GW3000 se ověřuje.</p>
+  <h2>Posledních 7 dní · skutečný archiv</h2>
+  <div class="soil-air-grid">
+   {[
+    {key:'pm25_1',title:'PM2,5 · archivní kanál',unit:'µg/m³'},
+    {key:'soilTemp1',title:'Teplota půdy · archivní kanál 1',unit:'°C'},
+    {key:'soilTemp2',title:'Teplota půdy · archivní kanál 2',unit:'°C'}
+   ].map(item=><article class="section soil-air-card">
+    <div class="section-heading"><h3>{item.title}</h3><span class="status-chip" data-soil-trend-status={item.key}>Načítám</span></div>
+    <div class="sensor-mini-trend" data-soil-trend={item.key} role="img" aria-label={'Archivní průběh '+item.title+' za 7 dní'}></div>
+    <p class="source-note" data-soil-summary={item.key}>Archivní hodnoty se připravují · {item.unit}</p>
+   </article>)}
+  </div>
+  <p class="source-note">Půdní vlhkost kanálu 1 pochází přímo z lokální GW3000 odpovědi. Historii půdní vlhkosti nyní nelze spolehlivě vykreslit ze schváleného veřejného archivu; neodvozujeme ji z teploty půdy. Nepřiřazujeme fyzické hloubky ani kvalitu baterie bez evidence instalace.</p>
+ </section>
+</BaseLayout>
+<script>
+ import {getHistoryInterval} from '../shared/api/client';
+ import {formatValue} from '../shared/domain/metrics';
+ const root=document.querySelector<HTMLElement>('[data-soil-air]');
+ if(root){
+  const ctrl=new AbortController();
+  const live:Record<string,{unit:string;digits:number}>={soilMoisture1:{unit:'%',digits:0},
+   pm25_1:{unit:'µg/m³',digits:1},radiation:{unit:'W/m²',digits:0},UV:{unit:'',digits:1}};
+  type GatewayResponse={state:string;source:string;receivedAt:string|null;readings:Record<string,{value:number;quality:string;source:string}>};
+  async function fetchLive(){
+   try{
+    const response=await fetch('/api/v1/live/current',{signal:ctrl.signal,cache:'no-store'});
+    if(!response.ok)throw Error('Live data unavailable');
+    const data=await response.json() as GatewayResponse;
+    if(ctrl.signal.aborted)return;
+    const isFresh=data.state==='live'&&data.source==='gw3000_live'&&
+     Number.isFinite(Date.parse(data.receivedAt??''))&&Date.now()-Date.parse(data.receivedAt??'')<=120000;
+    const status=root?.querySelector<HTMLElement>('[data-soil-live-status]');
+    if(status){status.textContent=isFresh?'GW3000 · živě':'Archivní režim';status.className='status-chip '+(isFresh?'ok':'warning');}
+    for(const [key,meta] of Object.entries(live)){
+     const node=root?.querySelector<HTMLElement>('[data-soil-live="'+key+'"]');
+     const detail=root?.querySelector<HTMLElement>('[data-soil-live-quality="'+key+'"]');
+     const reading=isFresh?data.readings?.[key]:undefined;
+     const valid=reading?.source==='gw3000_live'&&reading.quality==='measured'&&Number.isFinite(reading.value);
+     if(node)node.textContent=valid?formatValue(reading!.value,meta.digits):'—';
+     if(detail)detail.textContent=valid?meta.unit+' · čerstvé měření GW3000':meta.unit+' · bez platného živého údaje';
+    }
+    const time=root?.querySelector<HTMLElement>('[data-soil-time]');
+    if(time)time.textContent=isFresh&&data.receivedAt?
+     'Přečteno z brány: '+new Intl.DateTimeFormat('cs-CZ',{dateStyle:'medium',timeStyle:'medium',timeZone:'Europe/Prague'}).format(new Date(data.receivedAt))+
+     ' · není to potvrzený okamžik měření senzoru.':
+     'GW3000 momentálně neposkytuje čerstvá data. Žádné hodnoty nenahrazujeme nulami.';
+   }catch{
+    if(ctrl.signal.aborted)return;
+    const status=root?.querySelector<HTMLElement>('[data-soil-live-status]');
+    if(status){status.textContent='Živá data nedostupná';status.className='status-chip warning';}
+   }
+  }
+  const now=new Date(),from=new Date(now.getTime()-7*86400000).toISOString(),to=now.toISOString();
+  const metrics=[{key:'pm25_1',unit:'µg/m³',digits:1},{key:'soilTemp1',unit:'°C',digits:1},{key:'soilTemp2',unit:'°C',digits:1}];
+  async function trend(metric:typeof metrics[number]){
+   const panel=root?.querySelector<HTMLElement>('[data-soil-trend="'+metric.key+'"]');
+   const status=root?.querySelector<HTMLElement>('[data-soil-trend-status="'+metric.key+'"]');
+   const description=root?.querySelector<HTMLElement>('[data-soil-summary="'+metric.key+'"]');
+   try{
+    const response=await getHistoryInterval(metric.key,from,to,'hourly',ctrl.signal);
+    if(ctrl.signal.aborted||!panel)return;
+    const values=response.points.map(p=>({
+     x:Date.parse(p.endTime),y:p.value!==null&&p.quality!=='suspect'&&p.quality!=='missing'?p.value:null
+    })).filter(p=>Number.isFinite(p.x));
+    const good=values.filter((p):p is {x:number;y:number}=>p.y!==null&&Number.isFinite(p.y));
+    panel.replaceChildren();
+    if(good.length<2){
+     if(status){status.textContent='Málo dat';status.className='status-chip warning';}
+     if(description)description.textContent='Pro sedmidenní průběh nejsou dostatečná archivní měření.';
+     return;
+    }
+    const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg'),path=document.createElementNS(ns,'path');
+    svg.setAttribute('viewBox','0 0 600 120');svg.setAttribute('role','img');
+    svg.setAttribute('aria-label',metric.key+' · '+good.length+' platných hodinových souhrnů');
+    const min=Math.min(...good.map(p=>p.y)),max=Math.max(...good.map(p=>p.y)),span=max-min||1;
+    let d='',pen=false;
+    for(const point of values){
+     if(point.y===null){pen=false;continue;}
+     const x=12+576*(point.x-Date.parse(from))/(Date.parse(to)-Date.parse(from));
+     const y=106-92*(point.y-min)/span;
+     d+=(pen?'L':'M')+x.toFixed(2)+','+y.toFixed(2)+' ';pen=true;
+    }
+    path.setAttribute('d',d);path.setAttribute('fill','none');path.setAttribute('stroke','currentColor');
+    path.setAttribute('stroke-width','2.4');path.setAttribute('stroke-linejoin','round');
+    svg.append(path);panel.append(svg);
+    if(status){status.textContent=good.length+' platných bodů';status.className='status-chip ok';}
+    if(description)description.textContent='Minimum '+formatValue(min,metric.digits)+
+     ' · maximum '+formatValue(max,metric.digits)+' '+metric.unit+
+     ' · mezery v datech nejsou propojovány.';
+   }catch{
+    if(ctrl.signal.aborted)return;
+    if(status){status.textContent='Nedostupné';status.className='status-chip warning';}
+    if(description)description.textContent='Historická měření nejsou pro tento kanál dostupná.';
+   }
+  }
+  void fetchLive();
+  const timer=setInterval(()=>void fetchLive(),30000);
+  let index=0;void Promise.all(Array.from({length:2},async()=>{
+   while(index<metrics.length&&!ctrl.signal.aborted)await trend(metrics[index++]);
+  }));
+  document.addEventListener('astro:before-swap',()=>{ctrl.abort();clearInterval(timer);},{once:true});
+ }
+</script>
