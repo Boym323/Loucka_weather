@@ -42,7 +42,7 @@ const tabs = [
 
  echarts.use([LineChart, BarChart, GridComponent, TooltipComponent, DataZoomComponent, SVGRenderer]);
  const formatTime=(value:number)=>new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',hour:'2-digit',minute:'2-digit',day:'numeric',month:'numeric'}).format(new Date(value));
- const colorByMetric:Record<string,string>={outTemp:'#ff6674',outHumidity:'#5dc1ee',barometer:'#b39cff',windSpeed:'#4de0a5',windGust:'#4de0a5',rainRate:'#56baf0'};
+ const colorByMetric:Record<string,string>={outTemp:'#007e9a',outHumidity:'#1770b5',barometer:'#8061b6',windSpeed:'#178b75',windGust:'#168a75',rainRate:'#347ec4'};
  document.querySelectorAll<HTMLElement>('[data-history-chart]').forEach(root=>{
   const element=root.querySelector<HTMLElement>('[data-chart-canvas]');
   const message=root.querySelector<HTMLElement>('[data-chart-message]');
@@ -68,18 +68,23 @@ const tabs = [
      point.value===null||point.quality==='missing'||point.quality==='suspect'?null:point.value
     ] as [number,number|null]);
     const valid=plotted.filter((point):point is [number,number]=>point[1]!==null&&Number.isFinite(point[1]));
-    const color=colorByMetric[activeMetric]??'#4de0a5';
+    const light=document.documentElement.dataset.theme!=='dark';
+    const axisColor=light?'#476477':'#adc5d2';
+    const gridColor=light?'#dbe6ec':'#405867';
+    const darkColors:Record<string,string>={outTemp:'#69d5e4',outHumidity:'#8fc7f4',barometer:'#bba1ee',
+     windSpeed:'#80d6b8',windGust:'#80d6b8',rainRate:'#8fc7f4'};
+    const color=light?(colorByMetric[activeMetric]??'#007e9a'):(darkColors[activeMetric]??'#69d5e4');
     chart.clear();
     chart.setOption({
      backgroundColor:'transparent',
      animation:false,
      grid:{top:20,right:15,bottom:38,left:46,containLabel:false},
      tooltip:{trigger:'axis',confine:true},
-     xAxis:{type:'time',axisLine:{lineStyle:{color:'#476176'}},axisLabel:{
-      color:'#99b4c6',fontSize:10,formatter:(value:number)=>formatTime(value)
+     xAxis:{type:'time',axisLine:{lineStyle:{color:gridColor}},axisLabel:{
+      color:axisColor,fontSize:11,formatter:(value:number)=>formatTime(value)
      },axisTick:{show:false},splitLine:{show:false}},
-     yAxis:{type:'value',scale:true,name:known.unit,nameTextStyle:{color:'#9bb2c3'},axisLabel:{color:'#99b4c6',fontSize:10},
-      splitLine:{lineStyle:{color:'#264357',type:'dashed'}}},
+     yAxis:{type:'value',scale:true,name:known.unit,nameTextStyle:{color:axisColor},axisLabel:{color:axisColor,fontSize:11},
+      splitLine:{lineStyle:{color:gridColor,type:'dashed'}}},
      series:[{
       name:known.label,type:activeMetric==='rainRate'||activeMetric==='windGust'?'bar':'line',data:plotted,
       showSymbol:false,connectNulls:false,smooth:false,lineStyle:{width:2,color},
@@ -118,8 +123,14 @@ const tabs = [
    root.querySelectorAll<HTMLButtonElement>('[data-select-hours]').forEach(b=>b.setAttribute('aria-pressed',String(b===btn)));
    void update();
   }));
-  document.addEventListener('astro:before-swap',()=>{controller?.abort();observer.disconnect();chart.dispose();},{once:true});
+  document.addEventListener('astro:before-swap',()=>{
+   controller?.abort();observer.disconnect();chart.dispose();
+   window.removeEventListener('loucka:theme-change',themeChanged);
+  },{once:true});
   window.addEventListener('loucka:archive-updated',()=>{if(!controller?.signal.aborted)void update();});
+  // Reuse the existing API route: switching theme also recolors the chart axes.
+  const themeChanged=()=>{void update();};
+  window.addEventListener('loucka:theme-change',themeChanged);
   void update();
  });
 </script>

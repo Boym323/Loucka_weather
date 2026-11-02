@@ -8,39 +8,55 @@ import ForecastPanel from '../features/forecast/ForecastPanel.astro';
 import RadarPanel from '../features/maps/RadarPanel.astro';
 import LocalWarnings from '../features/alerts/LocalWarnings.astro';
 ---
-<BaseLayout title="Přehled" description="Počasí Loučka: skutečná data meteostanice, aktuální předpověď, grafy, webkamera a radar.">
- <section class="site-banner" aria-label="Pohled západní kamerou na Loučku; čas pořízení snímku nebyl ověřen">
-  <img class="banner-scene" src="https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg" alt="" aria-hidden="true" loading="eager" />
-  <div class="banner-copy"><strong>Počasí Loučka</strong><span>Aktuální měření · lokální meteostanice ve Zlínském kraji</span></div>
-  <small class="illustration-label">Kamera Loučka · čas snímku neověřen</small>
- </section>
- <div class="dashboard-top">
-  <div class="dashboard-primary">
-   <CurrentPanel variant="dashboard" />
-   <DailySummaryStrip />
-   <div class="home-quick-links" aria-label="Další údaje">
-    <a href="/aktualne/"><span aria-hidden="true">◉</span> Podrobné aktuální údaje <span aria-hidden="true">↗</span></a>
-    <a href="/grafy/"><span aria-hidden="true">⌁</span> Historie a grafy <span aria-hidden="true">↗</span></a>
-    <a href="/senzory/"><span aria-hidden="true">▥</span> Senzory <span aria-hidden="true">↗</span></a>
+<BaseLayout title="Přehled" description="Počasí Loučka: živá měření GW3000, původní archiv WeeWX, předpověď, grafy, kamera a radar.">
+ <div class="atlas-home">
+  <header class="atlas-home-intro">
+   <div>
+    <span class="atlas-location"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg> Loučka, okres Zlín</span>
+    <h1>Počasí právě teď</h1>
+    <p>Měření z vlastní meteorologické stanice · údaje s uvedením původu a času</p>
+   </div>
+   <a class="atlas-intro-link" href="/aktualne/">Všechna aktuální měření <span aria-hidden="true">↗</span></a>
+  </header>
+  <section class="atlas-hero" aria-label="Aktuální počasí v Loučce">
+   <div class="atlas-hero-backdrop" aria-hidden="true"></div>
+   <div class="atlas-hero-top">
+    <CurrentPanel variant="dashboard"/>
+   </div>
+   <aside class="atlas-hero-daily" aria-label="Dnešní archivní minima, maxima a srážky">
+    <DailySummaryStrip />
+   </aside>
+   <p class="atlas-illustration-note">Ilustrační krajina · není záběrem webkamery</p>
+  </section>
+
+  <div class="atlas-alert-line"><LocalWarnings compact /></div>
+
+  <div class="atlas-home-analytics">
+   <div class="atlas-main-history"><HistoryChart compact /></div>
+   <div class="atlas-forecast"><ForecastPanel compact /></div>
+   <div class="atlas-home-extras"><OverviewReadings /></div>
+  </div>
+
+  <div class="atlas-media-row">
+   <section class="atlas-media-card atlas-camera-tile" aria-labelledby="atlas-camera-title">
+    <a class="atlas-media-image" href="/kamera/" aria-label="Otevřít detail webkamery Loučka">
+     <img src="https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg" alt="Webkamera Loučka, západní směr; čas pořízení neověřen" loading="lazy" decoding="async"/>
+     <span class="atlas-media-overlay"><strong id="atlas-camera-title">Webkamera</strong><span aria-hidden="true">↗</span></span>
+    </a>
+    <p>Snímek ze západní kamery · čas pořízení nebyl ověřen</p>
+   </section>
+   <div class="atlas-media-card atlas-radar-tile">
+    <RadarPanel compact />
    </div>
   </div>
-  <aside class="sidebar-stack" aria-label="Předpověď a doplňková meteorologická data">
-   <ForecastPanel compact />
-   <div class="dashboard-side-notes">
-    <LocalWarnings compact />
-    <OverviewReadings />
-   </div>
-  </aside>
- </div>
- <div class="dashboard-bottom">
-  <HistoryChart compact />
-  <section class="section camera-preview-panel">
-   <div class="section-heading"><div class="panel-title"><span class="panel-mark" aria-hidden="true">▣</span> Webkamera Loučka – západ</div><a class="panel-link" href="/kamera/">Kamera ↗</a></div>
-   <a class="camera-image home-camera-image" href="/kamera/" aria-label="Otevřít aktuální snímek kamery">
-    <img src="https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg" alt="Webkamera Loučka směrem na západ" loading="lazy" />
-   </a>
-   <div class="preview-footer"><span class="source-note">Snímek z kamery · čas pořízení nebyl ověřen</span><a class="panel-link" href="/kamera/">Zobrazit detail ↗</a></div>
-  </section>
-  <RadarPanel compact />
+
+  <nav class="atlas-home-destinations" aria-label="Prozkoumat meteorologická data">
+   <a href="/aktualne/"><span class="atlas-dest-icon" aria-hidden="true">◉</span><span><strong>Detailní měření</strong><small>Všechny dostupné veličiny</small></span><span aria-hidden="true">↗</span></a>
+   <a href="/grafy/"><span class="atlas-dest-icon" aria-hidden="true">⌁</span><span><strong>Grafy a historie</strong><small>Průběh a porovnání</small></span><span aria-hidden="true">↗</span></a>
+   <a href="/klimatologie/"><span class="atlas-dest-icon" aria-hidden="true">▥</span><span><strong>Klimatologie</strong><small>Dlouhodobé statistiky</small></span><span aria-hidden="true">↗</span></a>
+   <a href="/rekordy/"><span class="atlas-dest-icon" aria-hidden="true">◇</span><span><strong>Rekordy</strong><small>Extrémy s ověřením původu</small></span><span aria-hidden="true">↗</span></a>
+   <a href="/senzory/"><span class="atlas-dest-icon" aria-hidden="true">⌖</span><span><strong>Senzory</strong><small>Kanály a dostupnost</small></span><span aria-hidden="true">↗</span></a>
+   <a href="/o-stanici/"><span class="atlas-dest-icon" aria-hidden="true">ⓘ</span><span><strong>O stanici</strong><small>Technologie a metodika</small></span><span aria-hidden="true">↗</span></a>
+  </nav>
  </div>
 </BaseLayout>

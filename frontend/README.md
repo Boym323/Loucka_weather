@@ -25,6 +25,29 @@ meteorologické hodnoty se v pixelových regresích neporovnávají.
 Vizuální změny nemění původní DB, QC, GW3000 ani API; čerstvost archivního
 snímku zůstává explicitně neověřená.
 
+## Atlas Minimal — schválený návrh (2026-11-02)
+
+Vizuální implementace používá Astro a existující Fastify API. Nové rozvržení úvodu
+je v `src/pages/index.astro`, design tokeny a rozvržení v
+`src/styles/atlas-minimal.css` (načítá se za `global.css` a
+`refinement.css`). Výchozí motiv je světlý, uložený uživatelský tmavý
+motiv zůstává zachován. `public/atlas-hills.svg` je deklarovaná ilustrace,
+nikoliv aktuální fotografie.
+
+Úvod se skládá z modulů `CurrentPanel`, `DailySummaryStrip`,
+`LocalWarnings`, `HistoryChart`, `ForecastPanel`,
+`OverviewReadings` a `RadarPanel`. Každý používá dosavadní skutečný
+zdroj dat. Chybějící/podezřelé měření se nezobrazuje jako 0, přepnutí
+na GW3000 se provádí jen při čerstvém live eventu a modelová předpověď
+je odlišena od měření. Čas pořízení fotografie kamery je neověřený.
+`frontend/scripts/preview-visual-check.mjs` kontroluje novou geometrii
+na desktopu i mobilu.
+
+Vizuální vzhled je nutno ověřovat na nasazeném testovacím serveru, protože
+schválený generovaný obrázek byl koncept, nikoliv zdroj strukturovaných
+komponent ani skutečných měření. Zdroj `atlas-minimal.css` lze v další
+iteraci po ověření konsolidovat s historickými styly.
+
 ## Příkazy a nasazení
 
 Použij Node.js 24. Pro lokální vývoj:

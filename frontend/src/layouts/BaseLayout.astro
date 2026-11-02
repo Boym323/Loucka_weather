@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import '../styles/refinement.css';
+import '../styles/atlas-minimal.css';
 import DeploymentInfo from '../shared/ui/DeploymentInfo.astro';
 import LiveSync from '../shared/ui/LiveSync.astro';
 import MobileDock from '../shared/ui/MobileDock.astro';
@@ -8,27 +9,31 @@ interface Props { title: string; description?: string }
 const { title, description = 'Meteorologická měření ze stanice Počasí Loučka.' } = Astro.props;
 const navigation = [
  { href:'/',title:'Přehled' },
- { href:'/aktualne/',title:'Aktuálně' },
+ { href:'/aktualne/',title:'Měření' },
  { href:'/grafy/',title:'Grafy' },
  { href:'/klimatologie/',title:'Klimatologie' },
- { href:'/kamera/',title:'Kamera' },
- { href:'/mapy/',title:'Mapy' },
- { href:'/senzory/',title:'Senzory' },
- { href:'/stav/',title:'Stav' },
+ { href:'/rekordy/',title:'Rekordy' },
+ { href:'/senzory/',title:'Senzory' }
+];
+const secondaryNavigation = [
+ { href:'/kamera/',title:'Webkamera' },
+ { href:'/mapy/',title:'Radar a mapy' },
+ { href:'/puda-ovzdusi/',title:'Půda a ovzduší' },
+ { href:'/stav/',title:'Stav stanice' },
  { href:'/o-stanici/',title:'O projektu' }
 ];
 const active = Astro.url.pathname;
 ---
 <!doctype html>
-<html lang="cs" data-theme="dark">
+<html lang="cs" data-theme="light">
  <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content={description} />
-  <meta name="theme-color" content="#061723" />
+  <meta name="theme-color" content="#F6F9FB" />
   <title>{title} | Počasí Loučka</title>
   <script is:inline>
-   try { document.documentElement.dataset.theme = localStorage.getItem('loucka-theme') === 'light' ? 'light' : 'dark'; } catch {}
+   try { document.documentElement.dataset.theme = localStorage.getItem('loucka-theme') === 'dark' ? 'dark' : 'light'; } catch {}
   </script>
  </head>
  <body>
@@ -36,21 +41,27 @@ const active = Astro.url.pathname;
   <header class="site-header">
    <div class="wrap header-inner">
     <a class="brand" href="/" aria-label="Počasí Loučka – úvod">
-     <span class="brand-symbol" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 5-7 4 4 3-3 6 6"/><path d="M3 19h18"/><path d="M16.5 4.5v3m-1.5-1.5h3"/></svg></span>
-     <span class="brand-label"><strong>Počasí Loučka</strong><small>Místní meteorologická stanice</small></span>
+     <span class="brand-symbol" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 5-7 4 4 3-3 6 6"/><path d="M3 19h18"/><path d="M16.5 4.5v3m-1.5-1.5h3"/></svg></span>
+     <span class="brand-label"><strong>Počasí Loučka</strong><small>Osobní meteorologická stanice</small></span>
     </a>
     <nav aria-label="Hlavní navigace" class="nav">
      {navigation.map(item => <a href={item.href} aria-current={active === item.href ? 'page' : undefined}>{item.title}</a>)}
+     <details class="atlas-more">
+      <summary>Více <span aria-hidden="true">⌄</span></summary>
+      <div class="atlas-more-list">
+       {secondaryNavigation.map(item => <a href={item.href} aria-current={active === item.href ? 'page' : undefined}>{item.title}</a>)}
+      </div>
+     </details>
     </nav>
     <div class="header-actions">
      <LiveSync />
-     <button type="button" class="theme-toggle" data-theme-toggle aria-label="Přepnout světlý a tmavý motiv" title="Přepnout motiv">☼ <span class="theme-name">Motiv</span></button>
+     <button type="button" class="theme-toggle" data-theme-toggle aria-label="Přepnout světlý a tmavý motiv" title="Přepnout motiv"><span class="atlas-theme-icon" aria-hidden="true">☼</span><span class="theme-name">Motiv</span></button>
      <span class="header-clock" data-prague-clock aria-label="Místní čas v Loučce">--:--</span>
     </div>
     <details class="mobile-nav">
      <summary aria-label="Otevřít navigaci">☰ <span>Menu</span></summary>
      <nav aria-label="Mobilní navigace">
-      {navigation.map(item => <a href={item.href} aria-current={active === item.href ? 'page' : undefined}>{item.title}</a>)}
+      {[...navigation,...secondaryNavigation].map(item => <a href={item.href} aria-current={active === item.href ? 'page' : undefined}>{item.title}</a>)}
      </nav>
     </details>
    </div>
@@ -64,6 +75,7 @@ const active = Astro.url.pathname;
     const mode=document.documentElement.dataset.theme==='light'?'dark':'light';
     document.documentElement.dataset.theme=mode;
     try {localStorage.setItem('loucka-theme',mode);}catch{}
+    window.dispatchEvent(new Event('loucka:theme-change'));
    });
    const clock=document.querySelector<HTMLElement>('[data-prague-clock]');
    const tick=()=>{if(clock)clock.textContent=new Intl.DateTimeFormat('cs-CZ',{dateStyle:'short',timeStyle:'short',timeZone:'Europe/Prague'}).format(new Date());};

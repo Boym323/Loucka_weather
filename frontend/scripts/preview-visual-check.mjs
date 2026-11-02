@@ -78,40 +78,48 @@ try{
     // comparing live weather images or dynamic values pixel-by-pixel.
     if(path==='/'){
      const layout=await page.evaluate(()=>{
-      const columns=(selector)=> {
-       const el=document.querySelector(selector);
-       return el?getComputedStyle(el).gridTemplateColumns.split(' ').filter(Boolean).length:0;
+      const columns=selector=>{
+       const element=document.querySelector(selector);
+       return element?getComputedStyle(element).gridTemplateColumns.split(' ').filter(Boolean).length:0;
       };
-      const hero=document.querySelector('.site-banner');
-      const navLinks=[...document.querySelectorAll('.mobile-dock a')];
-      const firstLink=navLinks[0];
+      const hero=document.querySelector('.atlas-hero');
+      const firstNav=document.querySelector('.mobile-dock a');
       return {
-       forecastColumns:columns('.forecast-tabs'),
-       briefColumns:columns('.daily-brief'),
-       bottomColumns:columns('.dashboard-bottom'),
-       bannerHeight:hero?.getBoundingClientRect().height??0,
-       svgIcons:document.querySelectorAll('.mobile-dock a svg').length,
-       mobileTargetHeight:firstLink?.getBoundingClientRect().height??0,
-       quickLinks:document.querySelectorAll('.home-quick-links a').length,
-       radarHeight:document.querySelector('.dashboard-bottom .radar-map')?.getBoundingClientRect().height??0,
-       cameraHeight:document.querySelector('.dashboard-bottom .home-camera-image')?.getBoundingClientRect().height??0,
-       chartHeight:document.querySelector('.dashboard-bottom .chart-box')?.getBoundingClientRect().height??0
+       defaultTheme:document.documentElement.dataset.theme,
+       heroHeight:hero?.getBoundingClientRect().height??0,
+       temperature:document.querySelector('.atlas-hero [data-metric-value="outTemp"]')!==null,
+       dataStatus:document.querySelector('.atlas-hero [data-current-status]')!==null,
+       forecastColumns:columns('.atlas-forecast .forecast-tabs'),
+       dailyColumns:columns('.atlas-hero-daily .daily-brief'),
+       analyticsColumns:columns('.atlas-home-analytics'),
+       destinations:document.querySelectorAll('.atlas-home-destinations a').length,
+       destinationColumns:columns('.atlas-home-destinations'),
+       cameraImage:document.querySelector('.atlas-media-image img')!==null,
+       radar:document.querySelector('.atlas-radar-tile [data-radar-map]')!==null,
+       svgIcons:document.querySelectorAll('.mobile-dock > a svg, .atlas-mobile-more > summary svg').length,
+       moreLinks:document.querySelectorAll('.atlas-mobile-more-menu a').length,
+       mobileTargetHeight:firstNav?.getBoundingClientRect().height??0,
+       chartHeight:document.querySelector('.atlas-main-history .chart-box')?.getBoundingClientRect().height??0
       };
      });
-     console.log('HOME VISUAL GEOMETRY',size.name,JSON.stringify(layout));
-     if(layout.quickLinks!==3)errors.push(size.name+': expected 3 homepage navigation links');
+     console.log('ATLAS MINIMAL HOME GEOMETRY',size.name,JSON.stringify(layout));
+     if(layout.defaultTheme!=='light')errors.push(size.name+': fresh visit must default to light theme');
+     if(!layout.temperature||!layout.dataStatus)errors.push(size.name+': missing live/archive reading source in hero');
+     if(!layout.cameraImage||!layout.radar)errors.push(size.name+': camera or radar is missing');
+     if(layout.destinations!==6)errors.push(size.name+': expected six meaningful destination links');
+     if(layout.heroHeight<290)errors.push(size.name+': weather hero is too short');
      if(size.name==='mobil'){
-      if(layout.forecastColumns!==3)errors.push('Mobile forecast must use three readable columns, got '+layout.forecastColumns);
-      if(layout.briefColumns!==3)errors.push('Mobile day summary must use three columns at 390px');
-      if(layout.bottomColumns!==1)errors.push('Mobile dashboard panels must stack vertically');
-      if(layout.bannerHeight<130)errors.push('Mobile camera banner is too short');
-      if(layout.svgIcons!==5)errors.push('Mobile dock must contain five SVG icons');
+      if(layout.forecastColumns!==3)errors.push('Mobile forecast should use three readable columns');
+      if(layout.dailyColumns!==3)errors.push('Mobile daily summary should use three columns');
+      if(layout.analyticsColumns!==1)errors.push('Mobile analytical modules must stack');
+      if(layout.destinationColumns!==2)errors.push('Mobile destinations should use two columns at 390px');
+      if(layout.svgIcons!==5)errors.push('Mobile dock must contain five SVG navigation icons');
+      if(layout.moreLinks!==7)errors.push('Mobile More menu must expose remaining seven pages');
       if(layout.mobileTargetHeight<44)errors.push('Mobile dock touch targets must be at least 44px');
      }else{
-      if(layout.bottomColumns!==3)errors.push('Desktop dashboard requires three lower panels');
-      if(layout.radarHeight<260)errors.push('Desktop radar map remains too short: '+layout.radarHeight);
-      if(layout.cameraHeight<260)errors.push('Desktop camera preview remains too short: '+layout.cameraHeight);
-      if(layout.chartHeight<290)errors.push('Desktop chart remains too short: '+layout.chartHeight);
+      if(layout.analyticsColumns!==3)errors.push('Desktop weather / forecast / context should show three columns');
+      if(layout.destinationColumns!==3)errors.push('Desktop destinations should use three columns');
+      if(layout.chartHeight<230)errors.push('Desktop temperature plot should have ample room');
      }
     }
     // Shared layout regression assertions across non-homepage routes.
