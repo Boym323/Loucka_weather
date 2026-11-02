@@ -16,7 +16,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
    {[
     {key:'api',name:'Fastify API',desc:'Webové rozhraní a odpověď serveru'},
     {key:'archive',name:'Archiv WeeWX',desc:'Poslední uložené meteorologické měření'},
-    {key:'gw3000',name:'GW3000 · skutečně živě',desc:'Přímé ověřené HTTP uploady z brány'},
+    {key:'gw3000',name:'GW3000 · skutečně živě',desc:'Pasivní čtení lokálního HTTP API GW3000; beze změny nastavení stanice'},
     {key:'camera',name:'Západní kamera',desc:'Stažené snímky a jejich aktuálnost'},
     {key:'chmi',name:'ČHMÚ · CAP výstrahy',desc:'Poslední validovaná kontrola výstrah pro ORP 7209'}
    ].map(item=><article class="monitor-card" data-monitor-card={item.key}>
@@ -56,7 +56,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
      const chip=root?.querySelector<HTMLElement>('[data-monitor-state="'+key+'"]');
      const detail=root?.querySelector<HTMLElement>('[data-monitor-detail="'+key+'"]');
      if(chip){chip.textContent=label[item.status]??'Neznámý stav';chip.className='status-chip '+(['ok','fresh'].includes(item.status)?'ok':['stale','missing'].includes(item.status)?'warning':'');}
-     if(detail)detail.textContent=relative(item.lastObservedAt??item.lastReceivedAt);
+     if(detail)detail.textContent=key==='api'?
+      (item.status==='ok'?'API odpovídá; dostupnost ověřena při poslední kontrole.':'API nedostupné'):
+      relative(item.lastObservedAt??item.lastReceivedAt);
     }
    }catch{
     if(controller.signal.aborted)return;
