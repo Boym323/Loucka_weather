@@ -7,26 +7,25 @@ import OverviewReadings from '../features/current/OverviewReadings.astro';
 import ForecastPanel from '../features/forecast/ForecastPanel.astro';
 import RadarPanel from '../features/maps/RadarPanel.astro';
 import LocalWarnings from '../features/alerts/LocalWarnings.astro';
+import SiteIcon from '../shared/ui/SiteIcon.astro';
 ---
 <BaseLayout title="Přehled" description="Počasí Loučka: živá měření GW3000, původní archiv WeeWX, předpověď, grafy, kamera a radar.">
  <div class="atlas-home">
   <header class="atlas-home-intro">
    <div>
-    <span class="atlas-location"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg> Loučka, okres Zlín</span>
+    <span class="atlas-location"><SiteIcon name="map-pin" size={16} /> Loučka, okres Zlín</span>
     <h1>Počasí právě teď</h1>
     <p>Měření z vlastní meteorologické stanice · údaje s uvedením původu a času</p>
    </div>
    <a class="atlas-intro-link" href="/aktualne/">Všechna aktuální měření <span aria-hidden="true">↗</span></a>
   </header>
   <section class="atlas-hero" aria-label="Aktuální počasí v Loučce">
-   <div class="atlas-hero-backdrop" aria-hidden="true"></div>
    <div class="atlas-hero-top">
     <CurrentPanel variant="dashboard"/>
    </div>
    <aside class="atlas-hero-daily" aria-label="Dnešní archivní minima, maxima a srážky">
     <DailySummaryStrip />
    </aside>
-   <p class="atlas-illustration-note">Ilustrační krajina · není záběrem webkamery</p>
   </section>
 
   <div class="atlas-alert-line"><LocalWarnings compact /></div>
@@ -51,12 +50,12 @@ import LocalWarnings from '../features/alerts/LocalWarnings.astro';
   </div>
 
   <nav class="atlas-home-destinations" aria-label="Prozkoumat meteorologická data">
-   <a href="/aktualne/"><span class="atlas-dest-icon" aria-hidden="true">◉</span><span><strong>Detailní měření</strong><small>Všechny dostupné veličiny</small></span><span aria-hidden="true">↗</span></a>
-   <a href="/grafy/"><span class="atlas-dest-icon" aria-hidden="true">⌁</span><span><strong>Grafy a historie</strong><small>Průběh a porovnání</small></span><span aria-hidden="true">↗</span></a>
-   <a href="/klimatologie/"><span class="atlas-dest-icon" aria-hidden="true">▥</span><span><strong>Klimatologie</strong><small>Dlouhodobé statistiky</small></span><span aria-hidden="true">↗</span></a>
-   <a href="/rekordy/"><span class="atlas-dest-icon" aria-hidden="true">◇</span><span><strong>Rekordy</strong><small>Extrémy s ověřením původu</small></span><span aria-hidden="true">↗</span></a>
-   <a href="/senzory/"><span class="atlas-dest-icon" aria-hidden="true">⌖</span><span><strong>Senzory</strong><small>Kanály a dostupnost</small></span><span aria-hidden="true">↗</span></a>
-   <a href="/o-stanici/"><span class="atlas-dest-icon" aria-hidden="true">ⓘ</span><span><strong>O stanici</strong><small>Technologie a metodika</small></span><span aria-hidden="true">↗</span></a>
+   <a href="/aktualne/"><span class="atlas-dest-icon"><SiteIcon name="weather" size={20}/></span><span><strong>Detailní měření</strong><small>Všechny dostupné veličiny</small></span><span aria-hidden="true">↗</span></a>
+   <a href="/grafy/"><span class="atlas-dest-icon"><SiteIcon name="chart" size={20}/></span><span><strong>Grafy a historie</strong><small>Průběh a porovnání</small></span><span aria-hidden="true">↗</span></a>
+   <a href="/klimatologie/"><span class="atlas-dest-icon"><SiteIcon name="archive" size={20}/></span><span><strong>Klimatologie</strong><small>Dlouhodobé statistiky</small></span><span aria-hidden="true">↗</span></a>
+   <a href="/rekordy/"><span class="atlas-dest-icon"><SiteIcon name="record" size={20}/></span><span><strong>Rekordy</strong><small>Extrémy s ověřením původu</small></span><span aria-hidden="true">↗</span></a>
+   <a href="/senzory/"><span class="atlas-dest-icon"><SiteIcon name="sensors" size={20}/></span><span><strong>Senzory</strong><small>Kanály a dostupnost</small></span><span aria-hidden="true">↗</span></a>
+   <a href="/o-stanici/"><span class="atlas-dest-icon"><SiteIcon name="info" size={20}/></span><span><strong>O stanici</strong><small>Technologie a metodika</small></span><span aria-hidden="true">↗</span></a>
   </nav>
  </div>
 </BaseLayout>
