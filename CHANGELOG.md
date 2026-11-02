@@ -4,6 +4,15 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ## 2026-11-02
 
+### Fastify API: audit RSS, historických rekordů, cache a SSE shutdownu
+- Opraveny opakované alokace `Intl.DateTimeFormat` a zavedena omezená cache lokálních půlnocí Europe/Prague.
+- Rekordy používají 20min cache, deduplikaci souběžných přepočtů, maximálně 60min stale odpověď v rámci stejného lokálního dne a po půlnoci nový výpočet.
+- Volitelné bezpečné logování SQL/CPU časů a struktury Node.js paměti; bez publikování interní diagnostiky přes API.
+- Při zavírání Fastify se již otevřená SSE spojení ukončují v `preClose` ještě před `server.close()`.
+- Regresní testy cache, chybového stavu, půlnoci, letního času a uzavření SSE; historické rekordy zůstávají předběžné.
+- Provozní srovnávací benchmark po nasazení je stále nutný; 570 MiB RSS samo o sobě neprokazuje memory leak.
+
+
 ### Evidence senzorů, úspornější historie a lehký test výkonu
 - Nové `/api/v1/sensors/channels`: 11 explicitních archivních kanálů, výhradně počet neprázdných měření za 24 h a poslední timestamp; fyzická identita a propojení s GW3000 nejsou tvrzeny jako ověřené.
 - Jeden indexovaný agregovaný SELECT pro všechny kanály, 60s paměťová cache a 30s privátní HTTP cache, podporované ETag/304 a regresní i MariaDB CI testy.
