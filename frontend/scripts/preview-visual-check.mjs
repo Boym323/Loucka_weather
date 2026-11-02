@@ -255,6 +255,10 @@ try{
       return status.includes('Čerstvost archivu')||
        status.includes('Dostupnost se nepodařilo ověřit');
      },null,{timeout:16000}).catch(()=>errors.push(size.name+': sensor channel provenance unavailable'));
+     const channelStatus=(await page.locator('[data-channel-status]').textContent())?.trim()??'';
+     console.log('CHANNEL AVAILABILITY',size.name,channelStatus);
+     if(!channelStatus.includes('Čerstvost archivu ověřena'))
+      errors.push(size.name+': real 24h archive sensor presence query not verified: '+channelStatus);
      const count=await page.locator('[data-channel-cards] .sensor-inventory-card').count();
      if(count!==11)errors.push(size.name+': expected 11 channel evidence cards, found '+count);
      const physical=await page.locator('[data-channel-cards] .sensor-inventory-card').first().textContent();
