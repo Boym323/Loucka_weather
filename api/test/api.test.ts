@@ -66,6 +66,11 @@ test('24h sensor evidence is batched, presence-only and cached for 60 seconds',a
  assert.equal(requests,1);
  assert.deepEqual(first.json(),second.json());
  assert.equal(first.headers['cache-control'],'private, max-age=30');
+ const etag=first.headers.etag;
+ assert.equal(typeof etag,'string');
+ const conditional=await app.inject({method:'GET',url:'/api/v1/sensors/channels',headers:{'if-none-match':etag}});
+ assert.equal(conditional.statusCode,304);
+ assert.equal(requests,1);
  const item=first.json().channels.find((x:any)=>x.metric==='soilTemp1');
  assert.equal(item.nonNullSamples,287);
  assert.equal(item.archiveStatus,'observed_recently');
