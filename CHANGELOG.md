@@ -4,6 +4,11 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ## 2026-11-02
 
+### Provozní audit bez zásahů do meteorologické infrastruktury
+- Read-only deploy/lxc/site-readiness-audit.sh ověřuje reálné běžící služby, veřejné i lokální API, stav MP4/FFmpeg, prostor a paměť, síťovou expozici a aktuální commit.
+- Kontrola výslovně odděluje provozní health od Proxmox/PBS záloh, restore testů, NPM pravidel a skutečné zátěže, které nelze ověřit uvnitř LXC bez přístupu k hostiteli.
+- Bez zápisu do MariaDB, změn Ecowitt GW3000, WeeWX či restartů služeb.
+
 ### Rekordy, kvalita historických dat a měření půdy/ovzduší
 - Nová read-only API /api/v1/climate/records využívá maximálně tři původní denní souhrnné tabulky (teplota, srážky, nárazy); omezený časový rozsah, fyzikální meze, 20min cache, žádný zápis do DB. Výstup je vždy označený „předběžný z původního archivu“.
 - Stránka /rekordy/ zobrazuje orientační minima/maxima, charakteristické teplotní dny, počty podložených kalendářních dnů a rekordy k dnešnímu datu. Chybějící dny ani skutečnou QC nenahrazuje odhadem.
