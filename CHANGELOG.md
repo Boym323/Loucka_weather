@@ -4,6 +4,16 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ## 2026-11-02
 
+### Vizuál: přehled a mobilní layout podle tmavého devítipanelového návrhu
+- Kontrastnější jednotná sada design tokenů (pozadí, panely, text, linky a akcent) podle FRONTEND_SPEC; zachován samostatný světlý motiv.
+- Vyváženější úvodní fotografie z původní kamery, jasnější primární teplotní karta, grafické karty historie, kamery a radaru se sjednoceným zaoblením a mezerami.
+- Mobilní předpověď ze šesti úzkých karet přepracována na tři čitelné sloupce a dva řádky; na šířkách pod 360 px na dva sloupce.
+- Na mobilu třísloupcový denní souhrn (od 360 px), kompaktnější rychlé odkazy a větší dotykové cíle.
+- Spodní navigace používá pět jednotných vektorových ikon místo proměnlivých textových glyfů.
+- Ve veřejném Playwright screenshot auditu přidány kontroly reálného layoutu 390px / 1440px, bez závislosti na živých hodnotách.
+- Záměrně bez změny API, databází, historie senzorů a stavů dostupnosti dat; dostupnost snímku nadále neznamená ověřený čas pořízení.
+
+
 ### Fastify API: audit RSS, historických rekordů, cache a SSE shutdownu
 - Opraveny opakované alokace `Intl.DateTimeFormat` a zavedena omezená cache lokálních půlnocí Europe/Prague.
 - Rekordy používají 20min cache, deduplikaci souběžných přepočtů, maximálně 60min stale odpověď v rámci stejného lokálního dne a po půlnoci nový výpočet.
