@@ -250,6 +250,15 @@ try{
       errors.push(size.name+': all three source-backed soil-air history graphs unavailable');
     }
     if(path==='/senzory/'){
+     await page.waitForFunction(()=>{
+      const status=document.querySelector('[data-channel-status]')?.textContent??'';
+      return status.includes('Čerstvost archivu')||
+       status.includes('Dostupnost se nepodařilo ověřit');
+     },null,{timeout:16000}).catch(()=>errors.push(size.name+': sensor channel provenance unavailable'));
+     const count=await page.locator('[data-channel-cards] .sensor-inventory-card').count();
+     if(count!==11)errors.push(size.name+': expected 11 channel evidence cards, found '+count);
+     const physical=await page.locator('[data-channel-cards] .sensor-inventory-card').first().textContent();
+     if(!physical?.includes('Neověřená'))errors.push(size.name+': physical installation incorrectly marked verified');
      if(await page.locator('[data-sensor-trend]').count()<8)
       errors.push(size.name+': missing real sensor trend containers');
      if(await page.locator('[data-sensor-diagnostics]').count()!==1)
