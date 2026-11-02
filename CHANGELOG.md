@@ -4,6 +4,17 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ## 2026-11-02
 
+### Celoplošné vizuální doladění 11 stránek – desktop, tablet a mobil
+- Nový `frontend/src/styles/refinement.css` načítaný až po globálních stylech: jednotné nadpisy, karty, čitelné stavy, formuláře, tabulky a světlý motiv bez kopírování celé původní palety.
+- Na úvodní stránce se spodní karty přizpůsobují: historie má větší graf, kamera využívá dostupnou výšku a radar místo prázdného spodku zobrazuje větší mapu.
+- Grafy/klimatologie/rekordy: jednotná typografie, ovládací prvky, čitelnější legendy a mobilní grafy; nesprávné doslovné Markdown `**orientační**` opraveno na sémantické zvýraznění.
+- Klimatologie: navigace používá správně název *Sluneční energie* (nikoliv neexistující měření délky slunečního svitu).
+- Senzory/půda/ovzduší: vyvážené karty a čitelnější diagnostické řádky; žádný archivní kanál není vydáván za ověřenou fyzickou identitu.
+- Kamera: při neúspěšných JPEG náhledech (např. 429) se namísto rozbitého obrázku ukáže dostupná, klikací náhradní karta; jediné omezené zopakování požadavku zachováno.
+- Mapy, stav, o projektu: sjednocené informační panely; stránka stavu nabízí přístup k měření, senzorům a kameře.
+- Screenshotový Playwright smoke nově ověřuje reálné rozměry hlavních panelů a responzivitu vedlejších sekcí; nedochází k zápisu do DB či změně původu dat.
+
+
 ### Vizuál: přehled a mobilní layout podle tmavého devítipanelového návrhu
 - Kontrastnější jednotná sada design tokenů (pozadí, panely, text, linky a akcent) podle FRONTEND_SPEC; zachován samostatný světlý motiv.
 - Vyváženější úvodní fotografie z původní kamery, jasnější primární teplotní karta, grafické karty historie, kamery a radaru se sjednoceným zaoblením a mezerami.
