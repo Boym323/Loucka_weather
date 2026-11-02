@@ -4,6 +4,11 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ## 2026-11-02
 
+### Oprava sedmidenních grafů půdy a PM2,5
+- Skutečné veřejné 7d hourly API vrací 503 (neplatný nebo nedostupný hodinový archiv); ověřený 24h raw endpoint PM2,5 vrací 200 a skutečných 288 měření.
+- Graf nyní zkouší sedmidenní hodinový archiv, poté 7 dokončených dnů v původních WeeWX daily summaries a nakonec 24h syrové intervaly, vždy se zobrazením reálně použitého rozsahu.
+- Pro půdní teplotu se používá generický veřejný history endpoint (nikoli úzký seznam hlavních metrik), tedy žádný vymyšlený senzor ani zápis do databáze.
+
 ### Diagnostika půdních a PM2,5 grafů
 - Přísnější veřejný test odhalil, že tři sedmidenní hourly křivky půdy/ovzduší selhaly na desktopu i mobilu.
 - Frontend nyní respektuje původní ochranu historického hourly API a při neúspěchu zkusí ověřený 24hodinový syrový archiv; explicitně uvádí, jaký rozsah a zdroj skutečně zobrazuje.
