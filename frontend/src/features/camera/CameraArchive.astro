@@ -38,7 +38,7 @@
   },450);
   function makeThumb(url:string,description:string):HTMLImageElement{
    const img=document.createElement('img');
-   img.alt=description;img.loading='lazy';img.decoding='async';
+   img.alt=description;img.loading='eager';img.decoding='async';
    // Never expose the browser's broken-image icon while a frame is pending or
    // when the camera server responds with 429/502. Preserve the clickable link.
    img.hidden=true;
