@@ -412,7 +412,7 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
     }
    }
    const result=climateRecordsFromDaily({temperature:rows[0],rain:rows[1],
-    gust:rows[2],from,toExclusive,calendarDays});
+    gust:rows[2],from,toExclusive,calendarDays,todayMonthDay:toExclusive.slice(5)});
    recordsCache={at:nowMs,result};
    return conditional(req,reply,{schemaVersion:'1',...result});
   }catch{return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Preliminary records unavailable',503);}
