@@ -26,6 +26,38 @@ Proces při `SIGINT`/`SIGTERM` zavře Fastify, zastaví archivní observer a uza
 
 Zdrojový katalog metrik a jednotek: `../schemas/metrics.json`; `src/metrics.ts` je z něj generovaná kopie. Jednotky se interpretují **u každého řádku** podle původního `usUnits`; `NULL` zůstává `null` a neznámé usUnits se odmítne. Odpovědi `current` a `history` mají ETag / 304, `dataset=approved` je bez schválení nepřístupný (503).
 
+## Audit výkonu a paměti (2026-11-02)
+
+Výchozí měření na testovacím LXC: `GET /api/v1/climate/records` měl studenou
+odezvu ~4,8 s a další požadavky ~1–4 ms; proces měl RSS přibližně 570 MiB,
+z toho ~534 MiB anonymní paměti. **Samotná RSS nerozlišuje V8 heap od nativních
+alokací a nedokazuje memory leak.** Endpoint čte pouze původní `archive_day_*`
+a vrací `status: preliminary`; oprava nemění historická měření ani stav QC.
+
+Změny:
+- Sdílené `Intl.DateTimeFormat` pro klimatické rekordy a lokální kalendář,
+  omezená (8 000 dní) cache přepočtů půlnoci `Europe/Prague`.
+- 20minutová fresh cache a max. 60minutová stáří záložní odpovědi **jen v rámci
+  stejného lokálního dne**; přepnutí kalendářního dne vynutí nové načtení.
+- Současní klienti sdílejí stejný in-flight výpočet. Po selhání načtení cache
+  nepublikuje nový výsledek a další požadavek může načtení zopakovat.
+- Volitelné logování etap (souhrnná doba paralelních SQL dotazů, doby jednotlivých
+  čtení, zpracování) a Node paměti; nikdy se nevypisují SQL credentials ani data
+  okolních stanic.
+- Fastify `preClose` ukončí aktivní SSE streamy dříve než `server.close()`;
+  `onClose` dále uvolní MariaDB pool a observéry.
+
+Pro měření v testovacím LXC lze **dočasně** nastavit do
+`/etc/loucka-weather/api.env` hodnotu `WEATHER_API_PERF_LOG=YES` a restartovat
+pouze `loucka-weather-api` v plánovaném okně. Záznam `climate_records_refresh`
+pak obsahuje `queryMs`, `queryWallMs`, `processingMs`, `rssMiB`,
+`heapUsedMiB`, `heapTotalMiB`, `externalMiB` a `arrayBuffersMiB`.
+Jde o read-only diagnostiku; po ověření je vhodné ji vypnout.
+
+Po nasazení je nutný porovnávací benchmark studených i zahřátých požadavků
+a dlouhodobé RSS; žádné konkrétní zrychlení či odstranění úniku paměti se
+nepovažuje za prokázané jen na základě úpravy zdrojového kódu.
+
 ## Ověření
 Node 24 používá uložený `api/package-lock.json` a CI instaluje přes `npm ci`, nikoli přepočítávání závislostí při každém běhu.
 
