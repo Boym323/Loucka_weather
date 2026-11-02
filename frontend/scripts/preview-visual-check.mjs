@@ -96,7 +96,8 @@ try{
        destinationColumns:columns('.atlas-home-destinations'),
        cameraImage:document.querySelector('.atlas-media-image img')!==null,
        radar:document.querySelector('.atlas-radar-tile [data-radar-map]')!==null,
-       svgIcons:document.querySelectorAll('.mobile-dock a svg').length,
+       svgIcons:document.querySelectorAll('.mobile-dock > a svg, .atlas-mobile-more > summary svg').length,
+       moreLinks:document.querySelectorAll('.atlas-mobile-more-menu a').length,
        mobileTargetHeight:firstNav?.getBoundingClientRect().height??0,
        chartHeight:document.querySelector('.atlas-main-history .chart-box')?.getBoundingClientRect().height??0
       };
@@ -113,6 +114,7 @@ try{
       if(layout.analyticsColumns!==1)errors.push('Mobile analytical modules must stack');
       if(layout.destinationColumns!==2)errors.push('Mobile destinations should use two columns at 390px');
       if(layout.svgIcons!==5)errors.push('Mobile dock must contain five SVG navigation icons');
+      if(layout.moreLinks!==7)errors.push('Mobile More menu must expose remaining seven pages');
       if(layout.mobileTargetHeight<44)errors.push('Mobile dock touch targets must be at least 44px');
      }else{
       if(layout.analyticsColumns!==3)errors.push('Desktop weather / forecast / context should show three columns');
