@@ -1,0 +1,97 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="Historické rekordy">
+ <div class="page-intro">
+  <span class="eyebrow">Loučka · původní archiv 2009–2026</span>
+  <h1>Historické rekordy a charakteristické dny</h1>
+  <p>Předběžné výsledky z denních souhrnů WeeWX. Nejde o definitivní rekordy po forenzní kontrole historických dat.</p>
+ </div>
+ <section class="section" data-climate-records>
+  <div class="section-heading">
+   <div><span class="eyebrow">Měření, ne model</span><h2>Nejvýraznější zaznamenané hodnoty</h2></div>
+   <span class="status-chip" data-records-status role="status">Načítám zdroj</span>
+  </div>
+  <div class="climate-summary-strip records-grid">
+   {[
+    ['minTemp','Nejnižší teplota','°C'],
+    ['maxTemp','Nejvyšší teplota','°C'],
+    ['maxDailyRain','Nejvyšší denní srážky','mm'],
+    ['maxWindGust','Nejsilnější náraz větru','m/s']
+   ].map(([metric,title,unit])=>
+    <div class="climate-summary-metric">
+     <span>{title}</span><strong data-record-value={metric}>—</strong>
+     <small data-record-date={metric}>Den se ověřuje · {unit}</small>
+    </div>)}
+  </div>
+  <h2>Charakteristické dny</h2>
+  <div class="climate-summary-strip records-grid">
+   {[
+    ['frost','Mrazové dny','Minimum pod 0 °C'],
+    ['ice','Ledové dny','Maximum pod 0 °C'],
+    ['summer','Letní dny','Maximum alespoň 25 °C'],
+    ['tropical','Tropické dny','Maximum alespoň 30 °C']
+   ].map(([key,title,description])=>
+    <div class="climate-summary-metric">
+     <span>{title}</span><strong data-daycount={key}>—</strong><small>{description}</small>
+    </div>)}
+  </div>
+  <p class="source-note" data-records-coverage>Počet dní s důvěryhodným zdrojem se zjišťuje.</p>
+  <h2>Pro dnešní kalendářní datum</h2>
+  <div class="climate-extreme-values records-today">
+   <div>Nejnižší teplota <strong data-today-value="minTemp">—</strong></div>
+   <div>Nejvyšší teplota <strong data-today-value="maxTemp">—</strong></div>
+  </div>
+  <p class="source-note" data-today-coverage>Porovnání dostupných stejných kalendářních dní předchozích roků.</p>
+  <p class="source-note">Rekordy jsou **orientační**: původní srážky a další období obsahují neověřené anomálie. Fyzikální omezení odstraňuje jen zjevně chybná čísla. Chybějící dny nezapočítáváme jako dny bez mrazu či srážek. Čas pořízení extrému nelze bez přesnější kontroly denních souhrnů potvrdit.</p>
+ </section>
+</BaseLayout>
+<script>
+ import {formatValue} from '../shared/domain/metrics';
+ const root=document.querySelector<HTMLElement>('[data-climate-records]');
+ if(root){
+  const ctrl=new AbortController();
+  type R={value:number;unit:string;localDate:string;quality:string};
+  type Response={schemaVersion:string;status:string;records:Record<string,R|null>;
+   coverage:{temperatureDays:number;rainDays:number;windDays:number;calendarDays:number};
+   dayTypes:Record<string,number>;todayCalendar:{monthDay:string;minTemp:R|null;maxTemp:R|null;sampleYears:number};
+   range:{from:string;toExclusive:string}};
+  void fetch('/api/v1/climate/records',{signal:ctrl.signal}).then(async r=>{
+   if(!r.ok)throw Error('HTTP '+r.status);
+   return r.json() as Promise<Response>;
+  }).then(data=>{
+   if(ctrl.signal.aborted||data.schemaVersion!=='1'||data.status!=='preliminary')throw Error('Neplatná evidence');
+   const fmt=(v:R|null)=>v&&Number.isFinite(v.value)?formatValue(v.value,1)+' '+v.unit:'—';
+   for(const [key,item] of Object.entries(data.records)){
+    const value=root.querySelector<HTMLElement>('[data-record-value="'+key+'"]');
+    const date=root.querySelector<HTMLElement>('[data-record-date="'+key+'"]');
+    if(value)value.textContent=fmt(item);
+    if(date)date.textContent=item?'Archivní den: '+item.localDate+' · bez QC':'Bez podloženého záznamu';
+   }
+   for(const [key,value] of Object.entries(data.dayTypes)){
+    const target=root.querySelector<HTMLElement>('[data-daycount="'+key+'"]');
+    if(target)target.textContent=Number.isSafeInteger(value)?value.toLocaleString('cs-CZ'):'—';
+   }
+   const coverage=root.querySelector<HTMLElement>('[data-records-coverage]');
+   if(coverage)coverage.textContent='Úplnost kalendářních dní (nikoli jednotlivých měření): teplota '+data.coverage.temperatureDays+
+    ' / '+data.coverage.calendarDays+', srážky '+data.coverage.rainDays+
+    ' / '+data.coverage.calendarDays+', vítr '+data.coverage.windDays+' / '+data.coverage.calendarDays+
+    '. Dny s nedostatečnými podklady nezapočítáváme.';
+   for(const [key,item] of Object.entries({minTemp:data.todayCalendar.minTemp,maxTemp:data.todayCalendar.maxTemp})){
+    const target=root.querySelector<HTMLElement>('[data-today-value="'+key+'"]');
+    if(target)target.textContent=fmt(item);
+   }
+   const today=root.querySelector<HTMLElement>('[data-today-coverage]');
+   if(today)today.textContent='Den '+data.todayCalendar.monthDay+
+    ' · potvrzené denní souhrny '+data.todayCalendar.sampleYears+
+    ' předchozích roků (není úplná historická QC).';
+   const status=root.querySelector<HTMLElement>('[data-records-status]');
+   if(status){status.textContent='Původní data · bez QC';status.className='status-chip warning';}
+  }).catch(()=>{
+   if(ctrl.signal.aborted)return;
+   const status=root.querySelector<HTMLElement>('[data-records-status]');
+   if(status){status.textContent='Rekordy nedostupné';status.className='status-chip error';}
+  });
+  document.addEventListener('astro:before-swap',()=>ctrl.abort(),{once:true});
+ }
+</script>
