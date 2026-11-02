@@ -3,11 +3,10 @@
 
 Never contacts GW3000, modifies services, or performs DB writes.
 Samples four HTTP GET endpoints (8 cycles, <= 4 req/s) and reports p50/p95,
-cache ETag/304, failures and RSS via user-controlled external monitoring.
+cache ETag/304 and failures; no background monitoring or writes.
 """
 import json
 import math
-import statistics
 import time
 import urllib.error
 import urllib.request
