@@ -41,7 +41,7 @@
      const info=document.createElement('dl');
      const rows=[
       ['Sloupec WeeWX',c.metric],
-      ['Platných nenulových nebo nulových polí',c.nonNullSamples===null?'Nezjištěno':
+      ['Neprázdných archivních hodnot',c.nonNullSamples===null?'Nezjištěno':
        c.nonNullSamples.toLocaleString('cs-CZ')+' za 24 h'],
       ['Poslední záznam',c.lastObservedAt?stamp(c.lastObservedAt):'Nezjištěno'],
       ['GW3000 live',c.liveKey?
