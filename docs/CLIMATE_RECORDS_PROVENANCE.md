@@ -1,0 +1,13 @@
+# Evidence meteorologických rekordů Počasí Loučka
+
+Veřejný endpoint /api/v1/climate/records používá pouze původní denní souhrnné tabulky WeeWX pro teplotu, srážky a nárazy větru. Výsledky jsou předběžné a neprošly dokončenou forenzní kontrolou let 2009–2026. Fyzikální meze jsou pouze ochranou před zjevně nemožnými hodnotami a nenahrazují audit původních dat.
+
+Mrazový den: minimum pod 0 °C. Ledový den: maximum pod 0 °C. Letní den: maximum alespoň 25 °C. Tropický den: maximum alespoň 30 °C. K započtení je potřeba platné minimum i maximum stejného kalendářního dne. Chybějící dny nejsou počítány jako dny bez jevu.
+
+Pokrytí času platnými teplotními měřeními v roční statistice se počítá z WeeWX day_outTemp.sumtime v sekundách a skutečné délky místního kalendářního roku (CET/CEST). Publikuje se jen při konzistentních hodnotách. Nejde o certifikát kvality měření, pokrytí srážek ani stav historické rekonstrukce.
+
+Fyzický inventář čidel zůstává neověřený. Lokální GW3000 potvrzuje půdní vlhkost kanálu 1, nikoliv hloubku nebo kalibrační historii senzoru. Proto neodvozujeme historickou půdní vlhkost z jiných veličin.
+
+Endpoint je pouze GET, čte existující read-only ArchiveReader.dailySummaries, maximálně 7500 dní, cache 20 minut. Nikdy nemění původní ani rekonstruovaná data.
+
+Pro definitivní rekordy je nutné dokončit kontrolu historických mezer, původu, jednotek a problémových srážek a schválené publikování opravených dat. Zatím není dovoleno označit výstup jako ověřené historické rekordy.

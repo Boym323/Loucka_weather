@@ -10,6 +10,7 @@ import {LiveHub,serializeSse} from './live.js';
 import {readingsFromRow,converted,outputUnit} from './units.js';
 import {gatewayReadings} from './gateway.js';
 import {readFile} from 'node:fs/promises';
+import {climateRecordsFromDaily} from './records.js';
 import type {Metric} from './metrics.js';
 import type {OutputUnits} from './units.js';
 
@@ -382,6 +383,40 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
   sensors:[] // Verified physical mapping and installation epochs are not supplied.
  }));
  app.get('/api/v1/camera/status',async()=>archiveCameraStatus(sourceFiles));
+ // Read-only provisional records for completed calendar days, never silently
+ // promote original data to audited historical records.
+ let recordsCache:{at:number;result:ReturnType<typeof climateRecordsFromDaily>}|null=null;
+ app.get('/api/v1/climate/records',async(req,reply)=>{
+  if(!reader.dailySummaries)return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Daily summary tables unavailable',503);
+  const nowMs=now().getTime();
+  if(recordsCache&&nowMs-recordsCache.at>=0&&nowMs-recordsCache.at<1200000)
+   return conditional(req,reply,{schemaVersion:'1',...recordsCache.result});
+  const from='2009-01-01',toExclusive=localDateAt(Math.floor(nowMs/1000));
+  const start=localMidnight(from),end=localMidnight(toExclusive);
+  if(start===null||end===null||end<=start)return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Calendar range unavailable',503);
+  const calendarDays=Math.round((Date.parse(toExclusive+'T00:00:00Z')-Date.parse(from+'T00:00:00Z'))/86400000);
+  if(calendarDays<1||calendarDays>7500)return bad(reply,req.id,'LIMIT_EXCEEDED','Historical period exceeds bounded reader range',422);
+  try{
+   const rows=await Promise.all([
+    reader.dailySummaries('outTemp',start,end,calendarDays+1),
+    reader.dailySummaries('rain',start,end,calendarDays+1),
+    reader.dailySummaries('windGust',start,end,calendarDays+1)
+   ]);
+   if(rows.some(a=>a.length>calendarDays))throw new Error('Day-summary result truncated');
+   for(const items of rows){
+    let previous=-1;
+    for(const record of items){
+     if(record.dateTime<=previous||record.dateTime<start||record.dateTime>=end||
+      localMidnight(localDateAt(record.dateTime))!==record.dateTime)throw new Error('Invalid daily boundary');
+     previous=record.dateTime;
+    }
+   }
+   const result=climateRecordsFromDaily({temperature:rows[0],rain:rows[1],
+    gust:rows[2],from,toExclusive,calendarDays,todayMonthDay:toExclusive.slice(5)});
+   recordsCache={at:nowMs,result};
+   return conditional(req,reply,{schemaVersion:'1',...result});
+  }catch{return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Preliminary records unavailable',503);}
+ });
  const statisticsRoute=(period:'day'|'month'|'year')=>async(req:any,reply:any)=>{
   const {metric,aggregation,units='metricwx',dataset='original'}=req.query as StatisticsQuery;
   const label=period==='day'?(req.query as StatisticsQuery).date!:period==='month'?
@@ -426,6 +461,17 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
     quality:result.value===null?'missing':'derived',source:'weewx_daily',
     provenance:result.value===null?null:`weewx-daily-${aggregation}`,dataset,
     dataRevision:`daily-${fingerprint}`,completeness:{expected:null,valid:result.valid,fraction:null},
+    // WeeWX day_<metric>.sumtime is the time-weighted number of VALID
+    // observation seconds. Do not infer this from row counts or assume 5 min.
+    timeCoverage:(period==='year'&&aggregation==='mean'&&
+     rows.length>0&&rows.every(r=>(r.count??0)===0||
+      (r.sumtime!==null&&Number.isFinite(r.sumtime)&&r.sumtime>=0)))?(()=>{
+      const validSeconds=rows.reduce((n,r)=>n+(r.sumtime??0),0);
+      const expectedSeconds=end-start;
+      return validSeconds<=expectedSeconds*1.01&&expectedSeconds>0?
+       {validSeconds,expectedSeconds,fraction:Math.min(1,validSeconds/expectedSeconds),
+        basis:'weewx_daily_sumtime_seconds',scope:'metric_only'}:null;
+     })():null,
     extremaObservedAt:result.extremaObservedAt===null?null:utcIso(result.extremaObservedAt),
     extremaSource:aggregation==='dir_at_max'?(result.value===null?'unknown':'archive'):
      extremaApplies?'unknown':'not_applicable'};
