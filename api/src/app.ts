@@ -318,8 +318,12 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
  }));
  app.get('/api/v1/readyz',async(req,reply)=>{
   try{await reader.ping();}catch{return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Archive unavailable',503);}
+  // Component health is informative; readiness depends only on the primary DB.
+  const camera=await archiveCameraStatus(sourceFiles);
+  const gw=liveHub?.gatewayStatus(now().getTime())??'disabled';
   return {schemaVersion:'1',checkedAt:now().toISOString(),ready:true,
-   components:{api:'ok',archive:'ok',live:liveHub?.gatewayStatus(now().getTime())==='fresh'?'ok':liveHub?'degraded':'disabled',camera:'disabled'}};
+   components:{api:'ok',archive:'ok',live:gw==='fresh'?'ok':gw==='disabled'?'disabled':'degraded',
+    camera:camera.status==='fresh'?'ok':camera.status==='stale'?'degraded':'disabled'}};
  });
  app.get('/api/v1/station',async(req,reply)=>conditional(req,reply,{
   schemaVersion:'1',stationId:'loucka',name:'Počasí Loučka',timezone:'Europe/Prague',
@@ -462,7 +466,8 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
    const gateway=units==='metricwx'?liveHub.getGateway(now().getTime()):null;
    if(gateway)return liveHub.createLiveEvent({eventType,observedAt:gateway.observedAt,
     receivedAt:gateway.receivedAt,emittedAt:now().toISOString(),units:'metricwx',
-    state:'live',source:'gw3000_live',readings:gatewayReadings(gateway)});
+    state:'live',source:'gw3000_live',timestampMeaning:gateway.timestampMeaning??'device_reported',
+    readings:gatewayReadings(gateway)});
    let row=liveHub.latestObservation;
    let readings:unknown={},state:'archive_fallback'|'stale'|'unavailable'=row?
     (now().getTime()/1000-row.dateTime>120?'stale':'archive_fallback'):'unavailable';

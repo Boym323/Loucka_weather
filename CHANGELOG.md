@@ -2,6 +2,14 @@
 
 Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místním kalendáři; commit v `main` automaticky neznamená, že je už nasazen na testovacím webu.
 
+## 2026-11-02
+
+### Živé přepínání prohlížeče a nezávislý provozní dohled (2. 11.)
+- Prohlížeč zobrazuje explicitní zdroj živých hodnot GW3000 versus původní archiv WeeWX, bez zavádějícího archivního popisku pod živými kartami.
+- Playwright ověřuje skutečný GW3000 stream v otevřené stránce bez reloadu a odděleně simuluje front-end výpadek a návrat na archiv pouze v testovacím browseru (desktop i mobil).
+- Informační `readyz` hlásí skutečný stav kamery a vypnutý versus chybující live zdroj, ale nezávisí na nich připravenost DB.
+- Pětiminutový LXC watchdog běží od 2. 11. 2026, doplněné samostatné hodinové kondicionální upozornění v ChatGPT na potvrzené výpadky a obnovu.
+
 ## 2026-11-01
 
 ### GW3000 LAN API – skutečný paket a úplnější živá telemetrie (1. 11.)

@@ -34,6 +34,11 @@ jobs:
         env:
           LOUCKA_PREVIEW_URL: https://dev.pocasi-loucka.eu
           LOUCKA_EXPECT_COMMIT: ${{ github.event_name == 'push' && github.sha || '' }}
+      - name: Verify public GW3000 live painting and browser-only archival failover
+        working-directory: frontend
+        run: node scripts/live-browser-check.mjs
+        env:
+          LOUCKA_PREVIEW_URL: https://dev.pocasi-loucka.eu
       - uses: actions/upload-artifact@v4
         if: always()
         with:

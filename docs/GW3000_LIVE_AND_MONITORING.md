@@ -112,3 +112,13 @@ Ecowitt GW3000 manual (Weather Services -> Customized), příklady Ecowitt HTTP 
 Dodaná lokální odpověď má `common_list` pro venkovní teplotu, relativní vlhkost, vítr, UV, záření; `rain` pro intenzitu; `wh25` pro vnitřní teplotu/vlhkost a absolutní/relativní tlak; `ch_pm25` pro kanál PM2,5 č. 1 a `ch_soil` pro procentuální vlhkost půdy na kanálu 1. Převod explicitně kontroluje jednotky a hranice, ignoruje neznámé ID a staré datum posledního blesku. Surové číselné kódy `battery` neinterpretuje jako procenta či volty. Tento parser nyní má regresní test podle skutečného paketu, nejen syntetických příkladů.
 
 Aktivace na LXC pokračuje uvedeným *read-only* postupem; nepotřebuje měnit Weather Services, Customized, ani firmware GW3000. Na port 80 zařízení provádíme jen běžné dotazy GET.
+
+## Ověření veřejného živého zobrazení (2. 11. 2026)
+
+CI po publikování nového commitu provádí `frontend/scripts/live-browser-check.mjs` přes Chromium nad veřejným `https://dev.pocasi-loucka.eu`. V případě aktivního GW3000 čeká na skutečné živé `/api/v1/live/current`, kontroluje indikátor a změnu paketů v otevřeném prohlížeči bez reloadu a správné označení archivní intervalové srážky. Nezasahuje do GW3000.
+
+Zcela oddělený browser-only test ověří přepnutí na živé hodnoty a návrat na WeeWX archiv na desktopu i mobilu. Syntetická data se vkládají **jen do izolovaného testovacího prohlížeče** událostí `loucka:live-observation`; nikdy nejsou zapisována na server, do databáze ani fyzické stanice. Expiraci simuluje browser-only `loucka:live-expired`. Test také odmítá přepsat aktuální hodnotu zastaralým paketem.
+
+Pětiminutový `loucka-monitor.timer` je již aktivován na LXC (2. 11. 2026, 06:49 SEČ) a první kontrola v journalu vrátila `LOUCKA OK`. Samostatná podmínková automatizace v ChatGPT kontroluje **veřejné** endpointy jednou za hodinu a má upozornit jen na potvrzený výpadek / obnovu. Je nezávislá na systemd a má nižší frekvenci než místní watchdog. Není to SMS ani přímý pětiminutový push. Vypnutí automatizace v ChatGPT se nijak nedotkne LXC.
+
+Oprava read-only `/readyz` sjednocuje informativní štítky pro kameru a GW3000 s `/monitor/status`. `ready:true` zůstává vázané pouze na dostupnost archivu, aby chyba volitelného zdroje neodstavila web.
