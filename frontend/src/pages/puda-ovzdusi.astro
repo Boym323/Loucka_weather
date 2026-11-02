@@ -26,14 +26,16 @@ import BaseLayout from '../layouts/BaseLayout.astro';
    {[
     {key:'pm25_1',title:'PM2,5 · archivní kanál',unit:'µg/m³'},
     {key:'soilTemp1',title:'Teplota půdy · archivní kanál 1',unit:'°C'},
-    {key:'soilTemp2',title:'Teplota půdy · archivní kanál 2',unit:'°C'}
+    {key:'soilTemp2',title:'Teplota půdy · archivní kanál 2',unit:'°C'},
+    {key:'soilTemp3',title:'Teplota půdy · archivní kanál 3',unit:'°C'},
+    {key:'soilTemp4',title:'Teplota půdy · archivní kanál 4',unit:'°C'}
    ].map(item=><article class="section soil-air-card">
     <div class="section-heading"><h3>{item.title}</h3><span class="status-chip" data-soil-trend-status={item.key}>Načítám</span></div>
     <div class="sensor-mini-trend" data-soil-trend={item.key} role="img" aria-label={'Archivní průběh '+item.title+' za 7 dní nebo posledních 24 hodin'}></div>
     <p class="source-note" data-soil-summary={item.key}>Archivní hodnoty se připravují · {item.unit}</p>
    </article>)}
   </div>
-  <p class="source-note">Půdní vlhkost kanálu 1 pochází přímo z lokální GW3000 odpovědi. Historii půdní vlhkosti nyní nelze spolehlivě vykreslit ze schváleného veřejného archivu; neodvozujeme ji z teploty půdy. Nepřiřazujeme fyzické hloubky ani kvalitu baterie bez evidence instalace.</p>
+  <p class="source-note">Kanál půdní teploty 2 může být bez údajů, zatímco ostatní kanály měří; každou časovou řadu proto hodnotíme zvlášť. Půdní vlhkost kanálu 1 pochází přímo z lokální GW3000 odpovědi. Historii půdní vlhkosti nyní nelze spolehlivě vykreslit ze schváleného veřejného archivu; neodvozujeme ji z teploty půdy. Nepřiřazujeme fyzické hloubky ani kvalitu baterie bez evidence instalace.</p>
  </section>
 </BaseLayout>
 <script>
@@ -76,7 +78,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
    }
   }
   const now=new Date(),from=new Date(now.getTime()-7*86400000).toISOString(),to=now.toISOString();
-  const metrics=[{key:'pm25_1',unit:'µg/m³',digits:1},{key:'soilTemp1',unit:'°C',digits:1},{key:'soilTemp2',unit:'°C',digits:1}];
+  const metrics=[{key:'pm25_1',unit:'µg/m³',digits:1},{key:'soilTemp1',unit:'°C',digits:1},
+   {key:'soilTemp2',unit:'°C',digits:1},{key:'soilTemp3',unit:'°C',digits:1},
+   {key:'soilTemp4',unit:'°C',digits:1}];
   async function trend(metric:typeof metrics[number]){
    const panel=root?.querySelector<HTMLElement>('[data-soil-trend="'+metric.key+'"]');
    const status=root?.querySelector<HTMLElement>('[data-soil-trend-status="'+metric.key+'"]');
