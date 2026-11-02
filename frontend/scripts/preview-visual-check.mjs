@@ -245,16 +245,27 @@ try{
      }));
      if(!controls.auto||!controls.fullscreen||!controls.latest)
       errors.push(size.name+': missing camera controls');
+     // A public JPEG may be rate-limited or unavailable. A correctly rendered
+     // fallback is a valid UI state; an unresolved spinner or broken icon is not.
      await page.waitForFunction(()=>{
       const image=document.querySelector('[data-archive-frames] img');
-      return !image||image.complete&&image.naturalWidth>0;
-     },null,{timeout:24000}).catch(()=>errors.push(size.name+': first camera preview not decoded; check image 429/404'));
+      if(!image)return true;
+      const note=image.nextElementSibling?.textContent??'';
+      return image.naturalWidth>0||note.includes('Náhled není dostupný');
+     },null,{timeout:24000}).catch(()=>errors.push(size.name+': camera thumbnail remained unresolved (no image or fallback)'));
      const preview=await page.evaluate(()=>{
       const image=document.querySelector('[data-archive-frames] img');
-      return {exists:!!image,complete:image?.complete??false,width:image?.naturalWidth??0};
+      const note=image?.nextElementSibling?.textContent??'';
+      return {
+       exists:!!image,complete:image?.complete??false,width:image?.naturalWidth??0,
+       fallback:note.includes('Náhled není dostupný'),hidden:image?.hidden??false,
+       link:!!image?.closest('a[href^="/api/v1/camera/frames/"]')
+      };
      });
      console.log('CAMERA THUMB',size.name,JSON.stringify(preview));
-     if(preview.exists&&preview.width===0)errors.push(size.name+': camera image failed to decode');
+     if(preview.exists&&preview.width===0&&(!preview.fallback||!preview.hidden||!preview.link))
+      errors.push(size.name+': missing safe fallback for unavailable camera image');
+     if(preview.fallback)console.warn('Camera image source temporarily unavailable; verified clickable fallback:',size.name);
      if(await page.locator('[data-camera-archive] [data-archive-status]').count()!==1)
       errors.push(size.name+': missing real camera archive gallery');
      if(await page.locator('[data-archive-video]').count()!==1)
