@@ -466,7 +466,8 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
    const gateway=units==='metricwx'?liveHub.getGateway(now().getTime()):null;
    if(gateway)return liveHub.createLiveEvent({eventType,observedAt:gateway.observedAt,
     receivedAt:gateway.receivedAt,emittedAt:now().toISOString(),units:'metricwx',
-    state:'live',source:'gw3000_live',readings:gatewayReadings(gateway)});
+    state:'live',source:'gw3000_live',timestampMeaning:gateway.timestampMeaning??'device_reported',
+    readings:gatewayReadings(gateway)});
    let row=liveHub.latestObservation;
    let readings:unknown={},state:'archive_fallback'|'stale'|'unavailable'=row?
     (now().getTime()/1000-row.dateTime>120?'stale':'archive_fallback'):'unavailable';
