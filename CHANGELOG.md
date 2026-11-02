@@ -4,6 +4,12 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ## 2026-11-02
 
+### Galerie kamery: oprava vizuálního regresního testu po nasazení
+- Veřejný screenshotový smoke odhalil, že lazy-loaded miniatura skrytá během čekání se nemusela vůbec načíst; obrázky ve frontě nyní používají `loading=eager` s původní rychlostní limitací.
+- Test rozlišuje tři stavy: dekódovaný snímek, bezpečný klikací fallback při nedostupnosti JPEG a chybný neukončený spinner/rozbitý obrázek.
+- Nedostupnost JPEG zdroje se neoznačuje za úspěšné načtení: výsledek CI vypíše upozornění a zachová veřejný odkaz na původní fotografii.
+
+
 ### Celoplošné vizuální doladění 11 stránek – desktop, tablet a mobil
 - Nový `frontend/src/styles/refinement.css` načítaný až po globálních stylech: jednotné nadpisy, karty, čitelné stavy, formuláře, tabulky a světlý motiv bez kopírování celé původní palety.
 - Na úvodní stránce se spodní karty přizpůsobují: historie má větší graf, kamera využívá dostupnou výšku a radar místo prázdného spodku zobrazuje větší mapu.
