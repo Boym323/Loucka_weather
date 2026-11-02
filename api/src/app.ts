@@ -299,9 +299,9 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
  });
  const bad=(reply:any,reqId:string,code:string,message:string,status=400)=>
   reply.code(status).send(errorBody(code,message,reqId));
- const conditional=(req:any,reply:any,body:unknown)=>{
+ const conditional=(req:any,reply:any,body:unknown,cacheControl='no-cache')=>{
   const etag=responseEtag(body);
-  reply.header('ETag',etag).header('Cache-Control','no-cache');
+  reply.header('ETag',etag).header('Cache-Control',cacheControl);
   const supplied=req.headers['if-none-match'];
   const candidates=typeof supplied==='string'?supplied.split(',').map((tag:string)=>tag.trim()):[];
   const matches=candidates.includes('*')||candidates.includes(etag)||candidates.includes(`W/${etag}`);
@@ -413,11 +413,10 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
     lastObservedAt:item?.lastObservedAt===null||item?.lastObservedAt===undefined?null:
       new Date(item.lastObservedAt*1000).toISOString()};
   });
-  reply.header('Cache-Control','private, max-age=30');
   return conditional(req,reply,{schemaVersion:'1',status:availability,
-    checkedAt:new Date(timestamp*1000).toISOString(),sampleWindowHours:24,
+    checkedAt:new Date((sensorPresenceCache?.at??timestamp)*1000).toISOString(),sampleWindowHours:24,
     interpretation:'A non-null archive sample is evidence of a field, not sensor installation or validated quality.',
-    channels});
+    channels},availability==='archive_recent'?'private, max-age=30':'no-cache');
  });
  app.get('/api/v1/camera/status',async()=>archiveCameraStatus(sourceFiles));
  // Read-only provisional records for completed calendar days, never silently
