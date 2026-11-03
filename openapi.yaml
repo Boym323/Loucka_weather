@@ -105,6 +105,62 @@ paths:
         '429': { $ref: '#/components/responses/TooMany' }
         '503': { $ref: '#/components/responses/Unavailable' }
         '500': { $ref: '#/components/responses/Internal' }
+  /api/v1/climate/temperature-years:
+    get:
+      operationId: getAllYearsTemperature
+      summary: Daily outdoor temperature across every available year in one read-only response
+      description: |
+        A single bounded SELECT over original WeeWX archive_day_outTemp.
+        Dates and period lengths use Europe/Prague local midnight, including 23/25-hour DST days.
+        Mean temperatures are weighted by sumtime. Incomplete and malformed daily rows
+        are labelled; missing dates are omitted, never zero-filled. Data remain original_unverified.
+        The current unfinished day is excluded. Browser charts may compare daily and
+        time-weighted monthly values, but the baseline is NOT an approved climate normal.
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
+        - $ref: '#/components/parameters/Dataset'
+        - name: units
+          in: query
+          schema: { type: string, enum: [metricwx], default: metricwx }
+      responses:
+        '200':
+          description: Daily temperature values and measurement-time coverage since 2009
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [schemaVersion, metric, unit, dataset, qcStatus, firstYear, endsBefore, points]
+                properties:
+                  schemaVersion: { type: string, const: '1' }
+                  metric: { type: string, const: outTemp }
+                  unit: { type: string, const: '°C' }
+                  dataset: { type: string, const: original }
+                  qcStatus: { type: string, const: original_unverified }
+                  firstYear: { type: integer, const: 2009 }
+                  endsBefore: { type: string, format: date }
+                  dataRevision: { type: string }
+                  points:
+                    type: array
+                    maxItems: 7500
+                    items:
+                      type: object
+                      required: [date, year, monthDay, value, validSeconds, expectedSeconds, quality]
+                      properties:
+                        date: { type: string, format: date }
+                        year: { type: integer, minimum: 2009 }
+                        monthDay:
+                          type: string
+                          pattern: '^[0-9]{2}-[0-9]{2}$'
+                        value: { type: [number, 'null'] }
+                        validSeconds: { type: [integer, 'null'], minimum: 0 }
+                        expectedSeconds: { type: integer, minimum: 82800, maximum: 90000 }
+                        quality: { type: string, enum: [derived, partial, missing, suspect] }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '422': { $ref: '#/components/responses/InvalidRange' }
+        '429': { $ref: '#/components/responses/TooMany' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+        '500': { $ref: '#/components/responses/Internal' }
   /api/v1/climate/annual-matrix:
     get:
       operationId: getConsolidatedAnnualClimate

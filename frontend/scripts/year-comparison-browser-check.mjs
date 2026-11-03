@@ -34,6 +34,35 @@ try{
   page.on('pageerror',error=>errors.push(width+'px JS: '+error.message));
   await page.route('**/api/v1/**',async route=>{
    const url=new URL(route.request().url());
+   if(url.pathname==='/api/v1/climate/temperature-years'){
+    // Synthetic historical sequence only in this isolated Chromium test.
+    const points=[];
+    for(let year=2009;year<=2026;year++){
+     for(let month=1;month<=3;month++){
+      if(year===2009&&month<3)continue;
+      const days=new Date(Date.UTC(year,month,0)).getUTCDate();
+      for(let day=1;day<=days;day++){
+       if(year===2011&&month===2&&day<20)continue;
+       const date=year+'-'+String(month).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+       const following=new Date(Date.UTC(year,month-1,day+1)).toISOString().slice(0,10);
+       const seconds=(Date.parse(pragueMidnightIso(following))-
+        Date.parse(pragueMidnightIso(date)))/1000;
+       const partial=year===2017&&month===2&&day===12;
+       const value=Number(((year-2016)*.42+
+        Math.sin((day/31+month)*1.8)*4+(month-1)*3).toFixed(2));
+       points.push({date,year,monthDay:date.slice(5),value,
+        validSeconds:partial?3600:seconds,expectedSeconds:seconds,
+        quality:partial?'partial':'derived'});
+      }
+     }
+    }
+    return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+     schemaVersion:'1',metric:'outTemp',unit:'°C',dataset:'original',
+     source:'weewx_daily',qcStatus:'original_unverified',
+     firstYear:2009,endsBefore:'2026-11-03',
+     dataRevision:'browser-fixture-temperature',points
+    })});
+   }
    if(url.pathname==='/api/v1/climate/annual-matrix'){
     const metric=url.searchParams.get('metric')??'outTemp';
     const unit=metric==='rain'?'mm':metric==='outHumidity'?'%':'°C';
@@ -76,6 +105,35 @@ try{
   });
   const response=await page.goto(origin+'klimatologie/',{waitUntil:'domcontentloaded'});
   assert.equal(response?.status(),200);
+  const all=page.locator('[data-all-years-temperature]');
+  assert.equal(await all.count(),1);
+  await all.scrollIntoViewIfNeeded();
+  await page.waitForFunction(()=>
+   document.querySelectorAll('[data-temperature-year]').length===18,
+   null,{timeout:25000});
+  assert.equal(await all.locator('[data-temperature-highlight] option').count(),18);
+  assert.equal(await all.locator('[data-temperature-chart] svg').count(),1);
+  assert.match(await all.locator('[data-temperature-summary]').textContent()??'',/18 z 18/);
+  const chartLabel=await all.locator('[data-temperature-chart]').getAttribute('aria-label');
+  assert.match(chartLabel??'',/2009–2026/);
+  await all.locator('[data-temperature-resolution]').selectOption('monthly');
+  assert.match(await all.locator('[data-temperature-summary]').textContent()??'',/měsíční/);
+  await all.locator('[data-temperature-highlight]').selectOption('2024');
+  await all.locator('[data-temperature-show-all]').uncheck();
+  assert.match(await all.locator('[data-temperature-summary]').textContent()??'',/1 z 18/);
+  await all.locator('[data-temperature-filter] summary').click();
+  await all.locator('[data-temperature-year="2025"]').check();
+  assert.match(await all.locator('[data-temperature-summary]').textContent()??'',/2 z 18/);
+  await all.locator('[data-temperature-select-all]').click();
+  assert.match(await all.locator('[data-temperature-summary]').textContent()??'',/18 z 18/);
+  await all.locator('[data-temperature-resolution]').selectOption('daily');
+  assert.match(await all.locator('[data-temperature-summary]').textContent()??'',/denní/);
+  await all.locator('[data-temperature-average]').uncheck();
+  await all.locator('[data-temperature-range]').uncheck();
+  await all.locator('[data-temperature-average]').check();
+  await all.locator('[data-temperature-range]').check();
+  assert.equal(await all.locator('[data-temperature-chart] svg').count(),1);
+  console.log('ALL YEARS TEMP',width,'18 years, daily/monthly, filters, baseline/range, SVG');
   const section=page.locator('[data-year-comparison]');
   await section.scrollIntoViewIfNeeded();
   await page.waitForFunction(()=>{

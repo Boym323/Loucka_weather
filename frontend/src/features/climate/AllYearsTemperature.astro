@@ -1,0 +1,296 @@
+---
+import '../../styles/all-years-temperature.css';
+---
+<section class="all-years-temp section" id="teplota-vsechny-roky"
+ data-all-years-temperature aria-labelledby="all-years-temp-title">
+ <div class="all-years-temp-heading">
+  <div>
+   <span class="eyebrow">Klimatologie · Loučka · archiv od roku 2009</span>
+   <h2 id="all-years-temp-title">Teplota všech roků v jednom grafu</h2>
+   <p>Jedna křivka představuje jeden rok. Dny jsou zarovnány podle kalendáře, takže můžeš přímo srovnat průběh zimy, jara i léta.</p>
+  </div>
+  <span class="status-chip" data-temperature-status role="status" aria-live="polite">Připravuji data…</span>
+ </div>
+ <div class="all-years-temp-controls">
+  <label>Podrobnost
+   <select data-temperature-resolution>
+    <option value="daily" selected>Denní průměry</option>
+    <option value="monthly">Měsíční průměry</option>
+   </select>
+  </label>
+  <label>Zvýraznit rok
+   <select data-temperature-highlight aria-label="Rok se zvýrazněnou křivkou">
+    <option value="">Načítání roků…</option>
+   </select>
+  </label>
+  <label class="all-years-temp-checkbox"><input type="checkbox" data-temperature-show-all checked/>
+   <span>Všechny roky</span></label>
+  <label class="all-years-temp-checkbox"><input type="checkbox" data-temperature-average checked/>
+   <span>Orientační průměr</span></label>
+  <label class="all-years-temp-checkbox"><input type="checkbox" data-temperature-range checked/>
+   <span>Rozmezí min–max</span></label>
+ </div>
+ <div class="all-years-temp-legend">
+  <span class="all-years-temp-key"><i class="all-years-temp-key-selected"></i> Zvýrazněný rok</span>
+  <span class="all-years-temp-key"><i class="all-years-temp-key-background"></i> Ostatní roky</span>
+  <span class="all-years-temp-key"><i class="all-years-temp-key-average"></i> Průměr dostupných let</span>
+  <span class="all-years-temp-key"><i class="all-years-temp-key-range"></i> Rozmezí min–max</span>
+ </div>
+ <div class="all-years-temp-plot" data-temperature-chart role="img"
+  aria-label="Načítá se graf denních teplot za všechny dostupné roky."></div>
+ <div class="all-years-temp-footer">
+  <span data-temperature-summary>Data z originálního archivu WeeWX. Chybějící měření zůstávají prázdná.</span>
+  <span data-temperature-selected-coverage></span>
+ </div>
+ <details class="all-years-temp-filter" data-temperature-filter>
+  <summary>Vybrat jednotlivé roky</summary>
+  <div class="all-years-temp-years" data-temperature-year-choices aria-label="Zobrazení jednotlivých roků"></div>
+  <div class="all-years-temp-filter-actions">
+   <button type="button" data-temperature-select-all>Zobrazit všechny</button>
+   <button type="button" data-temperature-only-selected>Jen zvýrazněný rok</button>
+  </div>
+ </details>
+ <p class="source-note all-years-temp-disclaimer">
+  Zdroj: původní denní agregace WeeWX, datum Europe/Prague. Údaje ještě nejsou definitivně
+  historicky ověřené. Průměr a rozmezí vycházejí z dostupných hodnot dokončených roků,
+  nikoli z oficiálního klimatického normálu. Měsíční průměr se zobrazuje až od 50 %
+  naměřeného časového pokrytí. Rok 2009 je neúplný; probíhající rok končí posledním dokončeným dnem.
+  Žádné chybějící dny nejsou doplňovány nulou.
+ </p>
+</section>
+<script>
+ import {getTemperatureYears} from '../../shared/api/client';
+ import {overlayTemperatureYears,monthLabels,hasValidTemperature} from '../../shared/domain/temperature-years';
+ import type {TemperatureYears,TemperatureOverlay,TemperatureResolution} from '../../shared/domain/temperature-years';
+ import * as echarts from 'echarts/core';
+ import {LineChart} from 'echarts/charts';
+ import {GridComponent,TooltipComponent} from 'echarts/components';
+ import {SVGRenderer} from 'echarts/renderers';
+ echarts.use([LineChart,GridComponent,TooltipComponent,SVGRenderer]);
+
+ const root=document.querySelector<HTMLElement>('[data-all-years-temperature]');
+ if(root){
+  const plot=root.querySelector<HTMLElement>('[data-temperature-chart]')!;
+  const status=root.querySelector<HTMLElement>('[data-temperature-status]')!;
+  const mode=root.querySelector<HTMLSelectElement>('[data-temperature-resolution]')!;
+  const highlight=root.querySelector<HTMLSelectElement>('[data-temperature-highlight]')!;
+  const showAll=root.querySelector<HTMLInputElement>('[data-temperature-show-all]')!;
+  const average=root.querySelector<HTMLInputElement>('[data-temperature-average]')!;
+  const range=root.querySelector<HTMLInputElement>('[data-temperature-range]')!;
+  const choices=root.querySelector<HTMLElement>('[data-temperature-year-choices]')!;
+  const summary=root.querySelector<HTMLElement>('[data-temperature-summary]')!;
+  const coverage=root.querySelector<HTMLElement>('[data-temperature-selected-coverage]')!;
+  const chart=echarts.init(plot,undefined,{renderer:'svg'});
+  const resize=new ResizeObserver(()=>chart.resize());resize.observe(plot);
+  const abort=new AbortController();
+  let loaded:TemperatureYears|undefined;
+  let overlay:TemperatureOverlay|undefined;
+  let selectedYear:number|null=null;
+  let visible=new Set<number>();
+  let requestStarted=false;
+  const colors=[
+   '#4d718f','#b4786a','#788c65','#956f9f','#709897','#b18b55',
+   '#6b83a3','#9a7864','#64817c','#a48b9d','#778d58','#bd7b62',
+   '#648fa9','#ad9867','#7587a5','#ae776b','#78978b','#967ea9',
+   '#6783a1','#a58965','#678b76'
+  ];
+  const number=(value:number)=>new Intl.NumberFormat('cs-CZ',{
+   minimumFractionDigits:1,maximumFractionDigits:1
+  }).format(value);
+  const message=(text:string,state:'warning'|'error')=>{
+   status.className='status-chip '+state;status.textContent=text;
+  };
+  const currentlyVisible=(year:number)=>visible.has(year);
+  const buildYearControls=()=>{
+   if(!overlay)return;
+   choices.replaceChildren();highlight.replaceChildren();
+   for(const year of overlay.years){
+    const option=document.createElement('option');
+    option.value=String(year);
+    option.textContent=year===overlay.years.at(-1)?year+' · probíhá':String(year);
+    highlight.append(option);
+    const label=document.createElement('label');
+    label.className='all-years-temp-year-choice';
+    const checkbox=document.createElement('input');
+    checkbox.type='checkbox';
+    checkbox.value=String(year);
+    checkbox.dataset.temperatureYear=String(year);
+    checkbox.checked=visible.has(year);
+    const text=document.createElement('span');text.textContent=String(year);
+    label.append(checkbox,text);choices.append(label);
+   }
+   highlight.value=String(selectedYear);
+  };
+  const syncCheckboxes=()=>{
+   if(!overlay)return;
+   showAll.checked=visible.size===overlay.years.length;
+   choices.querySelectorAll<HTMLInputElement>('[data-temperature-year]').forEach(input=>{
+    input.checked=visible.has(Number(input.value));
+   });
+  };
+  const render=()=>{
+   if(!loaded||!selectedYear)return;
+   overlay=overlayTemperatureYears(loaded,mode.value as TemperatureResolution);
+   const data=overlay,years=data.years;
+   const selected=selectedYear;
+   const selectedCoverage=data.validDays.get(selected)??0;
+   coverage.textContent=selected+' · '+selectedCoverage+' dnů s daty';
+   const complete=years.filter(y=>y<years.at(-1)!);
+   const hasBaseline=complete.length>=3;
+   const showRange=range.checked&&hasBaseline;
+   const dark=document.documentElement.dataset.theme==='dark';
+   const fg=dark?'#c9d9d7':'#47605e';
+   const grid=dark?'#32484d':'#dbe5e3';
+   const highlightColor=dark?'#ffb678':'#bc5d2e';
+   const baselineColor=dark?'#a2ebe0':'#0d6266';
+   const axis=data.keys;
+   // The stacked invisible baseline and positive span shade exactly [min,max],
+   // including freezing temperatures (stackStrategy=all preserves negative bases).
+   const series:any[]=[];
+   if(showRange){
+    series.push({
+     id:'band-base',name:'Rozmezí: spodní hranice',type:'line',
+     stack:'year-range',stackStrategy:'all',data:data.minimum,
+     connectNulls:false,showSymbol:false,silent:true,
+     lineStyle:{opacity:0},itemStyle:{opacity:0},areaStyle:{opacity:0},z:0
+    });
+    series.push({
+     id:'band-range',name:'Rozmezí min–max',type:'line',
+     stack:'year-range',stackStrategy:'all',
+     data:data.maximum.map((max,i)=>max!==null&&data.minimum[i]!==null?max-data.minimum[i]!:null),
+     connectNulls:false,showSymbol:false,silent:true,
+     lineStyle:{opacity:0},itemStyle:{opacity:0},
+     areaStyle:{color:dark?'rgba(130,198,193,.24)':'rgba(48,116,122,.15)',opacity:1},z:0
+    });
+   }
+   for(let i=0;i<years.length;i++){
+    const year=years[i]!;
+    if(!currentlyVisible(year))continue;
+    const selectedLine=year===selected;
+    series.push({
+     id:'year-'+year,name:String(year),type:'line',data:data.values.get(year),
+     smooth:false,connectNulls:false,showSymbol:false,emphasis:{focus:'series'},
+     sampling:'none',
+     lineStyle:{width:selectedLine?3.2:1.05,
+      color:selectedLine?highlightColor:colors[i%colors.length],
+      opacity:selectedLine?1:(dark?.67:.53)},
+     itemStyle:{color:selectedLine?highlightColor:colors[i%colors.length]},
+     z:selectedLine?8:2
+    });
+   }
+   if(average.checked&&hasBaseline)series.push({
+    id:'baseline',name:'Průměr dokončených let',type:'line',
+    data:data.average,connectNulls:false,showSymbol:false,smooth:false,
+    lineStyle:{width:2.7,color:baselineColor,type:'dashed'},
+    itemStyle:{color:baselineColor},z:10
+   });
+   const tooltip=(items:any[])=>{
+    if(!Array.isArray(items)||!items.length)return '';
+    const key=String(items[0].axisValue);
+    const label=mode.value==='daily'?
+     Number(key.slice(3))+'. '+monthLabels[Number(key.slice(0,2))-1]:
+     monthLabels[Number(key)-1];
+    const lines=items.filter(item=>String(item.seriesName)!=='Rozmezí: spodní hranice'&&
+     String(item.seriesName)!=='Rozmezí min–max'&&hasValidTemperature(item.data));
+    lines.sort((a,b)=>{
+     const aPriority=String(a.seriesName)===String(selected)?-2:
+      String(a.seriesName).startsWith('Průměr')?-1:0;
+     const bPriority=String(b.seriesName)===String(selected)?-2:
+      String(b.seriesName).startsWith('Průměr')?-1:0;
+     return aPriority-bPriority||Number(b.data)-Number(a.data);
+    });
+    return '<div style="min-width:145px;max-height:270px;overflow:auto;padding:2px 4px">'+
+     '<strong>'+label+'</strong>'+
+     lines.map(item=>'<div style="display:flex;justify-content:space-between;gap:16px">'+
+      '<span>'+item.marker+' '+item.seriesName+'</span><b>'+number(Number(item.data))+' °C</b></div>').join('')+
+     (lines.length===0?'<div>Bez platného měření</div>':'')+'</div>';
+   };
+   chart.setOption({
+    animation:false,backgroundColor:'transparent',
+    grid:{left:window.innerWidth<600?49:60,right:window.innerWidth<600?12:28,top:24,bottom:40},
+    tooltip:{trigger:'axis',confine:true,appendToBody:false,formatter:tooltip,
+     textStyle:{fontSize:12}},
+    xAxis:{type:'category',boundaryGap:false,data:axis,
+     axisTick:{show:false},axisLine:{lineStyle:{color:grid}},
+     axisLabel:{color:fg,fontSize:11,interval:0,hideOverlap:true,
+      formatter:(key:string)=>mode.value==='monthly'?
+       monthLabels[Number(key)-1]:(key.endsWith('-01')?
+        monthLabels[Number(key.slice(0,2))-1]:'')}},
+    yAxis:{type:'value',scale:true,name:'°C',nameTextStyle:{color:fg,fontSize:12},
+     axisLabel:{color:fg,fontSize:11},axisLine:{show:false},axisTick:{show:false},
+     splitLine:{lineStyle:{color:grid,type:'dotted'}}},
+    series
+   },true);
+   plot.setAttribute('aria-label',(mode.value==='daily'?'Denní':'Měsíční')+
+    ' srovnání teplot ve všech letech '+years[0]+'–'+years.at(-1)+
+    ', zobrazeno '+visible.size+' roků, zvýrazněn '+selected+
+    '. Nulové a chybějící hodnoty se nezaměňují.');
+   summary.textContent='Zobrazeno '+visible.size+' z '+years.length+
+    ' roků · '+(mode.value==='daily'?'denní':'měsíční')+
+    ' teploty · průměr dokončených roků 2009–'+(years.at(-1)!-1);
+   chart.resize();
+  };
+  const load=async()=>{
+   if(requestStarted)return;
+   requestStarted=true;
+   message('Načítám archivní denní teploty…','warning');
+   try{
+    loaded=await getTemperatureYears(abort.signal);
+    if(abort.signal.aborted)return;
+    overlay=overlayTemperatureYears(loaded,'daily');
+    selectedYear=overlay.years.at(-1)??null;
+    visible=new Set(overlay.years);
+    buildYearControls();syncCheckboxes();render();
+    message('Archiv WeeWX · bez finální QC','warning');
+   }catch{
+    if(abort.signal.aborted)return;
+    message('Teplotní archiv není nyní dostupný','error');
+    plot.textContent='Graf nelze načíst. Je potřeba dostupné API denních teplot; žádné náhradní hodnoty se nevykreslují.';
+    plot.classList.add('is-unavailable');
+   }
+  };
+  mode.addEventListener('change',render);
+  highlight.addEventListener('change',()=>{
+   const chosen=Number(highlight.value);
+   if(!overlay?.years.includes(chosen))return;
+   selectedYear=chosen;
+   visible.add(chosen);
+   syncCheckboxes();render();
+  });
+  showAll.addEventListener('change',()=>{
+   if(!overlay||selectedYear===null)return;
+   visible=new Set(showAll.checked?overlay.years:[selectedYear]);
+   syncCheckboxes();render();
+  });
+  average.addEventListener('change',render);
+  range.addEventListener('change',render);
+  choices.addEventListener('change',event=>{
+   const input=(event.target as HTMLElement).closest<HTMLInputElement>('[data-temperature-year]');
+   if(!input||!overlay)return;
+   const year=Number(input.value);
+   if(input.checked)visible.add(year);else visible.delete(year);
+   if(!visible.size){visible.add(selectedYear??year);}
+   syncCheckboxes();render();
+  });
+  root.querySelector('[data-temperature-select-all]')?.addEventListener('click',()=>{
+   if(!overlay)return;
+   visible=new Set(overlay.years);syncCheckboxes();render();
+  });
+  root.querySelector('[data-temperature-only-selected]')?.addEventListener('click',()=>{
+   if(selectedYear===null)return;
+   visible=new Set([selectedYear]);syncCheckboxes();render();
+  });
+  const onTheme=()=>{if(loaded)render();};
+  window.addEventListener('loucka:theme-change',onTheme);
+  const observer=new IntersectionObserver(entries=>{
+   if(entries.some(entry=>entry.isIntersecting)){
+    observer.disconnect();void load();
+   }
+  },{rootMargin:'300px'});
+  observer.observe(root);
+  document.addEventListener('astro:before-swap',()=>{
+   abort.abort();observer.disconnect();resize.disconnect();chart.dispose();
+   window.removeEventListener('loucka:theme-change',onTheme);
+  },{once:true});
+ }
+</script>

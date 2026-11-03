@@ -4,6 +4,14 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ## 2026-11-03
 
+### Teplota 2009–dnes v jednom čárovém grafu
+- Na Klimatologii přidán samostatný celoroční graf všech roků, s výchozím zobrazením všech linek, zvýrazněním aktuálního roku a jednotlivým výběrem let.
+- Přepínání denních/měsíčních průměrů, orientační průměr dokončených roků a volitelné stínované min/max rozmezí. Chybějící dny se nepropojují.
+- Nový read-only endpoint /api/v1/climate/temperature-years: jediný bounded SQL scan původních denních souhrnů WeeWX, okamžitě konvertovaný na °C, metadata časového pokrytí, DST, in-memory cache a ETag.
+- Testy kalendáře, 29. února, 23/25hodinových dní CET/CEST, chybějících měření, měsíčního váženého průměru, API a skutečného Chromia.
+- Veřejný staging smoke ověřuje nejen přítomnost grafu, ale i dostupnost nového backend endpointu. Zdroj stále original_unverified; žádná změna databází.
+
+
 ### Roční konsolidace 2009–2026
 - API annual-matrix vrací všechny roky z původních WeeWX denních souhrnů s časově váženými průměry, správnými součty, explicitními mezerami a statusem original_unverified.
 - Rozšířeno porovnání heatmap na 35 měřených veličin, přidaná roční tabulka a dostupnost měření.

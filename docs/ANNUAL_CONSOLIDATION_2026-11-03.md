@@ -29,3 +29,26 @@ Tato změna neprovádí fyzický merge šesti databází, nic nemaže, neopravuj
 Rok s 365 platnými dny nemusí mít 100 % sekundového pokrytí. Rok bez UV před rokem 2022 neznamená nulové UV.
 Srovnání dvou roků na heatmapě používá společné kalendářní dny; celoroční agregát v tabulce používá vlastní dostupné intervaly daného roku. Tyto dva výsledky mají odlišný jmenovatel.
 Snapshot je časově omezený; dynamické roční API načítá zdroj znovu v bounded cache.
+
+## Jeden graf teplot všech roků (2026-11-03)
+
+Adresa: /klimatologie/#teplota-vsechny-roky
+
+- API: GET /api/v1/climate/temperature-years?units=metricwx&dataset=original.
+- Jeden read-only dotaz na archive_day_outTemp pro 2009 až poslední dokončený místní den.
+- Každý řádek zachovává datum v Europe/Prague, teplotní průměr wsum/sumtime
+  konvertovaný na °C, počet platných sekund a délku dne (23, 24 nebo 25 hodin).
+- Neúplné dny mají stav partial, neplatné hodnoty suspect, chybějící souhrny missing.
+  Pro neexistující datum se žádná hodnota nevyrábí, graf ponechá prázdné místo.
+- Graf zobrazuje 18 let na společné ose s odděleným 29. únorem;
+  měsíční průměr vzniká vážením skutečných sekund a vyžaduje alespoň 50 %
+  pokrytí celého měsíce. Ostatní roky nezmizí, pouze jsou slaběji vykreslené.
+- Orientační průměr a min/max interval pochází z dokončených dostupných roků;
+  pro den či měsíc vyžaduje alespoň tři různé historické roky. Není to klimatický normál.
+- Výběr zvýrazněného roku, zapínání všech/konkrétních roků, průměru a rozmezí
+  probíhá v prohlížeči bez dalších API požadavků.
+- API nikdy neposkytne approved dataset bez schválené rekonstrukce;
+  veřejná staging kontrola ověřuje endpoint po nasazení backendu i frontendu.
+
+Výkon: odpověď má nanejvýš 7500 denních řádků, pouze jednu veličinu,
+cache 15 minut (jediný současný in-flight dotaz) a HTTP ETag.

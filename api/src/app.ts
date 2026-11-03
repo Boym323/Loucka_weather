@@ -13,6 +13,7 @@ import {readFile} from 'node:fs/promises';
 import {climateRecordsFromDaily} from './records.js';
 import {DayScopedCache} from './records-cache.js';
 import {consolidateAnnualSummaries} from './climate-consolidation.js';
+import {buildTemperatureDays} from './temperature-years.js';
 import {sensorChannels} from './sensor-evidence.js';
 import type {Metric} from './metrics.js';
 import type {OutputUnits} from './units.js';
@@ -352,7 +353,7 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
   archivalSource:'weewx',supportedOutputUnits:['us','metric','metricwx'],
   dataRevision:liveHub?.dataRevision??'original-unverified',updatedAt:metadataCheckedAt,
   capabilities:['current','history','sensors',...(reader.dailySummaries?
-   ['daily_statistics','monthly_statistics','yearly_statistics','annual_consolidation']:[]),...(liveHub?['live_sse']:[]),...(liveHub?.gatewayConfigured?['gw3000_live']:[])],
+   ['daily_statistics','monthly_statistics','yearly_statistics','annual_consolidation','temperature_all_years']:[]),...(liveHub?['live_sse']:[]),...(liveHub?.gatewayConfigured?['gw3000_live']:[])],
   availableDatasets:['original']
  }));
  app.get('/api/v1/live/current',async()=>{
@@ -438,6 +439,57 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
     channels},availability==='archive_recent'?'private, max-age=30':'no-cache');
  });
  app.get('/api/v1/camera/status',async()=>archiveCameraStatus(sourceFiles));
+
+
+ // All historical years in a single request; bounded, SELECT-only and cache-coalesced.
+ // The source is ORIGINAL WeeWX daily summaries, never approved reconstruction.
+ type TemperatureYearsQuery={units?:'metricwx';dataset?:Dataset};
+ let temperatureYearsCache:
+  {key:string;expires:number;load:Promise<unknown>}|undefined;
+ app.get<{Querystring:TemperatureYearsQuery}>('/api/v1/climate/temperature-years',{
+  schema:{querystring:{type:'object',additionalProperties:false,properties:{
+   units:{type:'string',enum:['metricwx']},
+   dataset:{type:'string',enum:['original','approved']}
+  }}}
+ },async(req,reply)=>{
+  if(req.query.dataset==='approved')
+   return bad(reply,req.id,'DATASET_UNAVAILABLE','Approved temperature reconstruction is not published',503);
+  if(!reader.dailySummaries)
+   return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Daily source is not available',503);
+  const today=localDateAt(Math.floor(now().getTime()/1000));
+  const from=localMidnight('2009-01-01'),until=localMidnight(today);
+  if(from===null||until===null||until<=from)
+   return bad(reply,req.id,'INVALID_RANGE','Daily boundaries unavailable',422);
+  const days=Math.round((Date.parse(today+'T00:00:00Z')-
+   Date.parse('2009-01-01T00:00:00Z'))/86400000);
+  if(days<1||days>7500)
+   return bad(reply,req.id,'LIMIT_EXCEEDED','Historical range exceeds bounded reader limit',422);
+  const key=today,at=Date.now();
+  let load=temperatureYearsCache?.key===key&&temperatureYearsCache.expires>at?
+   temperatureYearsCache.load:null;
+  if(!load){
+   load=(async()=>{
+    const rows=await reader.dailySummaries!('outTemp',from,until,days+1);
+    if(rows.length>days)throw new Error('Truncated temperature daily source');
+    const points=buildTemperatureDays({
+     rows,from,until,today,localDateAt,localMidnight,
+     convert:(value,usUnits)=>converted('outTemp',value,usUnits,'metricwx').value
+    });
+    return {schemaVersion:'1',metric:'outTemp',unit:'°C',dataset:'original',
+     source:'weewx_daily',qcStatus:'original_unverified',
+     firstYear:2009,endsBefore:today,
+     dataRevision:'temp-years-'+createHash('sha256').update(JSON.stringify(rows)).digest('hex').slice(0,20),
+     points,
+     description:'Daily time-weighted means from original WeeWX summaries. Missing dates are not zero-filled; reference stations are not substituted.'};
+   })();
+   temperatureYearsCache={key,expires:at+15*60_000,load};
+  }
+  try{return conditional(req,reply,await load,'public, max-age=300');}
+  catch{
+   if(temperatureYearsCache?.load===load)temperatureYearsCache=undefined;
+   return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Temperature year-series could not be verified',503);
+  }
+ });
 
  // Single bounded scan, one selected metric, all calendar years; no database writes.
  type AnnualMatrixQuery={metric?:string;units?:OutputUnits;dataset?:Dataset};
