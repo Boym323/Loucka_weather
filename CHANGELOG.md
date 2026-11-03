@@ -4,6 +4,11 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ## 2026-11-03
 
+### Oprava veřejného testu po zkrácení zdrojových popisků
+- Prohlížečová kontrola živých měření stále vyžadovala doslovné staré věty. Test nyní ověřuje stabilní význam: živý zdroj GW3000 + archiv WeeWX, a po expiraci žádný živý původ.
+- Zkontrolováno z veřejného logu: skutečné live údaje se vykreslují, syntetická data zůstávají pouze v izolovaném prohlížeči a archivní fallback vrací naměřené hodnoty.
+- Žádná změna API, produkčních hodnot ani časové logiky.
+
 ### Jemné dokončení Evergreen Observatory
 - Dotažena čitelnost drobných zdrojových a časových popisků v hlavním panelu, anemometru, 24h grafu a denním souhrnu; hodnoty mají stabilní tabulkové číslice.
 - Sjednoceny rozměry a nadpisy čtyř úvodních karet, jemné stíny a vizuální rytmus. Kamera má decentní zvětšení při hoveru/fokusu; animace respektuje `prefers-reduced-motion`.

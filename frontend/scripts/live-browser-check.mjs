@@ -9,7 +9,8 @@ const base=process.env.LOUCKA_PREVIEW_URL||'https://dev.pocasi-loucka.eu';
 const issues=[];
 const browser=await chromium.launch({headless:true});
 const fmt=(n,d)=>new Intl.NumberFormat('cs-CZ',{minimumFractionDigits:d,maximumFractionDigits:d}).format(n);
-const expectedProvenance='Živá data GW3000 přes lokální API';
+// Verify stable source semantics, not changeable explanatory wording.
+const hasLiveSourceLabel=text=>Boolean(text?.includes('Živá data GW3000')&&text.includes('WeeWX'));
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 
 async function liveCurrent(){
@@ -118,7 +119,7 @@ try{
    }));
    console.log('BROWSER SYNTHETIC PAINT',viewport.name,JSON.stringify(rendered));
    if(rendered.temp!==fmt(43.21,1)||rendered.pm25!==fmt(55.55,1)||
-     !rendered.status?.includes('GW3000')||!rendered.provenance?.includes(expectedProvenance))
+     !rendered.status?.includes('GW3000')||!hasLiveSourceLabel(rendered.provenance))
     issues.push(viewport.name+': live event failed to paint selected metric values');
    if(rendered.rain!==(archive?.trim()??''))issues.push(viewport.name+': fake gateway interval rain displayed');
 
@@ -138,7 +139,7 @@ try{
      const chip=document.querySelector('[data-current-status]')?.textContent??'';
      const provenance=document.querySelector('[data-current-provenance]')?.textContent??'';
      return (chip.includes('Archivní měření')||chip.includes('Zastaralé měření'))&&
-      provenance.includes('Původní archiv WeeWX');
+      provenance.includes('Archiv WeeWX')&&!provenance.includes('Živá data GW3000');
     },null,{timeout:35000});
    }catch(error){
     const diag=await page.evaluate(()=>({
