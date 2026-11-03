@@ -4,6 +4,19 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ## 2026-11-03
 
+### Evergreen Observatory — implementace schváleného nadčasového vzhledu
+- Úvodní fotografická krajina pochází z aktuální URL **skutečné západní webkamery**. Jde o obrazový kontext, nikoliv podklad potvrzující počasí; čas pořízení není ověřen a zůstává označen.
+- Původní tmavý přístrojový hero panel nahrazen světlým poloprůhledným meteorologickým celkem s měřenou teplotou, vlhkostí, tlakem, rosným bodem, denním souhrnem, větrnou růžicí a skutečným grafem z archivu. Tmavý motiv má samostatně čitelný kontrast.
+- Anemometr v horním panelu nově spojuje **směr, rychlost a nárazy**, přičemž každý údaj používá pouze platné hodnoty z archivu WeeWX nebo autentického živého eventu GW3000; jejich původ se zobrazuje samostatně.
+- Přímo v hero panelu se vykresluje 24h graf skutečných měření (WeeWX), bez interpolace nedostupných údajů. Ovládání odborných grafů zůstává na stránce Grafy.
+- Čtyři významově odlišné karty pod hlavním panelem: kamera, astronomický výpočet Slunce/Měsíc, stejný den před rokem s informací o úplnosti, a ověřená základní fakta o stanici.
+- Doplňkové modelové předpovědi, radar, sekundární veličiny a navigace zůstávají dále na úvodu, ale bez duplicity anemometru či 24h grafu.
+- Neověřenou nadmořskou výšku a fiktivní vybavení z grafického návrhu do webu **nepřenášíme**.
+- Nová prezentace je izolována v `frontend/src/styles/observatory-evergreen.css`; specializované stránky, API, MariaDB, rekonstrukce a přístup k datům zůstávají beze změny.
+- Upraveny regresní testy a veřejná QA pro jednotný přístrojový panel, reálný původ panoramatu, rozložení čtyř karet a mobilní variantu.
+
+## 2026-11-03
+
 ### Historické srovnání s neúplnými daty
 - Při veřejném ověření původní archiv z předchozího roku nesplnil 80% pokrytí. Ověřené naměřené min/max již nepřijdou bez vysvětlení vniveč: pokud oba agregáty obsahují platná archivní měření, zobrazí se jako **nejnižší a nejvyšší zachycená hodnota**.
 - Při neúplném nebo neověřitelném pokrytí se vždy viditelně zobrazí upozornění, že se nejedná o potvrzené celodenní extrémy. Při nulovém počtu platných měření zůstanou hodnoty skryté.
