@@ -119,7 +119,7 @@ try{
      if(!layout.solarRise||layout.solarRise==='—'||!layout.moonPhase||layout.moonPhase==='—')
       errors.push(size.name+': astronomical cycle did not calculate');
      if(!layout.cameraImage||!layout.radar)errors.push(size.name+': camera or radar is missing');
-     if(layout.hasDecorativeHero||layout.heroBackground!=='none')errors.push(size.name+': measurement hero should not have decorative artwork');
+     if(layout.hasDecorativeHero||layout.heroBackground.includes('url('))errors.push(size.name+': measurement hero must not use a fake landscape image');
      if(layout.pictogramCount!==6)errors.push(size.name+': forecast must have six consistent SVG pictograms');
      if(layout.destinations!==6)errors.push(size.name+': expected six meaningful destination links');
      if(layout.heroHeight<290)errors.push(size.name+': weather hero is too short');
