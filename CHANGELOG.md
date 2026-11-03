@@ -4,6 +4,11 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ## 2026-11-03
 
+### QA opravy observatoře
+- U mobilního panelu byly na skutečném screenshotu jednotky tlaku a rychlosti větru příliš natěsnané; při šířkách do 760 px se proto zobrazují pod hodnotou.
+- Původní smoke test odmítal jakýkoliv CSS gradient za měřením. Nový test správně rozlišuje barevné plochy (povolené) od nepravdivého meteorologického podkladu či falešné fotografie (zakázané).
+- Screenshotový test nyní před zachycením hlavní stránky vyčká na pokus o načtení historického srovnání, takže fotografie rozhraní zachycuje i datový stav po aktualizaci.
+
 ### Meteorologická observatoř — identita původního Počasí Loučka
 - Úvod dostal výraznější petrolejový přístrojový panel s živou teplotou a dalšími skutečně měřenými veličinami; zachován zdroj GW3000/WeeWX, stavy kvality, denní minima/maxima a srážky.
 - Nová tříčástá část observatoře: **větrná růžice** s mapováním 16 směrů a přepínáním platných živých/archivních údajů; **Slunce a Měsíc** s jasně označeným astronomickým výpočtem pro přibližnou polohu obce; **stejný den před rokem** z původního archivu, zobrazovaný jen při pokrytí alespoň 80 %.
