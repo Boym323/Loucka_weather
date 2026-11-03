@@ -723,6 +723,16 @@
  outline-color:#9de3df
 }
 
+:root[data-theme="dark"] .evergreen-hero .history-hero .status-chip{
+ background:#27474c;color:#d7f2ef;border-color:#557c7e
+}
+:root[data-theme="dark"] .evergreen-spotlight .observatory-small-tag{
+ background:#345158;color:#e2f3f1;border-color:#6b878c
+}
+:root[data-theme="dark"] .evergreen-spotlight .observatory-sky .observatory-small-tag{
+ background:#6a4f32;color:#fff0d6;border-color:#ad8752
+}
+
 /* At narrow phone widths, give measured temperature the full line.
    Three compact companion readings remain legible with long pressure values. */
 @media(max-width:600px){

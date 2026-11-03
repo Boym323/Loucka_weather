@@ -86,6 +86,27 @@ try{
     theme:document.documentElement.dataset.theme,
     background:getComputedStyle(document.querySelector('.evergreen-hero')).backgroundColor
    }));
+   const chipContrast=await page.evaluate(()=>{
+    const parse=color=>(color.match(/[\\d.]+/g)||[]).slice(0,3).map(Number);
+    const luminance=color=>{
+     const rgb=parse(color).map(v=>v/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);
+     return .2126*rgb[0]+.7152*rgb[1]+.0722*rgb[2];
+    };
+    const check=selector=>{
+     const s=getComputedStyle(document.querySelector(selector));
+     const a=luminance(s.color),b=luminance(s.backgroundColor);
+     return (Math.max(a,b)+.05)/(Math.min(a,b)+.05);
+    };
+    return {
+     history:check('.evergreen-hero .history-hero .status-chip'),
+     sky:check('.evergreen-spotlight .observatory-sky .observatory-small-tag'),
+     year:check('.evergreen-spotlight .observatory-history .observatory-small-tag')
+    };
+   });
+   console.log('DARK CHIP CONTRAST',width,JSON.stringify(chipContrast));
+   for(const [name,ratio] of Object.entries(chipContrast)){
+    if(ratio<4.5)errors.push(width+'px: '+name+' dark chip contrast '+ratio.toFixed(2)+':1 (<4.5)');
+   }
    if(dark.theme!=='dark')errors.push(width+'px: dark theme not restored');
    if(!dark.background.includes('rgba(')&&!dark.background.includes('rgb('))
     errors.push(width+'px: missing dark hero background');

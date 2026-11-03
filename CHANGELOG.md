@@ -8,7 +8,7 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 - Nahrazeny problematické 9–11px popisky v úvodním panelu a čtyřech kartách čitelnými 12px zdrojovými údaji; sjednocena typografická hierarchie, včetně tmavého motivu.
 - Opraveno přetékání globální mobilní hlavičky na šířce 320 px (zkrácená značka, kompaktní mezery a menu); kontrola přetečení nyní vypisuje problematické prvky.\n- Na úzkých telefonech (do 600 px) má hlavní naměřená teplota vlastní řádek a vedlejší měření jsou v přehledné trojici; kompaktní layout 320 px nepřekrývá hodnoty ani jednotky.
 - V původním CSS odstraněna duplicitní pozdní vrstva přepisů fontů, zachovány potřebné výjimky kvůli starším Atlas stylům. Doplněna podpora snížené průhlednosti, vynucených systémových barev a volby omezení pohybu.
-- PR nyní spouští skutečný Chromium test na 320, 390, 600, 768, 1024 a 1440 px: přetečení, zdrojové popisky, zátěžová syntetická délka čísel a dark mode. Screenshoty jsou artefaktem CI; veřejná vizuální kontrola nasazení zůstává samostatná.
+- Doplněn kontrastní tmavý vzhled stavového štítku grafu a štítků astronomie/historie; prohlížečový audit hlídá poměr kontrastu textu alespoň 4,5:1.\n- PR nyní spouští skutečný Chromium test na 320, 390, 600, 768, 1024 a 1440 px: přetečení, zdrojové popisky, zátěžová syntetická délka čísel a dark mode. Screenshoty jsou artefaktem CI; veřejná vizuální kontrola nasazení zůstává samostatná.
 - Žádné změny API, DB, meteorologických hodnot, QC nebo původu GW3000/WeeWX.
 
 
