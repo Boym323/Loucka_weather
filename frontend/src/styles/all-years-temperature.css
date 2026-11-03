@@ -1,0 +1,95 @@
+/* All-year climate temperature overlay; independent from two-year heatmaps. */
+.all-years-temp{
+ max-width:1320px;margin:22px auto 0;
+ padding:clamp(17px,2.4vw,32px);border:1px solid var(--line);
+ border-radius:18px;background:var(--panel);
+ box-shadow:0 10px 28px rgba(29,68,70,.05);min-width:0;
+}
+.all-years-temp-heading{display:flex;gap:18px;justify-content:space-between;align-items:flex-start;margin-bottom:17px}
+.all-years-temp-heading>div{min-width:0;max-width:760px}
+.all-years-temp-heading h2{margin:5px 0 8px;font-size:clamp(23px,2.5vw,35px);line-height:1.2;letter-spacing:-.035em;text-wrap:balance}
+.all-years-temp-heading p{margin:0;color:var(--muted);line-height:1.55;font-size:13px}
+.all-years-temp-heading .status-chip{line-height:1.5;white-space:normal;max-width:255px}
+.all-years-temp-controls{
+ display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 18px;
+ padding:15px;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;
+}
+.all-years-temp-controls>label:not(.all-years-temp-checkbox){
+ display:flex;flex-direction:column;gap:6px;color:var(--muted);font-size:12px;font-weight:650;min-width:170px
+}
+.all-years-temp-controls select{
+ border:1px solid var(--line);background:var(--panel);color:var(--text);
+ font:inherit;font-size:13px;font-weight:600;
+ border-radius:8px;padding:10px 12px;min-height:44px;width:100%;cursor:pointer
+}
+.all-years-temp-checkbox{
+ display:inline-flex;gap:8px;align-items:center;min-height:44px;
+ font-size:12px;color:var(--text);font-weight:600;cursor:pointer;white-space:nowrap
+}
+.all-years-temp-checkbox input,.all-years-temp-year-choice input{accent-color:var(--teal);width:16px;height:16px}
+.all-years-temp-legend{display:flex;gap:8px 20px;flex-wrap:wrap;margin:14px 2px 3px;font-size:11px;color:var(--muted)}
+.all-years-temp-key{display:flex;gap:8px;align-items:center}
+.all-years-temp-key i{display:inline-block;flex:none;width:24px;height:3px;border-radius:4px}
+.all-years-temp-key-selected{background:#bc5d2e}
+.all-years-temp-key-background{background:#7e9aa0}
+.all-years-temp-key-average{border-top:3px dashed #0d6266}
+.all-years-temp-key-range{background:rgba(48,116,122,.17);height:13px!important;border:1px solid rgba(48,116,122,.36)}
+.all-years-temp-plot{height:475px;width:100%;min-width:0;margin:12px 0 3px}
+.all-years-temp-plot.is-unavailable{
+ display:flex;align-items:center;justify-content:center;
+ padding:30px;min-height:260px;height:auto;
+ border:1px dashed var(--line);border-radius:12px;
+ color:var(--muted);font-size:14px;text-align:center;line-height:1.6
+}
+.all-years-temp-footer{
+ display:flex;align-items:center;justify-content:space-between;gap:8px 20px;
+ flex-wrap:wrap;font-size:12px;color:var(--muted);line-height:1.5
+}
+.all-years-temp-footer [data-temperature-selected-coverage]{font-weight:650;color:var(--text)}
+.all-years-temp-filter{margin-top:20px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.all-years-temp-filter summary{
+ padding:13px 16px;background:var(--panel-2);font-size:13px;font-weight:650;
+ color:var(--text);cursor:pointer
+}
+.all-years-temp-years{
+ display:grid;grid-template-columns:repeat(auto-fill,minmax(83px,1fr));gap:7px;
+ padding:14px
+}
+.all-years-temp-year-choice{
+ display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+ font-size:12px;padding:7px 9px;background:var(--panel-2);
+ border:1px solid var(--line);border-radius:7px;cursor:pointer
+}
+.all-years-temp-filter-actions{display:flex;gap:9px;flex-wrap:wrap;padding:0 14px 15px}
+.all-years-temp-filter-actions button{
+ font-size:12px;min-height:38px;border:1px solid var(--line);
+ background:var(--panel);color:var(--text);border-radius:7px;padding:8px 12px;cursor:pointer
+}
+.all-years-temp-filter-actions button:hover{border-color:var(--teal)}
+.all-years-temp-disclaimer{margin:17px 2px 0;font-size:12px;line-height:1.65}
+.all-years-temp :is(button,select,input,summary):focus-visible{
+ outline:3px solid var(--teal);outline-offset:3px
+}
+:root[data-theme="dark"] .all-years-temp{box-shadow:none}
+:root[data-theme="dark"] .all-years-temp-key-selected{background:#ffb678}
+:root[data-theme="dark"] .all-years-temp-key-average{border-color:#a2ebe0}
+@media(max-width:850px){
+ .all-years-temp-heading{flex-direction:column;gap:10px}
+ .all-years-temp-heading .status-chip{max-width:100%}
+}
+@media(max-width:600px){
+ .all-years-temp{padding:14px;margin-top:12px;border-radius:13px}
+ .all-years-temp-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding:12px;gap:7px 10px}
+ .all-years-temp-controls>label:not(.all-years-temp-checkbox){min-width:0}
+ .all-years-temp-checkbox{white-space:normal;min-height:38px}
+ .all-years-temp-legend{gap:8px 12px}
+ .all-years-temp-plot{height:405px;margin-top:8px}
+ .all-years-temp-footer{font-size:11px}
+}
+@media(max-width:359px){
+ .all-years-temp-controls{grid-template-columns:1fr}
+ .all-years-temp-plot{height:375px}
+}
+@media(prefers-reduced-motion:reduce){
+ .all-years-temp *{scroll-behavior:auto}
+}
