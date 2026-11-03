@@ -1,0 +1,31 @@
+---
+/* Milestones are dated by the original station's public changelog.
+ * They describe historical documentation, not an independently audited
+ * sensor-to-database mapping.
+ */
+const milestones=[
+ {date:'29. 3. 2009',year:'2009',title:'Začínáme měřit',
+  description:'První záznamy teploty, vlhkosti, tlaku a srážek na stanici Watson W-8681.'},
+ {date:'28. 11. 2018',year:'2018',title:'Měření u povrchu a v půdě',
+  description:'Rozšíření stanice o půdní a přízemní teplotní čidla.'},
+ {date:'20. 8. 2022',year:'2022',title:'Nová generace sběru dat',
+  description:'Historicky doložený přechod na bránu GW1000; aktuální infrastruktura již používá GW3000.'},
+ {date:'17. 9. 2023',year:'2023',title:'Západní webkamera',
+  description:'Výměna západní kamery za model Dahua HFW2241S.'},
+ {date:'21. 9. 2024',year:'2024',title:'Úpravy stanice',
+  description:'Přemístění a výměna radiačního štítu.'},
+];
+---
+<section class="observatory-milestones" aria-labelledby="milestones-title">
+ <header class="observatory-milestones-head">
+  <span class="observatory-kicker">PŘÍBĚH STANICE</span>
+  <h2 id="milestones-title">Loučka pozoruje počasí od roku 2009.</h2>
+  <p>Každá změna přístrojů zanechala stopu v historii měření. Proto u starších dat uvádíme jejich původ a upozorňujeme na neověřené přiřazení senzorů.</p>
+ </header>
+ <ol class="observatory-milestones-line">
+  {milestones.map(m=><li>
+   <time>{m.date}</time><strong>{m.title}</strong><span>{m.description}</span>
+  </li>)}
+ </ol>
+ <p class="observatory-source-note">Zdroj historie: <a href="https://pocasi-loucka.eu/about/" target="_blank" rel="noopener noreferrer">původní stránka O meteostanici</a>. Dřívější popisy instalací nejsou důkazem fyzické identity každého historického kanálu WeeWX.</p>
+</section>
