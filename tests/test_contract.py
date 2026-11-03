@@ -53,6 +53,7 @@ def test_openapi():
     assert set(DOC["paths"])=={
         "/api/v1/current","/api/v1/history",
         "/api/v1/statistics/daily","/api/v1/statistics/monthly","/api/v1/statistics/yearly",
+            "/api/v1/climate/annual-matrix",
         "/api/v1/station","/api/v1/sensors","/api/v1/live",
         "/api/v1/camera/status","/api/v1/readyz","/api/v1/healthz"
     }
