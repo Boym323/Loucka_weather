@@ -87,6 +87,12 @@ try{
       return {
        defaultTheme:document.documentElement.dataset.theme,
        heroHeight:hero?.getBoundingClientRect().height??0,
+       observatoryColumns:columns('.observatory-instruments'),
+       windInstrument:document.querySelector('.observatory-wind [data-wind-compass]')!==null,
+       solarPanel:document.querySelector('[data-solar-cycle]')!==null,
+       solarRise:document.querySelector('[data-solar-rise]')?.textContent?.trim()??'',
+       moonPhase:document.querySelector('[data-moon-illumination]')?.textContent?.trim()??'',
+       pastDayPanel:document.querySelector('[data-day-history]')!==null,
        temperature:document.querySelector('.atlas-hero [data-metric-value="outTemp"]')!==null,
        dataStatus:document.querySelector('.atlas-hero [data-current-status]')!==null,
        forecastColumns:columns('.atlas-forecast .forecast-tabs'),
@@ -108,6 +114,10 @@ try{
      console.log('ATLAS MINIMAL HOME GEOMETRY',size.name,JSON.stringify(layout));
      if(layout.defaultTheme!=='light')errors.push(size.name+': fresh visit must default to light theme');
      if(!layout.temperature||!layout.dataStatus)errors.push(size.name+': missing live/archive reading source in hero');
+     if(!layout.windInstrument||!layout.solarPanel||!layout.pastDayPanel)
+      errors.push(size.name+': original-station inspired instruments are missing');
+     if(!layout.solarRise||layout.solarRise==='—'||!layout.moonPhase||layout.moonPhase==='—')
+      errors.push(size.name+': astronomical cycle did not calculate');
      if(!layout.cameraImage||!layout.radar)errors.push(size.name+': camera or radar is missing');
      if(layout.hasDecorativeHero||layout.heroBackground!=='none')errors.push(size.name+': measurement hero should not have decorative artwork');
      if(layout.pictogramCount!==6)errors.push(size.name+': forecast must have six consistent SVG pictograms');
@@ -117,12 +127,14 @@ try{
       if(layout.forecastColumns!==3)errors.push('Mobile forecast should use three readable columns');
       if(layout.dailyColumns!==3)errors.push('Mobile daily summary should use three columns');
       if(layout.analyticsColumns!==1)errors.push('Mobile analytical modules must stack');
+      if(layout.observatoryColumns!==1)errors.push('Mobile wind, sky and history modules must stack');
       if(layout.destinationColumns!==2)errors.push('Mobile destinations should use two columns at 390px');
       if(layout.svgIcons!==5)errors.push('Mobile dock must contain five SVG navigation icons');
       if(layout.moreLinks!==7)errors.push('Mobile More menu must expose remaining seven pages');
       if(layout.mobileTargetHeight<44)errors.push('Mobile dock touch targets must be at least 44px');
      }else{
       if(layout.analyticsColumns!==3)errors.push('Desktop weather / forecast / context should show three columns');
+      if(layout.observatoryColumns!==3)errors.push('Desktop observatory needs distinct wind, sky and history modules');
       if(layout.destinationColumns!==3)errors.push('Desktop destinations should use three columns');
       if(layout.chartHeight<230)errors.push('Desktop temperature plot should have ample room');
      }
