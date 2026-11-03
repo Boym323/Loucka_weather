@@ -36,13 +36,26 @@
     Date.parse(p.endTime),
     p.value===null||p.quality==='missing'||p.quality==='suspect'?null:p.value
    ] as [number,number|null]);
+   const compact=window.matchMedia('(max-width:650px)').matches;
+   const light=document.documentElement.dataset.theme!=='dark';
+   const ink=light?'#4b625e':'#bbd0cc',gridColor=light?'#e2e9e6':'#3a5054';
+   const color=light?'#2879a3':'#8dc7e4';
+   const clock=new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',hour:'2-digit',minute:'2-digit'});
    chart.clear();
    chart.setOption({
-    backgroundColor:'transparent',animation:false,grid:{top:16,bottom:30,left:46,right:10},
-    tooltip:{trigger:'axis'},
-    xAxis:{type:'time',axisLabel:{color:'#a1b8c8',fontSize:10},axisLine:{lineStyle:{color:'#355768'}},splitLine:{show:false}},
-    yAxis:{type:'value',min:0,name:'mm',axisLabel:{color:'#a1b8c8'},splitLine:{lineStyle:{color:'#234356',type:'dashed'}}},
-    series:[{name:'Intervalový úhrn',type:'bar',data:values,itemStyle:{color:'#56b7ec'},barMaxWidth:14}]
+    backgroundColor:'transparent',animation:false,
+    grid:{top:22,bottom:compact?45:52,left:compact?42:52,right:compact?12:22},
+    tooltip:{trigger:'axis',confine:true},
+    xAxis:{type:'time',splitNumber:compact?3:7,
+     axisLabel:{color:ink,fontSize:compact?10:12,hideOverlap:true,
+      showMinLabel:false,showMaxLabel:false,formatter:(v:number)=>clock.format(new Date(v))},
+     axisTick:{show:false},axisLine:{lineStyle:{color:gridColor}},splitLine:{show:false}},
+    yAxis:{type:'value',min:0,name:'mm',splitNumber:4,
+     nameTextStyle:{color:ink,fontSize:11},axisLabel:{color:ink,fontSize:compact?10:12},
+     axisLine:{show:false},axisTick:{show:false},
+     splitLine:{lineStyle:{color:gridColor,type:'solid'}}},
+    series:[{name:'Intervalový úhrn',type:'bar',data:values,itemStyle:{color},
+     barMaxWidth:compact?8:14}]
    });
    const valid=values.filter((p):p is [number,number]=>p[1]!==null&&Number.isFinite(p[1]));
    const hasGaps=values.length===0||values.some(p=>p[1]===null);
@@ -61,6 +74,11 @@
   retry?.addEventListener('click',()=>void load());
   // Do not compete with the large advanced-history request during initial navigation.
   const initial=setTimeout(()=>void load(),2200);
-  document.addEventListener('astro:before-swap',()=>{clearTimeout(initial);controller.abort();observer.disconnect();chart.dispose();},{once:true});
+  const themeChanged=()=>void load();
+  window.addEventListener('loucka:theme-change',themeChanged);
+  document.addEventListener('astro:before-swap',()=>{
+   clearTimeout(initial);controller.abort();observer.disconnect();chart.dispose();
+   window.removeEventListener('loucka:theme-change',themeChanged);
+  },{once:true});
  }
 </script>

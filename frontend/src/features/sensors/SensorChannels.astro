@@ -1,29 +1,57 @@
 ---
 const channels=[
- {id:'soilTemp1',name:'Teplota půdy · kanál 1',unit:'°C',digits:1,symbol:'🌱'},
- {id:'soilTemp2',name:'Teplota půdy · kanál 2',unit:'°C',digits:1,symbol:'🌱'},
- {id:'soilTemp3',name:'Teplota půdy · kanál 3',unit:'°C',digits:1,symbol:'🌱'},
- {id:'soilTemp4',name:'Teplota půdy · kanál 4',unit:'°C',digits:1,symbol:'🌱'},
- {id:'extraTemp1',name:'Teplota · externí kanál 1',unit:'°C',digits:1,symbol:'🌡️'},
- {id:'extraHumid1',name:'Vlhkost · externí kanál 1',unit:'%',digits:0,symbol:'◉'},
- {id:'pm25_1',name:'PM2,5 · archivní kanál',unit:'µg/m³',digits:1,symbol:'◌'},
- {id:'lightning_distance',name:'Detekce blesků · vzdálenost',unit:'km',digits:0,symbol:'⚡'}
+ {id:'soilTemp1',name:'Teplota půdy · kanál 1',unit:'°C',digits:1},
+ {id:'soilTemp2',name:'Teplota půdy · kanál 2',unit:'°C',digits:1},
+ {id:'soilTemp3',name:'Teplota půdy · kanál 3',unit:'°C',digits:1},
+ {id:'soilTemp4',name:'Teplota půdy · kanál 4',unit:'°C',digits:1},
+ {id:'extraTemp1',name:'Teplota · externí kanál 1',unit:'°C',digits:1},
+ {id:'extraHumid1',name:'Vlhkost · externí kanál 1',unit:'%',digits:0},
+ {id:'pm25_1',name:'PM2,5 · archivní kanál',unit:'µg/m³',digits:1},
+ {id:'lightning_distance',name:'Detekce blesků · vzdálenost',unit:'km',digits:0}
 ];
 ---
-<section class="section sensors-overview" data-sensor-channels>
- <div class="section-heading"><div><span class="eyebrow">Archivované kanály</span><h2>Stav měřených veličin</h2></div><span class="status-chip" data-sensors-status role="status">Načítám</span></div>
- <p class="lead">Číslování odpovídá sloupcům WeeWX, nikoliv ověřené poloze čidel. Stav baterií, typ zařízení a RSSI zde nemáme spolehlivě přiřazené.</p>
- <div class="sensor-channel-grid">
-  {channels.map(item=><article class="sensor-channel" data-sensor-id={item.id}>
-   <div class="sensor-head"><span aria-hidden="true">{item.symbol}</span><strong>{item.name}</strong></div>
-   <p class="sensor-number"><span data-sensor-value={item.id}>—</span><small>{item.unit}</small></p>
-   <span class="sensor-state" data-sensor-quality={item.id}>Čeká na měření</span>
-   <div class="sensor-mini-trend" data-sensor-trend={item.id} aria-label={'Průběh posledních 24 hodin: '+item.name}>
-    <span class="source-note">24h průběh se načítá…</span>
-   </div>
-  </article>)}
+<section class="section sensors-overview sensor-directory" data-sensor-channels aria-labelledby="sensor-directory-title">
+ <div class="section-heading">
+  <div><span class="eyebrow">Aktuální stav archivních měření</span><h2 id="sensor-directory-title">Měřené veličiny</h2></div>
+  <span class="status-chip" data-sensors-status role="status">Načítám</span>
  </div>
- <p class="source-note">Zelený stav znamená pouze platné poslední archivní měření, nikoliv potvrzené připojení fyzického senzoru.</p>
+ <p class="lead">Číslování označuje databázové kanály WeeWX, ne ověřenou fyzickou polohu čidel. Vyber kanál a zobraz jeho skutečný průběh za 24 hodin.</p>
+ <div class="sensor-directory-toolbar">
+  <label class="sensor-search-label" for="sensor-search">Hledat senzor
+   <input id="sensor-search" type="search" data-sensor-search placeholder="Název nebo kanál" autocomplete="off" />
+  </label>
+  <label for="sensor-availability-filter">Dostupnost
+   <select id="sensor-availability-filter" data-sensor-filter>
+    <option value="all">Všechny kanály</option>
+    <option value="available">S poslední hodnotou</option>
+    <option value="unavailable">Bez platné hodnoty</option>
+   </select>
+  </label>
+  <output class="sensor-filter-count" data-sensor-count aria-live="polite">8 kanálů</output>
+ </div>
+ <div class="sensor-channel-grid sensor-directory-list">
+  {channels.map(item=><details class="sensor-channel sensor-directory-entry" data-sensor-id={item.id} data-sensor-state="loading">
+   <summary class="sensor-directory-row">
+    <span class="sensor-directory-name">{item.name}<small>{item.id} · WeeWX</small></span>
+    <span class="sensor-directory-reading">
+     <strong><span data-sensor-value={item.id}>—</span><small>{item.unit}</small></strong>
+     <span class="sensor-state" data-sensor-quality={item.id}>Čeká na měření</span>
+    </span>
+    <span class="sensor-directory-chevron" aria-hidden="true">
+     <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+    </span>
+   </summary>
+   <div class="sensor-directory-detail">
+    <h3>Vývoj za posledních 24 hodin</h3>
+    <div class="sensor-mini-trend" data-sensor-trend={item.id} aria-label={'Průběh posledních 24 hodin: '+item.name}>
+     <span class="source-note">Graf se načte po otevření kanálu</span>
+    </div>
+    <p class="source-note">Průběh tvoří pouze platná archivní měření. Chybějící intervaly nejsou spojeny čarou. Stav neprokazuje fyzickou identitu ani kalibraci senzoru.</p>
+   </div>
+  </details>)}
+ </div>
+ <p class="sensor-directory-empty" data-sensor-empty hidden>Žádný kanál neodpovídá filtru.</p>
+ <p class="source-note">Dostupnost znamená platný archivní údaj, nikoli potvrzené připojení konkrétního zařízení. Nula je skutečná naměřená hodnota; neznámý údaj označujeme „—“.</p>
 </section>
 <script>
  import {getCurrent,getHistoryInterval} from '../../shared/api/client';
@@ -31,73 +59,107 @@ const channels=[
  const root=document.querySelector<HTMLElement>('[data-sensor-channels]');
  if(root){
   const status=root.querySelector<HTMLElement>('[data-sensors-status]');
+  const search=root.querySelector<HTMLInputElement>('[data-sensor-search]');
+  const filter=root.querySelector<HTMLSelectElement>('[data-sensor-filter]');
+  const count=root.querySelector<HTMLOutputElement>('[data-sensor-count]');
+  const empty=root.querySelector<HTMLElement>('[data-sensor-empty]');
+  const entries=[...root.querySelectorAll<HTMLDetailsElement>('[data-sensor-id]')];
   const controller=new AbortController();
   const digits:Record<string,number>={soilTemp1:1,soilTemp2:1,soilTemp3:1,soilTemp4:1,extraTemp1:1,extraHumid1:0,pm25_1:1,lightning_distance:0};
+  const filterRows=()=>{
+   const q=(search?.value??'').trim().toLocaleLowerCase('cs-CZ');
+   const f=filter?.value??'all';
+   let visible=0;
+   for(const entry of entries){
+    const byText=!q||entry.textContent?.toLocaleLowerCase('cs-CZ').includes(q);
+    const byState=f==='all'||(f==='available'&&entry.dataset.sensorState==='available')||
+     (f==='unavailable'&&entry.dataset.sensorState==='unavailable');
+    const show=Boolean(byText&&byState);
+    entry.hidden=!show;if(show)visible++;
+   }
+   if(count)count.textContent=visible+' z '+entries.length+' kanálů';
+   if(empty)empty.hidden=visible!==0;
+  };
+  search?.addEventListener('input',filterRows);
+  filter?.addEventListener('change',filterRows);
   void getCurrent(controller.signal).then(resp=>{
-   if(status){status.textContent=resp.stale?'Archiv zastaralý':'Poslední archivní měření';status.classList.add(resp.stale?'warning':'ok');}
-   Object.entries(digits).forEach(([id,count])=>{
-    const reading=resp.readings[id];
-    const value=root.querySelector<HTMLElement>('[data-sensor-value="'+id+'"]');
-    const quality=root.querySelector<HTMLElement>('[data-sensor-quality="'+id+'"]');
-    if(!quality)return;
-    if(!reading||reading.value===null||reading.quality==='missing'||reading.quality==='suspect'){
-     quality.textContent=reading?.quality==='suspect'?'Podezřelý údaj':'Měření není k dispozici';
-     quality.classList.add('unavailable');
-    } else {
-     if(value)value.textContent=formatValue(reading.value,count);
-     quality.textContent=resp.stale?'Archivní hodnota – zastaralá':'Dostupné v archivu';
-     quality.classList.add(resp.stale?'unavailable':'available');
+   if(controller.signal.aborted)return;
+   if(status){status.textContent=resp.stale?'Archiv zastaralý':'Poslední archivní měření';status.className='status-chip '+(resp.stale?'warning':'ok');}
+   for(const entry of entries){
+    const id=entry.dataset.sensorId??'',reading=resp.readings[id];
+    const value=entry.querySelector<HTMLElement>('[data-sensor-value]');
+    const quality=entry.querySelector<HTMLElement>('[data-sensor-quality]');
+    if(!quality)continue;
+    const valid=Boolean(reading&&reading.value!==null&&Number.isFinite(reading.value)&&reading.quality!=='missing'&&reading.quality!=='suspect');
+    entry.dataset.sensorState=valid?'available':'unavailable';
+    if(valid&&reading){
+     if(value)value.textContent=formatValue(reading.value,digits[id]);
+     quality.textContent=resp.stale?'Archivní údaj · starší':'Platné archivní měření';
+     quality.className='sensor-state '+(resp.stale?'unavailable':'available');
+    }else{
+     if(value)value.textContent='—';
+     quality.textContent=reading?.quality==='suspect'?'Podezřelý údaj':'Nedostupné měření';
+     quality.className='sensor-state unavailable';
     }
-   });
-  }).catch(()=>{if(status){status.textContent='API nedostupné';status.classList.add('error');}});
-  const begin=new Date(Date.now()-24*3600_000).toISOString(),end=new Date().toISOString();
-  const channels=Object.keys(digits);
-  let cursor=0;
-  async function loadTrends(){
-   await Promise.all(Array.from({length:3},async()=>{
-    while(cursor<channels.length){
-     const id=channels[cursor++];
-     const container=root?.querySelector<HTMLElement>('[data-sensor-trend="'+id+'"]');
-     if(!container)continue;
-     try{
-      const response=await getHistoryInterval(id,begin,end,'raw',controller.signal);
-      if(controller.signal.aborted)return;
-      const points=response.points.map(p=>{
-       const value=p.quality==='suspect'||p.quality==='missing'?null:p.value;
-       return {time:Date.parse(p.endTime),value:value!==null&&Number.isFinite(value)?value:null};
-      }).filter(p=>Number.isFinite(p.time));
-      const values=points.filter((p):p is {time:number;value:number}=>p.value!==null);
-      container.replaceChildren();
-      if(values.length<2){container.textContent='24h průběh není dostupný';continue;}
-      const t0=Date.parse(begin),t1=Date.parse(end);
-      const lo=Math.min(...values.map(p=>p.value)),hi=Math.max(...values.map(p=>p.value));
-      const range=hi-lo||1;
-      const x=(t:number)=>4+192*(t-t0)/(t1-t0);
-      const y=(v:number)=>32-28*(v-lo)/range;
-      let path='',penDown=false;
-      for(const p of points){
-       if(p.value===null){penDown=false;continue;}
-       path+=(penDown?' L ':' M ')+x(p.time).toFixed(1)+' '+y(p.value).toFixed(1);
-       penDown=true;
-      }
-      const ns='http://www.w3.org/2000/svg';
-      const svg=document.createElementNS(ns,'svg');
-      svg.setAttribute('viewBox','0 0 200 38');
-      svg.setAttribute('role','img');
-      svg.setAttribute('aria-label','Skutečná měření za 24 hodin, '+values.length+' platných intervalů');
-      const trace=document.createElementNS(ns,'path');
-      trace.setAttribute('d',path);trace.setAttribute('fill','none');
-      trace.setAttribute('stroke','currentColor');trace.setAttribute('stroke-width','1.8');
-      trace.setAttribute('stroke-linecap','round');trace.setAttribute('stroke-linejoin','round');
-      svg.append(trace);container.append(svg);
-     }catch{
-      if(controller.signal.aborted)return;
-      container.textContent='Historie senzoru nedostupná';
-     }
+   }
+   filterRows();
+  }).catch(()=>{
+   if(controller.signal.aborted)return;
+   if(status){status.textContent='Archivní API nedostupné';status.className='status-chip error';}
+   for(const entry of entries){entry.dataset.sensorState='unavailable';}
+   filterRows();
+  });
+  const loaded=new Set<string>();
+  const begin=()=>new Date(Date.now()-24*3600_000).toISOString();
+  const finish=()=>new Date().toISOString();
+  async function loadTrend(entry:HTMLDetailsElement){
+   const id=entry.dataset.sensorId??'';
+   if(!id||loaded.has(id)||controller.signal.aborted)return;
+   loaded.add(id);
+   const container=entry.querySelector<HTMLElement>('[data-sensor-trend]');
+   if(!container)return;
+   container.textContent='Načítání historických měření…';
+   const from=begin(),to=finish();
+   try{
+    const response=await getHistoryInterval(id,from,to,'raw',controller.signal);
+    if(controller.signal.aborted)return;
+    const points=response.points.map(p=>{
+     const value=p.quality==='suspect'||p.quality==='missing'?null:p.value;
+     return {time:Date.parse(p.endTime),value:value!==null&&Number.isFinite(value)?value:null};
+    }).filter(p=>Number.isFinite(p.time));
+    const values=points.filter((p):p is {time:number;value:number}=>p.value!==null);
+    container.replaceChildren();
+    if(values.length<2){container.textContent='Pro graf není dostatek platných intervalů';return;}
+    const t0=Date.parse(from),t1=Date.parse(to);
+    const lo=Math.min(...values.map(p=>p.value)),hi=Math.max(...values.map(p=>p.value));
+    const range=hi-lo||1;
+    const x=(t:number)=>5+390*(t-t0)/(t1-t0);
+    const y=(v:number)=>70-62*(v-lo)/range;
+    let d='',penDown=false;
+    for(const p of points){
+     if(p.value===null){penDown=false;continue;}
+     d+=(penDown?' L ':' M ')+x(p.time).toFixed(1)+' '+y(p.value).toFixed(1);
+     penDown=true;
     }
-   }));
+    const ns='http://www.w3.org/2000/svg';
+    const svg=document.createElementNS(ns,'svg');
+    svg.setAttribute('viewBox','0 0 400 80');svg.setAttribute('role','img');
+    svg.setAttribute('aria-label',id+': '+values.length+' platných intervalů za 24 hodin');
+    const path=document.createElementNS(ns,'path');
+    path.setAttribute('d',d);path.setAttribute('fill','none');
+    path.setAttribute('stroke','currentColor');path.setAttribute('stroke-width','2');
+    path.setAttribute('stroke-linecap','round');path.setAttribute('stroke-linejoin','round');
+    svg.append(path);container.append(svg);
+   }catch{
+    if(controller.signal.aborted)return;
+    container.textContent='Historický průběh nedostupný';
+    loaded.delete(id); // permit retry after re-opening
+   }
   }
-  void loadTrends();
+  for(const entry of entries)entry.addEventListener('toggle',()=>{
+   if(entry.open)void loadTrend(entry);
+  });
+  filterRows();
   document.addEventListener('astro:before-swap',()=>controller.abort(),{once:true});
  }
 </script>

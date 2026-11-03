@@ -77,10 +77,24 @@
    outTemp:'°C',outHumidity:'%',barometer:'hPa',windSpeed:'m/s',
    windGust:'m/s',rain:'mm',rainRate:'mm/h',radiation:'W/m²',pm25_1:'µg/m³'
   };
-  const colors:Record<string,string>={
-   outTemp:'#fa6776',outHumidity:'#57bded',barometer:'#a598fc',
-   windSpeed:'#41d8a7',windGust:'#4bd6ad',rain:'#54b4eb',
-   rainRate:'#459bde',radiation:'#f5c15c',pm25_1:'#c89cf8'
+  // Consistent semantically grouped chart palette for both design themes.
+  const lightColors:Record<string,string>={
+   outTemp:'#176878',outHumidity:'#386e96',barometer:'#665d83',
+   windSpeed:'#27785e',windGust:'#27785e',rain:'#2879a3',
+   rainRate:'#2879a3',radiation:'#996728',pm25_1:'#795e89'
+  };
+  const darkColors:Record<string,string>={
+   outTemp:'#8dd5c9',outHumidity:'#89bedb',barometer:'#bbacd5',
+   windSpeed:'#8dd1b4',windGust:'#8dd1b4',rain:'#8dc7e4',
+   rainRate:'#8dc7e4',radiation:'#e2bc76',pm25_1:'#ceaddb'
+  };
+  const fmtDate=(value:number,days:number)=>{
+   const options:Intl.DateTimeFormatOptions=days<=2
+    ?{timeZone:'Europe/Prague',hour:'2-digit',minute:'2-digit'}
+    :days<=40
+    ?{timeZone:'Europe/Prague',day:'numeric',month:'numeric'}
+    :{timeZone:'Europe/Prague',month:'short',year:'2-digit'};
+   return new Intl.DateTimeFormat('cs-CZ',options).format(new Date(value));
   };
   const dateInput=(key:string)=>form.elements.namedItem(key) as HTMLInputElement;
   const metricInput=(key:string)=>form.elements.namedItem(key) as HTMLSelectElement;
@@ -110,29 +124,63 @@
     const keys=[...new Set([metric,compare].filter(Boolean))];
     results=await Promise.all(keys.map(k=>getHistoryInterval(k,from,to,resolution,signal)));
     if(signal.aborted)return;
+    const compact=window.matchMedia('(max-width:650px)').matches;
+    const light=document.documentElement.dataset.theme!=='dark';
+    const colors=light?lightColors:darkColors;
+    const ink=light?'#4b625e':'#bbd0cc';
+    const gridColor=light?'#e2e9e6':'#3a5054';
+    const primary=light?'#176878':'#8dd5c9';
     const series=results.map((result,index)=>{
      const id=result.metric;
+     const color=colors[id]??primary;
      return {
       name:names[id]??id,type:id==='rain'?'bar':'line',
       yAxisIndex:index,data:result.points.map(p=>[
        Date.parse(p.endTime),valid(p)?p.value:null
       ] as [number,number|null]),
-      showSymbol:false,smooth:false,connectNulls:false,barMaxWidth:14,
-      itemStyle:{color:colors[id]??'#4de6b0'},lineStyle:{width:2,color:colors[id]??'#4de6b0'}
+      showSymbol:false,smooth:false,connectNulls:false,barMaxWidth:compact?8:14,
+      itemStyle:{color},lineStyle:{width:compact?2:2.5,color},
+      emphasis:{focus:'series'},
+      areaStyle:undefined
      };
     });
     const yAxis=results.map((result,index)=>({
      type:'value',scale:result.metric!=='rain',min:result.metric==='rain'?0:undefined,
      name:units[result.metric]??result.unit,position:index===0?'left':'right',
-     axisLabel:{color:'#a8bdcb'},splitLine:{show:index===0,lineStyle:{color:'#244657',type:'dashed'}}
+     splitNumber:compact?4:5,
+     nameGap:10,nameTextStyle:{color:ink,fontSize:compact?10:12},
+     axisLine:{show:false},axisTick:{show:false},
+     axisLabel:{color:ink,fontSize:compact?11:12,hideOverlap:true,margin:compact?8:12},
+     splitLine:{show:index===0,lineStyle:{color:gridColor,type:'solid',width:1}}
     }));
-    chart.setOption({animation:false,backgroundColor:'transparent',
-     legend:{show:series.length>1,top:0,textStyle:{color:'#b1c6d3'}},
-     tooltip:{trigger:'axis',confine:true},
-     grid:{left:55,right:series.length>1?55:20,top:40,bottom:64},
-     xAxis:{type:'time',axisLabel:{color:'#a9c0cd'},splitLine:{show:false},axisLine:{lineStyle:{color:'#35576a'}}},
+    chart.clear();
+    chart.setOption({
+     animation:false,backgroundColor:'transparent',
+     color:series.map(s=>s.itemStyle.color),
+     legend:{show:series.length>1,top:4,itemWidth:14,itemHeight:3,textStyle:{color:ink,fontSize:11}},
+     tooltip:{trigger:'axis',confine:true,
+      backgroundColor:light?'#ffffff':'#1a282d',
+      borderColor:gridColor,textStyle:{color:light?'#1d302f':'#eff5f3'},
+      axisPointer:{type:'line',lineStyle:{color:ink,opacity:.5}}},
+     grid:{left:compact?45:56,right:series.length>1?(compact?48:65):(compact?9:24),
+      top:series.length>1?48:24,bottom:compact?69:75,containLabel:false},
+     xAxis:{type:'time',splitNumber:compact?3:7,boundaryGap:false,
+      axisLabel:{color:ink,fontSize:compact?10:12,hideOverlap:true,
+       showMinLabel:false,showMaxLabel:false,
+       formatter:(value:number)=>fmtDate(value,days)},
+      splitLine:{show:false},axisTick:{show:false},
+      axisLine:{lineStyle:{color:gridColor}}},
      yAxis,series,
-     dataZoom:[{type:'inside'},{type:'slider',height:15,bottom:13,textStyle:{color:'#a9c0cd'},borderColor:'#294c5d'}]},true);
+     dataZoom:[
+      {type:'inside',zoomOnMouseWheel:false,moveOnMouseWheel:true},
+      {type:'slider',height:compact?12:17,bottom:compact?8:10,
+       showDetail:false,showDataShadow:true,
+       textStyle:{color:ink},borderColor:gridColor,
+       fillerColor:light?'rgba(23,104,120,.10)':'rgba(141,213,201,.15)',
+       handleStyle:{color:primary,borderColor:primary},
+       dataBackground:{lineStyle:{color:gridColor},areaStyle:{color:gridColor}}}
+     ]
+    },true);
     const total=results.reduce((n,r)=>n+r.points.filter(valid).length,0);
     if(status){status.textContent=total+' měření · '+resolution;status.className='status-chip '+(total?'ok':'warning');}
     if(summary){
@@ -168,7 +216,12 @@
    const a=document.createElement('a');a.href=url;a.download='loucka-historie-'+dateInput('from').value+'-'+dateInput('to').value+'.csv';a.click();
    setTimeout(()=>URL.revokeObjectURL(url),1000);
   });
-  document.addEventListener('astro:before-swap',()=>{controller?.abort();observer.disconnect();chart.dispose();},{once:true});
+  const themeChanged=()=>void refresh();
+  window.addEventListener('loucka:theme-change',themeChanged);
+  document.addEventListener('astro:before-swap',()=>{
+   controller?.abort();observer.disconnect();chart.dispose();
+   window.removeEventListener('loucka:theme-change',themeChanged);
+  },{once:true});
   setPreset(activeRange);
  }
 </script>

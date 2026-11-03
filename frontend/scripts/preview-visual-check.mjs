@@ -140,7 +140,10 @@ try{
       return {
        climate:columns('.climate-grid'),
        map:columns('.map-page-layout'),
-       channel:columns('.sensor-inventory-grid'),
+       channel:columns('.sensor-directory-list'),
+       sensorRows:document.querySelectorAll('.sensor-directory-entry').length,
+       sensorEvidenceGroups:document.querySelectorAll('.sensor-advanced-group').length,
+       sensorEvidenceClosed:[...document.querySelectorAll('.sensor-advanced-group')].every(el=>!el.open),
        soil:columns('.soil-air-grid'),
        monitor:columns('.monitor-grid'),
        statusLinks:document.querySelectorAll('.status-explainer-grid a').length,
@@ -150,6 +153,20 @@ try{
      console.log('SECONDARY VISUAL GEOMETRY',size.name,path,JSON.stringify(geometry));
      if(geometry.brokenCameraThumbnails)errors.push(size.name+' '+path+': broken-image thumbnails visible');
      if(path==='/stav/'&&geometry.statusLinks!==3)errors.push('Status page needs 3 diagnostic links');
+     if(path==='/senzory/'){
+      if(geometry.sensorRows!==8)errors.push(size.name+': sensor directory must list all eight known archive channels');
+      if(geometry.sensorEvidenceGroups!==3||!geometry.sensorEvidenceClosed)
+       errors.push(size.name+': specialist sensor evidence should start in three collapsed groups');
+      const input=page.locator('[data-sensor-search]');
+      await input.fill('pm25');
+      const remaining=await page.locator('.sensor-directory-entry:not([hidden])').count();
+      if(remaining!==1)errors.push(size.name+': sensor search did not filter to PM2.5');
+      await input.fill('');
+      const row=page.locator('.sensor-directory-entry').first();
+      await row.locator('summary').click();
+      if(!(await row.evaluate(el=>el.open)))errors.push(size.name+': sensor detail did not open');
+      await row.locator('summary').click();
+     }
      if(size.name==='mobil'){
       if(path==='/klimatologie/'&&geometry.climate!==1)errors.push('Mobile climate dashboard must stack cards');
       if(path==='/mapy/'&&geometry.map!==1)errors.push('Mobile map sidebar must stack');

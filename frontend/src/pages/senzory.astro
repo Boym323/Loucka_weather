@@ -6,17 +6,36 @@ import SensorDiagnostics from '../features/sensors/SensorDiagnostics.astro';
 import ChannelAvailability from '../features/sensors/ChannelAvailability.astro';
 ---
 <BaseLayout title="Senzory">
- <div class="page-intro"><span class="eyebrow">Senzory · meteo archiv · diagnostika</span><h1>Senzory a diagnostika</h1><p>Archivované údaje z meteostanice, jejich dostupnost a kontrola kvality posledního měření.</p></div>
- <section class="section sensor-feature-link"><div class="section-heading"><div><h2>Půda a ovzduší</h2><p class="source-note">Živá půdní vlhkost, PM2,5, UV a sedmidenní archivní průběhy</p></div><a class="panel-link" href="/puda-ovzdusi/">Otevřít měření →</a></div></section>
- <ChannelAvailability />
- <AuditedSensorRegistry />
- <SensorChannels />
- <div class="sensor-foot-grid">
-  <SensorDiagnostics />
-  <section class="section">
-   <div class="section-heading"><h2>Poslední diagnostické události</h2><span class="status-chip">Nepřipojeno</span></div>
-   <p class="lead">Samostatný diagnostický protokol stanice není součástí aktuálního archivu WeeWX. Nezobrazujeme smyšlená upozornění nebo historii výpadků.</p>
-   <p class="source-note">Podklad pro budoucí modul monitoringu GW3000.</p>
-  </section>
+ <div class="page-intro">
+  <span class="eyebrow">Měřicí kanály · archiv WeeWX</span>
+  <h1>Senzory a měření</h1>
+  <p>Co stanice právě zaznamenává, které údaje jsou dostupné a jaká je jejich historie. Identitu a umístění čidel uvádíme pouze tam, kde jsou potvrzené.</p>
  </div>
+ <nav class="sensor-page-shortcuts" aria-label="Související podrobnosti">
+  <a href="/puda-ovzdusi/"><strong>Půda a ovzduší</strong><span>Vlhkost půdy, UV, PM2,5 a grafy</span><span aria-hidden="true">↗</span></a>
+  <a href="/grafy/"><strong>Historické grafy</strong><span>Libovolná veličina a období</span><span aria-hidden="true">↗</span></a>
+ </nav>
+ <SensorChannels />
+ <section class="sensor-advanced-section" aria-label="Odborné informace o senzorech">
+  <h2>Podrobnosti a původ dat</h2>
+  <p>Evidence dostupnosti, fyzické přiřazení a telemetrie jsou dostupné samostatně. Nemusíš procházet všechna technická pole při běžné návštěvě.</p>
+  <details class="sensor-advanced-group">
+   <summary><span><strong>Dostupnost archivních kanálů</strong><small>Počet záznamů, poslední měření a vztah ke GW3000</small></span><span class="sensor-expand-indicator" aria-hidden="true">⌄</span></summary>
+   <div class="sensor-advanced-content"><ChannelAvailability /></div>
+  </details>
+  <details class="sensor-advanced-group">
+   <summary><span><strong>Fyzické senzory stanice</strong><small>Pouze ověřený inventář a identita zařízení</small></span><span class="sensor-expand-indicator" aria-hidden="true">⌄</span></summary>
+   <div class="sensor-advanced-content"><AuditedSensorRegistry /></div>
+  </details>
+  <details class="sensor-advanced-group">
+   <summary><span><strong>Signál, baterie a diagnostika</strong><small>Surové hodnoty a jejich čas bez domýšlení jednotek</small></span><span class="sensor-expand-indicator" aria-hidden="true">⌄</span></summary>
+   <div class="sensor-advanced-content">
+    <SensorDiagnostics />
+    <section class="sensor-diagnostics-note" aria-labelledby="sensor-monitoring-title">
+     <h3 id="sensor-monitoring-title">Historie diagnostických událostí</h3>
+     <p>Samostatný diagnostický protokol zatím není součástí archivu WeeWX. Nezobrazujeme smyšlená upozornění ani historii výpadků.</p>
+    </section>
+   </div>
+  </details>
+ </section>
 </BaseLayout>
