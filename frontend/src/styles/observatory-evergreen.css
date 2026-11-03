@@ -61,7 +61,7 @@
  grid-template-columns:minmax(0,1.47fr) minmax(270px,.81fr) minmax(280px,.96fr);
  grid-template-rows:minmax(0,1fr) auto;
  grid-template-areas:"core wind chart" "daily wind chart";
- gap:0;min-height:280px;align-items:stretch;overflow:hidden;
+ gap:0;min-height:310px;align-items:stretch;overflow:hidden;
  background:var(--evergreen-glass);color:var(--evergreen-ink);
  border:1px solid rgba(255,255,255,.88);border-radius:23px;
  box-shadow:var(--evergreen-deep-shadow);
