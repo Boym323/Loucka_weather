@@ -127,7 +127,7 @@ const beforePrevious=todayYear-2;
    });
   };
   function heatmap(slot:'first'|'second',year:number,values:Map<string,number|null>){
-   const parent=root.querySelector<HTMLElement>('[data-heatmap-cells="'+slot+'"]')!;
+   const parent=root!.querySelector<HTMLElement>('[data-heatmap-cells="'+slot+'"]')!;
    parent.replaceChildren();
    const fragment=document.createDocumentFragment();
    for(let month=1;month<=12;month++){
