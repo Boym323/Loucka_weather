@@ -4,6 +4,15 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ## 2026-11-03
 
+### Jemné dokončení Evergreen Observatory
+- Dotažena čitelnost drobných zdrojových a časových popisků v hlavním panelu, anemometru, 24h grafu a denním souhrnu; hodnoty mají stabilní tabulkové číslice.
+- Sjednoceny rozměry a nadpisy čtyř úvodních karet, jemné stíny a vizuální rytmus. Kamera má decentní zvětšení při hoveru/fokusu; animace respektuje `prefers-reduced-motion`.
+- Zvýrazněny a sjednoceny přístupné klávesnicové focus styly pro odkazy, tlačítka a rozbalovací prvky; tmavý motiv má vlastní zvýraznění.
+- Zkrácen nadbytečný text u živých/archivních měření, kompasu a grafu, ale zachován přesný zdroj GW3000/WeeWX, datum, čas, význam neověřených dat a prázdných intervalů.
+- Vizuální změny jsou omezeny na `observatory-evergreen.css` a malé úpravy textů existujících komponent. API, databáze, QC, archivní statistiky a ostatní URL beze změny.
+
+## 2026-11-03
+
 ### Evergreen Observatory — implementace schváleného nadčasového vzhledu
 - Úvodní fotografická krajina pochází z aktuální URL **skutečné západní webkamery**. Jde o obrazový kontext, nikoliv podklad potvrzující počasí; čas pořízení není ověřen a zůstává označen.
 - Původní tmavý přístrojový hero panel nahrazen světlým poloprůhledným meteorologickým celkem s měřenou teplotou, vlhkostí, tlakem, rosným bodem, denním souhrnem, větrnou růžicí a skutečným grafem z archivu. Tmavý motiv má samostatně čitelný kontrast.
