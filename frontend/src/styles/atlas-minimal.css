@@ -331,6 +331,12 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,s
  .mobile-dock a:hover{color:var(--teal)}
 }
 @media(max-width:359px){
+ /* A narrow header must not force the whole document beyond 320px. */
+ .header-inner{gap:5px}
+ .brand{gap:6px;min-width:0}
+ .brand-label strong{font-size:15px}
+ .brand-label small{display:none}
+ .mobile-nav>summary{padding-inline:8px}
  .wrap{width:calc(100% - 24px)}
  .atlas-home-intro h1{font-size:26px}
  .atlas-hero .metric-card.featured .metric-number{font-size:60px!important}

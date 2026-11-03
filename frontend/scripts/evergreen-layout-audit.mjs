@@ -44,6 +44,10 @@ try{
    return {
     viewport:window.innerWidth,
     scrollWidth:document.documentElement.scrollWidth,
+    overflowElements:[...document.querySelectorAll('body *')].filter(el=>{
+     const rect=el.getBoundingClientRect();
+     return rect.width>0&&rect.right>window.innerWidth+2&&getComputedStyle(el).position!=='fixed';
+    }).slice(0,10).map(el=>el.tagName.toLowerCase()+(el.className&&typeof el.className==='string'?'.'+el.className.trim().replace(/\s+/g,'.'):'')),
     heroWidth:hero.getBoundingClientRect().width,
     heroRight:hero.getBoundingClientRect().right,
     columns,metricColumns,
@@ -62,7 +66,7 @@ try{
   });
   const light=await measure();
   console.log('LAYOUT',width,JSON.stringify(light));
-  if(light.scrollWidth>width+2)errors.push(width+'px: horizontal page overflow '+light.scrollWidth);
+  if(light.scrollWidth>width+2)errors.push(width+'px: horizontal page overflow '+light.scrollWidth+'; suspects: '+light.overflowElements.join(', '));
   if(light.heroRight>width+2)errors.push(width+'px: hero extends past viewport');
   const expectedCols=width<=760?1:width<=1270?2:3;
   if(light.columns!==expectedCols)errors.push(width+'px: hero columns '+light.columns+' expected '+expectedCols);
