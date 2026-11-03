@@ -175,7 +175,7 @@ try{
       if(path==='/stav/'&&geometry.monitor!==1)errors.push('Mobile monitoring cards must stack');
      }else{
       if(path==='/klimatologie/'&&geometry.climate!==2)errors.push('Desktop climate cards must form two columns');
-      if(path==='/senzory/'&&geometry.channel!==3)errors.push('Desktop sensor evidence must form three columns');
+      if(path==='/senzory/'&&geometry.channel!==2)errors.push('Desktop sensor directory must form two readable columns');
       if(path==='/stav/'&&geometry.monitor<3)errors.push('Desktop monitoring cards too narrow');
      }
     }
@@ -394,6 +394,11 @@ try{
       errors.push(size.name+': missing locality-filtered CHMI alert panel');
     }
     if(state.width>state.viewport+3)errors.push(size.name+' '+path+': horizontal overflow '+state.width+'px > '+state.viewport+'px');
+    // Interactions can scroll the viewport. Reset before full-page screenshots
+    // so sticky navigation is captured at its real top-of-page position.
+    await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
+    await page.mouse.move(1,1);
+    await page.waitForTimeout(120);
     await page.screenshot({path:out+'/'+size.name+'-'+name+'.png',fullPage:true});
     console.log('OK',size.name,path,state.title,'scrollWidth='+state.width);
     if(path==='/'){
