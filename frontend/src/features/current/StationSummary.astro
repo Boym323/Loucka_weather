@@ -1,0 +1,16 @@
+---
+import SiteIcon from '../../shared/ui/SiteIcon.astro';
+---
+<section class="evergreen-station-card" aria-labelledby="evergreen-station-title">
+ <header class="evergreen-card-header">
+  <span class="evergreen-card-icon"><SiteIcon name="sensors" size={21}/></span>
+  <h2 id="evergreen-station-title">Meteorologická stanice</h2>
+ </header>
+ <dl class="evergreen-station-facts">
+  <div><dt>První měření</dt><dd>29. března 2009</dd></div>
+  <div><dt>Aktuální sběr</dt><dd>Ecowitt GW3000</dd></div>
+  <div><dt>Historická data</dt><dd>WeeWX / MariaDB</dd></div>
+ </dl>
+ <p>Osobní stanice v Loučce. Starší záznamy a senzory jsou rozlišeny podle ověřeného původu.</p>
+ <a href="/o-stanici/" class="observatory-text-link">Příběh a vybavení stanice <span aria-hidden="true">↗</span></a>
+</section>
