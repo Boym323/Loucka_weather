@@ -34,6 +34,27 @@ try{
   page.on('pageerror',error=>errors.push(width+'px JS: '+error.message));
   await page.route('**/api/v1/**',async route=>{
    const url=new URL(route.request().url());
+   if(url.pathname==='/api/v1/climate/annual-matrix'){
+    const metric=url.searchParams.get('metric')??'outTemp';
+    const unit=metric==='rain'?'mm':metric==='outHumidity'?'%':'°C';
+    const years=Array.from({length:18},(_,i)=>{
+     const year=2009+i;const inSample=year===2024||year===2025;
+     const n=year===2024?366:365;
+     return {year,calendarDays:n,elapsedDays:year===2026?306:n,
+      sourceRows:inSample?3:0,validDays:inSample?2:0,
+      invalidDays:0,missingDays:inSample?n-2:year===2026?306:n,
+      completenessFraction:inSample?2/n:0,timeCoverageFraction:inSample?2/n:0,
+      value:inSample?(metric==='rain'?0:11.5):null,unit,
+      method:metric==='rain'?'sum':'time_weighted_mean',
+      periodStatus:year===2026?'in_progress':'finished',
+      qcStatus:'original_unverified',source:'weewx_daily'};
+    });
+    return route.fulfill({status:200,contentType:'application/json',
+     body:JSON.stringify({schemaVersion:'1',metric,aggregation:metric==='rain'?'sum':'mean',
+      units:'metricwx',dataset:'original',source:'weewx_daily',qcStatus:'original_unverified',
+      startsAt:'2009-01-01',endsBefore:'2026-11-03',
+      dataRevision:'browser-fixture',years})});
+   }
    if(url.pathname==='/api/v1/station'){
     return route.fulfill({status:200,contentType:'application/json',
      body:JSON.stringify({schemaVersion:'1',capabilities:[]})});
@@ -61,6 +82,14 @@ try{
    const node=document.querySelector('[data-heatmap-count="first"]');
    return Boolean(node?.textContent?.includes('/ 365'));
   },null,{timeout:25000});
+  await page.waitForFunction(()=>{
+   const body=document.querySelector('[data-annual-rows]');
+   return body?.querySelectorAll('tr').length===18;
+  },null,{timeout:10000});
+  const annual=section.locator('[data-annual-rows]');
+  assert.equal(await annual.locator('tr').count(),18);
+  assert.match(await annual.locator('tr').first().textContent()??'',/2026/);
+  assert.match(await annual.locator('tr').filter({hasText:'2025'}).first().textContent()??'',/2 \/ 365/);
   const first=section.locator('[data-heatmap-cells="first"]');
   const second=section.locator('[data-heatmap-cells="second"]');
   assert.equal(await first.locator('.year-heatmap-day').count(),365);
@@ -84,6 +113,7 @@ try{
    el=>el.getBoundingClientRect().height);
   assert.ok(expectedHeight>=250,'chart too short at '+width);
   assert.ok(await section.locator('[data-compare-chart] svg').count()>0,'no rendered SVG overlay');
+  assert.ok(await section.locator('[data-compare-metric] option').count()>=35);
   await section.locator('[data-compare-metric]').selectOption('rain');
   await section.locator('[data-compare-form] button[type="submit"]').click();
   await page.waitForFunction(()=>{

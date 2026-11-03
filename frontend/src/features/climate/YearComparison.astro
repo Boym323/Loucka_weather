@@ -53,10 +53,29 @@ const beforePrevious=todayYear-2;
   <div class="section-heading"><div><h3 id="compare-chart-title">Denní průběh obou let</h3><p>Stejná kalendářní data jsou zarovnaná; 29. únor zůstává samostatný.</p></div></div>
   <div class="year-compare-chart" data-compare-chart role="img" aria-label="Graf porovnání denních hodnot dvou let"></div>
  </section>
+ <section class="year-annual-overview" id="rocni-srovnani" aria-labelledby="year-annual-title">
+  <div class="section-heading">
+   <div><span class="eyebrow">Sjednocené denní souhrny · 2009 až současnost</span>
+    <h3 id="year-annual-title">Přehled všech roků</h3>
+    <p>U každého roku vidíš skutečný roční výsledek, počet dostupných dnů a časové pokrytí. Hodnoty nejsou prohlašované za ověřené klimatické rekordy.</p>
+   </div>
+   <span class="status-chip" data-annual-status role="status" aria-live="polite">Připravuji přehled…</span>
+  </div>
+  <div class="table-scroll year-annual-scroll" tabindex="0" aria-label="Tabulka ročních souhrnů">
+   <table class="history-table year-annual-table">
+    <thead><tr><th scope="col">Rok</th><th scope="col">Roční hodnota</th>
+     <th scope="col">Dny s daty</th><th scope="col">Časové pokrytí</th>
+     <th scope="col">Stav</th><th scope="col">Porovnat</th></tr></thead>
+    <tbody data-annual-rows><tr><td colspan="6">Roční souhrny se načtou po otevření sekce…</td></tr></tbody>
+   </table>
+  </div>
+  <p class="source-note year-annual-notice">Roční průměry jsou časově vážené souhrny WeeWX. U součtů používáme skutečné naměřené intervaly; chybějící dny nedoplňujeme nulou. Pokrytí času není totéž co schválení kvality a porovnání dvou let výše zahrnuje pouze společné kalendářní dny.</p>
+ </section>
  <p class="source-note year-compare-footer" data-comparison-provenance>Údaje zůstávají orientační až do dokončení rekonstrukce. Barevná stupnice je stálá pro všechny roky a stejnou veličinu; hodnoty nad či pod krajní mezí sdílí krajní barvu.</p>
 </section>
 <script>
- import {getHistoryInterval} from '../../shared/api/client';
+ import {getHistoryInterval,getAnnualMatrix} from '../../shared/api/client';
+ import type {AnnualMatrix} from '../../shared/api/client';
  import {pragueMidnightIso} from '../../shared/domain/statistics';
  import {comparisonMetrics,comparisonMonths,isComparisonMetric,dailyValues,colorBand,
   calendarDayExists,yearDays,validDayCount,sharedDayComparison,alignedCalendarDays} from '../../shared/domain/year-comparison';
@@ -79,6 +98,9 @@ const beforePrevious=todayYear-2;
   const chart=echarts.init(chartElement,undefined,{renderer:'svg'});
   const resize=new ResizeObserver(()=>chart.resize());resize.observe(chartElement);
   let controller:AbortController|undefined;
+  const yearMatrixCache=new Map<ComparisonMetric,AnnualMatrix>();
+  const annualStatus=root.querySelector<HTMLElement>('[data-annual-status]')!;
+  const annualBody=root.querySelector<HTMLTableSectionElement>('[data-annual-rows]')!;
   let started=false, selectedDay='01-01';
   let firstValues=new Map<string,number|null>(),secondValues=new Map<string,number|null>();
   let years:[number,number]=[Number(firstSelect.value),Number(secondSelect.value)];
@@ -217,6 +239,68 @@ const beforePrevious=todayYear-2;
    chartElement.setAttribute('aria-label','Denní hodnoty '+comparisonMetrics[metric].label+
     ' v letech '+years[0]+' a '+years[1]+', chybějící dny nejsou spojovány.');
   }
+  const renderAnnual=(matrix:AnnualMatrix)=>{
+   annualBody.replaceChildren();
+   const rows=[...matrix.years].sort((a,b)=>b.year-a.year);
+   for(const year of rows){
+    const line=annualBody.insertRow();
+    const yearCell=line.insertCell();
+    yearCell.textContent=year.year+(year.periodStatus==='in_progress'?' *':'');
+    const measured=line.insertCell();
+    measured.textContent=year.value===null?'—':format(year.value)+(year.unit?' '+year.unit:'');
+    measured.className='year-annual-measure';
+    const daily=line.insertCell();
+    daily.textContent=year.validDays+' / '+year.elapsedDays;
+    const coverage=line.insertCell();
+    const rowCoverage=document.createElement('span');
+    rowCoverage.className='year-annual-coverage';
+    const percentage=year.timeCoverageFraction;
+    const caption=document.createElement('span');
+    caption.textContent=percentage===null?'Neověřeno':
+     Math.round(percentage*100)+' %';
+    const track=document.createElement('span');track.className='year-annual-progress';
+    const fill=document.createElement('span');
+    fill.style.width=Math.max(0,Math.min(100,(percentage??0)*100))+'%';
+    track.append(fill);rowCoverage.append(track,caption);coverage.append(rowCoverage);
+    const state=line.insertCell();
+    state.className='year-annual-state';
+    const yearFraction=year.completenessFraction;
+    state.textContent=year.value===null?'Bez dat':
+     year.periodStatus==='in_progress'?'Probíhá':
+     year.invalidDays>0?'Neplatné dny':
+     yearFraction!==null&&yearFraction<.9?'Neúplný':'Bez finální QC';
+    state.title='Původní archiv WeeWX; historická rekonstrukce a okolní stanice nejsou schválená součást této hodnoty.';
+    const cell=line.insertCell();
+    const button=document.createElement('button');button.type='button';
+    button.className='year-annual-compare-button';
+    button.dataset.annualSelect=String(year.year);
+    button.textContent='Vybrat rok';
+    button.setAttribute('aria-label','Vybrat rok '+year.year+' pro srovnání');
+    cell.append(button);
+   }
+   annualStatus.textContent=rows.length+' let · původní archiv';
+   annualStatus.className='status-chip warning';
+  };
+  async function loadAnnual(kind:ComparisonMetric,signal:AbortSignal){
+   const saved=yearMatrixCache.get(kind);
+   if(saved){renderAnnual(saved);return;}
+   annualStatus.textContent='Sjednocuji roční statistiky…';
+   annualStatus.className='status-chip warning';
+   try{
+    const matrix=await getAnnualMatrix(kind,signal);
+    if(signal.aborted||metric!==kind)return;
+    yearMatrixCache.set(kind,matrix);
+    renderAnnual(matrix);
+   }catch{
+    if(signal.aborted||metric!==kind)return;
+    annualBody.replaceChildren();
+    const row=annualBody.insertRow(),cell=row.insertCell();
+    cell.colSpan=6;
+    cell.textContent='Roční souhrny nyní nelze ověřit. Denní heatmapy zůstávají dostupné samostatně.';
+    annualStatus.textContent='Roční podklady nedostupné';
+    annualStatus.className='status-chip error';
+   }
+  }
   const summary=()=>{
    const compare=sharedDayComparison(metric,firstValues,secondValues);
    const unit=comparisonMetrics[metric].unit;
@@ -229,9 +313,11 @@ const beforePrevious=todayYear-2;
    set('[data-comparison-coverage="first"]','Platné dny v roce: '+countOf(firstValues)+' / '+yearDays(years[0]));
    set('[data-comparison-coverage="second"]','Platné dny v roce: '+countOf(secondValues)+' / '+yearDays(years[1]));
    set('[data-comparison-coverage="matched"]','Společné platné kalendářní dny: '+compare.days);
-   set('[data-comparison-meaning]',metric==='rain'
-    ?'Sčítáme denní úhrny jen na '+compare.days+' společných platných dnech. Nejde nutně o celoroční úhrny a historické srážky dosud nejsou plně auditované.'
-    :'Počítáme nevážený průměr '+compare.days+' denních agregátů pro shodná kalendářní data, nikoli časově vážený roční průměr. Výsledky jsou orientační.');
+   set('[data-comparison-meaning]',comparisonMetrics[metric].kind==='sum'
+    ?'Součet z '+compare.days+' společných platných kalendářních dnů, ne nutně celoroční úhrn. Původní data nejsou po finální historické QC.'
+    :comparisonMetrics[metric].kind==='max'
+    ?'Maximum na '+compare.days+' společných dnech. Dny bez měření nejsou započteny a nejde o ověřený rekord.'
+    :'Nevážený průměr '+compare.days+' denních agregátů na shodných kalendářních dnech; není to časově vážený roční průměr z tabulky níže.');
   };
   const redraw=()=>{
    heatmap('first',years[0],firstValues);heatmap('second',years[1],secondValues);
@@ -247,6 +333,7 @@ const beforePrevious=todayYear-2;
    years=[Number(firstSelect.value),Number(secondSelect.value)];
    if(years[0]===years[1]){setStatus('Vyber dva různé roky','warning');return;}
    setStatus('Načítám denní souhrny WeeWX…','warning');
+   void loadAnnual(metric,signal);
    const responses=await Promise.allSettled(years.map(y=>sourceFromYear(y,metric,signal)));
    if(signal.aborted)return;
    firstValues=responses[0].status==='fulfilled'?dailyValues(years[0],responses[0].value.points):new Map();
@@ -258,6 +345,18 @@ const beforePrevious=todayYear-2;
    else setStatus('Původní archiv · bez finální QC','ok');
   }
   form.addEventListener('submit',event=>{event.preventDefault();void load();});
+  annualBody.addEventListener('click',event=>{
+   const button=(event.target as HTMLElement).closest<HTMLButtonElement>('[data-annual-select]');
+   if(!button)return;
+   const chosen=Number(button.dataset.annualSelect);
+   if(!Number.isInteger(chosen)||chosen<2009)return;
+   const first=Number(firstSelect.value),second=Number(secondSelect.value);
+   if(chosen===second)secondSelect.value=String(first);
+   firstSelect.value=String(chosen);
+   void load();
+   root.querySelector('.year-heatmaps')?.scrollIntoView({behavior:'smooth',block:'start'});
+  });
+
   root.addEventListener('click',event=>{
    const node=(event.target as HTMLElement).closest<HTMLButtonElement>('.year-heatmap-day');
    if(!node||!root.contains(node))return;
