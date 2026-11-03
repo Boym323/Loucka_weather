@@ -43,6 +43,7 @@ jobs:
           npx playwright install --with-deps chromium
           npm run preview -- --host 127.0.0.1 --port 4321 > /tmp/loucka-layout-preview.log 2>&1 &
           node scripts/evergreen-layout-audit.mjs
+          node scripts/year-comparison-browser-check.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

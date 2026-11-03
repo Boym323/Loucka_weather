@@ -154,6 +154,20 @@ try{
       if(layout.chartHeight<145)errors.push('Desktop integrated 24h chart must remain legible');
      }
     }
+    // The year comparison is part of the existing climatology route (no extra route).
+    if(path==='/klimatologie/'){
+     const compare=await page.evaluate(()=>({
+      visible:document.querySelector('[data-year-comparison]')!==null,
+      first:document.querySelector('[data-compare-first]')!==null,
+      second:document.querySelector('[data-compare-second]')!==null,
+      metric:document.querySelector('[data-compare-metric]')!==null,
+      chart:document.querySelector('[data-compare-chart]')!==null,
+      calendarA:document.querySelector('[data-heatmap-cells="first"]')!==null,
+      calendarB:document.querySelector('[data-heatmap-cells="second"]')!==null
+     }));
+     if(Object.values(compare).some(value=>!value))
+      errors.push(size.name+': climatology missing two-year heatmap and overlay controls');
+    }
     // Shared layout regression assertions across non-homepage routes.
     if(['/klimatologie/','/mapy/','/senzory/','/puda-ovzdusi/','/stav/','/kamera/'].includes(path)){
      const geometry=await page.evaluate(()=>{
