@@ -55,8 +55,8 @@ const quickReadings = [
    status.textContent=response.stale?'Zastaralé měření':'Archivní měření';
    status.classList.add(response.stale?'warning':'ok');
   }
-  if(updated)updated.textContent='Naměřeno '+formatTimestamp(response.observedAt)+' · původní archiv';
-  if(provenance)provenance.textContent='Původní archiv WeeWX · METRICWX · podezřelé a chybějící údaje se nezobrazují jako nula.';
+  if(updated)updated.textContent='Archiv WeeWX · naměřeno '+formatTimestamp(response.observedAt);
+  if(provenance)provenance.textContent='Archiv WeeWX · chybějící a podezřelé hodnoty zůstávají nevyplněné.';
   for(const metric of activeMetrics){
    const node=section.querySelector<HTMLElement>('[data-metric-value="'+metric.id+'"]');
    const quality=section.querySelector<HTMLElement>('[data-metric-quality="'+metric.id+'"]');
@@ -122,9 +122,9 @@ const quickReadings = [
    if(quality){quality.textContent='Živé měření GW3000';quality.dataset.readingState='measured';}
   }
   if(status){status.textContent='GW3000 · živá měření';status.className='status-chip ok';}
-  if(provenance)provenance.textContent='Živá data GW3000 přes lokální API · pouze právě dostupné veličiny; ostatní hodnoty z archivu WeeWX.';
-  if(updated)updated.textContent=(data.timestampMeaning==='gateway_polled_at'?'GW3000 · přečteno ':'GW3000 · naměřeno ')+formatTimestamp(data.observedAt)+
-   ' · nezahrnuté veličiny z posledního archivu WeeWX';
+  if(provenance)provenance.textContent='Živá data GW3000 · ostatní veličiny z posledního záznamu WeeWX.';
+  if(updated)updated.textContent=(data.timestampMeaning==='gateway_polled_at'?'Přečteno ':'Naměřeno ')+
+   formatTimestamp(data.observedAt)+' · GW3000';
  };
  const restoreArchive=()=>{
   lastLiveEvent=undefined;
