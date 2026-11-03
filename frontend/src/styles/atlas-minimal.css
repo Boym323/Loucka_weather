@@ -1040,3 +1040,12 @@ h1,h2,h3{font-weight:500;letter-spacing:0}
   white-space:normal;overflow-wrap:normal
  }
 }
+
+/* Preserve visual uncertainty when a historical day has incomplete coverage. */
+.observatory-history[data-history-completeness="incomplete"] .observatory-history-stats>div{
+ background:color-mix(in srgb,var(--observatory-sun) 13%,var(--panel));
+ border:1px solid color-mix(in srgb,var(--observatory-sun) 34%,var(--line))
+}
+.observatory-history[data-history-completeness="incomplete"] [data-day-history-status]{
+ color:var(--muted);padding-left:11px;border-left:2px solid var(--observatory-sun-dark)
+}

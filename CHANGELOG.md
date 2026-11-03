@@ -4,6 +4,11 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ## 2026-11-03
 
+### Historické srovnání s neúplnými daty
+- Při veřejném ověření původní archiv z předchozího roku nesplnil 80% pokrytí. Ověřené naměřené min/max již nepřijdou bez vysvětlení vniveč: pokud oba agregáty obsahují platná archivní měření, zobrazí se jako **nejnižší a nejvyšší zachycená hodnota**.
+- Při neúplném nebo neověřitelném pokrytí se vždy viditelně zobrazí upozornění, že se nejedná o potvrzené celodenní extrémy. Při nulovém počtu platných měření zůstanou hodnoty skryté.
+- Význam původních rekordů ani QC pravidel se nemění; žádný zásah do MariaDB či Fastify.
+
 ### QA opravy observatoře
 - U mobilního panelu byly na skutečném screenshotu jednotky tlaku a rychlosti větru příliš natěsnané; při šířkách do 760 px se proto zobrazují pod hodnotou.
 - Původní smoke test odmítal jakýkoliv CSS gradient za měřením. Nový test správně rozlišuje barevné plochy (povolené) od nepravdivého meteorologického podkladu či falešné fotografie (zakázané).
