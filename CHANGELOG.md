@@ -4,6 +4,15 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ## 2026-11-03
 
+### Meteorologická observatoř — identita původního Počasí Loučka
+- Úvod dostal výraznější petrolejový přístrojový panel s živou teplotou a dalšími skutečně měřenými veličinami; zachován zdroj GW3000/WeeWX, stavy kvality, denní minima/maxima a srážky.
+- Nová tříčástá část observatoře: **větrná růžice** s mapováním 16 směrů a přepínáním platných živých/archivních údajů; **Slunce a Měsíc** s jasně označeným astronomickým výpočtem pro přibližnou polohu obce; **stejný den před rokem** z původního archivu, zobrazovaný jen při pokrytí alespoň 80 %.
+- Sluneční časy se počítají lokálně v prohlížeči podle publikovaných přibližných rovnic NOAA, nikoliv podle meteorologického API. Astronomická fáze Měsíce je orientační. Nikdy se nevydávají za senzorová měření.
+- Na stránce O stanici zveřejněna časová osa původního projektu od roku 2009, doložené změny techniky, odkaz na původní web a skutečný obraz západní webkamery místo generické ilustrace.
+- Zůstaly zachovány všechny ostatní podstránky, grafy, kalendářní čas Europe/Prague, odborné funkce a kvalita dat; produkční databáze i Fastify API beze změny.
+- Testy výpočtu Slunce a Měsíce, provenience historie, vizuální přítomnosti přístrojů a responzivního rozložení desktop/mobil v `frontend/tests/observatory-heritage.test.mjs` a public smoke.
+
+
 ### Oprava regresí po prvním veřejném vizuálním testu
 - Public smoke odhalil, že mobilní analytické panely přebraly pozdní širokoúhlé CSS pravidlo a vytvořily tři nepoužitelné úzké sloupce; přidána explicitní adaptivní mřížka 1 sloupec na mobilu, 2 na tabletu, 3 na desktopu.
 - Opravena zastaralá testovací aserce, která očekávala původní třísloupcový seznam Senzorů; nový katalog má úmyslně 2 sloupce na desktopu a 1 na mobilu.

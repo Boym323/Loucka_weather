@@ -8,18 +8,21 @@ import ForecastPanel from '../features/forecast/ForecastPanel.astro';
 import RadarPanel from '../features/maps/RadarPanel.astro';
 import LocalWarnings from '../features/alerts/LocalWarnings.astro';
 import SiteIcon from '../shared/ui/SiteIcon.astro';
+import WindCompass from '../features/current/WindCompass.astro';
+import SolarCycle from '../features/current/SolarCycle.astro';
+import SameDayLastYear from '../features/history/SameDayLastYear.astro';
 ---
 <BaseLayout title="Přehled" description="Počasí Loučka: živá měření GW3000, původní archiv WeeWX, předpověď, grafy, kamera a radar.">
  <div class="atlas-home">
   <header class="atlas-home-intro">
    <div>
-    <span class="atlas-location"><SiteIcon name="map-pin" size={16} /> Loučka, okres Zlín</span>
-    <h1>Počasí právě teď</h1>
-    <p>Měření z vlastní meteorologické stanice · údaje s uvedením původu a času</p>
+    <span class="atlas-location"><SiteIcon name="map-pin" size={16} /> Loučka · Zlínský kraj · od roku 2009</span>
+    <h1>Počasí, které má <em>své místo.</em></h1>
+    <p>Vlastní meteorologická observatoř. Skutečná měření, živé podmínky a příběh počasí v Loučce.</p>
    </div>
    <a class="atlas-intro-link" href="/aktualne/">Všechna aktuální měření <span aria-hidden="true">↗</span></a>
   </header>
-  <section class="atlas-hero" aria-label="Aktuální počasí v Loučce">
+  <section class="atlas-hero observatory-hero" aria-label="Aktuální počasí v Loučce">
    <div class="atlas-hero-top">
     <CurrentPanel variant="dashboard"/>
    </div>
@@ -29,6 +32,12 @@ import SiteIcon from '../shared/ui/SiteIcon.astro';
   </section>
 
   <div class="atlas-alert-line"><LocalWarnings compact /></div>
+
+  <section class="observatory-instruments" aria-label="Přístroje, denní světlo a historické srovnání">
+   <div class="observatory-wind"><WindCompass /></div>
+   <SolarCycle />
+   <SameDayLastYear />
+  </section>
 
   <div class="atlas-home-analytics">
    <div class="atlas-main-history"><HistoryChart compact /></div>

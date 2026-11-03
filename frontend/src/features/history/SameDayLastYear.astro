@@ -1,0 +1,58 @@
+<section class="observatory-history" data-day-history aria-labelledby="day-history-title">
+ <div class="observatory-module-head">
+  <div><span class="observatory-kicker">LOUČKA V ČASE</span><h2 id="day-history-title">Před rokem ve stejný den</h2></div>
+  <span class="observatory-small-tag" data-history-year>WeeWX · archiv</span>
+ </div>
+ <p class="observatory-history-intro">Jaké bylo počasí v Loučce v tento kalendářní den minulého roku?</p>
+ <div class="observatory-history-stats" aria-label="Archivní denní minimum a maximum">
+  <div><span>Minimum</span><strong data-day-history-min>—</strong></div>
+  <div><span>Maximum</span><strong data-day-history-max>—</strong></div>
+ </div>
+ <p class="observatory-source-note" data-day-history-status role="status">Ověřuji úplnost historického dne v původním archivu.</p>
+ <a href="/grafy/" class="observatory-text-link">Prozkoumat archiv od roku 2009 <span aria-hidden="true">↗</span></a>
+</section>
+<script>
+ import {getStatistics} from '../../shared/api/client';
+ import {formatValue} from '../../shared/domain/metrics';
+ import {qualitySupported} from '../../shared/domain/statistics';
+ const root=document.querySelector<HTMLElement>('[data-day-history]');
+ if(root){
+  const controller=new AbortController();
+  const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Prague',
+   year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+  const current=Object.fromEntries(parts.map(p=>[p.type,p.value]));
+  const year=Number(current.year)-1;
+  const date=year+'-'+current.month+'-'+current.day;
+  const yearNode=root.querySelector<HTMLElement>('[data-history-year]');
+  if(yearNode)yearNode.textContent=year+' · původní archiv';
+  const status=root.querySelector<HTMLElement>('[data-day-history-status]');
+  const set=(k:string,v:string)=>{const node=root.querySelector<HTMLElement>('[data-day-history-'+k+']');if(node)node.textContent=v;};
+  // Leap day has no matching civil date in a non-leap year.
+  const exists=new Date(Date.UTC(year,Number(current.month)-1,Number(current.day))).toISOString().slice(0,10)===date;
+  const load=async()=>{
+   if(controller.signal.aborted)return;
+   if(!exists){if(status)status.textContent='Stejný kalendářní den v minulém roce neexistuje.';return;}
+   try{
+    const [lo,hi]=await Promise.all([
+     getStatistics('daily','outTemp','min',date,controller.signal),
+     getStatistics('daily','outTemp','max',date,controller.signal)
+    ]);
+    if(controller.signal.aborted)return;
+    const coverage=Math.min(lo.timeCoverage?.fraction??lo.completeness.fraction??0,
+     hi.timeCoverage?.fraction??hi.completeness.fraction??0);
+    if(qualitySupported(lo)&&qualitySupported(hi)&&coverage>=.8){
+     set('min',formatValue(lo.value,1)+' °C');
+     set('max',formatValue(hi.value,1)+' °C');
+     if(status)status.textContent='Původní archiv WeeWX · '+date+
+      ' · časové pokrytí '+Math.round(coverage*100)+' %. Extrémy za tento den, nikoli ověřené rekordy.';
+    }else if(status)status.textContent='Denní srovnání nemá dostatečné pokrytí dat (minimálně 80 %). Hodnoty proto nezobrazujeme.';
+   }catch{
+    if(controller.signal.aborted)return;
+    if(status)status.textContent='Historický den se nyní nepodařilo načíst; archiv je dostupný na stránce Grafy.';
+   }
+  };
+  // The homepage already loads several real-time endpoints. Avoid API burst.
+  const timer=setTimeout(()=>void load(),2600);
+  document.addEventListener('astro:before-swap',()=>{clearTimeout(timer);controller.abort();},{once:true});
+ }
+</script>
