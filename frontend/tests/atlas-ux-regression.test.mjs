@@ -44,7 +44,9 @@ test('history charts use thematic colors and adaptive sparse time axes',async()=
 test('homepage prioritizes live readings and discloses the difference from archive',async()=>{
  const home=await read('src/pages/index.astro');
  const css=await read('src/styles/atlas-minimal.css');
- assert.match(home,/CurrentPanel variant="dashboard"/);
+ assert.match(home,/CurrentPanel variant="observatory"/);
+ assert.match(home,/WindCompass variant="hero"/);
+ assert.match(home,/HistoryChart compact hero/);
  assert.match(home,/DailySummaryStrip/);
  assert.match(home,/LocalWarnings compact/);
  assert.match(home,/HistoryChart compact/);
