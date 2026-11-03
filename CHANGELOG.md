@@ -4,6 +4,11 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ## 2026-11-03
 
+### Oprava regresí po prvním veřejném vizuálním testu
+- Public smoke odhalil, že mobilní analytické panely přebraly pozdní širokoúhlé CSS pravidlo a vytvořily tři nepoužitelné úzké sloupce; přidána explicitní adaptivní mřížka 1 sloupec na mobilu, 2 na tabletu, 3 na desktopu.
+- Opravena zastaralá testovací aserce, která očekávala původní třísloupcový seznam Senzorů; nový katalog má úmyslně 2 sloupce na desktopu a 1 na mobilu.
+- Playwright před celostránkovým screenshotem vrací scroll k začátku, aby zachytil sticky hlavičku věrně a nezobrazoval ji uprostřed screenshotu.
+
 ### Atlas Minimal — cílené dokončení UX podle screenshotů produkčního náhledu
 - Úvodní živé měření: nové dvouřádkové uspořádání veličin kolem dominantní teploty, odstranění nevyužité bílé plochy a mírnější vertikální rytmus; na mobilu zkráceno duplicitní vysvětlení zdroje, ale zachován čas a stav měření.
 - Grafy: přebarvení a odlehčení os, legend, mřížky a časových popisků v `AdvancedHistory`, `HistoryChart`, `RainDetail` a `ClimateDashboard`; mobil zobrazuje méně čitelných časových značek, namísto jejich překrývání.
