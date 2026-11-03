@@ -657,3 +657,158 @@
   transition:none!important
  }
 }
+
+/* Fine polish after desktop (1440 px) and mobile (390 px) visual review.
+   Only visual rhythm, source legibility, and accessible interaction; no data changes. */
+.evergreen-home{
+ --evergreen-card-shadow:0 10px 27px rgba(25,57,63,.065),0 1px 3px rgba(25,57,63,.025);
+}
+.evergreen-home .evergreen-intro h1{
+ text-wrap:balance;
+}
+.evergreen-home .evergreen-intro p{
+ font-size:14px;line-height:1.6;letter-spacing:-.006em
+}
+.evergreen-home .atlas-home-destinations a,
+.evergreen-home .evergreen-more-heading a,
+.evergreen-home .observatory-text-link{
+ text-underline-offset:4px
+}
+.evergreen-hero .evergreen-core .metric-card.featured .metric-number,
+.evergreen-hero .wind-speed-pair strong,
+.evergreen-hero .evergreen-daily .daily-brief-item strong{
+ font-variant-numeric:tabular-nums lining-nums
+}
+.evergreen-hero .current-panel [data-current-updated]{
+ font-size:12px;line-height:1.45
+}
+.evergreen-hero .current-panel [data-current-provenance]{
+ font-size:11px;line-height:1.45
+}
+.evergreen-hero .current-panel .metric-card .metric-note{
+ font-size:11px!important;line-height:1.4;color:#59747c!important
+}
+.evergreen-hero .current-panel .metric-card .metric-label{
+ font-size:12px!important;line-height:1.35
+}
+.evergreen-hero .current-panel .metric-card.featured .metric-label{
+ font-size:12px!important
+}
+.evergreen-hero .current-panel [data-current-status]{
+ font-size:11px;line-height:1.25;letter-spacing:0
+}
+.evergreen-hero .wind-hero [data-wind-status],
+.evergreen-hero .history-hero .status-chip{
+ font-size:10px!important;line-height:1.3
+}
+.evergreen-hero .wind-hero .observatory-wind-direction{
+ line-height:1.45
+}
+.evergreen-hero .wind-hero .wind-speed-pair>div>span{
+ font-size:11px
+}
+.evergreen-hero .wind-speed-pair>div>small,
+.evergreen-hero .wind-hero>.observatory-source-note{
+ font-size:11px;line-height:1.45
+}
+.evergreen-hero .history-hero .chart-message,
+.evergreen-hero .history-hero .history-legend{
+ font-size:11px;line-height:1.5
+}
+.evergreen-hero .history-hero .chart-summary{font-size:11px;line-height:1.4}
+.evergreen-hero .evergreen-daily .daily-brief-item>span,
+.evergreen-hero .evergreen-daily .daily-brief-item small{
+ font-size:11px!important
+}
+.evergreen-hero .evergreen-daily .daily-brief-status{
+ font-size:11px!important;line-height:1.45
+}
+.evergreen-home .evergreen-landscape-credit{
+ font-size:11px;line-height:1.35
+}
+/* Four distinct cards, aligned headings and natural reading order. */
+.evergreen-spotlight .atlas-media-card,
+.evergreen-spotlight .observatory-sky,
+.evergreen-spotlight .observatory-history,
+.evergreen-spotlight .evergreen-station-card{
+ border-color:color-mix(in srgb,var(--line) 82%,var(--evergreen-petrol) 18%);
+ box-shadow:var(--evergreen-card-shadow)
+}
+.evergreen-card-header{gap:10px;margin-bottom:15px}
+.evergreen-card-header h2{font-size:18px;line-height:1.25}
+.evergreen-spotlight .observatory-module-head h2{
+ font-size:18px;line-height:1.25
+}
+.evergreen-spotlight .observatory-history-intro{
+ line-height:1.55;font-size:12px
+}
+.evergreen-spotlight .evergreen-camera-tile>p,
+.evergreen-spotlight .observatory-source-note,
+.evergreen-station-card>p{
+ font-size:11px;line-height:1.5
+}
+.evergreen-spotlight .observatory-history .observatory-text-link,
+.evergreen-station-card .observatory-text-link{
+ font-size:12px
+}
+.evergreen-spotlight .evergreen-camera-tile .atlas-media-image img{
+ transition:transform .35s ease,filter .35s ease;
+ transform:scale(1.001)
+}
+.evergreen-spotlight .evergreen-camera-tile .atlas-media-image:hover img,
+.evergreen-spotlight .evergreen-camera-tile .atlas-media-image:focus-visible img{
+ transform:scale(1.018)
+}
+.evergreen-home :is(a,button,summary):focus-visible{
+ outline:3px solid #168ca5;outline-offset:3px
+}
+.evergreen-home .atlas-media-image:focus-visible{outline-offset:4px}
+.evergreen-home .observatory-text-link:hover,
+.evergreen-home .evergreen-more-heading a:hover{
+ color:var(--evergreen-petrol)
+}
+.evergreen-home .atlas-home-destinations>a:hover{
+ background:color-mix(in srgb,var(--panel) 82%,#dcefed 18%)
+}
+:root[data-theme="dark"] .evergreen-home .atlas-home-destinations>a:hover{
+ background:var(--panel-2)
+}
+:root[data-theme="dark"] .evergreen-hero .current-panel .metric-card .metric-note{
+ color:#bfd6d2!important
+}
+:root[data-theme="dark"] .evergreen-home .evergreen-spotlight>*{
+ box-shadow:none
+}
+:root[data-theme="dark"] .evergreen-home :is(a,button,summary):focus-visible{
+ outline-color:#9de3df
+}
+/* Do not let larger descriptive labels create horizontal clipping. */
+@media(min-width:761px) and (max-width:1270px){
+ .evergreen-hero .wind-hero .wind-layout{gap:13px}
+ .evergreen-hero .current-panel .metric-card .metric-note{font-size:10px!important}
+}
+@media(max-width:760px){
+ .evergreen-home .evergreen-intro h1{line-height:1.1}
+ .evergreen-home .evergreen-intro p{font-size:13px;line-height:1.5}
+ .evergreen-hero .current-panel [data-current-updated]{font-size:11px}
+ .evergreen-hero .current-panel [data-current-provenance]{
+  font-size:11px;line-height:1.5
+ }
+ .evergreen-hero .current-panel .metric-card .metric-label{font-size:11px!important}
+ .evergreen-hero .current-panel .metric-card .metric-note{font-size:10px!important}
+ .evergreen-hero .evergreen-daily .daily-brief-item>span{
+  font-size:10px!important
+ }
+ .evergreen-hero .wind-hero .wind-layout{gap:14px}
+ .evergreen-hero .history-hero .chart-box{min-height:168px}
+ .evergreen-spotlight .atlas-media-card,
+ .evergreen-spotlight .observatory-sky,
+ .evergreen-spotlight .observatory-history,
+ .evergreen-spotlight .evergreen-station-card{border-radius:16px}
+ .evergreen-home .evergreen-landscape-credit{margin-top:9px}
+}
+@media(prefers-reduced-motion:reduce){
+ .evergreen-spotlight .evergreen-camera-tile .atlas-media-image img{
+  transition:none!important;transform:none!important
+ }
+}
