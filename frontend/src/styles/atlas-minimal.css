@@ -678,3 +678,348 @@ h1,h2,h3{font-weight:500;letter-spacing:0}
  .atlas-home-analytics>*{min-width:0}
  .atlas-home-extras{grid-column:auto}
 }
+
+
+/* Observatory / Živé místo — historical station identity modernized (2026-11-03).
+   Presentation only. Real-time/archive/model provenance remains controlled by
+   the individual data components; astronomical figures are calculations. */
+:root[data-theme="light"]{
+ --observatory-petrol:#123941;
+ --observatory-petrol-mid:#1e5257;
+ --observatory-paper:#f8f6f0;
+ --observatory-sun:#edb96b;
+ --observatory-sun-dark:#a96528;
+ --observatory-sky-ink:#344449;
+}
+:root[data-theme="dark"]{
+ --observatory-petrol:#123941;
+ --observatory-petrol-mid:#1e5257;
+ --observatory-paper:#243437;
+ --observatory-sun:#f0c27d;
+ --observatory-sun-dark:#d6a565;
+ --observatory-sky-ink:#e0edea;
+}
+.atlas-home{gap:22px}
+.atlas-home-intro{padding:17px 0 7px;align-items:end}
+.atlas-home-intro h1{
+ font-size:clamp(34px,4.25vw,59px);line-height:1.06;
+ font-weight:600;letter-spacing:-.042em;margin:13px 0 13px
+}
+.atlas-home-intro h1 em{font-weight:500;font-style:normal;color:#bd7841}
+:root[data-theme="dark"] .atlas-home-intro h1 em{color:#efbd79}
+.atlas-home-intro p{font-size:14px;max-width:65ch;line-height:1.55}
+.atlas-location{font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+.atlas-intro-link{font-size:13px;margin-bottom:9px}
+
+/* Not a fake sky photograph: instrument-grade color and a subtle precision
+ * grid are distinct from the LIVE photo preview below. */
+.atlas-hero.observatory-hero{
+ --hero-line:rgba(211,242,234,.17);
+ --hero-secondary:#b7d3d1;
+ --hero-white:#f6fbf9;
+ background:
+  radial-gradient(circle at 80% -30%,rgba(110,183,176,.25),transparent 48%),
+  linear-gradient(120deg,#0f333c,#1a5053 78%,#1c4b4f);
+ border:1px solid #2a6c69;color:var(--hero-white);
+ border-radius:19px;min-height:350px;overflow:hidden;
+ box-shadow:0 15px 45px rgba(22,63,65,.12);
+ isolation:isolate
+}
+.atlas-hero.observatory-hero::before{
+ content:"";position:absolute;inset:0;pointer-events:none;z-index:-1;
+ background-image:
+  linear-gradient(90deg,transparent calc(100% - 1px),rgba(255,255,255,.032) 100%),
+  linear-gradient(0deg,transparent calc(100% - 1px),rgba(255,255,255,.032) 100%);
+ background-size:64px 64px;
+ mask-image:linear-gradient(90deg,transparent 0%,black 65%,transparent 100%)
+}
+.observatory-hero .atlas-hero-top{padding:27px 30px}
+.observatory-hero .current-panel{color:var(--hero-white)}
+.observatory-hero .current-panel .section-heading h2{
+ color:var(--hero-white);font-size:18px;font-weight:500;letter-spacing:-.015em
+}
+.observatory-hero .current-panel .eyebrow{
+ color:#b5d5d2;font-size:11px;letter-spacing:.12em;
+ text-transform:uppercase;font-weight:650
+}
+.observatory-hero .current-panel [data-current-status]{
+ color:#c9eee4;background:rgba(12,53,56,.62);
+ border:1px solid rgba(207,242,228,.28);border-radius:99px;
+ font-size:11px;padding:7px 10px
+}
+.observatory-hero .current-panel [data-current-status].warning{
+ color:#f8d493;background:#543b28;border-color:#916b47
+}
+.observatory-hero .current-panel [data-current-status].error{
+ color:#ffc3b9;background:#532c34;border-color:#a56469
+}
+.observatory-hero .current-panel [data-current-updated],
+.observatory-hero .current-panel [data-current-provenance]{
+ color:var(--hero-secondary);font-size:11px
+}
+.observatory-hero .current-panel .metric-card{color:var(--hero-white)}
+.observatory-hero .current-panel .metric-card .metric-label,
+.observatory-hero .current-panel .metric-card .metric-unit,
+.observatory-hero .current-panel .metric-card .metric-note{
+ color:var(--hero-secondary)
+}
+.observatory-hero .current-panel .metric-card.featured .metric-label{
+ font-size:12px;color:#c9e5dc
+}
+.observatory-hero .current-panel .metric-card.featured .metric-number{
+ font-size:clamp(80px,8vw,116px)!important;
+ color:#fffaf0;letter-spacing:-.065em;font-weight:550;
+ text-shadow:0 1px 14px rgba(0,0,0,.07)
+}
+.observatory-hero .current-panel .metric-card.featured .metric-unit{color:#eccb9b}
+.observatory-hero .current-panel .metric-card:not(.featured) .metric-number{
+ color:#f3f9f5;font-size:21px!important;font-weight:550
+}
+.observatory-hero .current-panel .metric-card:not(.featured){
+ border-left:1px solid var(--hero-line)!important;padding-left:18px!important
+}
+.observatory-hero .atlas-hero-daily{margin:0 27px 0 0}
+.observatory-hero .atlas-hero-daily .daily-brief{
+ background:rgba(5,38,44,.53);border:1px solid var(--hero-line);
+ color:var(--hero-white);padding:14px;
+ border-radius:14px;box-shadow:0 10px 28px rgba(0,30,35,.12);
+ backdrop-filter:blur(4px)
+}
+.observatory-hero .atlas-hero-daily .daily-brief-item:nth-child(3){border-top:1px solid var(--hero-line)}
+.observatory-hero .atlas-hero-daily .daily-brief-item>span,
+.observatory-hero .atlas-hero-daily .daily-brief-item small,
+.observatory-hero .atlas-hero-daily .daily-brief-status{color:#b9d8d4}
+.observatory-hero .atlas-hero-daily .daily-brief-item strong{color:#fff9f0;font-size:28px}
+.observatory-hero .atlas-hero-daily .daily-brief-item:nth-child(2) strong{color:#f0c17d}
+.atlas-alert-line>.local-warnings{border-color:var(--line);border-radius:10px}
+.atlas-alert-line .local-warnings .panel-title svg{color:#b17c46}
+
+/* The signature instruments: different content shapes, not cloned KPI cards. */
+.observatory-instruments{
+ display:grid;grid-template-columns:1.03fr 1.25fr .95fr;
+ gap:14px;align-items:stretch;min-width:0;
+}
+.observatory-instruments>*{min-width:0}
+.observatory-instruments .observatory-wind .section,
+.observatory-sky,.observatory-history{
+ border:1px solid var(--line);border-radius:14px;
+ padding:21px 22px;min-width:0;height:100%;
+}
+.observatory-instruments .observatory-wind .section{
+ background:var(--panel);box-shadow:none;display:flex;flex-direction:column
+}
+.observatory-module-head{
+ display:flex;justify-content:space-between;align-items:start;
+ flex-wrap:wrap;gap:8px;margin-bottom:13px
+}
+.observatory-kicker{
+ font-size:10px;line-height:1.3;font-weight:650;
+ letter-spacing:.13em;text-transform:uppercase;color:var(--teal)
+}
+.observatory-module-head h2{
+ font-weight:550;font-size:20px;line-height:1.14;margin:7px 0 0;
+ letter-spacing:-.02em
+}
+.observatory-small-tag{font-size:10px;color:var(--muted);background:var(--panel);
+ border:1px solid var(--line);border-radius:6px;padding:5px 7px;
+ white-space:nowrap
+}
+.observatory-instruments .observatory-wind .section-heading{
+ align-items:start;gap:8px;margin-bottom:8px
+}
+.observatory-instruments .observatory-wind .eyebrow{
+ font-size:10px;letter-spacing:.13em;text-transform:uppercase
+}
+.observatory-instruments .observatory-wind h2{font-size:20px;letter-spacing:-.02em}
+.observatory-instruments .observatory-wind .status-chip{font-size:10px}
+.observatory-wind .wind-layout{
+ justify-content:flex-start;gap:19px;
+ margin:9px 0 11px;min-height:139px
+}
+.observatory-wind .wind-gauge{
+ width:137px;height:137px;
+ border:1px solid #c7ddd8;background:
+ radial-gradient(circle at 50% 50%,#f9fbf8 0%,#ecf4ef 80%,#ddebe5);
+ box-shadow:inset 0 0 0 9px rgba(255,255,255,.35);
+ flex:none
+}
+.observatory-wind .wind-gauge::before,.observatory-wind .wind-gauge::after{background:#b3ccc4}
+.observatory-wind .wind-north,.observatory-wind .wind-east,
+.observatory-wind .wind-south,.observatory-wind .wind-west{
+ font-weight:600;color:#426e67;font-size:11px
+}
+.observatory-wind .wind-needle{height:82px}
+.observatory-wind .wind-needle::before{
+ background:#bd7841;height:44px;left:-4px;top:1px;width:18px
+}
+.observatory-wind .wind-center{background:#244d53}
+.observatory-wind-readout{min-width:0}
+.observatory-wind .wind-degrees{font-size:38px;letter-spacing:-.04em;margin:0 0 6px}
+.observatory-wind .wind-degrees strong{font-weight:550}
+.observatory-wind-direction{font-size:13px;font-weight:550;line-height:1.3;margin:0 0 7px}
+.observatory-wind .source-note{font-size:10px;margin:0}
+.observatory-source-note{font-size:11px;color:var(--muted);line-height:1.55;margin:0}
+.observatory-wind .observatory-source-note{margin-top:auto;padding-top:6px}
+
+.observatory-sky{
+ background:var(--observatory-paper);position:relative;overflow:hidden;
+ color:var(--text);display:flex;flex-direction:column
+}
+.observatory-sky .observatory-kicker{color:var(--observatory-sun-dark)}
+.observatory-sky .observatory-small-tag{
+ border-color:rgba(160,121,64,.18);background:rgba(255,255,255,.23)
+}
+.solar-arc{margin:0 0 2px;min-height:81px}
+.solar-arc svg{width:100%;height:88px;display:block}
+.solar-arc-track{
+ fill:none;stroke:#d1ac78;stroke-width:2.3;stroke-linecap:round;
+ stroke-dasharray:5 6
+}
+.solar-arc-horizon{stroke:rgba(118,104,80,.35);stroke-width:1}
+.solar-arc-sun{fill:#f0b65d;stroke:#fff1cf;stroke-width:4}
+.solar-arc-sun-core{fill:#fff5d8}
+.solar-times{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;
+ align-items:start;margin:0 0 12px
+}
+.solar-times>div{min-width:0}
+.solar-times>div:nth-child(2){text-align:center}
+.solar-times>div:last-child{text-align:right}
+.solar-times span{display:block;font-size:11px;color:var(--muted);margin-bottom:4px}
+.solar-times strong{font-size:18px;line-height:1.2;font-weight:600;
+ font-variant-numeric:tabular-nums;white-space:nowrap
+}
+.solar-moon-line{display:flex;align-items:center;gap:9px;
+ border-top:1px solid var(--line);padding:11px 0 8px;font-size:12px
+}
+.solar-moon-glyph{font-size:24px;line-height:1;color:var(--observatory-sun-dark)}
+.solar-moon-line strong{font-variant-numeric:tabular-nums;margin-left:auto;
+ font-size:14px;font-weight:600;color:var(--observatory-sun-dark)
+}
+.observatory-sky .observatory-source-note{margin-top:auto}
+
+.observatory-history{
+ background:var(--panel);display:flex;flex-direction:column;
+ border-top:3px solid #b17b4b
+}
+.observatory-history-intro{color:var(--muted);font-size:13px;line-height:1.5;margin:5px 0 14px}
+.observatory-history-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;
+ margin-bottom:17px
+}
+.observatory-history-stats>div{
+ padding:11px 12px;background:var(--panel-2);border-radius:9px;min-width:0
+}
+.observatory-history-stats span{display:block;font-size:11px;color:var(--muted);margin-bottom:5px}
+.observatory-history-stats strong{font-size:23px;font-weight:550;
+ letter-spacing:-.035em;font-variant-numeric:tabular-nums;white-space:nowrap
+}
+.observatory-history .observatory-source-note{margin:0 0 12px}
+.observatory-text-link{
+ display:inline-flex;align-items:center;gap:5px;font-size:12px;
+ color:var(--teal);font-weight:650;text-decoration:none;
+ text-underline-offset:4px;margin-top:auto
+}
+.observatory-text-link:hover{text-decoration:underline}
+.atlas-main-history [data-chart-canvas]{border-radius:8px}
+.atlas-home-analytics .section-heading h2{font-size:19px}
+.atlas-media-image{aspect-ratio:16/7.8}
+.atlas-media-overlay{font-size:19px;letter-spacing:-.025em;padding:42px 21px 18px}
+.atlas-radar-tile .radar-map{border-radius:9px}
+.atlas-home-destinations{border-radius:12px}
+.atlas-home-destinations strong{font-weight:550}
+.atlas-home-destinations>a:hover .atlas-dest-icon{color:#bd7841}
+.atlas-home-destinations>a:hover{background:var(--panel-2)}
+
+/* Real story belongs on the About page. */
+.observatory-milestones{
+ border:1px solid var(--line);border-radius:15px;background:var(--panel);
+ padding:28px 30px;margin:19px 0 20px
+}
+.observatory-milestones-head{max-width:80ch}
+.observatory-milestones-head h2{
+ font-weight:550;letter-spacing:-.035em;line-height:1.15;
+ font-size:clamp(23px,2.8vw,34px);margin:8px 0 12px
+}
+.observatory-milestones-head p{color:var(--muted);font-size:14px;line-height:1.6}
+.observatory-milestones-line{list-style:none;margin:29px 0 17px;padding:0;
+ display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:15px
+}
+.observatory-milestones-line li{
+ padding:17px 15px 11px 19px;border-left:2px solid #bd8758;
+ background:var(--panel-2);border-radius:0 9px 9px 0;
+ display:flex;flex-direction:column;gap:8px;min-width:0
+}
+.observatory-milestones-line time{font-size:12px;color:var(--teal);
+ font-weight:650;font-variant-numeric:tabular-nums
+}
+.observatory-milestones-line strong{font-size:15px;font-weight:600;line-height:1.3}
+.observatory-milestones-line span{font-size:12px;color:var(--muted);line-height:1.55}
+.observatory-milestones .observatory-source-note a{text-decoration:underline;
+ text-underline-offset:3px
+}
+.about-image img{width:100%;height:100%;max-height:390px;object-fit:cover;
+ border-radius:9px;display:block
+}
+.about-image .source-note{display:block;padding-top:10px}
+
+/* Tablet: vertical instruments stack without hiding meteorological details. */
+@media(min-width:761px) and (max-width:1330px){
+ .observatory-instruments{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .observatory-history{grid-column:1/-1}
+ .observatory-milestones-line{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:1050px){
+ .atlas-home-intro h1{font-size:clamp(32px,5vw,48px)}
+ .observatory-hero .current-panel .metric-card.featured .metric-number{font-size:80px!important}
+}
+@media(max-width:760px){
+ .atlas-home{gap:16px}
+ .atlas-home-intro{padding:7px 0 4px}
+ .atlas-home-intro h1{font-size:clamp(32px,8.7vw,43px);letter-spacing:-.037em;margin:10px 0}
+ .atlas-home-intro p{font-size:13px}
+ .atlas-location{font-size:10px;letter-spacing:.065em}
+ .atlas-hero.observatory-hero{min-height:0;border-radius:15px;display:grid;
+  grid-template-columns:minmax(0,1fr)
+ }
+ .observatory-hero .atlas-hero-top{padding:22px 17px 9px}
+ .observatory-hero .current-panel{gap:13px}
+ .observatory-hero .current-panel .section-heading{gap:9px}
+ .observatory-hero .current-panel .section-heading h2{font-size:16px}
+ .observatory-hero .current-panel .eyebrow{font-size:10px}
+ .observatory-hero .current-panel [data-current-status]{font-size:10px}
+ .observatory-hero .current-panel .metric-card.featured .metric-number{
+  font-size:clamp(66px,17vw,88px)!important
+ }
+ .observatory-hero .current-panel .metric-card:not(.featured){border:0!important;
+  padding:0!important
+ }
+ .observatory-hero .current-panel .metric-card:not(.featured) .metric-number{font-size:18px!important}
+ .observatory-hero .current-panel [data-current-updated]{font-size:10px}
+ .observatory-hero .atlas-hero-daily{margin:0 14px 14px}
+ .observatory-hero .atlas-hero-daily .daily-brief{padding:8px}
+ .observatory-hero .atlas-hero-daily .daily-brief-item strong{font-size:21px}
+ .observatory-hero .atlas-hero-daily .daily-brief-item>span{font-size:10px}
+ .observatory-instruments{grid-template-columns:1fr;gap:11px}
+ .observatory-instruments .observatory-wind .section,.observatory-sky,.observatory-history{padding:18px}
+ .observatory-wind .wind-layout{justify-content:center;gap:25px}
+ .observatory-wind .wind-gauge{width:145px;height:145px}
+ .observatory-wind .wind-needle{height:88px}
+ .observatory-history-stats strong{font-size:25px}
+ .solar-arc svg{height:90px}
+ .observatory-milestones{padding:20px 17px}
+ .observatory-milestones-line{grid-template-columns:1fr;gap:9px}
+ .observatory-milestones-line li{padding:13px 15px}
+ .observatory-milestones-head h2{font-size:26px}
+}
+@media(max-width:359px){
+ .observatory-hero .atlas-hero-top{padding-inline:13px}
+ .atlas-home-intro h1{font-size:30px}
+ .observatory-wind .wind-layout{gap:15px}
+ .observatory-wind .wind-gauge{width:119px;height:119px}
+ .observatory-wind .wind-needle{height:80px}
+ .observatory-wind .wind-degrees{font-size:32px}
+ .solar-times{gap:6px}
+ .solar-times strong{font-size:15px}
+}
+@media(prefers-reduced-motion:reduce){
+ .observatory-hero *{transition:none}
+}
