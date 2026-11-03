@@ -24,7 +24,7 @@ test('weather source microcopy remains precise without redundant qualifiers',asy
  assert.match(current,/Archive|Archiv WeeWX/);
  assert.match(current,/reading\.quality==='missing'\|\|reading\.quality==='suspect'/);
  assert.match(wind,/U každé hodnoty uvádíme její zdroj/);
- assert.match(wind,/reading\.source==='gw3000_live'|value\.source==='gw3000_live'/);
+ assert.match(wind,/reading\?\.source==='gw3000_live'|value\?\.source==='gw3000_live'/);
  assert.match(chart,/chybějící intervaly zůstávají prázdné/);
  assert.match(chart,/connectNulls:false/);
 });
