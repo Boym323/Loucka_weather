@@ -11,7 +11,6 @@ const browser=await chromium.launch({headless:true});
 const fmt=(n,d)=>new Intl.NumberFormat('cs-CZ',{minimumFractionDigits:d,maximumFractionDigits:d}).format(n);
 // Verify stable source semantics, not changeable explanatory wording.
 const hasLiveSourceLabel=text=>Boolean(text?.includes('Živá data GW3000')&&text.includes('WeeWX'));
-const hasArchiveSourceLabel=text=>Boolean(text?.includes('Archiv WeeWX')&&!text.includes('Živá data GW3000'));
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 
 async function liveCurrent(){
@@ -140,7 +139,7 @@ try{
      const chip=document.querySelector('[data-current-status]')?.textContent??'';
      const provenance=document.querySelector('[data-current-provenance]')?.textContent??'';
      return (chip.includes('Archivní měření')||chip.includes('Zastaralé měření'))&&
-      hasArchiveSourceLabel(provenance);
+      provenance.includes('Archiv WeeWX')&&!provenance.includes('Živá data GW3000');
     },null,{timeout:35000});
    }catch(error){
     const diag=await page.evaluate(()=>({
