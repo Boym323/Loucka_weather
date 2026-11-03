@@ -105,6 +105,66 @@ paths:
         '429': { $ref: '#/components/responses/TooMany' }
         '503': { $ref: '#/components/responses/Unavailable' }
         '500': { $ref: '#/components/responses/Internal' }
+  /api/v1/climate/annual-matrix:
+    get:
+      operationId: getConsolidatedAnnualClimate
+      summary: All available calendar-year summaries for one original WeeWX metric
+      description: |
+        One bounded SELECT-only scan of archive_day_<metric> produces 2009 through
+        the last *completed* Europe/Prague day. Mean is weighted by sumtime, sum
+        is additive, minima/maxima follow the per-metric aggregation policy.
+        Missing/invalid daily data are never zero-filled. Each year exposes
+        elapsedDays, validDays, missingDays, timeCoverageFraction and QC provenance.
+        This is NOT an approved reconstruction; reference stations and candidates
+        are not silently mixed with station measurements.
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
+        - $ref: '#/components/parameters/Metric'
+        - $ref: '#/components/parameters/Units'
+        - $ref: '#/components/parameters/Dataset'
+      responses:
+        '200':
+          description: One metric, every available year, plus provenance and completeness
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [schemaVersion, metric, aggregation, dataset, qcStatus, years]
+                properties:
+                  schemaVersion: { type: string, const: '1' }
+                  metric: { type: string }
+                  aggregation: { type: string, enum: [mean, sum, min, max] }
+                  dataset: { type: string, const: original }
+                  qcStatus: { type: string, const: original_unverified }
+                  dataRevision: { type: string }
+                  startsAt: { type: string, format: date }
+                  endsBefore: { type: string, format: date }
+                  years:
+                    type: array
+                    maxItems: 92
+                    items:
+                      type: object
+                      required: [year, calendarDays, elapsedDays, validDays, missingDays, value, unit, qcStatus]
+                      properties:
+                        year: { type: integer, minimum: 2009, maximum: 2100 }
+                        calendarDays: { type: integer, minimum: 365, maximum: 366 }
+                        elapsedDays: { type: integer, minimum: 0, maximum: 366 }
+                        validDays: { type: integer, minimum: 0, maximum: 366 }
+                        missingDays: { type: integer, minimum: 0, maximum: 366 }
+                        invalidDays: { type: integer, minimum: 0 }
+                        sourceRows: { type: integer, minimum: 0 }
+                        completenessFraction: { type: [number, 'null'], minimum: 0, maximum: 1 }
+                        timeCoverageFraction: { type: [number, 'null'], minimum: 0, maximum: 1 }
+                        value: { type: [number, 'null'] }
+                        unit: { type: string }
+                        method: { type: string, enum: [time_weighted_mean, sum, minimum, maximum] }
+                        qcStatus: { type: string, const: original_unverified }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '422': { $ref: '#/components/responses/InvalidRange' }
+        '429': { $ref: '#/components/responses/TooMany' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+        '500': { $ref: '#/components/responses/Internal' }
   /api/v1/statistics/yearly:
     get:
       operationId: getYearlyStatistics
