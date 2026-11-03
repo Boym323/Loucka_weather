@@ -1,6 +1,6 @@
 ---
-interface Props { compact?: boolean; defaultMetric?: string }
-const { compact = false, defaultMetric = 'outTemp' } = Astro.props;
+interface Props { compact?: boolean; defaultMetric?: string; hero?: boolean }
+const { compact = false, defaultMetric = 'outTemp', hero = false } = Astro.props;
 const tabs = [
  { id:'outTemp',label:'Teplota' },
  { id:'outHumidity',label:'Vlhkost' },
@@ -10,9 +10,9 @@ const tabs = [
  { id:'rainRate',label:'Srážky' }
 ];
 ---
-<section class="section" data-history-chart data-compact={compact ? 'true' : 'false'} data-default-metric={defaultMetric} aria-labelledby={compact?'home-chart-title':'history-chart-title'}>
+<section class:list={['section',{'history-hero':hero}]} data-history-chart data-compact={compact ? 'true' : 'false'} data-hero={hero ? 'true' : 'false'} data-default-metric={defaultMetric} aria-labelledby={compact?'home-chart-title':'history-chart-title'}>
  <div class="section-heading">
-  <div><span class="eyebrow">Archivní měření · WeeWX</span><h2 id={compact?'home-chart-title':'history-chart-title'}>{compact?(defaultMetric==='windGust'?'Nárazy větru · 24 hodin':'Posledních 24 hodin'):'Interaktivní meteorologický graf'}</h2></div>
+  <div><span class="eyebrow">Archivní měření · WeeWX</span><h2 id={compact?'home-chart-title':'history-chart-title'}>{hero?'Teplota · posledních 24 hodin':compact?(defaultMetric==='windGust'?'Nárazy větru · 24 hodin':'Posledních 24 hodin'):'Interaktivní meteorologický graf'}</h2></div>
   <span class="status-chip" data-chart-status role="status">Načítání grafu</span>
  </div>
  <div class="chart-toolbar" role="group" aria-label="Vybrat veličinu">
