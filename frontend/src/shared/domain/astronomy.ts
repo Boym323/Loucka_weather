@@ -47,7 +47,8 @@ export function solarDay(civilDate:string,latitude=LOUCKA_VILLAGE.latitude,longi
 export function lunarPhase(at:Date):{illuminated:number;name:string}{
  const synodic=29.530588853;
  const reference=Date.parse('2000-01-06T18:14:00Z'); // approximate new Moon
- const phase=(((at.getTime()-reference)/86400000/synodic)%1)+1)%1;
+ const cycles=(at.getTime()-reference)/(86400000*synodic);
+ const phase=((cycles%1)+1)%1;
  const illuminated=(1-Math.cos(phase*2*Math.PI))/2;
  const name=phase<.04||phase>=.96?'Nov':
   phase<.21?'Dorůstající srpek':phase<.29?'První čtvrť':
