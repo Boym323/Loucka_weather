@@ -11,7 +11,7 @@
  --evergreen-stroke:rgba(45,96,107,.16);
  --evergreen-glass:rgba(250,253,252,.94);
  --evergreen-deep-shadow:0 24px 60px rgba(20,48,53,.16),0 4px 14px rgba(29,59,62,.07);
- --evergreen-card-shadow:0 12px 30px rgba(33,65,68,.07);
+ --evergreen-card-shadow:0 10px 27px rgba(25,57,63,.065),0 1px 3px rgba(25,57,63,.025);
  gap:23px;
 }
 .evergreen-home .atlas-location{font-size:12px;letter-spacing:.08em;color:#184456;font-weight:650}
@@ -52,7 +52,7 @@
 .evergreen-intro .atlas-intro-link:hover{background:#fff;border-color:#328394}
 .evergreen-landscape-credit{
  margin:8px 8px 0;text-align:right;color:#566e73;
- font-size:10px;letter-spacing:.005em
+ font-size:12px;letter-spacing:.005em
 }
 
 /* The single meteorological instrument surface */
@@ -94,14 +94,14 @@
 }
 .evergreen-hero .current-panel .section-heading>div{display:flex;align-items:center;gap:9px}
 .evergreen-hero .current-panel .eyebrow{
- font-size:11px;letter-spacing:0;text-transform:none;font-weight:650;
+ font-size:12px;letter-spacing:0;text-transform:none;font-weight:650;
  color:#466873
 }
 .evergreen-hero .current-panel .section-heading h2{display:none}
 .evergreen-hero .current-panel [data-current-status]{
  background:rgba(223,238,234,.85)!important;
  color:#1c695b!important;border:1px solid rgba(33,116,100,.2)!important;
- border-radius:100px;font-size:10px;padding:5px 9px;white-space:nowrap
+ border-radius:100px;font-size:12px;padding:5px 9px;white-space:nowrap
 }
 .evergreen-hero .current-panel [data-current-status].warning{
  background:#f7eedb!important;color:#855f22!important;border-color:#dec89d!important
@@ -110,11 +110,11 @@
  background:#fbe3e1!important;color:#8b3944!important;border-color:#eac4c1!important
 }
 .evergreen-hero .current-panel [data-current-updated]{
- color:#58737a!important;font-size:11px;line-height:1.3;
+ color:#58737a!important;font-size:12px;line-height:1.3;
  margin:0;order:2;max-width:75ch
 }
 .evergreen-hero .current-panel [data-current-provenance]{
- color:#536c72!important;font-size:10px;line-height:1.3;
+ color:#536c72!important;font-size:12px;line-height:1.3;
  margin:4px 0 0;order:5;max-width:65ch
 }
 .evergreen-hero .current-panel .metric-grid{
@@ -141,7 +141,7 @@
 }
 .evergreen-hero .current-panel .metric-card .metric-label{
  color:#496771!important;font-weight:550;line-height:1.3;
- font-size:11px!important;margin:0 0 3px
+ font-size:12px!important;margin:0 0 3px
 }
 .evergreen-hero .current-panel .metric-card .metric-number{
  color:#123e50!important;font-size:21px!important;
@@ -162,7 +162,7 @@
 }
 .evergreen-hero .current-panel .metric-card.featured .metric-unit{font-size:.44em!important}
 .evergreen-hero .current-panel .metric-card .metric-note{
- color:#627c82!important;font-size:10px!important;line-height:1.25;
+ color:#627c82!important;font-size:12px!important;line-height:1.25;
  margin:3px 0 0;min-height:0
 }
 .evergreen-hero .current-panel .metric-card .metric-note[data-reading-state="measured"]{
@@ -186,17 +186,17 @@
  grid-column:auto!important;border-top:0!important
 }
 .evergreen-hero .evergreen-daily .daily-brief-item>span{
- color:#496771!important;font-size:10px!important;line-height:1.2
+ color:#496771!important;font-size:12px!important;line-height:1.2
 }
 .evergreen-hero .evergreen-daily .daily-brief-item strong{
  color:#153e4e!important;font-size:20px!important;font-weight:600
 }
 .evergreen-hero .evergreen-daily .daily-brief-item small{
- color:#466873!important;font-size:10px
+ color:#466873!important;font-size:12px
 }
 .evergreen-hero .evergreen-daily .daily-brief-status{
  grid-column:1/-1!important;color:#5b7478!important;
- padding:2px 6px 0;font-size:10px!important;line-height:1.2;
+ padding:2px 6px 0;font-size:12px!important;line-height:1.2;
  max-width:none;overflow-wrap:anywhere
 }
 
@@ -209,11 +209,11 @@
 .evergreen-hero .wind-hero .section-heading{margin:0 0 11px;gap:7px;align-items:center}
 .evergreen-hero .wind-hero .eyebrow{display:none}
 .evergreen-hero .wind-hero h2{
- color:#244c5b!important;font-size:14px!important;font-weight:650!important;
+ color:#244c5b!important;font-size:16px!important;font-weight:650!important;
  letter-spacing:-.01em
 }
 .evergreen-hero .wind-hero [data-wind-status]{
- font-size:9px!important;padding:4px 6px;
+ font-size:12px!important;padding:4px 6px;
  background:rgba(223,238,234,.8);border-color:var(--evergreen-stroke)
 }
 .evergreen-hero .wind-hero .wind-layout{
@@ -232,7 +232,7 @@
 .evergreen-hero .wind-hero .wind-north,
 .evergreen-hero .wind-hero .wind-east,
 .evergreen-hero .wind-hero .wind-south,
-.evergreen-hero .wind-hero .wind-west{color:#24576a!important;font-size:10px}
+.evergreen-hero .wind-hero .wind-west{color:#24576a!important;font-size:12px}
 .evergreen-hero .wind-hero .wind-needle{height:76px}
 .evergreen-hero .wind-hero .wind-needle::before{background:#178799!important}
 .evergreen-hero .wind-hero .wind-center{background:#145b68}
@@ -244,7 +244,7 @@
 }
 .evergreen-hero .wind-hero .wind-degrees strong{font-size:18px;font-weight:600}
 .evergreen-hero .wind-hero .observatory-wind-direction{
- color:#294b53;font-size:11px;line-height:1.3;margin:0
+ color:#294b53;font-size:12px;line-height:1.3;margin:0
 }
 .evergreen-hero .wind-hero [data-wind-description]{display:none}
 .evergreen-hero .wind-hero .wind-speed-pair{
@@ -253,19 +253,19 @@
 }
 .evergreen-hero .wind-speed-pair>div{display:flex;flex-direction:column;gap:1px}
 .evergreen-hero .wind-speed-pair>div>span{
- font-size:10px;color:#57747c
+ font-size:12px;color:#57747c
 }
 .evergreen-hero .wind-speed-pair strong{
  color:#184657;font-weight:600;font-size:19px;line-height:1.1;
  white-space:nowrap;font-variant-numeric:tabular-nums
 }
 .evergreen-hero .wind-speed-pair strong small{
- font-size:11px;font-weight:450;color:#567580
+ font-size:12px;font-weight:450;color:#567580
 }
-.evergreen-hero .wind-speed-pair>div>small{font-size:9px;color:#607b80}
+.evergreen-hero .wind-speed-pair>div>small{font-size:12px;color:#607b80}
 .evergreen-hero .wind-hero>.observatory-source-note{
  margin-top:auto;color:#617980!important;
- font-size:10px;line-height:1.4
+ font-size:12px;line-height:1.4
 }
 
 /* Genuine historical chart, with no controls competing with the temperature. */
@@ -280,10 +280,10 @@
 }
 .evergreen-hero .history-hero .eyebrow{display:none}
 .evergreen-hero .history-hero h2{
- color:#244c5b;font-weight:650;font-size:14px;letter-spacing:-.01em
+ color:#244c5b;font-weight:650;font-size:16px;letter-spacing:-.01em
 }
 .evergreen-hero .history-hero .status-chip{
- font-size:9px;padding:4px 6px;white-space:nowrap;
+ font-size:12px;padding:4px 6px;white-space:nowrap;
  border:1px solid rgba(52,110,116,.15);
  color:#356672;background:rgba(225,240,238,.7)
 }
@@ -291,15 +291,15 @@
 .evergreen-hero .history-hero .chart-figure{margin:0;flex:1;display:flex;flex-direction:column}
 .evergreen-hero .history-hero .chart-box{height:167px!important;min-height:130px;flex:1}
 .evergreen-hero .history-hero .chart-message{
- color:#547079;font-size:10px;line-height:1.4;
+ color:#547079;font-size:12px;line-height:1.4;
  padding:3px 0;margin:0
 }
 .evergreen-hero .history-hero .chart-summary{
  display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;
- font-size:11px;color:#3b6974;margin:0
+ font-size:12px;color:#3b6974;margin:0
 }
 .evergreen-hero .history-hero .history-legend{
- color:#617980;font-size:10px;line-height:1.35;margin:3px 0 0
+ color:#617980;font-size:12px;line-height:1.35;margin:3px 0 0
 }
 
 /* Four distinct stories: camera, astronomy, yesterday-in-history, and station. */
@@ -312,7 +312,7 @@
 .evergreen-spotlight .observatory-sky,
 .evergreen-spotlight .observatory-history,
 .evergreen-spotlight .evergreen-station-card{
- display:flex;flex-direction:column;min-height:284px;
+ display:flex;flex-direction:column;min-height:300px;
  border-radius:18px;border:1px solid rgba(56,90,94,.13);
  padding:17px!important;background:var(--panel);
  box-shadow:var(--evergreen-card-shadow);
@@ -338,27 +338,27 @@
 }
 .evergreen-spotlight .evergreen-camera-tile>p{
  padding:11px 1px 0;color:var(--muted);
- font-size:10px;line-height:1.35
+ font-size:12px;line-height:1.35
 }
 .evergreen-spotlight .observatory-sky{
  background:#fff9ed!important;color:#1d393e!important
 }
 .evergreen-spotlight .observatory-sky .observatory-kicker{
- font-size:10px;color:#8e6232
+ font-size:12px;color:#8e6232
 }
 .evergreen-spotlight .observatory-module-head{margin-bottom:12px}
 .evergreen-spotlight .observatory-module-head h2{font-size:17px;font-weight:650}
 .evergreen-spotlight .observatory-small-tag{
- font-size:9px;background:rgba(255,255,255,.55)
+ font-size:12px;background:rgba(255,255,255,.55)
 }
 .evergreen-spotlight .observatory-sky .solar-arc{margin:8px 0}
 .evergreen-spotlight .observatory-sky .solar-arc svg{height:78px}
 .evergreen-spotlight .solar-times{gap:6px;margin-bottom:10px}
-.evergreen-spotlight .solar-times span{font-size:10px}
+.evergreen-spotlight .solar-times span{font-size:12px}
 .evergreen-spotlight .solar-times strong{font-size:16px;font-weight:600}
-.evergreen-spotlight .solar-moon-line{margin-top:auto;padding-top:11px;font-size:11px;gap:6px}
+.evergreen-spotlight .solar-moon-line{margin-top:auto;padding-top:11px;font-size:12px;gap:6px}
 .evergreen-spotlight .solar-moon-glyph{font-size:21px}
-.evergreen-spotlight .observatory-source-note{font-size:10px;line-height:1.4}
+.evergreen-spotlight .observatory-source-note{font-size:12px;line-height:1.4}
 .evergreen-spotlight .observatory-sky .observatory-source-note{margin-top:7px}
 .evergreen-spotlight .observatory-history{
  border-top:1px solid rgba(56,90,94,.13)!important
@@ -372,9 +372,9 @@
  background:#f9f1e7;padding:10px 8px;border-radius:9px
 }
 .evergreen-spotlight .observatory-history-stats>div:last-child{background:#edf4f9}
-.evergreen-spotlight .observatory-history-stats span{font-size:10px}
+.evergreen-spotlight .observatory-history-stats span{font-size:12px}
 .evergreen-spotlight .observatory-history-stats strong{font-size:19px;letter-spacing:-.03em}
-.evergreen-spotlight .observatory-history .observatory-text-link{font-size:11px}
+.evergreen-spotlight .observatory-history .observatory-text-link{font-size:12px}
 .evergreen-spotlight .observatory-history .observatory-source-note{margin-bottom:9px}
 .evergreen-station-facts{
  display:grid;gap:0;margin:0;flex:1
@@ -383,12 +383,12 @@
  padding:11px 0;display:grid;gap:4px;
  border-bottom:1px solid var(--line)
 }
-.evergreen-station-facts dt{color:var(--muted);font-size:11px}
+.evergreen-station-facts dt{color:var(--muted);font-size:12px}
 .evergreen-station-facts dd{
  margin:0;color:var(--text);font-size:15px;font-weight:650
 }
 .evergreen-station-card>p{
- color:var(--muted);font-size:11px;line-height:1.45;margin:12px 0
+ color:var(--muted);font-size:12px;line-height:1.45;margin:12px 0
 }
 .evergreen-station-card .observatory-text-link{
  font-size:12px;color:var(--teal);margin-top:auto
@@ -558,7 +558,7 @@
   margin:8px 0 8px;letter-spacing:-.045em
  }
  .evergreen-home .evergreen-intro p{font-size:12px;line-height:1.45}
- .evergreen-home .atlas-location{font-size:10px;letter-spacing:.04em}
+ .evergreen-home .atlas-location{font-size:12px;letter-spacing:.04em}
  .atlas-hero.observatory-hero.evergreen-hero{
   grid-template-columns:minmax(0,1fr);
   grid-template-rows:auto;
@@ -567,8 +567,8 @@
  }
  .evergreen-hero .evergreen-core{padding:17px 16px 0!important}
  .evergreen-hero .current-panel .section-heading>div{gap:5px}
- .evergreen-hero .current-panel .eyebrow{font-size:10px}
- .evergreen-hero .current-panel [data-current-updated]{font-size:10px}
+ .evergreen-hero .current-panel .eyebrow{font-size:12px}
+ .evergreen-hero .current-panel [data-current-updated]{font-size:12px}
  .evergreen-hero .current-panel .metric-grid{
   display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr)!important;
   grid-template-rows:repeat(3,minmax(0,1fr))!important;
@@ -586,14 +586,14 @@
   padding:7px 0 7px 12px!important
  }
  .evergreen-hero .current-panel .metric-card:not(.featured) .metric-number{font-size:19px!important}
- .evergreen-hero .current-panel .metric-card .metric-label{font-size:10px!important}
- .evergreen-hero .current-panel .metric-card .metric-note{font-size:9px!important}
- .evergreen-hero .current-panel [data-current-provenance]{display:block!important;font-size:10px}
+ .evergreen-hero .current-panel .metric-card .metric-label{font-size:12px!important}
+ .evergreen-hero .current-panel .metric-card .metric-note{font-size:12px!important}
+ .evergreen-hero .current-panel [data-current-provenance]{display:block!important;font-size:12px}
  .evergreen-hero .evergreen-daily{padding:6px 12px 14px}
  .evergreen-hero .evergreen-daily .daily-brief{padding:8px 5px!important}
  .evergreen-hero .evergreen-daily .daily-brief-item{padding:3px 4px!important}
  .evergreen-hero .evergreen-daily .daily-brief-item strong{font-size:18px!important}
- .evergreen-hero .evergreen-daily .daily-brief-item>span{font-size:9px!important}
+ .evergreen-hero .evergreen-daily .daily-brief-item>span{font-size:12px!important}
  .evergreen-hero .evergreen-wind{
   border-left:0;border-top:1px solid var(--evergreen-stroke);
   padding:15px 17px!important
@@ -658,75 +658,34 @@
  }
 }
 
+
 /* Fine polish after desktop (1440 px) and mobile (390 px) visual review.
-   Only visual rhythm, source legibility, and accessible interaction; no data changes. */
-.evergreen-home{
- --evergreen-card-shadow:0 10px 27px rgba(25,57,63,.065),0 1px 3px rgba(25,57,63,.025);
-}
-.evergreen-home .evergreen-intro h1{
- text-wrap:balance;
-}
-.evergreen-home .evergreen-intro p{
- font-size:14px;line-height:1.6;letter-spacing:-.006em
-}
+   Canonical typography above replaces earlier tiny 9–11px copy instead of
+   stacking another set of !important font overrides onto the Atlas cascade. */
+.evergreen-home .evergreen-intro h1{text-wrap:balance}
+.evergreen-home .evergreen-intro p{line-height:1.6;letter-spacing:-.006em}
 .evergreen-home .atlas-home-destinations a,
 .evergreen-home .evergreen-more-heading a,
-.evergreen-home .observatory-text-link{
- text-underline-offset:4px
-}
+.evergreen-home .observatory-text-link{text-underline-offset:4px}
 .evergreen-hero .evergreen-core .metric-card.featured .metric-number,
 .evergreen-hero .wind-speed-pair strong,
 .evergreen-hero .evergreen-daily .daily-brief-item strong{
  font-variant-numeric:tabular-nums lining-nums
 }
-.evergreen-hero .current-panel [data-current-updated]{
- font-size:12px;line-height:1.45
+.evergreen-hero .current-panel .section-heading,
+.evergreen-hero .wind-hero .section-heading,
+.evergreen-hero .history-hero .section-heading{flex-wrap:wrap}
+.evergreen-hero :is([data-current-status],[data-wind-status],.history-hero .status-chip){
+ max-width:100%;white-space:normal;overflow-wrap:anywhere
 }
-.evergreen-hero .current-panel [data-current-provenance]{
- font-size:11px;line-height:1.45
+.evergreen-hero .current-panel .metric-card .metric-note,
+.evergreen-hero .current-panel [data-current-provenance],
+.evergreen-hero .history-hero .history-legend,
+.evergreen-spotlight .observatory-source-note{
+ line-height:1.5;overflow-wrap:anywhere
 }
-.evergreen-hero .current-panel .metric-card .metric-note{
- font-size:11px!important;line-height:1.4;color:#59747c!important
-}
-.evergreen-hero .current-panel .metric-card .metric-label{
- font-size:12px!important;line-height:1.35
-}
-.evergreen-hero .current-panel .metric-card.featured .metric-label{
- font-size:12px!important
-}
-.evergreen-hero .current-panel [data-current-status]{
- font-size:11px;line-height:1.25;letter-spacing:0
-}
-.evergreen-hero .wind-hero [data-wind-status],
-.evergreen-hero .history-hero .status-chip{
- font-size:10px!important;line-height:1.3
-}
-.evergreen-hero .wind-hero .observatory-wind-direction{
- line-height:1.45
-}
-.evergreen-hero .wind-hero .wind-speed-pair>div>span{
- font-size:11px
-}
-.evergreen-hero .wind-speed-pair>div>small,
-.evergreen-hero .wind-hero>.observatory-source-note{
- font-size:11px;line-height:1.45
-}
-.evergreen-hero .history-hero .chart-message,
-.evergreen-hero .history-hero .history-legend{
- font-size:11px;line-height:1.5
-}
-.evergreen-hero .history-hero .chart-summary{font-size:11px;line-height:1.4}
-.evergreen-hero .evergreen-daily .daily-brief-item>span,
-.evergreen-hero .evergreen-daily .daily-brief-item small{
- font-size:11px!important
-}
-.evergreen-hero .evergreen-daily .daily-brief-status{
- font-size:11px!important;line-height:1.45
-}
-.evergreen-home .evergreen-landscape-credit{
- font-size:11px;line-height:1.35
-}
-/* Four distinct cards, aligned headings and natural reading order. */
+.evergreen-hero .current-panel .metric-card .metric-label{line-height:1.35}
+.evergreen-hero .current-panel .metric-card .metric-number{font-variant-numeric:tabular-nums lining-nums}
 .evergreen-spotlight .atlas-media-card,
 .evergreen-spotlight .observatory-sky,
 .evergreen-spotlight .observatory-history,
@@ -735,25 +694,13 @@
  box-shadow:var(--evergreen-card-shadow)
 }
 .evergreen-card-header{gap:10px;margin-bottom:15px}
-.evergreen-card-header h2{font-size:18px;line-height:1.25}
+.evergreen-card-header h2,
 .evergreen-spotlight .observatory-module-head h2{
- font-size:18px;line-height:1.25
+ font-size:18px;line-height:1.3
 }
-.evergreen-spotlight .observatory-history-intro{
- line-height:1.55;font-size:12px
-}
-.evergreen-spotlight .evergreen-camera-tile>p,
-.evergreen-spotlight .observatory-source-note,
-.evergreen-station-card>p{
- font-size:11px;line-height:1.5
-}
-.evergreen-spotlight .observatory-history .observatory-text-link,
-.evergreen-station-card .observatory-text-link{
- font-size:12px
-}
+.evergreen-spotlight .observatory-history-intro{line-height:1.55}
 .evergreen-spotlight .evergreen-camera-tile .atlas-media-image img{
- transition:transform .35s ease,filter .35s ease;
- transform:scale(1.001)
+ transition:transform .35s ease,filter .35s ease;transform:scale(1.001)
 }
 .evergreen-spotlight .evergreen-camera-tile .atlas-media-image:hover img,
 .evergreen-spotlight .evergreen-camera-tile .atlas-media-image:focus-visible img{
@@ -764,48 +711,80 @@
 }
 .evergreen-home .atlas-media-image:focus-visible{outline-offset:4px}
 .evergreen-home .observatory-text-link:hover,
-.evergreen-home .evergreen-more-heading a:hover{
- color:var(--evergreen-petrol)
-}
+.evergreen-home .evergreen-more-heading a:hover{color:var(--evergreen-petrol)}
 .evergreen-home .atlas-home-destinations>a:hover{
  background:color-mix(in srgb,var(--panel) 82%,#dcefed 18%)
 }
 :root[data-theme="dark"] .evergreen-home .atlas-home-destinations>a:hover{
  background:var(--panel-2)
 }
-:root[data-theme="dark"] .evergreen-hero .current-panel .metric-card .metric-note{
- color:#bfd6d2!important
-}
-:root[data-theme="dark"] .evergreen-home .evergreen-spotlight>*{
- box-shadow:none
-}
+:root[data-theme="dark"] .evergreen-home .evergreen-spotlight>*{box-shadow:none}
 :root[data-theme="dark"] .evergreen-home :is(a,button,summary):focus-visible{
  outline-color:#9de3df
 }
-/* Do not let larger descriptive labels create horizontal clipping. */
-@media(min-width:761px) and (max-width:1270px){
- .evergreen-hero .wind-hero .wind-layout{gap:13px}
- .evergreen-hero .current-panel .metric-card .metric-note{font-size:10px!important}
+
+/* At narrow phone widths, give measured temperature the full line.
+   Three compact companion readings remain legible with long pressure values. */
+@media(max-width:600px){
+ .evergreen-hero .current-panel .metric-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  grid-template-rows:auto auto!important;gap:0!important
+ }
+ .evergreen-hero .current-panel .metric-card.featured{
+  grid-column:1/-1!important;grid-row:1!important;
+  min-height:0!important;padding:1px 0 12px!important;
+  border-bottom:1px solid var(--evergreen-stroke)!important
+ }
+ .evergreen-hero .current-panel .metric-card.featured .metric-number{
+  font-size:clamp(64px,16vw,88px)!important
+ }
+ .evergreen-hero .current-panel .metric-card:not(.featured){
+  border-left:0!important;padding:12px 7px 1px!important;
+  min-width:0
+ }
+ .evergreen-hero .current-panel .metric-card:not(.featured)+.metric-card:not(.featured){
+  border-left:1px solid var(--evergreen-stroke)!important;
+  padding-left:11px!important
+ }
+ .evergreen-hero .current-panel .metric-card:not(.featured) .metric-number{
+  font-size:18px!important;line-height:1.2
+ }
+ .evergreen-hero .current-panel .metric-card .metric-unit{margin-left:2px}
+ .evergreen-hero .current-panel .section-heading{gap:6px}
+ .evergreen-hero .evergreen-daily .daily-brief{gap:0}
+ .evergreen-hero .evergreen-daily .daily-brief-item{padding-inline:6px!important}
+ .evergreen-hero .evergreen-daily .daily-brief-item strong{font-size:20px!important}
+ .evergreen-hero .history-hero .chart-box{height:190px!important;min-height:190px}
+ .evergreen-home .evergreen-intro p{font-size:14px;line-height:1.5}
+ .evergreen-hero .wind-hero .wind-layout{gap:15px}
 }
-@media(max-width:760px){
- .evergreen-home .evergreen-intro h1{line-height:1.1}
- .evergreen-home .evergreen-intro p{font-size:13px;line-height:1.5}
- .evergreen-hero .current-panel [data-current-updated]{font-size:11px}
- .evergreen-hero .current-panel [data-current-provenance]{
-  font-size:11px;line-height:1.5
+@media(max-width:359px){
+ .evergreen-hero .current-panel .metric-card.featured .metric-number{
+  font-size:clamp(58px,18vw,64px)!important
  }
- .evergreen-hero .current-panel .metric-card .metric-label{font-size:11px!important}
- .evergreen-hero .current-panel .metric-card .metric-note{font-size:10px!important}
- .evergreen-hero .evergreen-daily .daily-brief-item>span{
-  font-size:10px!important
+ .evergreen-hero .current-panel .metric-card:not(.featured) .metric-number{
+  font-size:16px!important
  }
- .evergreen-hero .wind-hero .wind-layout{gap:14px}
- .evergreen-hero .history-hero .chart-box{min-height:168px}
- .evergreen-spotlight .atlas-media-card,
- .evergreen-spotlight .observatory-sky,
- .evergreen-spotlight .observatory-history,
- .evergreen-spotlight .evergreen-station-card{border-radius:16px}
- .evergreen-home .evergreen-landscape-credit{margin-top:9px}
+ .evergreen-hero .current-panel .metric-card:not(.featured){
+  padding-inline:4px!important
+ }
+ .evergreen-hero .current-panel .metric-card:not(.featured)+.metric-card:not(.featured){
+  padding-left:7px!important
+ }
+ .evergreen-hero .current-panel .metric-card:not(.featured) .metric-unit{
+  display:block!important;margin-left:0!important;margin-top:2px
+ }
+}
+/* The photograph is optional; the meteorological information must work without blur. */
+@media(prefers-reduced-transparency:reduce){
+ .atlas-hero.observatory-hero.evergreen-hero{
+  background:var(--panel);backdrop-filter:none;-webkit-backdrop-filter:none
+ }
+}
+@media(forced-colors:active){
+ .atlas-hero.observatory-hero.evergreen-hero,
+ .evergreen-spotlight>*{border:1px solid CanvasText}
+ .evergreen-home :is(a,button,summary):focus-visible{outline-color:Highlight}
 }
 @media(prefers-reduced-motion:reduce){
  .evergreen-spotlight .evergreen-camera-tile .atlas-media-image img{
