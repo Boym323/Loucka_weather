@@ -12,6 +12,7 @@ import {gatewayReadings} from './gateway.js';
 import {readFile} from 'node:fs/promises';
 import {climateRecordsFromDaily} from './records.js';
 import {DayScopedCache} from './records-cache.js';
+import {consolidateAnnualSummaries} from './climate-consolidation.js';
 import {sensorChannels} from './sensor-evidence.js';
 import type {Metric} from './metrics.js';
 import type {OutputUnits} from './units.js';
@@ -351,7 +352,7 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
   archivalSource:'weewx',supportedOutputUnits:['us','metric','metricwx'],
   dataRevision:liveHub?.dataRevision??'original-unverified',updatedAt:metadataCheckedAt,
   capabilities:['current','history','sensors',...(reader.dailySummaries?
-   ['daily_statistics','monthly_statistics','yearly_statistics']:[]),...(liveHub?['live_sse']:[]),...(liveHub?.gatewayConfigured?['gw3000_live']:[])],
+   ['daily_statistics','monthly_statistics','yearly_statistics','annual_consolidation']:[]),...(liveHub?['live_sse']:[]),...(liveHub?.gatewayConfigured?['gw3000_live']:[])],
   availableDatasets:['original']
  }));
  app.get('/api/v1/live/current',async()=>{
@@ -437,6 +438,59 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
     channels},availability==='archive_recent'?'private, max-age=30':'no-cache');
  });
  app.get('/api/v1/camera/status',async()=>archiveCameraStatus(sourceFiles));
+
+ // Single bounded scan, one selected metric, all calendar years; no database writes.
+ type AnnualMatrixQuery={metric?:string;units?:OutputUnits;dataset?:Dataset};
+ const annualCache=new Map<string,{expires:number;load:Promise<unknown>}>();
+ app.get<{Querystring:AnnualMatrixQuery}>('/api/v1/climate/annual-matrix',{
+  schema:{querystring:{...commonQuery,required:['metric'],
+   properties:{...commonQuery.properties,metric:{type:'string'}}}}
+ },async(req,reply)=>{
+  const {metric,units='metricwx',dataset='original'}=req.query;
+  if(dataset==='approved')return bad(reply,req.id,'DATASET_UNAVAILABLE','No approved dataset published',503);
+  if(!metric||!isMetric(metric))return bad(reply,req.id,'UNKNOWN_METRIC','Unknown metric',400);
+  const policy=historyPolicy(metric),aggregation=policy.aggregation;
+  if(!policy.enabled||!['mean','sum','min','max'].includes(aggregation))
+   return bad(reply,req.id,'INVALID_AGGREGATION','No safe annual aggregation',422);
+  if(!reader.dailySummaries)
+   return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Daily summaries unavailable',503);
+  const today=localDateAt(Math.floor(now().getTime()/1000));
+  const first=localMidnight('2009-01-01'),until=localMidnight(today);
+  if(first===null||until===null||until<first)
+   return bad(reply,req.id,'INVALID_RANGE','Invalid local calendar',422);
+  const n=Math.round((Date.parse(today+'T00:00:00Z')-
+   Date.parse('2009-01-01T00:00:00Z'))/86400000);
+  if(n<0||n>7500)return bad(reply,req.id,'LIMIT_EXCEEDED','Range exceeds safe limit',422);
+  const key=metric+'|'+units+'|'+today,at=Date.now(),existing=annualCache.get(key);
+  let load=existing&&existing.expires>at?existing.load:null;
+  if(!load){
+   load=(async()=>{
+    const rows=await reader.dailySummaries!(metric,first,until,n+1);
+    if(rows.length>n)throw new Error('Truncated daily consolidation');
+    const years=consolidateAnnualSummaries({rows,startYear:2009,currentDate:today,
+     aggregation:aggregation as 'mean'|'sum'|'min'|'max',
+     unit:outputUnit(metric,units),localDateAt,localMidnight,
+     aggregate:(items)=>aggregateSummaryRows(metric,aggregation,items,units)});
+    return {schemaVersion:'1',metric,aggregation,units,dataset:'original',
+     source:'weewx_daily',qcStatus:'original_unverified',
+     startsAt:'2009-01-01',endsBefore:today,
+     dataRevision:'annual-'+createHash('sha256').update(JSON.stringify(rows)).digest('hex').slice(0,20),
+     years,
+     disclaimer:'Original WeeWX daily summaries; reconstruction and reference data are not published as approved.'};
+   })();
+   annualCache.set(key,{expires:at+900000,load});
+   if(annualCache.size>12){
+    const oldest=annualCache.keys().next().value;
+    if(oldest!==undefined)annualCache.delete(oldest);
+   }
+  }
+  try{return conditional(req,reply,await load,'public, max-age=300');}
+  catch{
+   annualCache.delete(key);
+   return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Cannot consolidate daily summaries',503);
+  }
+ });
+
  // Read-only provisional records for completed calendar days, never silently
  // promote original data to audited historical records.
  const recordsCache=new DayScopedCache<ReturnType<typeof climateRecordsFromDaily>>(20*60_000,60*60_000);
