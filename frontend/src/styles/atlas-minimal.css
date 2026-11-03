@@ -1023,3 +1023,7 @@ h1,h2,h3{font-weight:500;letter-spacing:0}
 @media(prefers-reduced-motion:reduce){
  .observatory-hero *{transition:none}
 }
+
+/* Sun marker is not shown after sunset; do not imply daytime at night. */
+.observatory-sky[data-solar-night="true"] .solar-arc-sun,
+.observatory-sky[data-solar-night="true"] .solar-arc-sun-core{display:none}
