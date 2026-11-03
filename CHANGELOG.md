@@ -4,6 +4,12 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ## 2026-11-03
 
+### Roční konsolidace 2009–2026
+- API annual-matrix vrací všechny roky z původních WeeWX denních souhrnů s časově váženými průměry, správnými součty, explicitními mezerami a statusem original_unverified.
+- Rozšířeno porovnání heatmap na 35 měřených veličin, přidaná roční tabulka a dostupnost měření.
+- Read-only inventura šesti historických databází, referenčních stanic a pracovních oprav v docs/data/yearly_coverage_evidence_2026-11-03.json.
+
+
 ### Historické heatmapy a přímé srovnání dvou let
 - Na stránku Klimatologie doplněny dvě kalendářní heatmapy se shodnou pevnou stupnicí, výběrem let 2009–aktuální a veličin (denní průměr teploty a vlhkosti, denní srážky, průměrný vítr, nárazy).
 - Společný denní graf porovnává stejné kalendářní datum v obou letech; 29. únor je samostatný, chybějící a podezřelé hodnoty se nikdy nemění na nuly ani nepropojují.

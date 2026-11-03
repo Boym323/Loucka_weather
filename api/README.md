@@ -79,3 +79,7 @@ WEATHER_DB_USER=... WEATHER_DB_PASSWORD=... npm start
 Doporučeno `systemd EnvironmentFile` s oprávněním 0600 mimo Git. Chybějící `WEATHER_STAGING_ENABLED=YES` zabrání startu DB adapteru. HTTP backend naslouchá standardně pouze na `127.0.0.1:3100`, přístup přes důvěryhodný Nginx Proxy Manager same-origin. DB adapter používá parametrizované SELECT, pevně vymezené identifikátory metrik a max. dvě databázová spojení.
 
 **Nenahrazuje bezpečnostní schválení produkce:** náhledový Nginx má pouze základní limit 5 požadavků/s s burstem 12; chybí API limit na klienta a sdílená cache. Zbývá také ověřené QC senzorů/rekonstrukcí, bezpečnostní audit, validace SQL proti cílovému WeeWX schématu a zátěžové testy výhradně na izolovaném snapshotu. MQTT observation, ověřený katalog senzorů a fyzická telemetrie kamery nejsou dostupné; tyto výstupy zůstávají poctivě vypnuté nebo prázdné.
+
+## Konsolidované roční pohledy (read-only)
+
+GET /api/v1/climate/annual-matrix?metric=outTemp&units=metricwx&dataset=original vrací roky od 2009 se stavem QC, časovým pokrytím a metodikou vážených průměrů. Podrobnosti: docs/ANNUAL_CONSOLIDATION_2026-11-03.md. Zdrojové archive a rekonstrukce se nemění.

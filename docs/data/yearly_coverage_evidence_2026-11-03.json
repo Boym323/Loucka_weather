@@ -1,0 +1,301 @@
+{
+  "schemaVersion": "1",
+  "asOfLocalDate": "2026-11-03",
+  "source": "read-only metadata and original WeeWX daily summary tables",
+  "caveats": [
+    "Snapshot is not an atomic database transaction or a QC certificate",
+    "Counted days can have partial interval coverage",
+    "External reference stations are not Loucka measurements",
+    "Working reconstruction is not the published approved dataset",
+    "Known poor-quality WH1080 measurements are not merged"
+  ],
+  "rawSources": [
+    {
+      "src": "production",
+      "first_ts": 1238345100,
+      "last_ts": 1793713200,
+      "n": 1681223
+    },
+    {
+      "src": "reconstruction",
+      "first_ts": 1238345100,
+      "last_ts": 1793286600,
+      "n": 1679809
+    },
+    {
+      "src": "GW1000",
+      "first_ts": 1238345100,
+      "last_ts": 1793268600,
+      "n": 1674765
+    },
+    {
+      "src": "ESP_old",
+      "first_ts": 1238345160,
+      "last_ts": 1692013500,
+      "n": 1336195
+    },
+    {
+      "src": "old_weewx",
+      "first_ts": 1238345160,
+      "last_ts": 1596716400,
+      "n": 1104422
+    },
+    {
+      "src": "WH1080_untrusted",
+      "first_ts": 1238345160,
+      "last_ts": 1599055800,
+      "n": 1112201
+    }
+  ],
+  "referenceObservations": [
+    {
+      "station_id": "luhamet_sehradice",
+      "n": 1157794,
+      "first_ts": 1429274100,
+      "last_ts": 1793294160
+    },
+    {
+      "station_id": "wu_ilouka4",
+      "n": 494844,
+      "first_ts": 1640599384,
+      "last_ts": 1793295592
+    }
+  ],
+  "reconstructionChanges": [
+    {
+      "variable": "outHumidity",
+      "state": "applied",
+      "n": 9964
+    },
+    {
+      "variable": "rain",
+      "state": "applied",
+      "n": 789
+    },
+    {
+      "variable": "rain",
+      "state": "reverted",
+      "n": 8921
+    },
+    {
+      "variable": "rainRate",
+      "state": "applied",
+      "n": 62252
+    },
+    {
+      "variable": "rainRate",
+      "state": "reverted",
+      "n": 8921
+    }
+  ],
+  "metrics": [
+    "outTemp",
+    "outHumidity",
+    "rain",
+    "windSpeed",
+    "radiation",
+    "UV",
+    "pm25_1",
+    "soilTemp1"
+  ],
+  "dailyValidRowsByYear": [
+    {
+      "year": 2009,
+      "outTemp": 276,
+      "outHumidity": 276,
+      "rain": 276,
+      "windSpeed": 276,
+      "radiation": 0,
+      "UV": 0,
+      "pm25_1": 0,
+      "soilTemp1": 0
+    },
+    {
+      "year": 2010,
+      "outTemp": 365,
+      "outHumidity": 365,
+      "rain": 365,
+      "windSpeed": 365,
+      "radiation": 0,
+      "UV": 0,
+      "pm25_1": 0,
+      "soilTemp1": 0
+    },
+    {
+      "year": 2011,
+      "outTemp": 225,
+      "outHumidity": 225,
+      "rain": 225,
+      "windSpeed": 225,
+      "radiation": 0,
+      "UV": 0,
+      "pm25_1": 0,
+      "soilTemp1": 0
+    },
+    {
+      "year": 2012,
+      "outTemp": 306,
+      "outHumidity": 306,
+      "rain": 306,
+      "windSpeed": 306,
+      "radiation": 0,
+      "UV": 0,
+      "pm25_1": 0,
+      "soilTemp1": 0
+    },
+    {
+      "year": 2013,
+      "outTemp": 344,
+      "outHumidity": 346,
+      "rain": 354,
+      "windSpeed": 353,
+      "radiation": 0,
+      "UV": 0,
+      "pm25_1": 0,
+      "soilTemp1": 0
+    },
+    {
+      "year": 2014,
+      "outTemp": 351,
+      "outHumidity": 349,
+      "rain": 354,
+      "windSpeed": 352,
+      "radiation": 0,
+      "UV": 0,
+      "pm25_1": 0,
+      "soilTemp1": 0
+    },
+    {
+      "year": 2015,
+      "outTemp": 363,
+      "outHumidity": 362,
+      "rain": 363,
+      "windSpeed": 363,
+      "radiation": 0,
+      "UV": 0,
+      "pm25_1": 0,
+      "soilTemp1": 0
+    },
+    {
+      "year": 2016,
+      "outTemp": 339,
+      "outHumidity": 332,
+      "rain": 339,
+      "windSpeed": 339,
+      "radiation": 0,
+      "UV": 0,
+      "pm25_1": 0,
+      "soilTemp1": 0
+    },
+    {
+      "year": 2017,
+      "outTemp": 329,
+      "outHumidity": 301,
+      "rain": 330,
+      "windSpeed": 329,
+      "radiation": 0,
+      "UV": 0,
+      "pm25_1": 0,
+      "soilTemp1": 0
+    },
+    {
+      "year": 2018,
+      "outTemp": 316,
+      "outHumidity": 298,
+      "rain": 316,
+      "windSpeed": 316,
+      "radiation": 0,
+      "UV": 0,
+      "pm25_1": 0,
+      "soilTemp1": 0
+    },
+    {
+      "year": 2019,
+      "outTemp": 365,
+      "outHumidity": 338,
+      "rain": 365,
+      "windSpeed": 365,
+      "radiation": 0,
+      "UV": 0,
+      "pm25_1": 0,
+      "soilTemp1": 250
+    },
+    {
+      "year": 2020,
+      "outTemp": 364,
+      "outHumidity": 361,
+      "rain": 339,
+      "windSpeed": 338,
+      "radiation": 0,
+      "UV": 0,
+      "pm25_1": 0,
+      "soilTemp1": 365
+    },
+    {
+      "year": 2021,
+      "outTemp": 364,
+      "outHumidity": 362,
+      "rain": 364,
+      "windSpeed": 364,
+      "radiation": 0,
+      "UV": 0,
+      "pm25_1": 0,
+      "soilTemp1": 356
+    },
+    {
+      "year": 2022,
+      "outTemp": 365,
+      "outHumidity": 227,
+      "rain": 365,
+      "windSpeed": 365,
+      "radiation": 127,
+      "UV": 127,
+      "pm25_1": 127,
+      "soilTemp1": 217
+    },
+    {
+      "year": 2023,
+      "outTemp": 365,
+      "outHumidity": 365,
+      "rain": 365,
+      "windSpeed": 365,
+      "radiation": 365,
+      "UV": 365,
+      "pm25_1": 365,
+      "soilTemp1": 365
+    },
+    {
+      "year": 2024,
+      "outTemp": 366,
+      "outHumidity": 366,
+      "rain": 366,
+      "windSpeed": 366,
+      "radiation": 366,
+      "UV": 366,
+      "pm25_1": 327,
+      "soilTemp1": 268
+    },
+    {
+      "year": 2025,
+      "outTemp": 363,
+      "outHumidity": 363,
+      "rain": 363,
+      "windSpeed": 363,
+      "radiation": 363,
+      "UV": 363,
+      "pm25_1": 361,
+      "soilTemp1": 363
+    },
+    {
+      "year": 2026,
+      "outTemp": 307,
+      "outHumidity": 307,
+      "rain": 307,
+      "windSpeed": 307,
+      "radiation": 307,
+      "UV": 307,
+      "pm25_1": 307,
+      "soilTemp1": 296
+    }
+  ]
+}
