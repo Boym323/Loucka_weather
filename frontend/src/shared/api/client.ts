@@ -146,3 +146,27 @@ export async function getAnnualMatrix(metric:string,signal?:AbortSignal):Promise
   throw new Error('Neplatná roční konsolidace');
  return result as AnnualMatrix;
 }
+
+/** Single-batch historical temperature overlays; no 18-request fan-out. */
+export async function getTemperatureYears(signal?:AbortSignal):
+ Promise<import('../domain/temperature-years').TemperatureYears>{
+ const params=new URLSearchParams({units:'metricwx',dataset:'original'});
+ const raw=await request('/api/v1/climate/temperature-years?'+params,signal) as
+  Partial<import('../domain/temperature-years').TemperatureYears>;
+ const validDate=(value:unknown)=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value);
+ if(raw.schemaVersion!=='1'||raw.metric!=='outTemp'||raw.unit!=='°C'||
+  raw.dataset!=='original'||raw.source!=='weewx_daily'||
+  raw.qcStatus!=='original_unverified'||raw.firstYear!==2009||
+  !validDate(raw.endsBefore)||!Array.isArray(raw.points)||
+  raw.points.length>7500||
+  raw.points.some(p=>!p||!validDate(p.date)||!Number.isInteger(p.year)||
+   p.year<2009||p.year>2100||!(/^\d{2}-\d{2}$/.test(p.monthDay))||
+   p.date!==p.year+'-'+p.monthDay||
+   !['derived','partial','missing','suspect'].includes(p.quality)||
+   (p.value!==null&&(typeof p.value!=='number'||!Number.isFinite(p.value)))||
+   (p.validSeconds!==null&&(!Number.isFinite(p.validSeconds)||p.validSeconds<0))||
+   !Number.isFinite(p.expectedSeconds)||p.expectedSeconds<82800||p.expectedSeconds>90000
+  ))
+  throw new Error('Neplatný formát souhrnného teplotního archivu');
+ return raw as import('../domain/temperature-years').TemperatureYears;
+}
