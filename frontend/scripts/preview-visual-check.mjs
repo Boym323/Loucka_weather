@@ -406,6 +406,14 @@ try{
       errors.push(size.name+': missing locality-filtered CHMI alert panel');
     }
     if(state.width>state.viewport+3)errors.push(size.name+' '+path+': horizontal overflow '+state.width+'px > '+state.viewport+'px');
+    if(path==='/'){
+     await page.waitForFunction(()=>{
+      const status=document.querySelector('[data-day-history-status]')?.textContent??'';
+      return status.length>0&&!status.includes('Ověřuji úplnost');
+     },null,{timeout:7000}).catch(()=>console.log('Historical comparison is still loading or unavailable'));
+     const status=await page.locator('[data-day-history-status]').textContent();
+     console.log('SAME DAY HISTORY',size.name,status?.trim());
+    }
     // Interactions can scroll the viewport. Reset before full-page screenshots
     // so sticky navigation is captured at its real top-of-page position.
     await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
