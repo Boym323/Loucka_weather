@@ -37,3 +37,16 @@ jobs:
         run: npm test
       - name: Build static website
         run: npm run build
+      - name: Verify responsive layout and legibility in Chromium
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+          npm run preview -- --host 127.0.0.1 --port 4321 > /tmp/loucka-layout-preview.log 2>&1 &
+          node scripts/evergreen-layout-audit.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evergreen-layout-audit
+          path: frontend/test-results/layout-audit
+          retention-days: 7
+          if-no-files-found: ignore
