@@ -1,0 +1,305 @@
+---
+import {comparisonMetrics} from '../../shared/domain/year-comparison';
+const todayYear=Number(new Intl.DateTimeFormat('en-GB',{year:'numeric',timeZone:'Europe/Prague'}).format(new Date()));
+const firstYear=2009;
+const choices=Array.from({length:Math.max(1,todayYear-firstYear+1)},(_,i)=>todayYear-i);
+const previous=todayYear-1;
+const beforePrevious=todayYear-2;
+---
+<section class="section year-compare" id="srovnani-let" data-year-comparison aria-labelledby="comparison-heading">
+ <div class="section-heading">
+  <div><span class="eyebrow">Historie Loučky · od roku 2009</span><h2 id="comparison-heading">Heatmapy a porovnání dvou let</h2>
+   <p>Každý den má vlastní políčko. Vyber dva roky a prohlédni si společný průběh nebo konkrétní datum.</p></div>
+  <span class="status-chip" data-compare-status role="status" aria-live="polite">Načtení po otevření sekce</span>
+ </div>
+ <form class="year-compare-controls" data-compare-form>
+  <label>Veličina
+   <select data-compare-metric name="metric">
+    {Object.entries(comparisonMetrics).map(([id,item])=><option value={id}>{item.label}</option>)}
+   </select>
+  </label>
+  <label>První rok
+   <select data-compare-first name="first">{choices.map(year=><option value={year} selected={year===previous}>{year}{year===todayYear?' · probíhá':''}</option>)}</select>
+  </label>
+  <label>Druhý rok
+   <select data-compare-second name="second">{choices.map(year=><option value={year} selected={year===beforePrevious}>{year}{year===todayYear?' · probíhá':''}</option>)}</select>
+  </label>
+  <button class="year-compare-submit" type="submit">Porovnat roky</button>
+ </form>
+ <p class="source-note year-compare-disclaimer">Podklad: původní denní souhrny WeeWX / MariaDB, čas Europe/Prague. Ještě neproběhla kompletní historická QC. Neplatná a chybějící měření nejsou nuly, neznamenají ani den bez srážek.</p>
+ <div class="year-compare-kpis" aria-label="Porovnání společně změřených dní">
+  <div><span data-comparison-label="first">První rok</span><strong data-comparison-value="first">—</strong><small data-comparison-coverage="first">Čeká na zdroj</small></div>
+  <div><span data-comparison-label="second">Druhý rok</span><strong data-comparison-value="second">—</strong><small data-comparison-coverage="second">Čeká na zdroj</small></div>
+  <div><span>Rozdíl (druhý − první)</span><strong data-comparison-value="difference">—</strong><small data-comparison-coverage="matched">Pouze společné platné dny</small></div>
+ </div>
+ <p class="year-compare-meaning" data-comparison-meaning>U teploty, vlhkosti a větru porovnáváme průměr denních hodnot ve stejných dostupných datech, u srážek jejich součet. Nejde o úplné roční klimatologické normály.</p>
+ <div class="year-heatmaps" aria-label="Dvě kalendářní heatmapy se stejnou stupnicí">
+  <section class="year-heatmap-card" aria-labelledby="heatmap-a-title">
+   <div class="year-heatmap-heading"><h3 id="heatmap-a-title" data-compare-year-title="first">První rok</h3><span data-heatmap-count="first">—</span></div>
+   <div class="year-heatmap-scroll" tabindex="0" aria-label="Posuvný kalendář první rok">
+    <div class="year-heatmap-rows" data-heatmap-cells="first" role="group" aria-label="Dny prvního roku"></div>
+   </div>
+  </section>
+  <section class="year-heatmap-card" aria-labelledby="heatmap-b-title">
+   <div class="year-heatmap-heading"><h3 id="heatmap-b-title" data-compare-year-title="second">Druhý rok</h3><span data-heatmap-count="second">—</span></div>
+   <div class="year-heatmap-scroll" tabindex="0" aria-label="Posuvný kalendář druhý rok">
+    <div class="year-heatmap-rows" data-heatmap-cells="second" role="group" aria-label="Dny druhého roku"></div>
+   </div>
+  </section>
+ </div>
+ <div class="year-compare-legend" data-compare-legend aria-label="Barevná stupnice"><span>Načítám stupnici…</span></div>
+ <p class="year-compare-picked" data-compare-picked aria-live="polite">Kliknutím na den v heatmapě porovnáš stejný kalendářní den v obou letech.</p>
+ <section class="year-compare-chart-card" aria-labelledby="compare-chart-title">
+  <div class="section-heading"><div><h3 id="compare-chart-title">Denní průběh obou let</h3><p>Stejná kalendářní data jsou zarovnaná; 29. únor zůstává samostatný.</p></div></div>
+  <div class="year-compare-chart" data-compare-chart role="img" aria-label="Graf porovnání denních hodnot dvou let"></div>
+ </section>
+ <p class="source-note year-compare-footer" data-comparison-provenance>Údaje zůstávají orientační až do dokončení rekonstrukce. Barevná stupnice je stálá pro všechny roky a stejnou veličinu; hodnoty nad či pod krajní mezí sdílí krajní barvu.</p>
+</section>
+<script>
+ import {getHistoryInterval} from '../../shared/api/client';
+ import {pragueMidnightIso} from '../../shared/domain/statistics';
+ import {comparisonMetrics,comparisonMonths,isComparisonMetric,dailyValues,colorBand,
+  calendarDayExists,yearDays,validDayCount,sharedDayComparison,alignedCalendarDays} from '../../shared/domain/year-comparison';
+ import type {ComparisonMetric} from '../../shared/domain/year-comparison';
+ import type {HistoryResponse} from '../../shared/domain/weather';
+ import * as echarts from 'echarts/core';
+ import {LineChart} from 'echarts/charts';
+ import {GridComponent,TooltipComponent,LegendComponent} from 'echarts/components';
+ import {SVGRenderer} from 'echarts/renderers';
+ echarts.use([LineChart,GridComponent,TooltipComponent,LegendComponent,SVGRenderer]);
+
+ const root=document.querySelector<HTMLElement>('[data-year-comparison]');
+ if(root){
+  const form=root.querySelector<HTMLFormElement>('[data-compare-form]')!;
+  const status=root.querySelector<HTMLElement>('[data-compare-status]')!;
+  const metricSelect=root.querySelector<HTMLSelectElement>('[data-compare-metric]')!;
+  const firstSelect=root.querySelector<HTMLSelectElement>('[data-compare-first]')!;
+  const secondSelect=root.querySelector<HTMLSelectElement>('[data-compare-second]')!;
+  const chartElement=root.querySelector<HTMLElement>('[data-compare-chart]')!;
+  const chart=echarts.init(chartElement,undefined,{renderer:'svg'});
+  const resize=new ResizeObserver(()=>chart.resize());resize.observe(chartElement);
+  let controller:AbortController|undefined;
+  let started=false, selectedDay='01-01';
+  let firstValues=new Map<string,number|null>(),secondValues=new Map<string,number|null>();
+  let years:[number,number]=[Number(firstSelect.value),Number(secondSelect.value)];
+  let metric:ComparisonMetric='outTemp';
+  const cache=new Map<string,HistoryResponse>();
+  const countOf=(values:Map<string,number|null>)=>validDayCount(values);
+  const format=(value:number|null)=>{
+   if(value===null||!Number.isFinite(value))return '—';
+   return new Intl.NumberFormat('cs-CZ',{minimumFractionDigits:1,maximumFractionDigits:1}).format(value);
+  };
+  const set=(selector:string,value:string)=>{
+   const element=root.querySelector<HTMLElement>(selector);
+   if(element)element.textContent=value;
+  };
+  const setStatus=(message:string,state:'ok'|'warning'|'error')=>{
+   status.textContent=message;status.className='status-chip '+state;
+  };
+  const isPresent=(map:ReadonlyMap<string,number|null>,key:string)=>{
+   const value=map.get(key);
+   return value===undefined||value===null?null:value;
+  };
+  const sourceFromYear=async(year:number,kind:ComparisonMetric,signal:AbortSignal)=>{
+   const key=kind+'-'+year;
+   const cached=cache.get(key);
+   if(cached)return cached;
+   const from=pragueMidnightIso(year+'-01-01');
+   const to=pragueMidnightIso((year+1)+'-01-01');
+   const result=await getHistoryInterval(kind,from,to,'daily',signal);
+   // Completed years are immutable within this session. Current year refreshes on every run.
+   const current=Number(new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Prague',year:'numeric'}).format(new Date()));
+   if(year<current)cache.set(key,result);
+   return result;
+  };
+  const monthDayLabel=(key:string)=>Number(key.slice(3))+
+   '. '+comparisonMonths[Number(key.slice(0,2))-1].toLowerCase();
+  const picked=()=>{
+   const left=isPresent(firstValues,selectedDay),right=isPresent(secondValues,selectedDay);
+   set('[data-compare-picked]',monthDayLabel(selectedDay)+': '+years[0]+' — '+
+    (left===null?'bez platného měření':format(left)+' '+comparisonMetrics[metric].unit)+
+    ' · '+years[1]+' — '+
+    (right===null?'bez platného měření':format(right)+' '+comparisonMetrics[metric].unit));
+   root.querySelectorAll<HTMLElement>('[data-heatmap-cells]').forEach(group=>{
+    const buttons=[...group.querySelectorAll<HTMLButtonElement>('.year-heatmap-day')];
+    const preferred=buttons.find(button=>button.dataset.monthDay===selectedDay)??buttons[0];
+    buttons.forEach(button=>{
+     const active=button.dataset.monthDay===selectedDay;
+     button.setAttribute('aria-pressed',String(active));
+     button.tabIndex=button===preferred?0:-1;
+    });
+   });
+  };
+  function heatmap(slot:'first'|'second',year:number,values:Map<string,number|null>){
+   const parent=root!.querySelector<HTMLElement>('[data-heatmap-cells="'+slot+'"]')!;
+   parent.replaceChildren();
+   const fragment=document.createDocumentFragment();
+   for(let month=1;month<=12;month++){
+    const row=document.createElement('div');row.className='year-heatmap-row';
+    const label=document.createElement('span');label.className='year-heatmap-month';
+    label.textContent=comparisonMonths[month-1];row.append(label);
+    const cells=document.createElement('div');cells.className='year-heatmap-days';
+    for(let day=1;day<=31;day++){
+     if(!calendarDayExists(year,month,day)){
+      const voidCell=document.createElement('span');voidCell.className='year-heatmap-empty';
+      voidCell.setAttribute('aria-hidden','true');cells.append(voidCell);continue;
+     }
+     const key=String(month).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+     const value=isPresent(values,key);
+     const button=document.createElement('button');button.type='button';
+     button.className='year-heatmap-day'+(value===null?' is-missing':'');
+     button.dataset.monthDay=key;
+     button.dataset.year=String(year);
+     button.dataset.month=String(month);
+     button.dataset.day=String(day);
+     if(value!==null)button.style.backgroundColor=comparisonMetrics[metric].colors[colorBand(metric,value)];
+     const description=year+'-'+key+' · '+(value===null?'bez platného měření':format(value)+' '+comparisonMetrics[metric].unit);
+     button.title=description;button.setAttribute('aria-label',description);
+     button.setAttribute('aria-pressed',String(key===selectedDay));
+     button.tabIndex=key===selectedDay?0:-1;
+     cells.append(button);
+    }
+    row.append(cells);fragment.append(row);
+   }
+   parent.append(fragment);
+   set('[data-compare-year-title="'+slot+'"]',String(year));
+   set('[data-heatmap-count="'+slot+'"]',countOf(values)+' / '+yearDays(year)+' dní');
+  }
+  const renderLegend=()=>{
+   const legend=root.querySelector<HTMLElement>('[data-compare-legend]')!;
+   legend.replaceChildren();
+   const begin=document.createElement('span');begin.textContent='Nižší';
+   legend.append(begin);
+   for(const color of comparisonMetrics[metric].colors){
+    const swatch=document.createElement('span');swatch.className='year-compare-swatch';
+    swatch.style.backgroundColor=color;legend.append(swatch);
+   }
+   const end=document.createElement('span');end.textContent='Vyšší';
+   legend.append(end);
+   const scale=document.createElement('small');
+   scale.textContent='Meze '+comparisonMetrics[metric].limits.join(' · ')+' '+comparisonMetrics[metric].unit;
+   legend.append(scale);
+   const missing=document.createElement('span');missing.className='year-compare-legend-missing';
+   missing.textContent='bez platného měření';legend.append(missing);
+  };
+  function chartRender(){
+   const color=['#176878','#e19250'];
+   const dark=document.documentElement.dataset.theme==='dark';
+   const ink=dark?'#c4d8d5':'#4b625e',grid=dark?'#37525a':'#dce7e5';
+   const compact=window.matchMedia('(max-width:650px)').matches;
+   chart.setOption({
+    animation:false,backgroundColor:'transparent',
+    grid:{top:43,left:compact?42:56,right:compact?10:19,bottom:37},
+    legend:{top:0,data:years.map(String),textStyle:{color:ink,fontSize:12}},
+    tooltip:{trigger:'axis',confine:true,formatter:(items:any[])=>{
+     if(!Array.isArray(items)||!items.length)return '';
+     const key=String(items[0].axisValue);
+     return monthDayLabel(key)+'<br>'+items.map(item=>{
+      const value=typeof item.data==='number'&&Number.isFinite(item.data)?item.data:null;
+      return item.marker+' '+item.seriesName+': '+(value===null?'—':format(value)+' '+comparisonMetrics[metric].unit);
+     }).join('<br>');
+    }},
+    xAxis:{type:'category',boundaryGap:false,data:alignedCalendarDays,
+     axisLine:{lineStyle:{color:grid}},axisTick:{show:false},
+     axisLabel:{color:ink,fontSize:compact?10:11,interval:0,hideOverlap:true,
+      formatter:(key:string)=>key.endsWith('-01')?comparisonMonths[Number(key.slice(0,2))-1]:''}},
+    yAxis:{type:'value',scale:metric!=='rain',min:metric==='rain'?0:undefined,
+     name:comparisonMetrics[metric].unit,nameTextStyle:{color:ink},
+     axisLabel:{color:ink,fontSize:11},axisLine:{show:false},axisTick:{show:false},
+     splitLine:{lineStyle:{color:grid}}},
+    series:[firstValues,secondValues].map((map,i)=>({
+     name:String(years[i]),type:'line',data:alignedCalendarDays.map(key=>isPresent(map,key)),
+     connectNulls:false,smooth:false,showSymbol:false,
+     lineStyle:{width:2,color:color[i]},itemStyle:{color:color[i]}
+    }))
+   },true);
+   chart.resize();
+   chartElement.setAttribute('aria-label','Denní hodnoty '+comparisonMetrics[metric].label+
+    ' v letech '+years[0]+' a '+years[1]+', chybějící dny nejsou spojovány.');
+  }
+  const summary=()=>{
+   const compare=sharedDayComparison(metric,firstValues,secondValues);
+   const unit=comparisonMetrics[metric].unit;
+   set('[data-comparison-label="first"]',years[0]+' · společné dny');
+   set('[data-comparison-label="second"]',years[1]+' · společné dny');
+   set('[data-comparison-value="first"]',compare.first===null?'—':format(compare.first)+' '+unit);
+   set('[data-comparison-value="second"]',compare.second===null?'—':format(compare.second)+' '+unit);
+   set('[data-comparison-value="difference"]',compare.difference===null?'—':
+    (compare.difference>0?'+':'')+format(compare.difference)+' '+unit);
+   set('[data-comparison-coverage="first"]','Platné dny v roce: '+countOf(firstValues)+' / '+yearDays(years[0]));
+   set('[data-comparison-coverage="second"]','Platné dny v roce: '+countOf(secondValues)+' / '+yearDays(years[1]));
+   set('[data-comparison-coverage="matched"]','Společné platné kalendářní dny: '+compare.days);
+   set('[data-comparison-meaning]',metric==='rain'
+    ?'Sčítáme denní úhrny jen na '+compare.days+' společných platných dnech. Nejde nutně o celoroční úhrny a historické srážky dosud nejsou plně auditované.'
+    :'Počítáme nevážený průměr '+compare.days+' denních agregátů pro shodná kalendářní data, nikoli časově vážený roční průměr. Výsledky jsou orientační.');
+  };
+  const redraw=()=>{
+   heatmap('first',years[0],firstValues);heatmap('second',years[1],secondValues);
+   renderLegend();summary();picked();chartRender();
+  };
+  async function load(){
+   started=true;
+   controller?.abort();controller=new AbortController();
+   const signal=controller.signal;
+   const chosen=metricSelect.value;
+   if(!isComparisonMetric(chosen)){setStatus('Neznámá veličina','error');return;}
+   metric=chosen;
+   years=[Number(firstSelect.value),Number(secondSelect.value)];
+   if(years[0]===years[1]){setStatus('Vyber dva různé roky','warning');return;}
+   setStatus('Načítám denní souhrny WeeWX…','warning');
+   const responses=await Promise.allSettled(years.map(y=>sourceFromYear(y,metric,signal)));
+   if(signal.aborted)return;
+   firstValues=responses[0].status==='fulfilled'?dailyValues(years[0],responses[0].value.points):new Map();
+   secondValues=responses[1].status==='fulfilled'?dailyValues(years[1],responses[1].value.points):new Map();
+   selectedDay=alignedCalendarDays.find(d=>isPresent(firstValues,d)!==null&&isPresent(secondValues,d)!==null)??'01-01';
+   redraw();
+   if(responses.every(r=>r.status==='rejected'))setStatus('Archivní denní API je nedostupné','error');
+   else if(responses.some(r=>r.status==='rejected'))setStatus('Jeden z roků nelze načíst','warning');
+   else setStatus('Původní archiv · bez finální QC','ok');
+  }
+  form.addEventListener('submit',event=>{event.preventDefault();void load();});
+  root.addEventListener('click',event=>{
+   const node=(event.target as HTMLElement).closest<HTMLButtonElement>('.year-heatmap-day');
+   if(!node||!root.contains(node))return;
+   selectedDay=node.dataset.monthDay??selectedDay;picked();
+  });
+  root.addEventListener('keydown',event=>{
+   const keyboard=event as KeyboardEvent;
+   const node=(keyboard.target as HTMLElement).closest<HTMLButtonElement>('.year-heatmap-day');
+   if(!node)return;
+   const key=keyboard.key;
+   if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'].includes(key))return;
+   const cellRoot=node.closest<HTMLElement>('[data-heatmap-cells]');
+   if(!cellRoot)return;
+   const buttons=[...cellRoot.querySelectorAll<HTMLButtonElement>('.year-heatmap-day')];
+   const current=buttons.indexOf(node);
+   let next:HTMLButtonElement|undefined;
+   if(key==='ArrowUp'||key==='ArrowDown'){
+    const month=Number(node.dataset.month)+(key==='ArrowUp'?-1:1);
+    const year=Number(node.dataset.year);
+    let day=Number(node.dataset.day);
+    while(month>=1&&month<=12&&day>0&&!calendarDayExists(year,month,day))day--;
+    next=buttons.find(button=>Number(button.dataset.month)===month&&Number(button.dataset.day)===day);
+   }else{
+    const index=key==='Home'?0:key==='End'?buttons.length-1:
+     Math.max(0,Math.min(buttons.length-1,current+(key==='ArrowLeft'?-1:1)));
+    next=buttons[index];
+   }
+   if(!next)return;
+   keyboard.preventDefault();
+   selectedDay=next.dataset.monthDay??selectedDay;picked();next.focus();
+  });
+  const themeChanged=()=>{if(started)chartRender();};
+  window.addEventListener('loucka:theme-change',themeChanged);
+  const observer=new IntersectionObserver(entries=>{
+   if(entries.some(e=>e.isIntersecting)){
+    observer.disconnect();if(!started)void load();
+   }
+  },{rootMargin:'220px'});
+  observer.observe(root);
+  document.addEventListener('astro:before-swap',()=>{
+   controller?.abort();observer.disconnect();resize.disconnect();chart.dispose();
+   window.removeEventListener('loucka:theme-change',themeChanged);
+  },{once:true});
+ }
+</script>

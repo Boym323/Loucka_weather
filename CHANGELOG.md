@@ -4,6 +4,15 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ## 2026-11-03
 
+### Historické heatmapy a přímé srovnání dvou let
+- Na stránku Klimatologie doplněny dvě kalendářní heatmapy se shodnou pevnou stupnicí, výběrem let 2009–aktuální a veličin (denní průměr teploty a vlhkosti, denní srážky, průměrný vítr, nárazy).
+- Společný denní graf porovnává stejné kalendářní datum v obou letech; 29. únor je samostatný, chybějící a podezřelé hodnoty se nikdy nemění na nuly ani nepropojují.
+- Souhrn používá pouze společně dostupné dny; u srážek jde o jejich součet, u ostatních veličin o nevážený průměr denních agregátů, nikoli celoroční časově vážený průměr.
+- Načítání je odložené do příchodu sekce do obrazovky; dva roky = nejvýše dva denní API požadavky, bez nového databázového zatížení při běžném otevření stránky.
+- Přidány vstupy pro výběr dvou let, mobilní vodorovný posuv heatmapy, klávesové ovládání, detail vybraného dne, tmavý motiv a odkazy z Grafů a Klimatologie.
+- Rozšířený CI Chromium smoke používá izolované mockované denní API pro 390/1440 px, 29. únor, skutečnou nulu srážek, výběr dne, změnu veličiny a tmavý motiv. Veřejný dev smoke ověřuje přítomnost sekce na stránce Klimatologie.\n- Zdroj original WeeWX zůstává označen jako předběžný (bez finální historické QC), nenahrazuje rekonstrukci ani neschvaluje rekordy.
+
+
 ### Evergreen Observatory — dokončení čitelnosti a responzivity
 - Nahrazeny problematické 9–11px popisky v úvodním panelu a čtyřech kartách čitelnými 12px zdrojovými údaji; sjednocena typografická hierarchie, včetně tmavého motivu.
 - Opraveno přetékání globální mobilní hlavičky na šířce 320 px (zkrácená značka, kompaktní mezery a menu); kontrola přetečení nyní vypisuje problematické prvky.\n- Na úzkých telefonech (do 600 px) má hlavní naměřená teplota vlastní řádek a vedlejší měření jsou v přehledné trojici; kompaktní layout 320 px nepřekrývá hodnoty ani jednotky.

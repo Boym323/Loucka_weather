@@ -265,3 +265,126 @@ input[type="date"]{color-scheme:dark}
 @media(prefers-reduced-motion:reduce){
  .camera-archive-thumb{transition:none}
 }
+
+
+/* Historical heatmaps and paired-year comparisons.
+   Original WeeWX daily aggregates; no fabricated observations or zero-filling. */
+.year-compare{
+ max-width:1320px;margin:20px auto 0;min-width:0;
+ padding:clamp(16px,2.2vw,30px);
+ border-radius:18px;background:var(--panel);
+}
+.year-compare .section-heading{align-items:flex-start;gap:16px;margin-bottom:16px}
+.year-compare .section-heading h2{font-size:clamp(22px,2.3vw,31px);letter-spacing:-.035em;margin:5px 0}
+.year-compare .section-heading p{font-size:13px;line-height:1.55;color:var(--muted);margin:0}
+.year-compare .status-chip{white-space:normal;max-width:290px;line-height:1.5}
+.year-compare-controls{
+ display:grid;grid-template-columns:minmax(180px,1.4fr) minmax(125px,.9fr)
+ minmax(125px,.9fr) auto;gap:12px;align-items:end;
+ padding:15px;background:var(--panel-2);border-radius:13px;
+ border:1px solid var(--line);
+}
+.year-compare-controls label{display:flex;flex-direction:column;gap:6px;min-width:0;color:var(--muted);font-size:12px;font-weight:600}
+.year-compare-controls select{
+ display:block;width:100%;min-width:0;min-height:44px;padding:10px 12px;
+ font:inherit;font-weight:500;font-size:14px;
+ color:var(--text);background:var(--panel);
+ border:1px solid var(--line);border-radius:9px
+}
+.year-compare-submit{
+ min-height:44px;padding:10px 16px;border-radius:9px;
+ border:1px solid var(--teal);background:var(--teal);
+ color:var(--bg);font-weight:650;cursor:pointer;
+}
+.year-compare-submit:hover{filter:brightness(.94)}
+.year-compare :is(select,button,.year-heatmap-scroll):focus-visible{
+ outline:3px solid var(--teal);outline-offset:3px;
+}
+.year-compare-disclaimer{margin:13px 1px 18px;line-height:1.5}
+.year-compare-kpis{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+ gap:12px;margin-bottom:11px
+}
+.year-compare-kpis>div{
+ min-width:0;padding:17px;background:var(--panel-2);
+ border:1px solid var(--line);border-radius:12px;
+ display:flex;flex-direction:column;gap:7px
+}
+.year-compare-kpis span{color:var(--muted);font-weight:600;font-size:12px}
+.year-compare-kpis strong{font-size:clamp(23px,2.6vw,33px);color:var(--text);line-height:1.1;font-variant-numeric:tabular-nums}
+.year-compare-kpis small{font-size:12px;line-height:1.5;color:var(--muted)}
+.year-compare-meaning{margin:9px 1px 19px;font-size:12px;line-height:1.55;color:var(--muted)}
+.year-heatmaps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.year-heatmap-card{
+ border:1px solid var(--line);background:var(--panel);
+ border-radius:13px;padding:17px;min-width:0
+}
+.year-heatmap-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.year-heatmap-heading h3{font-size:20px;letter-spacing:-.02em;margin:0}
+.year-heatmap-heading span{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.year-heatmap-scroll{max-width:100%;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;padding:4px 4px 10px}
+.year-heatmap-rows{min-width:520px;display:grid;gap:5px}
+.year-heatmap-row{display:grid;grid-template-columns:32px minmax(0,1fr);gap:5px;align-items:center}
+.year-heatmap-month{color:var(--muted);font-size:11px}
+.year-heatmap-days{display:grid;grid-template-columns:repeat(31,minmax(0,1fr));gap:2px}
+.year-heatmap-empty,.year-heatmap-day{
+ display:block;aspect-ratio:1;min-width:0;border-radius:3px
+}
+.year-heatmap-empty{background:transparent}
+.year-heatmap-day{border:1px solid rgba(0,0,0,.04);padding:0;cursor:pointer;transition:transform .12s ease}
+.year-heatmap-day.is-missing{
+ background:repeating-linear-gradient(135deg,var(--panel-2),var(--panel-2) 3px,var(--line) 3px,var(--line) 4px);
+ border-color:var(--line)
+}
+.year-heatmap-day:hover{transform:scale(1.15);position:relative;z-index:2}
+.year-heatmap-day[aria-pressed="true"]{
+ outline:2px solid var(--text);outline-offset:1px;position:relative;z-index:2
+}
+.year-heatmap-day:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.year-compare-legend{
+ display:flex;gap:5px;align-items:center;flex-wrap:wrap;
+ margin:17px 1px 12px;color:var(--muted);font-size:12px
+}
+.year-compare-swatch{display:inline-block;height:16px;width:24px;border-radius:3px;border:1px solid rgba(0,0,0,.06)}
+.year-compare-legend small{color:var(--muted);font-size:11px;margin-left:7px}
+.year-compare-legend-missing{
+ display:inline-flex;align-items:center;gap:7px;margin-left:auto
+}
+.year-compare-legend-missing::before{
+ content:"";display:inline-block;width:17px;height:17px;border-radius:3px;
+ background:repeating-linear-gradient(135deg,var(--panel-2),var(--panel-2) 3px,var(--line) 3px,var(--line) 4px);
+ border:1px solid var(--line)
+}
+.year-compare-picked{margin:11px 0 18px;padding:12px 14px;border-radius:9px;background:var(--panel-2);color:var(--text);font-size:13px;line-height:1.6}
+.year-compare-chart-card{
+ padding:18px;border:1px solid var(--line);border-radius:13px;min-width:0
+}
+.year-compare-chart-card .section-heading h3{font-size:19px;letter-spacing:-.02em;margin:0 0 6px}
+.year-compare-chart-card .section-heading p{font-size:12px;margin:0;color:var(--muted)}
+.year-compare-chart{width:100%;height:330px;min-width:0}
+.year-compare-footer{margin:15px 2px 0;line-height:1.6}
+:root[data-theme="dark"] .year-compare-submit{color:#071b20;background:#8edbd6;border-color:#8edbd6}
+:root[data-theme="dark"] .year-heatmap-day{border-color:rgba(255,255,255,.10)}
+@media(max-width:1050px){
+ .year-compare-controls{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .year-compare-controls label:first-child{grid-column:1/-1}
+ .year-compare-submit{min-width:0}
+ .year-heatmaps{grid-template-columns:1fr}
+}
+@media(max-width:650px){
+ .year-compare{padding:15px;margin-top:12px;border-radius:13px}
+ .year-compare-controls{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:12px}
+ .year-compare-controls label:first-child,.year-compare-submit{grid-column:1/-1}
+ .year-compare-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .year-compare-kpis>div{padding:12px}
+ .year-compare-kpis>div:last-child{grid-column:1/-1}
+ .year-compare-kpis strong{font-size:22px}
+ .year-heatmap-card{padding:12px}
+ .year-compare-legend-missing{margin-left:0}
+ .year-compare-chart-card{padding:11px}
+ .year-compare-chart{height:290px}
+}
+@media(prefers-reduced-motion:reduce){
+ .year-heatmap-day{transition:none}
+ .year-heatmap-day:hover{transform:none}
+}
