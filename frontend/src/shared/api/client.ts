@@ -114,3 +114,35 @@ export async function getCameraStatus(signal?:AbortSignal):Promise<CameraStatus>
   throw new Error('Neplatný status kamery');
  return d as CameraStatus;
 }
+
+/** A read-only multi-year view, not a QC approval or a replacement database. */
+export interface ConsolidatedAnnualYear {
+ year:number;calendarDays:number;elapsedDays:number;sourceRows:number;
+ validDays:number;invalidDays:number;missingDays:number;
+ completenessFraction:number|null;timeCoverageFraction:number|null;
+ value:number|null;unit:string;method:'time_weighted_mean'|'sum'|'minimum'|'maximum';
+ periodStatus:'in_progress'|'finished';qcStatus:'original_unverified';source:'weewx_daily';
+}
+export interface AnnualMatrix {
+ schemaVersion:'1';metric:string;aggregation:'mean'|'sum'|'min'|'max';
+ units:string;dataset:'original';source:'weewx_daily';qcStatus:'original_unverified';
+ startsAt:string;endsBefore:string;dataRevision:string;
+ years:ConsolidatedAnnualYear[];
+}
+export async function getAnnualMatrix(metric:string,signal?:AbortSignal):Promise<AnnualMatrix>{
+ const {isComparisonMetric}=await import('../domain/year-comparison');
+ if(!isComparisonMetric(metric))throw new Error('Nepodporovaná srovnávací veličina');
+ const params=new URLSearchParams({metric,units:'metricwx',dataset:'original'});
+ const result=await request('/api/v1/climate/annual-matrix?'+params,signal) as Partial<AnnualMatrix>;
+ if(result.schemaVersion!=='1'||result.metric!==metric||result.dataset!=='original'||
+  result.qcStatus!=='original_unverified'||!Array.isArray(result.years)||
+  result.years.length>100||result.years.some(year=>
+   !Number.isInteger(year.year)||year.year<2009||
+   !Number.isInteger(year.elapsedDays)||year.elapsedDays<0||year.elapsedDays>366||
+   !Number.isInteger(year.validDays)||year.validDays<0||year.validDays>year.elapsedDays||
+   year.value!==null&&(typeof year.value!=='number'||!Number.isFinite(year.value))||
+   year.qcStatus!=='original_unverified'
+  ))
+  throw new Error('Neplatná roční konsolidace');
+ return result as AnnualMatrix;
+}
