@@ -5,8 +5,8 @@
  </div>
  <p class="observatory-history-intro">Jaké bylo počasí v Loučce v tento kalendářní den minulého roku?</p>
  <div class="observatory-history-stats" aria-label="Archivní denní minimum a maximum">
-  <div><span>Minimum</span><strong data-day-history-min>—</strong></div>
-  <div><span>Maximum</span><strong data-day-history-max>—</strong></div>
+  <div><span>Nejnižší zachycená</span><strong data-day-history-min>—</strong></div>
+  <div><span>Nejvyšší zachycená</span><strong data-day-history-max>—</strong></div>
  </div>
  <p class="observatory-source-note" data-day-history-status role="status">Ověřuji úplnost historického dne v původním archivu.</p>
  <a href="/grafy/" class="observatory-text-link">Prozkoumat archiv od roku 2009 <span aria-hidden="true">↗</span></a>
@@ -40,12 +40,22 @@
     if(controller.signal.aborted)return;
     const coverage=Math.min(lo.timeCoverage?.fraction??lo.completeness.fraction??0,
      hi.timeCoverage?.fraction??hi.completeness.fraction??0);
-    if(qualitySupported(lo)&&qualitySupported(hi)&&coverage>=.8){
+    if(qualitySupported(lo)&&qualitySupported(hi)){
      set('min',formatValue(lo.value,1)+' °C');
      set('max',formatValue(hi.value,1)+' °C');
-     if(status)status.textContent='Původní archiv WeeWX · '+date+
-      ' · časové pokrytí '+Math.round(coverage*100)+' %. Extrémy za tento den, nikoli ověřené rekordy.';
-    }else if(status)status.textContent='Denní srovnání nemá dostatečné pokrytí dat (minimálně 80 %). Hodnoty proto nezobrazujeme.';
+     const complete=coverage>=.8;
+     root.dataset.historyCompleteness=complete?'sufficient':'incomplete';
+     if(status)status.textContent=complete
+      ?'Původní archiv WeeWX · '+date+' · pokrytí '+Math.round(coverage*100)+
+       ' %. Zachycená minima a maxima, nikoli ověřené rekordy.'
+      :'Neúplný den · '+date+' · '+(coverage>0
+       ?'pokrytí jen '+Math.round(coverage*100)+' %'
+       :'pokrytí času nelze potvrdit')+
+       '. Zobrazujeme pouze rozsah dochovaných měření, nikoli jisté celodenní extrémy.';
+    }else if(status){
+     root.dataset.historyCompleteness='missing';
+     status.textContent='V původním archivu chybí platné teplotní měření pro tento den.';
+    }
    }catch{
     if(controller.signal.aborted)return;
     if(status)status.textContent='Historický den se nyní nepodařilo načíst; archiv je dostupný na stránce Grafy.';
