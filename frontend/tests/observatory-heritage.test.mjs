@@ -41,7 +41,10 @@ test('observatory uses live station components, never invented weather measureme
  const wind=await file('src/features/current/WindCompass.astro');
  assert.match(wind,/getCurrent/);
  assert.match(wind,/loucka:live-observation/);
- assert.match(wind,/quality!=='measured'/);
+ assert.match(wind,/quality==='measured'/);
+ assert.match(wind,/data-wind-value="windSpeed"/);
+ assert.match(wind,/data-wind-value="windGust"/);
+ assert.match(wind,/data-wind-source/);
 });
 
 test('astronomical values and historical comparison declare their limits',async()=>{
