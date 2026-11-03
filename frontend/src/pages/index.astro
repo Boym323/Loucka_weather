@@ -2,60 +2,73 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CurrentPanel from '../features/current/CurrentPanel.astro';
 import DailySummaryStrip from '../features/current/DailySummaryStrip.astro';
+import WindCompass from '../features/current/WindCompass.astro';
 import HistoryChart from '../features/history/HistoryChart.astro';
+import SolarCycle from '../features/current/SolarCycle.astro';
+import SameDayLastYear from '../features/history/SameDayLastYear.astro';
+import StationSummary from '../features/current/StationSummary.astro';
 import OverviewReadings from '../features/current/OverviewReadings.astro';
 import ForecastPanel from '../features/forecast/ForecastPanel.astro';
 import RadarPanel from '../features/maps/RadarPanel.astro';
 import LocalWarnings from '../features/alerts/LocalWarnings.astro';
 import SiteIcon from '../shared/ui/SiteIcon.astro';
-import WindCompass from '../features/current/WindCompass.astro';
-import SolarCycle from '../features/current/SolarCycle.astro';
-import SameDayLastYear from '../features/history/SameDayLastYear.astro';
 ---
-<BaseLayout title="Přehled" description="Počasí Loučka: živá měření GW3000, původní archiv WeeWX, předpověď, grafy, kamera a radar.">
- <div class="atlas-home">
-  <header class="atlas-home-intro">
-   <div>
-    <span class="atlas-location"><SiteIcon name="map-pin" size={16} /> Loučka · Zlínský kraj · od roku 2009</span>
-    <h1>Počasí, které má <em>své místo.</em></h1>
-    <p>Vlastní meteorologická observatoř. Skutečná měření, živé podmínky a příběh počasí v Loučce.</p>
+<BaseLayout title="Přehled" description="Počasí Loučka: živé měření GW3000, archiv WeeWX od roku 2009, anemometr, skutečný graf, kamera a radar.">
+ <div class="atlas-home evergreen-home">
+  <section class="evergreen-scene" aria-labelledby="evergreen-title">
+   <div class="evergreen-landscape" aria-hidden="true">
+    <img src="https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg" alt="" fetchpriority="high" decoding="async"/>
    </div>
-   <a class="atlas-intro-link" href="/aktualne/">Všechna aktuální měření <span aria-hidden="true">↗</span></a>
-  </header>
-  <section class="atlas-hero observatory-hero" aria-label="Aktuální počasí v Loučce">
-   <div class="atlas-hero-top">
-    <CurrentPanel variant="dashboard"/>
-   </div>
-   <aside class="atlas-hero-daily" aria-label="Dnešní archivní minima, maxima a srážky">
-    <DailySummaryStrip />
-   </aside>
+   <header class="atlas-home-intro evergreen-intro">
+    <div>
+     <span class="atlas-location"><SiteIcon name="map-pin" size={16}/> Loučka · Zlínský kraj · od roku 2009</span>
+     <h1 id="evergreen-title">Aktuální počasí</h1>
+     <p>Místní meteorologická stanice · skutečná měření a jejich čas vždy přímo u hodnot</p>
+    </div>
+    <a class="atlas-intro-link" href="/aktualne/">Podrobná měření <span aria-hidden="true">↗</span></a>
+   </header>
+
+   <section class="atlas-hero observatory-hero evergreen-hero" aria-label="Aktuální měření, anemometr a historický průběh">
+    <div class="atlas-hero-top evergreen-core">
+     <CurrentPanel variant="observatory" />
+    </div>
+    <div class="atlas-hero-daily evergreen-daily">
+     <DailySummaryStrip />
+    </div>
+    <div class="observatory-wind evergreen-wind">
+     <WindCompass variant="hero" />
+    </div>
+    <div class="atlas-main-history evergreen-chart">
+     <HistoryChart compact hero />
+    </div>
+   </section>
+   <p class="evergreen-landscape-credit">Krajina: západní webkamera Loučka · čas pořízení snímku není ověřen</p>
   </section>
 
   <div class="atlas-alert-line"><LocalWarnings compact /></div>
 
-  <section class="observatory-instruments" aria-label="Přístroje, denní světlo a historické srovnání">
-   <div class="observatory-wind"><WindCompass /></div>
+  <section class="observatory-instruments evergreen-spotlight" aria-label="Kamera, astronomický den, historické měření a stanice">
+   <section class="atlas-media-card atlas-camera-tile evergreen-camera-tile" aria-labelledby="atlas-camera-title">
+    <header class="evergreen-card-header"><span class="evergreen-card-icon"><SiteIcon name="camera" size={21}/></span><h2 id="atlas-camera-title">Webkamera</h2></header>
+    <a class="atlas-media-image" href="/kamera/" aria-label="Otevřít západní webkameru v Loučce">
+     <img src="https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg" alt="Skutečný záběr ze západní webkamery Loučka; čas pořízení neověřen" loading="lazy" decoding="async"/>
+     <span class="atlas-media-overlay">Západní pohled <span aria-hidden="true">↗</span></span>
+    </a>
+    <p>Skutečná kamera · čas snímku není ověřen</p>
+   </section>
    <SolarCycle />
    <SameDayLastYear />
+   <StationSummary />
   </section>
 
-  <div class="atlas-home-analytics">
-   <div class="atlas-main-history"><HistoryChart compact /></div>
-   <div class="atlas-forecast"><ForecastPanel compact /></div>
-   <div class="atlas-home-extras"><OverviewReadings /></div>
+  <div class="evergreen-more-heading">
+   <div><span class="observatory-kicker">VÍCE O POČASÍ</span><h2>Podrobnější pohled na Loučku</h2></div>
+   <a href="/grafy/">Prozkoumat historická data <span aria-hidden="true">↗</span></a>
   </div>
-
-  <div class="atlas-media-row">
-   <section class="atlas-media-card atlas-camera-tile" aria-labelledby="atlas-camera-title">
-    <a class="atlas-media-image" href="/kamera/" aria-label="Otevřít detail webkamery Loučka">
-     <img src="https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg" alt="Webkamera Loučka, západní směr; čas pořízení neověřen" loading="lazy" decoding="async"/>
-     <span class="atlas-media-overlay"><strong id="atlas-camera-title">Webkamera</strong><span aria-hidden="true">↗</span></span>
-    </a>
-    <p>Snímek ze západní kamery · čas pořízení nebyl ověřen</p>
-   </section>
-   <div class="atlas-media-card atlas-radar-tile">
-    <RadarPanel compact />
-   </div>
+  <div class="atlas-home-analytics evergreen-analytics">
+   <div class="atlas-forecast"><ForecastPanel compact /></div>
+   <div class="atlas-radar-tile"><RadarPanel compact /></div>
+   <div class="atlas-home-extras"><OverviewReadings /></div>
   </div>
 
   <nav class="atlas-home-destinations" aria-label="Prozkoumat meteorologická data">

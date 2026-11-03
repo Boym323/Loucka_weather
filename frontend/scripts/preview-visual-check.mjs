@@ -87,6 +87,14 @@ try{
       return {
        defaultTheme:document.documentElement.dataset.theme,
        heroHeight:hero?.getBoundingClientRect().height??0,
+       instrumentColumns:columns('.evergreen-hero'),
+       glassTransparency:getComputedStyle(hero).backdropFilter,
+       landscapeImage:document.querySelector('.evergreen-landscape img')?.getAttribute('src')??'',
+       stationCard:document.querySelector('.evergreen-station-card')!==null,
+       sourceLabel:document.querySelector('.evergreen-landscape-credit')?.textContent??'',
+       windSpeed:document.querySelector('.evergreen-hero [data-wind-value="windSpeed"]')!==null,
+       windGust:document.querySelector('.evergreen-hero [data-wind-value="windGust"]')!==null,
+       heroChart:document.querySelector('.evergreen-hero [data-history-chart]')!==null,
        observatoryColumns:columns('.observatory-instruments'),
        windInstrument:document.querySelector('.observatory-wind [data-wind-compass]')!==null,
        solarPanel:document.querySelector('[data-solar-cycle]')!==null,
@@ -111,11 +119,16 @@ try{
        chartHeight:document.querySelector('.atlas-main-history .chart-box')?.getBoundingClientRect().height??0
       };
      });
-     console.log('ATLAS MINIMAL HOME GEOMETRY',size.name,JSON.stringify(layout));
+     console.log('EVERGREEN OBSERVATORY GEOMETRY',size.name,JSON.stringify(layout));
      if(layout.defaultTheme!=='light')errors.push(size.name+': fresh visit must default to light theme');
      if(!layout.temperature||!layout.dataStatus)errors.push(size.name+': missing live/archive reading source in hero');
-     if(!layout.windInstrument||!layout.solarPanel||!layout.pastDayPanel)
-      errors.push(size.name+': original-station inspired instruments are missing');
+     if(!layout.windInstrument||!layout.solarPanel||!layout.pastDayPanel||!layout.stationCard)
+      errors.push(size.name+': approved four-feature observatory design is incomplete');
+     if(!layout.windSpeed||!layout.windGust||!layout.heroChart)
+      errors.push(size.name+': real anemometer speed/gust or 24h archive chart missing from hero');
+     if(layout.landscapeImage!=='https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg'||
+      !layout.sourceLabel.includes('čas pořízení snímku není ověřen'))
+      errors.push(size.name+': panorama must be authentic and source/freshness clearly labelled');
      if(!layout.solarRise||layout.solarRise==='—'||!layout.moonPhase||layout.moonPhase==='—')
       errors.push(size.name+': astronomical cycle did not calculate');
      if(!layout.cameraImage||!layout.radar)errors.push(size.name+': camera or radar is missing');
@@ -127,16 +140,18 @@ try{
       if(layout.forecastColumns!==3)errors.push('Mobile forecast should use three readable columns');
       if(layout.dailyColumns!==3)errors.push('Mobile daily summary should use three columns');
       if(layout.analyticsColumns!==1)errors.push('Mobile analytical modules must stack');
-      if(layout.observatoryColumns!==1)errors.push('Mobile wind, sky and history modules must stack');
+      if(layout.observatoryColumns!==1)errors.push('Mobile camera, sky, history and station cards must stack');
+      if(layout.instrumentColumns!==1)errors.push('Mobile hero must use one responsive column');
       if(layout.destinationColumns!==2)errors.push('Mobile destinations should use two columns at 390px');
       if(layout.svgIcons!==5)errors.push('Mobile dock must contain five SVG navigation icons');
       if(layout.moreLinks!==7)errors.push('Mobile More menu must expose remaining seven pages');
       if(layout.mobileTargetHeight<44)errors.push('Mobile dock touch targets must be at least 44px');
      }else{
       if(layout.analyticsColumns!==3)errors.push('Desktop weather / forecast / context should show three columns');
-      if(layout.observatoryColumns!==3)errors.push('Desktop observatory needs distinct wind, sky and history modules');
+      if(layout.observatoryColumns!==4)errors.push('Desktop observatory requires four distinct feature cards');
+      if(layout.instrumentColumns!==3)errors.push('Desktop glass hero should have temperature, anemometer and graph columns');
       if(layout.destinationColumns!==3)errors.push('Desktop destinations should use three columns');
-      if(layout.chartHeight<230)errors.push('Desktop temperature plot should have ample room');
+      if(layout.chartHeight<145)errors.push('Desktop integrated 24h chart must remain legible');
      }
     }
     // Shared layout regression assertions across non-homepage routes.

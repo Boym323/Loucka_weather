@@ -1,4 +1,8 @@
-<section class="section" data-wind-compass aria-labelledby="wind-compass-title">
+---
+interface Props { variant?: 'default' | 'hero' }
+const {variant='default'}=Astro.props;
+---
+<section class:list={['section','wind-compass-panel',{'wind-hero':variant==='hero'}]} data-wind-compass aria-labelledby="wind-compass-title">
  <div class="section-heading">
   <div><span class="eyebrow">Směr větru · anemometr</span><h2 id="wind-compass-title">Větrná růžice</h2></div>
   <span class="status-chip" data-wind-status role="status">Načítám</span>
@@ -14,6 +18,10 @@
    <p class="wind-degrees"><strong data-wind-degrees>—</strong><span>°</span></p>
    <p class="observatory-wind-direction" data-wind-sector>Směr se načítá</p>
    <p class="source-note" data-wind-description>Čeká na ověřený archivní směr větru.</p>
+   <div class="wind-speed-pair" aria-label="Rychlost a nárazy větru">
+    <div><span>Rychlost</span><strong><span data-wind-value="windSpeed">—</span> <small>m/s</small></strong><small data-wind-source="windSpeed">Načítám</small></div>
+    <div><span>Nárazy</span><strong><span data-wind-value="windGust">—</span> <small>m/s</small></strong><small data-wind-source="windGust">Načítám</small></div>
+   </div>
   </div>
  </div>
  <p class="observatory-source-note">Šipka ukazuje směr, odkud vítr vane. Údaj pochází z GW3000 nebo z posledního platného záznamu WeeWX.</p>
@@ -29,6 +37,15 @@
   const sector=root.querySelector<HTMLElement>('[data-wind-sector]');
   const description=root.querySelector<HTMLElement>('[data-wind-description]');
   const gauge=root.querySelector<HTMLElement>('.wind-gauge');
+  const windFormats:Record<string,number>={windSpeed:1,windGust:1};
+  const setWind=(id:'windSpeed'|'windGust',value:number|null,source:string)=>{
+   const number=root.querySelector<HTMLElement>('[data-wind-value="'+id+'"]');
+   const note=root.querySelector<HTMLElement>('[data-wind-source="'+id+'"]');
+   if(number)number.textContent=value===null?'—':new Intl.NumberFormat('cs-CZ',{
+    minimumFractionDigits:windFormats[id],maximumFractionDigits:windFormats[id]
+   }).format(value);
+   if(note)note.textContent=source;
+  };
   const sectors=['severní','severoseverovýchodní','severovýchodní','východoseverovýchodní',
    'východní','východojihovýchodní','jihovýchodní','jihojihovýchodní','jižní',
    'jihojihozápadní','jihozápadní','západojihozápadní','západní',
@@ -45,6 +62,13 @@
   const load=()=>{
    void getCurrent(controller.signal).then(response=>{
     if(controller.signal.aborted)return;
+    for(const id of ['windSpeed','windGust'] as const){
+     const item=response.readings[id];
+     const valid=Boolean(item&&item.value!==null&&Number.isFinite(item.value)&&
+      item.quality!=='missing'&&item.quality!=='suspect');
+     setWind(id,valid&&item&&typeof item.value==='number'?item.value:null,
+      valid?(response.stale?'Starší archiv WeeWX':'Archiv WeeWX'):'Nedostupné');
+    }
     const reading=response.readings.windDir;
     if(!reading||reading.value===null||reading.quality==='missing'||reading.quality==='suspect'||!Number.isFinite(reading.value)){
      if(status){status.textContent='Bez platného směru';status.className='status-chip warning';}
@@ -56,18 +80,27 @@
     if(controller.signal.aborted)return;
     if(status){status.textContent='API nedostupné';status.className='status-chip error';}
     if(description)description.textContent='Směr větru se nepodařilo načíst.';
+    setWind('windSpeed',null,'API nedostupné');
+    setWind('windGust',null,'API nedostupné');
    });
   };
   const live=(event:Event)=>{
    if(controller.signal.aborted)return;
    const data=(event as CustomEvent<{state:string;receivedAt:string;units:string;
     readings:Record<string,{value:number;quality:string;source:string}>}>).detail;
-   const reading=data?.readings?.windDir;
-   if(data?.state!=='live'||data.units!=='metricwx'||!reading||
-    reading.source!=='gw3000_live'||reading.quality!=='measured'||
-    !Number.isFinite(reading.value)||!Number.isFinite(Date.parse(data.receivedAt))||
+   if(data?.state!=='live'||data.units!=='metricwx'||
+    !Number.isFinite(Date.parse(data.receivedAt))||
     Date.now()-Date.parse(data.receivedAt)>120000)return;
-   show(reading.value,'Živě · GW3000');
+   for(const id of ['windSpeed','windGust'] as const){
+    const value=data.readings?.[id];
+    if(value?.source==='gw3000_live'&&value.quality==='measured'&&
+     typeof value.value==='number'&&Number.isFinite(value.value))
+     setWind(id,value.value,'Živě · GW3000');
+   }
+   const reading=data.readings?.windDir;
+   if(reading?.source==='gw3000_live'&&reading.quality==='measured'&&
+     typeof reading.value==='number'&&Number.isFinite(reading.value))
+    show(reading.value,'Živě · GW3000');
   };
   const restore=()=>load();
   window.addEventListener('loucka:live-observation',live);

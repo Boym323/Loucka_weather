@@ -7,7 +7,7 @@ const source=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 test('Atlas Minimal prioritizes actual measurement over decorative illustration',async()=>{
  const home=await source('src/pages/index.astro');
  const css=await source('src/styles/atlas-minimal.css');
- assert.match(home,/CurrentPanel variant="dashboard"/);
+ assert.match(home,/CurrentPanel variant="observatory"/);
  assert.match(home,/HistoryChart compact/);
  assert.match(home,/ForecastPanel compact/);
  assert.match(home,/LocalWarnings compact/);
