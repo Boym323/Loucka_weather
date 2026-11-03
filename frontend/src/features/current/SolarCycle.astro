@@ -49,11 +49,13 @@
     set('solar-length',Math.floor(sun.dayLengthMinutes/60)+' h '+sun.dayLengthMinutes%60+' min');
     const fraction=Math.max(0,Math.min(1,(now.getTime()-sun.sunrise.getTime())/
      (sun.sunset.getTime()-sun.sunrise.getTime())));
-    const x=30+440*fraction,y=101-192*fraction*(1-fraction);
+    const x=30+440*fraction,y=101-384*fraction*(1-fraction);
     for(const attr of ['solar-sun','solar-core']){
      const target=element.querySelector<SVGElement>('[data-'+attr+']');
      if(target){target.setAttribute('cx',x.toFixed(1));target.setAttribute('cy',y.toFixed(1));}
     }
+    const night=now<sun.sunrise||now>sun.sunset;
+    element.dataset.solarNight=String(night);
     const state=now<sun.sunrise?'Slunce ještě nevyšlo':now>sun.sunset?'Po západu slunce':'Probíhá denní světlo';
     set('solar-note',state+' · Orientační výpočet pro polohu obce Loučka, nikoli měření stanice. Terén a atmosféra ovlivňují skutečné časy.');
    }else{
