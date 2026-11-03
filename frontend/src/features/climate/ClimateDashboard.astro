@@ -258,7 +258,7 @@ const months=['Led','Úno','Bře','Dub','Kvě','Čvn','Čvc','Srp','Zář','Ří
     }
     badge('[data-years-status]','Souhrny WeeWX','ok');
     const orderedYears=[...yrs].reverse();
-    for(const [name,offset,color] of [['temperature',0,'#f5b84e'],['rain',1,'#4ba9e6'],['wind',2,'#49dca8']] as const){
+    for(const [name,offset,color] of [['temperature',0,'#176878'],['rain',1,'#2879a3'],['wind',2,'#27785e']] as const){
      const values=yrs.map((_,i)=>pick(annual[i*3+offset])).reverse();
      setAnnualChart(name,orderedYears,values,color);
     }
@@ -290,9 +290,9 @@ const months=['Led','Úno','Bře','Dub','Kvě','Čvn','Čvc','Srp','Zář','Ří
      badge('[data-extremes-status]',validHighs.length?'Původní archiv – bez QC':'Bez platných dat',validHighs.length?'warning':'error');
     }catch{badge('[data-extremes-status]','Nedostupné','warning');}
     if(signal.aborted)return;
-    setGraph('temperature',temps,'#f6bd51','°C',lows,highs);
-    setGraph('rain',rain,'#4ba9e6','mm');
-    setGraph('wind',wind,'#49dca8','m/s');
+    setGraph('temperature',temps,'#176878','°C',lows,highs);
+    setGraph('rain',rain,'#2879a3','mm');
+    setGraph('wind',wind,'#27785e','m/s');
     (['temperature','rain','wind'] as const).forEach((n,j)=>{
      const list=[temps,rain,wind][j];
      const validMonths=list.filter(v=>v!==null).length;
