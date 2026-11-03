@@ -759,6 +759,8 @@
  .evergreen-hero .wind-hero .wind-layout{gap:15px}
 }
 @media(max-width:359px){
+ /* Legacy Atlas hid the fourth card on 320px; show all three companions. */
+ .evergreen-hero .current-panel .metric-card:nth-child(4){display:flex}
  .evergreen-hero .current-panel .metric-card.featured .metric-number{
   font-size:clamp(58px,18vw,64px)!important
  }

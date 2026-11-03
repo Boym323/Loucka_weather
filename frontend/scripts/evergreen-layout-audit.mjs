@@ -49,6 +49,7 @@ try{
     columns,metricColumns,
     featuredOverflow:rightOf(reading)>rightOf(featured)+3,
     metrics,
+    visibleMetricCount:[...document.querySelectorAll('.evergreen-hero .metric-card')].filter(el=>getComputedStyle(el).display!=='none').length,
     labelFont:font('.evergreen-hero .metric-label'),
     noteFont:font('.evergreen-hero .metric-note'),
     sourceFont:font('.evergreen-hero [data-current-provenance]'),
@@ -66,6 +67,7 @@ try{
   const expectedCols=width<=760?1:width<=1270?2:3;
   if(light.columns!==expectedCols)errors.push(width+'px: hero columns '+light.columns+' expected '+expectedCols);
   if(width<=600&&light.metricColumns!==3)errors.push(width+'px: compact metric grid needs three columns');
+  if(light.visibleMetricCount!==4)errors.push(width+'px: all four real metric cards must remain visible');
   if(light.featuredOverflow||light.metrics.some(metric=>metric.overflow))
    errors.push(width+'px: temperature or companion reading exceeds its card');
   for(const key of ['labelFont','noteFont','sourceFont','windFont','chartFont','stationFont']){
