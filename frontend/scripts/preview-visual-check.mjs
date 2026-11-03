@@ -158,6 +158,10 @@ try{
     if(path==='/klimatologie/'){
      const compare=await page.evaluate(()=>({
       visible:document.querySelector('[data-year-comparison]')!==null,
+      allYears:document.querySelector('[data-all-years-temperature]')!==null,
+      allYearsChart:document.querySelector('[data-temperature-chart]')!==null,
+      allYearsMode:document.querySelector('[data-temperature-resolution]')!==null,
+      allYearsHighlight:document.querySelector('[data-temperature-highlight]')!==null,
       first:document.querySelector('[data-compare-first]')!==null,
       second:document.querySelector('[data-compare-second]')!==null,
       metric:document.querySelector('[data-compare-metric]')!==null,
@@ -479,6 +483,24 @@ try{
    if(![200,503].includes(endpoint.status))errors.push(name+': unexpected HTTP '+endpoint.status);
   }catch(e){errors.push(name+': endpoint exception '+String(e));}
  }
+ // Verify the real same-origin all-years API in staging; DOM presence alone
+ // cannot prove that the backend has been deployed.
+ try{
+  const endpoint=await fetch(base+'/api/v1/climate/temperature-years?units=metricwx&dataset=original',{
+   cache:'no-store',signal:AbortSignal.timeout(30000)
+  });
+  if(!endpoint.ok)errors.push('temperature-years: missing staged API, HTTP '+endpoint.status);
+  else{
+   const body=await endpoint.json();
+   const valid=body.schemaVersion==='1'&&body.metric==='outTemp'&&
+    body.dataset==='original'&&body.qcStatus==='original_unverified'&&
+    body.firstYear===2009&&Array.isArray(body.points)&&body.points.length>0;
+   if(!valid)errors.push('temperature-years: invalid staged temperature series');
+   else console.log('STAGED TEMPERATURE YEARS',JSON.stringify({
+    points:body.points.length,firstYear:body.firstYear,endsBefore:body.endsBefore
+   }));
+  }
+ }catch(e){errors.push('temperature-years API check: '+String(e));}
  // Independently check the deployment and read-only API, with no credentials.
  const response=await fetch(base+'/deployment.json',{signal:AbortSignal.timeout(12000)});
  if(!response.ok)errors.push('deployment.json: HTTP '+response.status);
