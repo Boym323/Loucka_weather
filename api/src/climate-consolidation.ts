@@ -48,7 +48,9 @@ export function consolidateAnnualSummaries(o:Options):AnnualSummary[]{
    const midnight=o.localMidnight(tomorrow);
    if(midnight===null)throw new Error('Bad day bounds');
    try{
-    if(row.count===null||!Number.isSafeInteger(row.count)||row.count<=0)continue;
+    if(row.count===0)continue;
+    if(row.count===null||!Number.isSafeInteger(row.count)||row.count<0)
+     throw new Error('Invalid daily sample count');
     if(row.sumtime!=null&&(!Number.isFinite(row.sumtime)||row.sumtime<0||
      row.sumtime>(midnight-row.dateTime)*1.01))throw new Error('Invalid sumtime');
     const a=o.aggregate([row]);
