@@ -1,38 +1,82 @@
 <section class="section" data-wind-compass aria-labelledby="wind-compass-title">
- <div class="section-heading"><div><span class="eyebrow">Směr větru</span><h2 id="wind-compass-title">Větrná růžice</h2></div><span class="status-chip" data-wind-status role="status">Načítám</span></div>
+ <div class="section-heading">
+  <div><span class="eyebrow">Směr větru · anemometr</span><h2 id="wind-compass-title">Větrná růžice</h2></div>
+  <span class="status-chip" data-wind-status role="status">Načítám</span>
+ </div>
  <div class="wind-layout">
-  <div class="wind-gauge" aria-label="Směr větru">
-   <span class="wind-north">S</span><span class="wind-east">V</span><span class="wind-south">J</span><span class="wind-west">Z</span>
+  <div class="wind-gauge" role="img" aria-label="Větrná růžice; směr se načítá">
+   <span class="wind-north">S</span><span class="wind-east">V</span>
+   <span class="wind-south">J</span><span class="wind-west">Z</span>
    <div class="wind-needle" data-wind-needle aria-hidden="true"></div>
    <span class="wind-center"></span>
   </div>
-  <div>
-   <p class="wind-degrees"><strong data-wind-degrees>—</strong><span> °</span></p>
+  <div class="observatory-wind-readout">
+   <p class="wind-degrees"><strong data-wind-degrees>—</strong><span>°</span></p>
+   <p class="observatory-wind-direction" data-wind-sector>Směr se načítá</p>
    <p class="source-note" data-wind-description>Čeká na ověřený archivní směr větru.</p>
   </div>
  </div>
+ <p class="observatory-source-note">Šipka ukazuje směr, odkud vítr vane. Údaj pochází z GW3000 nebo z posledního platného záznamu WeeWX.</p>
 </section>
 <script>
  import {getCurrent} from '../../shared/api/client';
  const root=document.querySelector<HTMLElement>('[data-wind-compass]');
- const status=root?.querySelector<HTMLElement>('[data-wind-status]');
- const number=root?.querySelector<HTMLElement>('[data-wind-degrees]');
- const needle=root?.querySelector<HTMLElement>('[data-wind-needle]');
- const description=root?.querySelector<HTMLElement>('[data-wind-description]');
- if(root)void getCurrent().then(response=>{
-  const reading=response.readings.windDir;
-  if(!reading||reading.value===null||reading.quality==='missing'||reading.quality==='suspect'||!Number.isFinite(reading.value)){
-   if(status)status.textContent='Nedostupné';
-   if(description)description.textContent='Směr větru nemá platné měření.';
-   return;
-  }
-  const deg=((reading.value%360)+360)%360;
-  if(number)number.textContent=new Intl.NumberFormat('cs-CZ',{maximumFractionDigits:0}).format(deg);
-  if(needle)needle.style.transform='translate(-50%,-50%) rotate('+deg+'deg)';
-  if(status){status.textContent=response.stale?'Zastaralé měření':'Archivní měření';status.classList.add(response.stale?'warning':'ok');}
-  if(description)description.textContent='Směr odkud vítr vane · naměřeno ve WeeWX';
- }).catch(()=>{
-  if(status){status.textContent='API nedostupné';status.classList.add('error');}
-  if(description)description.textContent='Směr větru se nepodařilo načíst.';
- });
+ if(root){
+  const controller=new AbortController();
+  const status=root.querySelector<HTMLElement>('[data-wind-status]');
+  const number=root.querySelector<HTMLElement>('[data-wind-degrees]');
+  const needle=root.querySelector<HTMLElement>('[data-wind-needle]');
+  const sector=root.querySelector<HTMLElement>('[data-wind-sector]');
+  const description=root.querySelector<HTMLElement>('[data-wind-description]');
+  const gauge=root.querySelector<HTMLElement>('.wind-gauge');
+  const sectors=['severní','severoseverovýchodní','severovýchodní','východoseverovýchodní',
+   'východní','východojihovýchodní','jihovýchodní','jihojihovýchodní','jižní',
+   'jihojihozápadní','jihozápadní','západojihozápadní','západní',
+   'západoseverozápadní','severozápadní','severoseverozápadní'];
+  const show=(value:number,source:string,stale=false)=>{
+   const deg=((value%360)+360)%360;
+   if(number)number.textContent=new Intl.NumberFormat('cs-CZ',{maximumFractionDigits:0}).format(deg);
+   if(needle)needle.style.transform='translate(-50%,-50%) rotate('+deg+'deg)';
+   if(sector)sector.textContent=sectors[Math.round(deg/22.5)%16]+' vítr';
+   if(gauge)gauge.setAttribute('aria-label','Vítr přichází z '+Math.round(deg)+' stupňů, '+sectors[Math.round(deg/22.5)%16]);
+   if(status){status.textContent=source;status.className='status-chip '+(stale?'warning':'ok');}
+   if(description)description.textContent=stale?'Starší archivní směr větru':'Směr odkud vítr vane · '+source;
+  };
+  const load=()=>{
+   void getCurrent(controller.signal).then(response=>{
+    if(controller.signal.aborted)return;
+    const reading=response.readings.windDir;
+    if(!reading||reading.value===null||reading.quality==='missing'||reading.quality==='suspect'||!Number.isFinite(reading.value)){
+     if(status){status.textContent='Bez platného směru';status.className='status-chip warning';}
+     if(description)description.textContent='Ověřený směr větru není k dispozici.';
+     return;
+    }
+    show(reading.value,'Archiv WeeWX',response.stale);
+   }).catch(()=>{
+    if(controller.signal.aborted)return;
+    if(status){status.textContent='API nedostupné';status.className='status-chip error';}
+    if(description)description.textContent='Směr větru se nepodařilo načíst.';
+   });
+  };
+  const live=(event:Event)=>{
+   if(controller.signal.aborted)return;
+   const data=(event as CustomEvent<{state:string;receivedAt:string;units:string;
+    readings:Record<string,{value:number;quality:string;source:string}>}>).detail;
+   const reading=data?.readings?.windDir;
+   if(data?.state!=='live'||data.units!=='metricwx'||!reading||
+    reading.source!=='gw3000_live'||reading.quality!=='measured'||
+    !Number.isFinite(reading.value)||!Number.isFinite(Date.parse(data.receivedAt))||
+    Date.now()-Date.parse(data.receivedAt)>120000)return;
+   show(reading.value,'Živě · GW3000');
+  };
+  const restore=()=>load();
+  window.addEventListener('loucka:live-observation',live);
+  window.addEventListener('loucka:live-expired',restore);
+  load();
+  document.addEventListener('astro:before-swap',()=>{
+   controller.abort();
+   window.removeEventListener('loucka:live-observation',live);
+   window.removeEventListener('loucka:live-expired',restore);
+  },{once:true});
+ }
 </script>
