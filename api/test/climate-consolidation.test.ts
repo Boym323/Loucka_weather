@@ -75,7 +75,7 @@ test('invalid and duplicate daily evidence fail closed, no invented annual 0',as
  assert.equal(y.invalidDays,1);
  assert.equal(y.validDays,1);
  assert.equal(y.value,9);
- const duplicate=buildApp(reader([bad[1],bad[1]]).r,now);t.after(()=>duplicate.close());
+ const duplicate=buildApp(reader([bad[1]!,bad[1]!]).r,now);t.after(()=>duplicate.close());
  assert.equal((await duplicate.inject('/api/v1/climate/annual-matrix?metric=outTemp')).statusCode,503);
 });
 test('unsupported metrics, approved data and absent summary reader fail closed',async t=>{
