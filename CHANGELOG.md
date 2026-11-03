@@ -2,6 +2,16 @@
 
 Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místním kalendáři; commit v `main` automaticky neznamená, že je už nasazen na testovacím webu.
 
+## 2026-11-03
+
+### Atlas Minimal — cílené dokončení UX podle screenshotů produkčního náhledu
+- Úvodní živé měření: nové dvouřádkové uspořádání veličin kolem dominantní teploty, odstranění nevyužité bílé plochy a mírnější vertikální rytmus; na mobilu zkráceno duplicitní vysvětlení zdroje, ale zachován čas a stav měření.
+- Grafy: přebarvení a odlehčení os, legend, mřížky a časových popisků v `AdvancedHistory`, `HistoryChart`, `RainDetail` a `ClimateDashboard`; mobil zobrazuje méně čitelných časových značek, namísto jejich překrývání.
+- Senzory: `SensorChannels` má vyhledávání, filtrování platných/nedostupných hodnot, osm přístupných rozbalovacích kanálů a 24h sparkline načítá pouze při otevření kanálu. Nulové hodnoty se nepletou s neznámými.
+- Odborná evidence kanálů, fyzický inventář a diagnostika byly zachovány, ale skryty za přístupnými rozbalovacími sekcemi, aby se běžný návštěvník nemusel procházet tisíci pixelů technických karet.
+- Opraveny vizuální smoke aserce na nové uspořádání Senzorů a doplněno ověření vyhledávání, rozevírání a počtu kanálů.
+- Beze změny API, SQL, produkční databáze, pravidel QC, původu dat a stávajících URL. Výsledky potvrzuje až CI a veřejný screenshotový test; samostatný audit přístupnosti zůstává požadavkem.
+
 ## 2026-11-02
 
 ### Unslop revize Atlas Minimal — přehlednost a specifická identita meteostanice
