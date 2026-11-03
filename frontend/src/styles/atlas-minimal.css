@@ -666,3 +666,15 @@ h1,h2,h3{font-weight:500;letter-spacing:0}
 @media(prefers-reduced-motion:reduce){
  .sensor-directory-chevron,.sensor-expand-indicator{transition:none}
 }
+
+/* Regression guard: tablet and mobile analytics must not inherit the
+   wide-screen three-column grid from the final polish pass above. */
+@media(min-width:761px) and (max-width:1330px){
+ .atlas-home-analytics{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)}
+ .atlas-home-extras{grid-column:1/-1}
+}
+@media(max-width:760px){
+ .atlas-home-analytics{grid-template-columns:minmax(0,1fr)}
+ .atlas-home-analytics>*{min-width:0}
+ .atlas-home-extras{grid-column:auto}
+}
