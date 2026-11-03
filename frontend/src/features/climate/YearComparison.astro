@@ -120,10 +120,14 @@ const beforePrevious=todayYear-2;
     (left===null?'bez platného měření':format(left)+' '+comparisonMetrics[metric].unit)+
     ' · '+years[1]+' — '+
     (right===null?'bez platného měření':format(right)+' '+comparisonMetrics[metric].unit));
-   root.querySelectorAll<HTMLButtonElement>('.year-heatmap-day').forEach(button=>{
-    const active=button.dataset.monthDay===selectedDay;
-    button.setAttribute('aria-pressed',String(active));
-    button.tabIndex=active?0:-1;
+   root.querySelectorAll<HTMLElement>('[data-heatmap-cells]').forEach(group=>{
+    const buttons=[...group.querySelectorAll<HTMLButtonElement>('.year-heatmap-day')];
+    const preferred=buttons.find(button=>button.dataset.monthDay===selectedDay)??buttons[0];
+    buttons.forEach(button=>{
+     const active=button.dataset.monthDay===selectedDay;
+     button.setAttribute('aria-pressed',String(active));
+     button.tabIndex=button===preferred?0:-1;
+    });
    });
   };
   function heatmap(slot:'first'|'second',year:number,values:Map<string,number|null>){
@@ -269,9 +273,19 @@ const beforePrevious=todayYear-2;
    if(!cellRoot)return;
    const buttons=[...cellRoot.querySelectorAll<HTMLButtonElement>('.year-heatmap-day')];
    const current=buttons.indexOf(node);
-   const delta=key==='ArrowLeft'?-1:key==='ArrowRight'?1:key==='ArrowUp'?-31:key==='ArrowDown'?31:0;
-   const index=key==='Home'?0:key==='End'?buttons.length-1:Math.max(0,Math.min(buttons.length-1,current+delta));
-   const next=buttons[index];if(!next)return;
+   let next:HTMLButtonElement|undefined;
+   if(key==='ArrowUp'||key==='ArrowDown'){
+    const month=Number(node.dataset.month)+(key==='ArrowUp'?-1:1);
+    const year=Number(node.dataset.year);
+    let day=Number(node.dataset.day);
+    while(month>=1&&month<=12&&day>0&&!calendarDayExists(year,month,day))day--;
+    next=buttons.find(button=>Number(button.dataset.month)===month&&Number(button.dataset.day)===day);
+   }else{
+    const index=key==='Home'?0:key==='End'?buttons.length-1:
+     Math.max(0,Math.min(buttons.length-1,current+(key==='ArrowLeft'?-1:1)));
+    next=buttons[index];
+   }
+   if(!next)return;
    keyboard.preventDefault();
    selectedDay=next.dataset.monthDay??selectedDay;picked();next.focus();
   });

@@ -74,6 +74,10 @@ try{
    /2/);
   assert.match(await section.locator('[data-comparison-value="difference"]').textContent()??'',
    /1,5/);
+  // Arrow-down follows the same calendar day, clamped for shorter months.
+  await first.locator('[data-month-day="01-31"]').focus();
+  await page.keyboard.press('ArrowDown');
+  assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('data-month-day')),'02-28');
   await second.locator('[data-month-day="02-29"]').click();
   assert.match(await section.locator('[data-compare-picked]').textContent()??'',/2025.*bez platného měření.*2024.*-2,0/s);
   const expectedHeight=await section.locator('[data-compare-chart]').evaluate(
@@ -92,7 +96,11 @@ try{
   assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
   assert.ok(overflow<=2,'horizontal overflow '+overflow+' at '+width);
-  assert.equal(historyRequests.filter(r=>r.metric==='outTemp').length,2);
+  // ClimateDashboard's separate frost evidence also requests daily outTemp.
+  const comparedYears=historyRequests.filter(r=>r.metric==='outTemp').map(r=>r.year);
+  assert.ok(comparedYears.includes(2024)&&comparedYears.includes(2025));
+  assert.ok(comparedYears.length>=2&&comparedYears.length<=4,
+   'unexpected temperature request burst: '+JSON.stringify(historyRequests));
   assert.equal(historyRequests.filter(r=>r.metric==='rain').length,2);
   await page.screenshot({path:screenshots+'/year-compare-'+width+'.png',fullPage:true});
   console.log('YEAR COMPARISON',width,JSON.stringify({

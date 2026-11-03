@@ -29,3 +29,6 @@
 - \`frontend/tests/year-comparison.test.mjs\`: pravidla kalendáře, CET/CEST, 29. únor, nulové srážky, missing/suspect, společné dny, pevné barvy.
 - \`frontend/scripts/year-comparison-browser-check.mjs\`: izolovaná mock data v lokálním Chromiu na 390 a 1440 px, zátěž pro null/0/leap, ověření grafu, změny veličiny a tmavého motivu.
 - \`frontend/scripts/preview-visual-check.mjs\`: ověří přítomnost rozhraní ve veřejném nasazení. Dělí se od mock browser testu a nenahrazuje kontrolu reálných dat.
+
+## Klávesnice
+V kalendáři Tab vstoupí na vybraný den, šipky vlevo/vpravo jdou mezi dny a šipky nahoru/dolů na odpovídající den sousedního měsíce (u kratšího měsíce se posunou na jeho poslední den). Home/End skáčou na začátek/konec roku. Každý rok má samostatný dosažitelný bod i při výběru 29. února v nepřestupném roce.
