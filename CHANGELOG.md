@@ -4,7 +4,15 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 
 ## 2026-11-05
 
-### Issue #36 – bezpečné profilování a shutdown API (PR čeká na ověření)
+### Dokončené nasazení a smoke audit #36; dlouhodobý follow-up #55
+- PR #54 sloučen do `main` jako `49ec8eea`; na staging LXC potvrzen `active-commit`, API health i readiness před restartem i po něm.
+- Všechny tři `archive_day_*` SELECT plány používají primární index `dateTime` (`type=range`, bez filesortu); není potřeba další index.
+- Systemd restart se bez chyby vrátil za 80 ms, journal `Deactivated successfully`, bez SIGKILL v pozorovaném výpisu; skutečně otevřený SSE stream v okamžiku stopu nebyl nezávisle potvrzen.
+- Read-only lokální sonda po restartu 5. 11. 2026, 15:31 UTC: 32/32 GET bez chyby, obě 304; klimatické rekordy první 2010,60 ms a další medián 3,20 ms; RSS krátce po startu 65,11 → 87,44 MiB. Bez potvrzení cold stavu ani důkazu memory leaku.
+- Zbývající dlouhodobé profilování a úplný SSE/DB stop scénář samostatně v [Issue #55](https://github.com/Boym323/Loucka_weather/issues/55); podrobnosti `docs/API_PERFORMANCE_AUDIT_2026-11-05.md`.
+
+
+### Issue #36 – bezpečné profilování a shutdown API (historický stav při otevření PR)
 - Archivní observer při ukončování explicitně dokončuje již rozběhnutý read-only SELECT dříve, než se zavře MariaDB pool. Není to důkaz vyřešení historických SIGKILL při systemd stopu.
 - Regresní testy pro souběžné volání klimatických rekordů, ETag/304, 60minutový stale limit, drain SQL a SSE při selhání závěrečného hooku.
 - Lokální read-only profilovací skript nově zaznamenává první a další GET zvlášť, 304 u rekordů a procesní RSS / RssAnon / RssFile; první GET **není automaticky cold**.

@@ -68,6 +68,10 @@ V pracovní větvi je doplněno bezpečné čekání na právě běžící SELEC
 
 Na LXC s evidovaným aktivovaným API commitem `dd816c5` (tedy stále před PR #54) proběhla nová read-only sonda v `14:02:22 UTC`: **32/32 GET 200**, `/climate/records` p50 **1,48 ms** a p95=max **4,21 ms** (8 vzorků); `/readyz` 31,45/50,72 ms, `/live/current` 1,40/3,11 ms, `/sensors/channels` 1,49/30,66 ms. Oba podmíněné GET (senzory i rekordy) vrátily `304`. Procesní RSS před/po: **104,12/104,13 MiB**, RssAnon 67,87/67,88 MiB, RssFile 36,25/36,25 MiB, 11 vláken, bez swapu a `NRestarts=0`. To jsou **krátká sekvenční pozorování se zahřátou cache**; nepovažovat je za cold-start výsledek, důkaz absence memory leaku nebo ověření nového shutdown kódu PR #54. Podrobná tabulka a další kroky: [audit 5. 11. 2026](../docs/API_PERFORMANCE_AUDIT_2026-11-05.md).
 
+### Výsledek nasazení PR #54 – 5. 11. 2026
+
+Staging LXC potvrdilo aktivovaný squash commit `49ec8eea`, health `ok`, readiness `true`. SELECT-only EXPLAIN u `archive_day_outTemp`, `archive_day_rain`, `archive_day_windGust` ukázal všude `PRIMARY` na `dateTime`, `type=range` bez filesortu. Systemd restart bez SIGKILL, návratový kód 0, trval 80 ms jako čas příkazu. Po restartu 32/32 GET bez chyby, klimatické rekordy první pozorovaný 2010,60 ms, další medián 3,20 ms; obě ETag 304. RSS 65,11 → 87,44 MiB v jednom krátkém zahřívacím okně; bez důkazu leaku nebo dlouhodobé stability. Plné měření cold SQL/heap trend a prokazatelně otevřeného SSE při shutdownu je v [Issue #55](https://github.com/Boym323/Loucka_weather/issues/55). Detailní důkazy: [audit](../docs/API_PERFORMANCE_AUDIT_2026-11-05.md).
+
 ## Ověření
 Node 24 používá uložený `api/package-lock.json` a CI instaluje přes `npm ci`, nikoli přepočítávání závislostí při každém běhu.
 

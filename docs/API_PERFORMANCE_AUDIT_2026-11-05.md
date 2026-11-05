@@ -194,3 +194,36 @@ Po sloučení [PR #54](https://github.com/Boym323/Loucka_weather/pull/54) (squas
 
 **Před závěrečným uzavřením #36**: nový `/healthz` a `/readyz` po restartu; nová neinvazivní lokální `preview-performance-check.py` na nasazeném commitu (ideálně s odstupem od TTL), odečet RSS. Dlouhodobý heap/external trend a cold-refresh SQL měření je samostatný širší monitoring, pokud nevyjde nová sonda vadně. Nezavádět změny MariaDB/GW3000/WeeWX ani neprovádět zátěžové testy na produkční DB.
 
+## Čtvrtá LXC sonda po restartu – 5. 11. 2026, 15:31:02 UTC
+
+Po ověření nasazení `main` `49ec8eeaab57e7a2d60d56b3e61ca92862d29a15` proběhly nové požadavky **až po restartu** na skutečně běžícím staging LXC (měření `2026-11-05T15:31:02.701851+00:00`):
+
+- `/healthz`: `status=ok`, `checkedAt=2026-11-05T15:31:02.189Z`.
+- `/readyz`: `ready=true`, všechny `api`, `archive`, `live`, `camera` = `ok`, `checkedAt=2026-11-05T15:31:02.275Z`.
+- 32/32 **sekvenčních** GET bez chyby; senzory i rekordy vrátily při podmíněném GET **304**.
+
+| Endpoint | 8 GET | p50 (ms) | p95=max (ms) |
+|---|---:|---:|---:|
+| `/api/v1/readyz` | 8/8 | 36,52 | 139,11 |
+| `/api/v1/live/current` | 8/8 | 4,31 | 11,15 |
+| `/api/v1/sensors/channels` | 8/8 | 3,11 | 50,95 |
+| `/api/v1/climate/records` | 8/8 | 3,20 | **2010,60** |
+
+U rekordů `first_observed_ms=2010,60`, `later_p50_ms=3,20`. Vzhledem k bezprostředně předcházejícímu restartu je první GET **pravděpodobně cache miss / cold refresh**, ale skript stav cache nepotvrzuje, výslovně obsahuje `first_is_not_guaranteed_cold=true`. Nelze prokázat zlepšení z historických 4 829 ms ani přiřadit dvě sekundy SQL vs Node, dokud nejsou k dispozici profilovací logy. Při osmi vzorcích jde u p95 o maximum.
+
+| Procesní paměť | Před | Po | Rozdíl |
+|---|---:|---:|---:|
+| RSS | 65,11 MiB | 87,44 MiB | +22,33 MiB |
+| RssAnon | 28,97 MiB | 51,30 MiB | +22,33 MiB |
+| RssFile | 36,13 MiB | 36,14 MiB | +0,01 MiB |
+| Swap | 0 | 0 | 0 |
+| Vlákna | 11 | 11 | 0 |
+
+Krátký nárůst procesu po startu a prvním klimatickém čtení je slučitelný s alokací/cachováním. **Není prokázán memory leak, ani jeho absence.** Předchozí sonda před nasazením PR #54 hlásila RSS 104 MiB; srovnání takto odlišně zahřátých procesů se nesmí vydávat za důkaz trvalé úspory.
+
+### Závěr původního Issue #36 a omezení
+
+- **Ověřeno:** správný commit a health po restartu; EXPLAIN PRIMARY/range u 3 tabulek bez filesortu; běžný systemd restart bez SIGKILL; rychlé cache hity, 304, read-only test bez chyb; CI včetně regresních testů SQL drain.
+- **Neověřeno na reálném LXC:** aktivní SSE stream prokazatelně v okamžiku stopu, souběžný dlouhý SELECT, dlouhodobý RSS/heap/external trend a přesný čas jednotlivých studených SQL částí.
+- Tyto otevřené úkoly jsou explicitně odděleny do [Issue #55](https://github.com/Boym323/Loucka_weather/issues/55). Uzavření původního úkolu nemá znamenat deklaraci bezchybnosti ve všech možných provozních podmínkách.
+
