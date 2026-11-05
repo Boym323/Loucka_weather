@@ -58,6 +58,12 @@ Po nasazení je nutný porovnávací benchmark studených i zahřátých požada
 a dlouhodobé RSS; žádné konkrétní zrychlení či odstranění úniku paměti se
 nepovažuje za prokázané jen na základě úpravy zdrojového kódu.
 
+## Pokračování výkonového auditu – Issue #36 (5. 11. 2026)
+
+V pracovní větvi je doplněno bezpečné čekání na právě běžící SELECT archivního observeru před uzavřením MariaDB poolu. Testy jsou rozšířeny o souběžné GET, klimatické ETag/304, expiraci stale odpovědí, dokončení SELECT při stopu a uvolnění SSE při chybě onClose. Neprokazuje to opravu historického SIGKILL v systemd.
+
+Šetrné profilování testovacího LXC: `python3 deploy/lxc/preview-performance-check.py` spuštěné z kořene repozitáře (skript kontaktuje jen localhost:3100). Vypíše p50/p95, první pozorovaný a další GET, ETag/304 rekordů i senzorů a oddělenou procesní RSS / RssAnon / RssFile, pokud je dostupný systemd/procfs. **První pozorovaný požadavek nemusí být cold.** Historické výsledky 2. 11. nejsou výsledkem tohoto PR. Podrobné podmínky, způsob opakovaného měření, bezpečné EXPLAIN a omezení důkazů: [docs/API_PERFORMANCE_AUDIT_2026-11-05.md](../docs/API_PERFORMANCE_AUDIT_2026-11-05.md).
+
 ## Ověření
 Node 24 používá uložený `api/package-lock.json` a CI instaluje přes `npm ci`, nikoli přepočítávání závislostí při každém běhu.
 
