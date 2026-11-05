@@ -132,7 +132,7 @@ test('simultaneous climate GETs coalesce SQL reads and support 304 ETag',async()
   const responses=await Promise.all(requests);
   for(const response of responses)assert.equal(response.statusCode,200,response.body);
   assert.deepEqual(hits,{outTemp:1,rain:1,windGust:1});
-  const etag=String(responses[0].headers.etag);
+  const etag=String(responses[0]!.headers.etag);
   assert.ok(etag.startsWith('"'));
   const unchanged=await app.inject({url:'/api/v1/climate/records',headers:{'if-none-match':etag}});
   assert.equal(unchanged.statusCode,304,unchanged.body);
