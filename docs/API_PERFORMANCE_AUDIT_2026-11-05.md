@@ -85,3 +85,33 @@ Uživatel předal JSON z příkazu `python3 /home/loucka/Loucka_weather/deploy/l
 Celkem **32/32 GET bez chyby**, následný podmíněný GET `/sensors/channels` vrátil `304` s `Cache-Control: private, max-age=30`. Starý baseline pro rekordy (2. 11.): 4 829 ms první zaznamenaný GET, další 1–4 ms. Poměr těchto **dvou pozorovaných maxim** je asi 8,7, ale bez prokázání studené cache a verze API **nejde o potvrzené zrychlení**. Aktuální paměť, trend RSS vs heap, actual queryMs ani 304 klimatických rekordů tímto během ověřeny nebyly.
 
 **Bezpečný další krok:** dočasně spustit aktualizovaný `preview-performance-check.py` z head větve PR #54 pouze jako neprivilegovaný proces na staging LXC, bez checkoutu nebo restartu serveru. Ověřit současně `/deployment.json`, `active-commit` a skutečný běžící proces, opakovat měření po TTL a případně provést oddělený plánovaný shutdown test. Issue #36 neuzavírat.
+
+## Druhá skutečná LXC sonda – 5. 11. 2026, 14:02:22 UTC (15:02 CET)
+
+Uživatel spustil novou revizi skriptu přímo z `FETCH_HEAD:deploy/lxc/preview-performance-check.py` přes `git show | python3 -`, **bez nasazení PR #54 a bez restartu backendu**. Následná kontrola hlásila:
+
+- Frontend `/deployment.json`: `main`, `dd816c5196a89c0c611c22a4a42ce7dc3a2d55c3`, nasazeno `2026-11-03T14:41:35Z`.
+- Evidovaný `/var/lib/loucka-weather-api/active-commit`: stejné SHA `dd816c5…`. API proces PID `122263`, systemd `NRestarts=0`.
+- Tato evidence potvrzuje správnou aktivovanou revizi podle deploy markeru, ale sama o sobě nekontroluje obsah momentálně běžících `dist/` souborů.
+- 32/32 sekvenčních HTTP GET bez chyby, navíc 2 podmíněné GET s `304`: senzory `private, max-age=30`, rekordy `no-cache`.
+
+| Endpoint | GET 200 | p50 (ms) | p95=max (ms) |
+|---|---:|---:|---:|
+| `/api/v1/readyz` | 8/8 | 31,45 | 50,72 |
+| `/api/v1/live/current` | 8/8 | 1,40 | 3,11 |
+| `/api/v1/sensors/channels` | 8/8 | 1,49 | 30,66 |
+| `/api/v1/climate/records` | 8/8 | 1,48 | 4,21 |
+
+Rekordy: `first_observed_ms=1,43`, `later_p50_ms=2,26`. Z toho vyplývá pravděpodobně **zahřátá cache**; studený refresh z tohoto běhu nelze vyčíst. Dřívější maximum 555,96 ms v první sondě a historické 4 829 ms nejsou přímo srovnatelné se současnými cache hity.
+
+| Procesní paměť | Před | Po |
+|---|---:|---:|
+| RSS | 104,12 MiB | 104,13 MiB |
+| Anon | 67,87 MiB | 67,88 MiB |
+| File | 36,25 MiB | 36,25 MiB |
+| Swap | 0 | 0 |
+| Threads | 11 | 11 |
+
+Historický baseline ~570 MiB RSS z 2. 11. je asi 5,5× vyšší než současných ~104 MiB; relativní rozdíl cca 82 %. **Nedokazuje to příčinnou zásluhu PR #35**, dlouhodobou stabilitu heapu ani absenci memory leaku. Také nemáme `heapUsed`, `external` a `queryMs`, protože se logují pouze při zapnutém opt-in diagnostickém profilu během refresh.
+
+**Zbývá:** skutečný expired/cold refresh v různých 20minutových oknech (včetně rozlišení stale-while-revalidate), opakovaná paměťová řada, read-only `SHOW INDEX/EXPLAIN SELECT` nad denními tabulkami a reálný systemd/SSE/DB shutdown pro PR #54. Neprovádět zátěž nebo zápisy do produkční DB. Do dokončení ověření zůstává PR draft, Issue otevřené.
