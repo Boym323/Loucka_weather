@@ -4,8 +4,8 @@ import {get} from 'node:http';
 import {DayScopedCache} from '../src/records-cache.js';
 import {climateRecordsFromDaily} from '../src/records.js';
 import {buildApp} from '../src/app.js';
-import {LiveHub} from '../src/live.js';
-import type {ArchiveReader,DailySummaryRow} from '../src/store.js';
+import {LiveHub,ArchiveObserver} from '../src/live.js';
+import type {ArchiveReader,ArchiveRow,DailySummaryRow} from '../src/store.js';
 
 test('day-scoped records cache coalesces simultaneous cold callers',async()=>{
  const cache=new DayScopedCache<number>(1000,5000);
@@ -111,4 +111,85 @@ test('SSE listeners drain before HTTP close and release subscribers', {timeout:5
   assert.equal(hub.subscriberCount,0);
   stream.destroy();
  }finally{await app.close();}
+});
+
+test('simultaneous climate GETs coalesce SQL reads and support 304 ETag',async()=>{
+ const hits:{outTemp:number;rain:number;windGust:number}={outTemp:0,rain:0,windGust:0};
+ let finish!:()=>void;
+ const gate=new Promise<void>(resolve=>{finish=resolve;});
+ const reader:ArchiveReader={
+  latest:async()=>null,history:async()=>[],ping:async()=>{},
+  dailySummaries:async(metric)=>{
+   if(metric==='outTemp'||metric==='rain'||metric==='windGust')hits[metric]++;
+   await gate;return [];
+  }
+ };
+ const app=buildApp(reader,()=>new Date('2026-11-02T12:00:00Z'));
+ try{
+  const requests=Array.from({length:8},()=>app.inject('/api/v1/climate/records'));
+  await new Promise<void>(resolve=>setImmediate(resolve));
+  finish();
+  const responses=await Promise.all(requests);
+  for(const response of responses)assert.equal(response.statusCode,200,response.body);
+  assert.deepEqual(hits,{outTemp:1,rain:1,windGust:1});
+  const etag=String(responses[0].headers.etag);
+  assert.ok(etag.startsWith('"'));
+  const unchanged=await app.inject({url:'/api/v1/climate/records',headers:{'if-none-match':etag}});
+  assert.equal(unchanged.statusCode,304,unchanged.body);
+  assert.equal(unchanged.body,'');
+  assert.deepEqual(hits,{outTemp:1,rain:1,windGust:1});
+ }finally{finish();await app.close();}
+});
+
+test('records fail closed beyond 60-minute same-day stale limit',async()=>{
+ let clock=Date.parse('2026-11-02T12:00:00Z'),fail=false;
+ const reader:ArchiveReader={
+  latest:async()=>null,history:async()=>[],ping:async()=>{},
+  dailySummaries:async()=>{if(fail)throw new Error('private DB failure');return [];}
+ };
+ const app=buildApp(reader,()=>new Date(clock));
+ try{
+  assert.equal((await app.inject('/api/v1/climate/records')).statusCode,200);
+  clock+=61*60_000;fail=true;
+  const unavailable=await app.inject('/api/v1/climate/records');
+  assert.equal(unavailable.statusCode,503,unavailable.body);
+  assert.ok(!unavailable.body.includes('private DB failure'));
+ }finally{await app.close();}
+});
+
+test('observer.stop waits for in-flight SELECT before a pool can close',async()=>{
+ let finish!:(rows:ArchiveRow[])=>void,reads=0;
+ const pending=new Promise<ArchiveRow[]>(resolve=>{finish=resolve;});
+ const reader:ArchiveReader={
+  latest:async()=>null,history:async()=>[],ping:async()=>{},
+  archiveWindow:async()=>{reads++;return pending;},
+  archiveAfter:async()=>[]
+ };
+ const observer=new ArchiveObserver(reader,new LiveHub(),()=>new Date('2026-11-02T12:00:00Z'));
+ const starting=observer.start();
+ let drained=false;
+ const stopping=observer.stop().then(()=>{drained=true;});
+ await Promise.resolve();
+ assert.equal(drained,false);
+ finish([]);
+ await Promise.all([starting,stopping]);
+ assert.equal(reads,1);
+ assert.equal(drained,true);
+});
+
+test('SSE subscribers drain even when a subsequent DB close hook fails', {timeout:5000},async()=>{
+ const hub=new LiveHub();
+ const reader:ArchiveReader={latest:async()=>null,history:async()=>[],ping:async()=>{}};
+ const app=buildApp(reader,()=>new Date('2026-11-02T12:00:00Z'),hub);
+ app.addHook('onClose',async()=>{throw new Error('simulated pool shutdown failure');});
+ const address=await app.listen({port:0,host:'127.0.0.1'});
+ const stream=await new Promise<import('node:http').IncomingMessage>((resolve,reject)=>{
+  const request=get(address+'/api/v1/live',resolve);request.on('error',reject);
+ });
+ stream.resume();
+ try{
+  assert.equal(hub.subscriberCount,1);
+  await assert.rejects(app.close(),/simulated pool shutdown failure/);
+  assert.equal(hub.subscriberCount,0);
+ }finally{stream.destroy();}
 });
