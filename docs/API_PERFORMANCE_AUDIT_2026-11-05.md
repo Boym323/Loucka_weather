@@ -62,11 +62,11 @@ Neprovádět `ANALYZE TABLE`, `OPTIMIZE TABLE`, `ALTER TABLE`, `CREATE INDEX`, S
 | Oblast | Stav k 5. 11. 2026 |
 |---|---|
 | Čtení kódu a historického auditu | Ověřeno na GitHub `main` `dd816c5` |
-| Drain právě běžícího observer SELECT | Implementováno v pracovní větvi, čeká na CI a staging |
-| Cache / 304 / shutdown regresní testy | Doplněny do PR, čeká na CI |
+| Drain právě běžícího observer SELECT | Implementováno; CI zelené, staging neověřen |
+| Cache / 304 / shutdown regresní testy | Prošly CI Node 24 a izolovanou MariaDB, reálný LXC dosud netestován |
 | Šetrná profilovací sonda a metodika | Připraveno k provedení na LXC |
 | Aktuální cold / warm / RSS trend | **Neměřeno na LXC** |
 | SQL EXPLAIN a indexy | **Neověřeno proti DB** |
 | Skutečný systemd stop při výpadku DB | **Neověřeno na LXC** |
 
-Závěr je nutné doplnit až po konkrétních měřeních a nesměšovat výsledky CI se skutečným provozem. Žádné změny v produkční MariaDB, rekonstrukci, WeeWX, GW3000 ani PBS.
+CI na commitu `b0c5114c` dne 5. 11. 2026: `typecheck-and-inject`, `isolated-mariadb` a `LXC preview deployment config` zelené. Tyto výsledky se nesměšují se skutečným provozem. Závěr je nutné doplnit až po konkrétních LXC měřeních. Žádné změny v produkční MariaDB, rekonstrukci, WeeWX, GW3000 ani PBS.
