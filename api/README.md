@@ -64,6 +64,10 @@ V pracovní větvi je doplněno bezpečné čekání na právě běžící SELEC
 
 Šetrné profilování testovacího LXC: `python3 deploy/lxc/preview-performance-check.py` spuštěné z kořene repozitáře (skript kontaktuje jen localhost:3100). Vypíše p50/p95, první pozorovaný a další GET, ETag/304 rekordů i senzorů a oddělenou procesní RSS / RssAnon / RssFile, pokud je dostupný systemd/procfs. **První pozorovaný požadavek nemusí být cold.** Historické výsledky 2. 11. nejsou výsledkem tohoto PR. Podrobné podmínky, způsob opakovaného měření, bezpečné EXPLAIN a omezení důkazů: [docs/API_PERFORMANCE_AUDIT_2026-11-05.md](../docs/API_PERFORMANCE_AUDIT_2026-11-05.md).
 
+### Ověřený staging baseline 5. 11. 2026
+
+Na LXC s evidovaným aktivovaným API commitem `dd816c5` (tedy stále před PR #54) proběhla nová read-only sonda v `14:02:22 UTC`: **32/32 GET 200**, `/climate/records` p50 **1,48 ms** a p95=max **4,21 ms** (8 vzorků); `/readyz` 31,45/50,72 ms, `/live/current` 1,40/3,11 ms, `/sensors/channels` 1,49/30,66 ms. Oba podmíněné GET (senzory i rekordy) vrátily `304`. Procesní RSS před/po: **104,12/104,13 MiB**, RssAnon 67,87/67,88 MiB, RssFile 36,25/36,25 MiB, 11 vláken, bez swapu a `NRestarts=0`. To jsou **krátká sekvenční pozorování se zahřátou cache**; nepovažovat je za cold-start výsledek, důkaz absence memory leaku nebo ověření nového shutdown kódu PR #54. Podrobná tabulka a další kroky: [audit 5. 11. 2026](../docs/API_PERFORMANCE_AUDIT_2026-11-05.md).
+
 ## Ověření
 Node 24 používá uložený `api/package-lock.json` a CI instaluje přes `npm ci`, nikoli přepočítávání závislostí při každém běhu.
 
