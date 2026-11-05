@@ -175,3 +175,22 @@ Rekordy: `first_observed_ms=1,43`, `later_p50_ms=2,26`. Z toho vyplývá pravdě
 Historický baseline ~570 MiB RSS z 2. 11. je asi 5,5× vyšší než současných ~104 MiB; relativní rozdíl cca 82 %. **Nedokazuje to příčinnou zásluhu PR #35**, dlouhodobou stabilitu heapu ani absenci memory leaku. Také nemáme `heapUsed`, `external` a `queryMs`, protože se logují pouze při zapnutém opt-in diagnostickém profilu během refresh.
 
 **Zbývá:** skutečný expired/cold refresh v různých 20minutových oknech (včetně rozlišení stale-while-revalidate), opakovaná paměťová řada, read-only `SHOW INDEX/EXPLAIN SELECT` nad denními tabulkami a reálný systemd/SSE/DB shutdown pro PR #54. Neprovádět zátěž nebo zápisy do produkční DB. Do dokončení ověření zůstává PR draft, Issue otevřené.
+
+## Třetí provozní kontrola – LXC, 5. 11. 2026, 15:28 UTC
+
+Po sloučení [PR #54](https://github.com/Boym323/Loucka_weather/pull/54) (squash commit `49ec8eeaab57e7a2d60d56b3e61ca92862d29a15`) uživatel provedl na staging LXC tři ověření. Jde o skutečně poskytnuté terminálové výstupy, nikoliv syntetické CI:
+
+1. **Nasazení/health**: `/var/lib/loucka-weather-api/active-commit` = `49ec8eeaab57e7a2d60d56b3e61ca92862d29a15`; `ActiveState=active`, `MainPID=213428`, `NRestarts=0`; `/api/v1/healthz` odpovídá `status=ok`; `/api/v1/readyz` obsahuje `ready=true`. JSON readiness byl v zaslaném terminálovém záznamu částečně přerušen následujícím příkazem, ale ověřitelná část obsahuje `ready:true`.
+2. **Read-only SQL plán** (`checked_at_utc=2026-11-05T15:28:14.627Z`): `SHOW GRANTS` prošlo SELECT-only kontrolou. Všechny 3 denní tabulky používají primární index `dateTime` bez hlášeného filesortu:
+   
+   | Tabulka | index | type | odhad rows | Extra |
+   |---|---|---|---:|---|
+   | `archive_day_outTemp` | `PRIMARY` | `range` | 6183 | Using where |
+   | `archive_day_rain` | `PRIMARY` | `range` | 6190 | Using where |
+   | `archive_day_windGust` | `PRIMARY` | `range` | 6193 | Using where |
+   
+   Nepřidávat index ani neměnit konfiguraci poolu bez naměřeného problému. EXPLAIN je plán a odhad, nikoliv měření doby SQL.
+3. **Restart systemd a SSE kandidát** (log `2026-11-05T16:28:24+01:00`): `systemctl restart loucka-weather-api.service` vrátil `rc=0`, lokálně změřeno `80 ms` od zahájení do návratu příkazu. Nový proces `MainPID=213636`, `ActiveState=active`, `NRestarts=0`. Journal: `Stopping` → `Deactivated successfully` → `Stopped` → `Started` ve stejnou sekundu; **žádný timeout ani SIGKILL v zobrazeném logu**. SSE klient byl v shellu spuštěn na pozadí a následně skončil, avšak výstup `curl` byl zahazován a není zachycené časové ověření, že spojení bylo aktivní těsně před restartem. Tento běh tedy **potvrzuje běžný graceful restart**, nikoli úplný test všech SSE/DB souběhů. `80 ms` je doba návratu příkazu `systemctl restart`, ne garantovaný čas do `/readyz` po restartu.
+
+**Před závěrečným uzavřením #36**: nový `/healthz` a `/readyz` po restartu; nová neinvazivní lokální `preview-performance-check.py` na nasazeném commitu (ideálně s odstupem od TTL), odečet RSS. Dlouhodobý heap/external trend a cold-refresh SQL měření je samostatný širší monitoring, pokud nevyjde nová sonda vadně. Nezavádět změny MariaDB/GW3000/WeeWX ani neprovádět zátěžové testy na produkční DB.
+
