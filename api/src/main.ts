@@ -7,7 +7,7 @@ const liveHub=new LiveHub();
 const observer=new ArchiveObserver(reader,liveHub);
 const gateway=new GatewayObserver(liveHub);
 const app=buildApp(reader,()=>new Date(),liveHub);
-app.addHook('onClose',async()=>{observer.stop();gateway.stop();await reader.close?.();});
+app.addHook('onClose',async()=>{gateway.stop();await observer.stop();await reader.close?.();});
 const port=Number(process.env.PORT||3100);
 const host=process.env.HOST||'127.0.0.1';
 let closing:Promise<void>|undefined;

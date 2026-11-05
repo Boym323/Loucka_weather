@@ -7,7 +7,10 @@ cache ETag/304 and failures; no background monitoring or writes.
 """
 import json
 import math
+import subprocess
 import time
+from datetime import datetime, timezone
+from pathlib import Path
 import urllib.error
 import urllib.request
 from collections import defaultdict
@@ -56,6 +59,33 @@ def call(path, etag=None):
             "etag": tag, "cache_control": cache_control}
 
 
+def memory_snapshot():
+    """One local systemd/procfs sample. No privileged operations or credentials."""
+    try:
+        cmd = subprocess.run(
+            ["systemctl", "show", "-P", "MainPID", "loucka-weather-api.service"],
+            capture_output=True, text=True, timeout=3, check=False,
+        )
+        pid = int(cmd.stdout.strip())
+        if cmd.returncode or pid <= 0:
+            return {"status": "not_available"}
+        status_text = Path(f"/proc/{pid}/status").read_text(encoding="utf-8")
+        source = {}
+        for line in status_text.splitlines():
+            if ":" in line:
+                key, value = line.split(":", 1)
+                source[key] = value.strip()
+        snapshot = {"status": "sampled"}
+        for name, label in (("VmRSS", "rss_mib"), ("RssAnon", "anon_mib"),
+                            ("RssFile", "file_mib"), ("VmSwap", "swap_mib")):
+            raw = source.get(name, "").split()
+            snapshot[label] = round(int(raw[0]) / 1024, 2) if raw and raw[0].isdigit() else None
+        snapshot["threads"] = int(source["Threads"]) if source.get("Threads", "").isdigit() else None
+        return snapshot
+    except (OSError, ValueError, subprocess.TimeoutExpired):
+        return {"status": "not_available"}
+
+
 def percentile(values, pct):
     values = sorted(values)
     if not values:
@@ -64,6 +94,8 @@ def percentile(values, pct):
 
 
 def run():
+    measured_at = datetime.now(timezone.utc).isoformat()
+    memory_before = memory_snapshot()
     results = defaultdict(list)
     for _ in range(SAMPLES):
         for path in PATHS:
@@ -78,6 +110,10 @@ def run():
         report[path] = {"requests": len(readings), "errors": len(problems),
                         "p50_ms": percentile(times, .5), "p95_ms": percentile(times, .95),
                         "max_ms": max(times, default=None)}
+        if path == "/api/v1/climate/records":
+            report[path]["first_observed_ms"] = readings[0]["elapsed_ms"]
+            report[path]["later_p50_ms"] = percentile(times[1:], .5)
+            report[path]["first_is_not_guaranteed_cold"] = True
         if problems:
             report[path]["error_samples"] = problems[:2]
             failures = True
@@ -94,9 +130,25 @@ def run():
     else:
         report["sensor_cache_etag"] = {"status": "no_etag"}
         failures = True
+    records_tag = results["/api/v1/climate/records"][-1].get("etag")
+    if records_tag:
+        conditional = call("/api/v1/climate/records", records_tag)
+        report["records_cache_etag"] = {
+            "status": conditional["status"], "expected_status": 304,
+            "cache_control": conditional.get("cache_control"),
+        }
+        if conditional["status"] != 304:
+            failures = True
+    else:
+        report["records_cache_etag"] = {"status": "no_etag"}
+        failures = True
+    memory_after = memory_snapshot()
     print(json.dumps({"source": BASE, "read_only": True, "samples_per_endpoint": SAMPLES,
+                      "measured_at_utc": measured_at,
+                      "process_memory_before": memory_before,
+                      "process_memory_after": memory_after,
                       "elapsed_window_seconds_estimate": SAMPLES*len(PATHS)*SPACING_SEC,
-                      "results": report, "sampling_warning": "not a concurrency/load test"},
+                      "results": report, "sampling_warning": "8 samples: p95 is max; first request may already be cached; not a concurrency/load test or memory-leak proof"},
                      indent=2, ensure_ascii=False))
     if failures:
         raise SystemExit(1)
