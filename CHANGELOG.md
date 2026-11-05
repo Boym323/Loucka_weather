@@ -2,6 +2,14 @@
 
 Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místním kalendáři; commit v `main` automaticky neznamená, že je už nasazen na testovacím webu.
 
+## 2026-11-05
+
+### Issue #36 – bezpečné profilování a shutdown API (PR čeká na ověření)
+- Archivní observer při ukončování explicitně dokončuje již rozběhnutý read-only SELECT dříve, než se zavře MariaDB pool. Není to důkaz vyřešení historických SIGKILL při systemd stopu.
+- Regresní testy pro souběžné volání klimatických rekordů, ETag/304, 60minutový stale limit, drain SQL a SSE při selhání závěrečného hooku.
+- Lokální read-only profilovací skript nově zaznamenává první a další GET zvlášť, 304 u rekordů a procesní RSS / RssAnon / RssFile; první GET **není automaticky cold**.
+- Metodika a nezměřené části auditu jsou zdokumentovány v docs/API_PERFORMANCE_AUDIT_2026-11-05.md. Aktuální cold/warm latence, SQL EXPLAIN, trend paměti a reálný shutdown se teprve musejí ověřit na staging LXC. Žádné změny DB ani GW3000.
+
 ## 2026-11-03
 
 ### Teplota 2009–dnes v jednom čárovém grafu
