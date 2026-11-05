@@ -1,6 +1,8 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
-**Aktualizace: 1. 11. 2026.** Tento dokument je vstupní rozcestník. Zdroj pravdy je `main/docs/` a původní výkonnostní implementace jsou ve větvi `bench/go-rust-python` (draft [PR #2](https://github.com/Boym323/Loucka_weather/pull/2)). Nepleť si větev PR s produkčním kódem; portál je rozpracovaný a běží testovací náhled; původní veřejný web zůstává samostatný.
+**Aktualizace vstupního přehledu: 5. 11. 2026.** Tento dokument je vstupní rozcestník. Zdroj pravdy je `main/docs/` a původní výkonnostní implementace jsou ve větvi `bench/go-rust-python` (draft [PR #2](https://github.com/Boym323/Loucka_weather/pull/2)). Nepleť si větev PR s produkčním kódem; portál je rozpracovaný a běží testovací náhled; původní veřejný web zůstává samostatný.
+
+**Aktuální provozní výkonnostní audit:** Issue [#36](https://github.com/Boym323/Loucka_weather/issues/36) a [metodika 5. 11. 2026](API_PERFORMANCE_AUDIT_2026-11-05.md). Zdrojový kód API obsahuje optimalizaci PR #35; nové změny observer shutdown a lokální profilovací sonda jsou v pracovní větvi a vyžadují CI i staging ověření. Historické časy z 2. 11. 2026 nejsou výsledkem dnešního měření.
 
 ## Cíl
 Navrhnout moderní portál **Počasí Loučka** pro veřejný web `https://pocasi-loucka.eu/`, s mobilním rozhraním, živými údaji, historickými grafy, statistikami a přehledem kvality dat. Původní **WeeWX + Belchertown** nadále provozovat, neměnit beze schválení produkční sběr dat. Meteorologická stanice Ecowitt GW3000, WeeWX a historický MariaDB archiv. Součástí většího projektu je historický audit a rekonstrukce chybějících/anomálních měření.
