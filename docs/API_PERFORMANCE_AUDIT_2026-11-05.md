@@ -57,6 +57,66 @@ Neprovádět `ANALYZE TABLE`, `OPTIMIZE TABLE`, `ALTER TABLE`, `CREATE INDEX`, S
 - Reálný shutdown se SSE klientem, skutečnými dotazy a selháním DB poolu vyžaduje **oddělené, plánované staging okno** s kontrolou `journalctl`, `NRestarts` a stop duration. Samotný fake-reader test nelze vydávat za ověření `TimeoutStopSec=15s` na LXC.
 - Nezvyšovat `TimeoutStopSec` bez zjištění příčiny. Po výpadku nepřepisovat historické hodnoty, potvrzení QC ani data GW3000.
 
+## 6. Závěrečný staging postup pro potvrzení PR #54
+
+Po sloučení do `main` se testovací LXC synchronizuje přes `loucka-preview-sync.timer` a při změně `api/` **může automaticky restartovat Fastify**. Před sloučením ověřit, že je na stagingu krátký restart přípustný; na produkčním WeeWX nic neprovádět. Následující příkazy jsou určeny **výhradně pro root shell testovacího LXC**, nikoliv pro jiné stroje.
+
+### A. Ověřit skutečně aktivované API
+
+```bash
+systemctl is-active --quiet loucka-weather-api.service || exit 1
+systemctl show -p MainPID -p NRestarts -p TimeoutStopUSec loucka-weather-api.service
+cat /var/lib/loucka-weather-api/active-commit
+runuser -u loucka -- git -C /home/loucka/Loucka_weather rev-parse HEAD
+curl -fsS --max-time 5 http://127.0.0.1:3100/api/v1/healthz
+curl -fsS --max-time 5 http://127.0.0.1:3100/api/v1/readyz
+```
+
+`active-commit` musí odpovídat vydané revizi (ne pouze GitHub `main`). Při nejistém stavu deploye nic nerebootovat a nejprve číst `journalctl -u loucka-preview-sync.service -n 60 --no-pager`.
+
+### B. Pouze SELECT-only SQL indexy a plány
+
+Po nasazení nového commitu lze spustit kontrolní skript z `api/scripts/read-only-query-plan.mjs`, který nejdříve **ověří SHOW GRANTS**, poté udělá jen `SHOW INDEX` a `EXPLAIN SELECT` pro `archive_day_outTemp`, `archive_day_rain` a `archive_day_windGust`. Nikdy nenačítá skutečné řádky a nikde nevypisuje přihlašovací údaje. Pomocí přechodné systemd jednotky se bezpečně předá již používaný root-owned env soubor, ale **Node běží pouze jako `loucka`**:
+
+```bash
+systemd-run --quiet --wait --pipe --collect \
+  -p User=loucka -p Group=loucka \
+  -p WorkingDirectory=/home/loucka/Loucka_weather/api \
+  -p EnvironmentFile=/etc/loucka-weather/api.env \
+  -- /usr/bin/node /home/loucka/Loucka_weather/api/scripts/read-only-query-plan.mjs
+```
+
+Skript provede pouze read-only administrativní a plánovací dotazy: `SHOW GRANTS`, 3× `SHOW INDEX`, 3× `EXPLAIN SELECT` (celkem **7** dotazů), bez `EXPLAIN ANALYZE`. Zjištěný `type=ALL` u malé plně čtené denní tabulky není sám o sobě důvodem ke změně indexu: před změnami nejprve vyhodnotit skutečný čas dotazů.
+
+### C. Záměrný restart pouze testovacího API s otevřeným SSE
+
+Následující krok **krátce přeruší staging API**. Proveď pouze ve chvíli, kdy je to přijatelné. Nejde o automatický test produkční WeeWX ani změnu MariaDB.
+
+```bash
+curl --noproxy '*' -fsSN --max-time 30 \
+  http://127.0.0.1:3100/api/v1/live >/dev/null 2>&1 &
+sse_pid=$!
+sleep 2
+start_epoch=$(date +%s)
+start_ms=$(date +%s%3N)
+systemctl restart loucka-weather-api.service
+restart_rc=$?
+end_ms=$(date +%s%3N)
+wait "$sse_pid" || true
+echo "restart_rc=$restart_rc elapsed_ms=$((end_ms-start_ms))"
+systemctl show -p ActiveState -p MainPID -p NRestarts loucka-weather-api.service
+curl -fsS --max-time 5 http://127.0.0.1:3100/api/v1/healthz
+curl -fsS --max-time 5 http://127.0.0.1:3100/api/v1/readyz
+journalctl -u loucka-weather-api.service --since "@$start_epoch" \
+  --no-pager -o short-iso
+```
+
+Úspěch vyžaduje `restart_rc=0`, obě zdravé odpovědi, ukončené původní SSE připojení a **žádný nový systemd timeout/SIGKILL**. Ruční restart neprokazuje všechna možná časování SQL dotazů; dříve přidaný CI test drainu in-flight SELECT tuto část pokrývá synteticky. Při timeoutu nezvyšovat slepě `TimeoutStopSec`; zachovat logy a opravit skutečnou příčinu.
+
+### D. Pasivní opakovaná kontrola
+
+V několika oddělených časových oknech (alespoň po TTL 20 minut) zopakovat `python3 deploy/lxc/preview-performance-check.py`. Pokud jsou potřeba `queryMs/heapUsed/external`, zapnout dočasně `WEATHER_API_PERF_LOG=YES` během servisního okna a vyvolat úspěšný refresh po TTL. Bez pozorovaného refresh s diagnostikou nevyhlašovat cold query benchmark ani vyloučení dlouhodobého úniku.
+
 ## Stav dokončení
 
 | Oblast | Stav k 5. 11. 2026 |
