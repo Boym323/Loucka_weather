@@ -70,3 +70,18 @@ Neprovádět `ANALYZE TABLE`, `OPTIMIZE TABLE`, `ALTER TABLE`, `CREATE INDEX`, S
 | Skutečný systemd stop při výpadku DB | **Neověřeno na LXC** |
 
 CI na commitu `b0c5114c` dne 5. 11. 2026: `typecheck-and-inject`, `isolated-mariadb` a `LXC preview deployment config` zelené. Tyto výsledky se nesměšují se skutečným provozem. Závěr je nutné doplnit až po konkrétních LXC měřeních. Žádné změny v produkční MariaDB, rekonstrukci, WeeWX, GW3000 ani PBS.
+
+## První skutečná LXC sonda předaná 5. 11. 2026 – dosud nesrovnatelné s cold baseline
+
+Uživatel předal JSON z příkazu `python3 /home/loucka/Loucka_weather/deploy/lxc/preview-performance-check.py` na testovacím LXC. Přesný UTC timestamp a Git SHA procesu/API **nebyly v JSON ani vedle měření uvedeny**. Formát výstupu odpovídá **staršímu profilu skriptu** bez `first_observed_ms`, `later_p50_ms`, `records_cache_etag` a `process_memory_before/after`; nepřiřazovat proto tuto sondu k novému diagnostickému skriptu v PR #54.
+
+| Endpoint | GET (200 OK) | p50 (ms) | p95=max (ms) |
+|---|---:|---:|---:|
+| `/api/v1/readyz` | 8/8 | 30,19 | 83,55 |
+| `/api/v1/live/current` | 8/8 | 1,50 | 2,70 |
+| `/api/v1/sensors/channels` | 8/8 | 1,90 | 32,27 |
+| `/api/v1/climate/records` | 8/8 | 2,23 | 555,96 |
+
+Celkem **32/32 GET bez chyby**, následný podmíněný GET `/sensors/channels` vrátil `304` s `Cache-Control: private, max-age=30`. Starý baseline pro rekordy (2. 11.): 4 829 ms první zaznamenaný GET, další 1–4 ms. Poměr těchto **dvou pozorovaných maxim** je asi 8,7, ale bez prokázání studené cache a verze API **nejde o potvrzené zrychlení**. Aktuální paměť, trend RSS vs heap, actual queryMs ani 304 klimatických rekordů tímto během ověřeny nebyly.
+
+**Bezpečný další krok:** dočasně spustit aktualizovaný `preview-performance-check.py` z head větve PR #54 pouze jako neprivilegovaný proces na staging LXC, bez checkoutu nebo restartu serveru. Ověřit současně `/deployment.json`, `active-commit` a skutečný běžící proces, opakovat měření po TTL a případně provést oddělený plánovaný shutdown test. Issue #36 neuzavírat.
