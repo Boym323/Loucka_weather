@@ -10,6 +10,11 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 - Lokální read-only profilovací skript nově zaznamenává první a další GET zvlášť, 304 u rekordů a procesní RSS / RssAnon / RssFile; první GET **není automaticky cold**.
 - Metodika a nezměřené části auditu jsou zdokumentovány v docs/API_PERFORMANCE_AUDIT_2026-11-05.md. Aktuální cold/warm latence, SQL EXPLAIN, trend paměti a reálný shutdown se teprve musejí ověřit na staging LXC. Žádné změny DB ani GW3000.
 
+### První provozní měření po PR #35, dosud před nasazením PR #54
+- Read-only testovací LXC 5. 11. 2026, 14:02:22 UTC: evidované API SHA `dd816c5`, 32/32 HTTP GET úspěšných, rekordy p50 1,48 ms / p95=max 4,21 ms (8 vzorků se zahřátou cache).
+- Proces RSS 104,12 → 104,13 MiB v jedné krátké sondě, RssAnon 67,87 → 67,88 MiB; obě ETag validace vracejí HTTP 304, systemd NRestarts=0.
+- Jde o nový provozní baseline, nikoli prokazatelné zrychlení cold startu ani dlouhodobé memory-leak měření. SQL EXPLAIN, dlouhodobý trend a graceful shutdown stále čekají na ověření. Detaily v `docs/API_PERFORMANCE_AUDIT_2026-11-05.md`.
+
 ## 2026-11-03
 
 ### Teplota 2009–dnes v jednom čárovém grafu
