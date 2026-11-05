@@ -82,6 +82,7 @@ export class LiveHub{
 export class ArchiveObserver{
  private running=false;
  private timer:ReturnType<typeof setTimeout>|undefined;
+ private inFlight:Promise<void>|null=null;
  private initialized=false;
  private failures=0;
  private cursor=0;
@@ -89,15 +90,28 @@ export class ArchiveObserver{
  private known=new Map<number,string>();
  constructor(private readonly reader:ArchiveReader,private readonly hub:LiveHub,
   private readonly now:()=>Date=()=>new Date()){}
- start(){if(this.running)return Promise.resolve();this.running=true;return this.pollAndSchedule();}
- stop(){this.running=false;if(this.timer)clearTimeout(this.timer);}
+ start(){if(this.running)return this.inFlight??Promise.resolve();this.running=true;return this.trackPoll();}
+ // Drain an already-running read before closing the MariaDB pool.
+ // Cancel only the timer: an in-flight SELECT cannot be safely aborted here.
+ stop():Promise<void>{
+  this.running=false;
+  if(this.timer){clearTimeout(this.timer);this.timer=undefined;}
+  return this.inFlight??Promise.resolve();
+ }
+ private trackPoll():Promise<void>{
+  const work=this.pollAndSchedule();
+  this.inFlight=work;
+  const clear=()=>{if(this.inFlight===work)this.inFlight=null;};
+  void work.then(clear,clear);
+  return work;
+ }
  private async pollAndSchedule():Promise<void>{
   if(!this.running)return;
   try{await this.poll();this.failures=0;}
   catch{this.failures=Math.min(this.failures+1,4);/* Internal DB errors are never sent to clients. */}
   const baseDelay=Math.min(120000,15000*2**this.failures);
   const delay=Math.round(baseDelay*(0.9+Math.random()*0.2));
-  if(this.running)this.timer=setTimeout(()=>void this.pollAndSchedule(),delay);
+  if(this.running)this.timer=setTimeout(()=>{this.timer=undefined;void this.trackPoll();},delay);
  }
  private async poll(){
   if(!this.reader.archiveWindow||!this.reader.archiveAfter)return;
