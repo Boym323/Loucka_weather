@@ -79,7 +79,7 @@ curl -fsS --max-time 5 http://127.0.0.1:3100/api/v1/readyz
 Po nasazení nového commitu lze spustit kontrolní skript z `api/scripts/read-only-query-plan.mjs`, který nejdříve **ověří SHOW GRANTS**, poté udělá jen `SHOW INDEX` a `EXPLAIN SELECT` pro `archive_day_outTemp`, `archive_day_rain` a `archive_day_windGust`. Nikdy nenačítá skutečné řádky a nikde nevypisuje přihlašovací údaje. Pomocí přechodné systemd jednotky se bezpečně předá již používaný root-owned env soubor, ale **Node běží pouze jako `loucka`**:
 
 ```bash
-systemd-run --quiet --wait --pipe --collect \
+systemd-run --quiet --pipe --collect \
   -p User=loucka -p Group=loucka \
   -p WorkingDirectory=/home/loucka/Loucka_weather/api \
   -p EnvironmentFile=/etc/loucka-weather/api.env \
