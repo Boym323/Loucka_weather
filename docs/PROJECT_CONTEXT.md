@@ -1,8 +1,8 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
-**Aktualizace vstupního přehledu: 5. 11. 2026.** Tento dokument je vstupní rozcestník. Zdroj pravdy je `main/docs/` a původní výkonnostní implementace jsou ve větvi `bench/go-rust-python` (draft [PR #2](https://github.com/Boym323/Loucka_weather/pull/2)). Nepleť si větev PR s produkčním kódem; portál je rozpracovaný a běží testovací náhled; původní veřejný web zůstává samostatný.
+**Aktualizace vstupního přehledu: 7. 11. 2026.** Zdroj pravdy je aktuální `main`, historická dokumentace ve `main/docs/` a samostatné provozní důkazy. Referenční benchmarky byly sloučeny v [PR #2](https://github.com/Boym323/Loucka_weather/pull/2) 1. 11. 2026. Astro frontend a Fastify API běží na testovacím náhledu; poslední potvrzený veřejný smoke 6. 11. ověřil commit `c8a5ab11` na 11 trasách pro desktop a mobil. Ověření z tohoto dne není automaticky dnešní aktuální nasazení. Původní veřejný web zůstává samostatný.
 
-**Aktuální provozní výkonnostní audit:** Issue [#36](https://github.com/Boym323/Loucka_weather/issues/36) a [metodika 5. 11. 2026](API_PERFORMANCE_AUDIT_2026-11-05.md). Zdrojový kód API obsahuje optimalizaci PR #35; nové změny observer shutdown a lokální profilovací sonda jsou v pracovní větvi a vyžadují CI i staging ověření. Historické časy z 2. 11. 2026 nejsou výsledkem dnešního měření.
+**Provozní výkonnostní audit:** Issue [#36](https://github.com/Boym323/Loucka_weather/issues/36) byl uzavřen 5. 11. po sloučení změn observer shutdown/profilovací sondy a jejich staging ověření; metodika a omezení jsou v [auditu 5. 11. 2026](API_PERFORMANCE_AUDIT_2026-11-05.md). Následný [Issue #55](https://github.com/Boym323/Loucka_weather/issues/55) stále řeší dlouhodobý trend RSS/heap, cold refresh a živě ověřený SSE shutdown. Krátké profilování **neprokazuje** paměťový leak ani dlouhodobou stabilitu.
 
 ## Cíl
 Navrhnout moderní portál **Počasí Loučka** pro veřejný web `https://pocasi-loucka.eu/`, s mobilním rozhraním, živými údaji, historickými grafy, statistikami a přehledem kvality dat. Původní **WeeWX + Belchertown** nadále provozovat, neměnit beze schválení produkční sběr dat. Meteorologická stanice Ecowitt GW3000, WeeWX a historický MariaDB archiv. Součástí většího projektu je historický audit a rekonstrukce chybějících/anomálních měření.
@@ -30,23 +30,23 @@ Navrhnout moderní portál **Počasí Loučka** pro veřejný web `https://pocas
 7. [Branch benchmarků](https://github.com/Boym323/Loucka_weather/tree/bench/go-rust-python/benchmark/) a [offline compute](https://github.com/Boym323/Loucka_weather/tree/bench/go-rust-python/benchmark/compute/).
 
 ## Co není hotové
-- Testovací frontend a částečné Fastify API jsou nasazené na dev.pocasi-loucka.eu. Původní devítipanelový návrh je vizuální předloha; jeho úplná realizace a ověření na mobilu dosud nejsou dokončeny.
+- Testovací frontend a Fastify API běží na `dev.pocasi-loucka.eu`. Veřejný Playwright smoke 6. 11. ověřil 11 tras na desktopu a mobilu. Zbývající audit: dokázat skutečné vykreslení lazy-loaded klimatologie, mobilní ergonomii, proxy/rate limit a pořadí publikace při aktivaci API. Tuto kontrolu nelze zaměňovat za úplný audit produkčního prostředí.
 - V repozitáři nejsou původní surové HTTP logy ani osobní IP adresy a nejsou zde originální soubory Matomo; reporty uvádějí agregáty ověřené read-only konektorem.
 - Zbývá ověřit zátěž **všech** požadovaných API endpointů na testovací kopii DB, efekt aktivních MQTT spojení, správnost statistik nad reálnou rekonstruovanou historií a reálný dopad na DB a WeeWX writer.
 - Neexistuje ještě finální přijetí stacku v produkci. Před samotnou implementací schválit přesné moduly, provozní hranice a bezpečnostní pravidla.
 
 ## Instrukce pro nový chat
-„Pokračujeme v projektu Boym323/Loucka_weather. Nejprve načti `main/docs/PROJECT_CONTEXT.md` a všechny zde odkazované audity. Původní benchmarky hledej ve větvi `bench/go-rust-python` a PR #2. Nezaměňuj syntetické/produkční měření, respektuj read-only produkční archiv a nic nemaž. Nejprve vyhodnoť aktuální stav projektu a navrhni nejbližší bezpečné kroky.“
+„Pokračujeme v projektu Boym323/Loucka_weather. Nejprve načti `main/docs/PROJECT_CONTEXT.md` a všechny zde odkazované audity. Původní benchmarky hledej v `main/benchmark/` a historickém PR #2. Nezaměňuj syntetické/produkční měření, respektuj read-only produkční archiv a nic nemaž. Nejprve vyhodnoť aktuální stav projektu a navrhni nejbližší bezpečné kroky.“
 
 
 ## Jednotky v návrhu API v1
 Doplněn `?units=us|metric|metricwx` (default metricwx); zdrojová normalizace podle `usUnits` každého řádku 1/16/17. Odpovědi musí uvádět skutečné jednotky; golden vektory v `tests/fixtures/unit-conversions.json` a referenční převodník `contracts/unit_conversion.py`. Detaily v [API auditu](API_CONTRACT_AUDIT_2026-10-31.md). Úplný kontrakt je návrh; část API v1 je implementovaná na testovacím webu.
 
 ## API v1 – aktuální zadání
-Kontrakt v [API_V1_PRODUCT_CONTRACT.md](API_V1_PRODUCT_CONTRACT.md) a OpenAPI 3.1 definují metadata, historii, statistiky, SSE a status kamery. Pracovní větev `codex/api-v1-completion` implementuje raw/hodinovou/denní historii s `resolution=auto`, denní/měsíční/roční statistiky z WeeWX denních souhrnů a read-only archivní SSE observer. MQTT observation, ověření SQL mapování na cílovou DB, úplná validace schémat a live parita Fastify/Go/Rust zůstávají nehotové; změny ve větvi nejsou nasazené.
+Kontrakt v [API_V1_PRODUCT_CONTRACT.md](API_V1_PRODUCT_CONTRACT.md) a OpenAPI 3.1 definuje metadata, historii, statistiky, SSE a status kamery. Aktuální `main` obsahuje Fastify API s historií, statistikami, read-only archivním observerem a live GW3000 HTTP přenosem; jeho skutečné staging chování ověřuj z aktuálních testů a `deployment.json`. Produkční nasazení původního webu, plná historická QC a parita případné alternativy Go/Rust zůstávají samostatnými úkoly.
 
 ## Archivní refresh – staging implementace
-V pracovní větvi read-only observer kontroluje dvouhodinové překryvné okno každých 15 sekund, dohání nové řádky stránkovaně a publikuje deduplikované `archive-updated` přes SSE. Dokud není prokázána čerstvost denních souhrnů, `summaryStatus` zůstává `unknown`; MQTT pozorování není připojeno. Kontrakt a omezení jsou v [ARCHIVE_REFRESH_CONTRACT.md](ARCHIVE_REFRESH_CONTRACT.md). Implementace není nasazená a nebyla ověřena na cílovém DB schématu.
+Read-only archivní observer a SSE `archive-updated` jsou již implementované na stagingu. Podmínky `summaryStatus` nadále závisí na ověřené čerstvosti souhrnů a nesmí vytvářet domnělou čerstvost. Stav GW3000 live HTTP přenosu je oddělený od MQTT. Kontrakt a omezení jsou v [ARCHIVE_REFRESH_CONTRACT.md](ARCHIVE_REFRESH_CONTRACT.md), provozní kontrola v auditu 5. 11. a otevřeném Issue #55.
 
 ## Průběžná dokumentace
 

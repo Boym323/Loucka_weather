@@ -1,0 +1,36 @@
+name: Dependency security audit
+on:
+  pull_request:
+    paths:
+      - "api/package-lock.json"
+      - "frontend/package-lock.json"
+      - ".github/workflows/dependency-security.yml"
+  push:
+    branches: [main]
+    paths:
+      - "api/package-lock.json"
+      - "frontend/package-lock.json"
+      - ".github/workflows/dependency-security.yml"
+  schedule:
+    - cron: "35 3 * * 1"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  production-dependencies:
+    name: Security audit – ${{ matrix.project }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [api, frontend]
+    defaults:
+      run:
+        working-directory: ${{ matrix.project }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Check production dependencies for high or critical advisories
+        run: npm audit --omit=dev --audit-level=high
