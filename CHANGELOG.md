@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-07 – návrh: WCAG audit ve tmavém motivu
+- Rozšíření testu 11 tras ze 22 na 44 kombinací (desktop/mobil × světlý/tmavý motiv), včetně stavu otevřeného menu klimatologie.
+- Explicitně se ověřuje přepnutí motivu před spuštěním axe-core; těmto testům nestačí vložit tmavou třídu až po renderu.
+- Test je lokální, read-only a nijak nemění živé meteorologické měření či nasazení.
+
+
 ## 2026-11-07 – návrh: odstranění potvrzených bariér přístupnosti
 - První axe-core CI běh ověřil 22 kombinací stránky a viewportu a nalezl 39 závažných výskytů porušení pravidel, převážně kontrast a nesoulad mezi viditelným a přístupným názvem sdílené navigace.
 - Opraveny přístupné názvy značky, mobilních rozbalovacích menu a odkazu na kameru. Horizontálně posuvné oblasti klimatologické tabulky a mapových záložek jsou dosažitelné klávesnicí.
