@@ -19,14 +19,15 @@ try{
    const context=await browser.newContext({
     viewport:{width:viewport.width,height:900},deviceScaleFactor:1
    });
-   let fixture={
+   const fixtureForArchive=()=>({
     schemaVersion:'1',observedAt:new Date().toISOString(),
     stale:false,units:'metricwx',dataset:'original',dataRevision:'wind-browser-fixture',
     readings:{
      windDir:{...reading(350),unit:'degree_compass'},
      windSpeed:reading(4.2),windGust:reading(7.8)
     }
-   };
+   });
+   let fixture=fixtureForArchive();
    await context.route('**/api/v1/current?*',route=>route.fulfill({
     status:200,contentType:'application/json',body:JSON.stringify(fixture)
    }));
@@ -42,13 +43,14 @@ try{
    page.on('pageerror',e=>exceptions.push(e.message));
    await page.addInitScript(mode=>localStorage.setItem('loucka-theme',mode),theme);
    for(const path of ['','aktualne/']){
+    fixture=fixtureForArchive();
     const response=await page.goto(new URL(path,origin).href,{
      waitUntil:'domcontentloaded',timeout:25000
     });
     assert.equal(response?.status(),200,path+' HTTP 200');
     const compass=page.locator('[data-wind-compass]');
-    await compass.locator('[data-wind-degrees]').getByText('350',{exact:true})
-     .waitFor({timeout:12000});
+    await page.waitForFunction(()=>document.querySelector('[data-wind-degrees]')?.textContent==='350',
+     null,{timeout:12000});
     assert.equal(await compass.locator('[data-wind-sector-short]').textContent(),'S');
     assert.equal(await compass.locator('[data-wind-valid]').getAttribute('data-wind-valid'),'true');
     assert.match(await compass.locator('.wind-gauge-v2').getAttribute('aria-label')??'',/350 stupňů/);
@@ -79,7 +81,8 @@ try{
     };
     await page.evaluate(data=>window.dispatchEvent(
      new CustomEvent('loucka:live-observation',{detail:data})),detail);
-    await compass.locator('[data-wind-degrees]').getByText('10',{exact:true}).waitFor();
+    await page.waitForFunction(()=>document.querySelector('[data-wind-degrees]')?.textContent==='10',
+     null,{timeout:12000});
     assert.equal(await compass.locator('[data-wind-bearing]').evaluate(e=>e.style.transform),
      'rotate(370deg)','must cross north by 20 degrees, not spin backwards');
     assert.equal(await compass.locator('[data-wind-value="windSpeed"]').textContent(),'5,3');
@@ -98,7 +101,8 @@ try{
      fullPage:true
     });
     await page.evaluate(()=>window.dispatchEvent(new Event('loucka:live-expired')));
-    await compass.locator('[data-wind-degrees]').getByText('350',{exact:true}).waitFor({timeout:12000});
+    await page.waitForFunction(()=>document.querySelector('[data-wind-degrees]')?.textContent==='350',
+     null,{timeout:12000});
     assert.match(await compass.locator('[data-wind-status]').textContent()??'',/WeeWX/);
 
     fixture={...fixture,readings:{
