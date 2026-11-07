@@ -6,6 +6,11 @@
 - Mobilní dock sjednocuje název sekce na „Klima“; izolovaný Chromium regresní test kontroluje otevření, deset odkazů a zavření menu.
 - Žádná změna dat, API, WeeWX, historické QC ani GW3000. Čeká se na CI ověření.
 
+## 2026-11-07 – návrh: důsledná vizuální kontrola klimatologie
+- Veřejný Playwright smoke nově odscrolluje ke grafu teplot všech roků i ke dvěma heatmapám a vyžaduje dokončené načtení originálních API dat, vykreslený SVG graf a skutečně naplněné dny; samotné HTML kontejnery již nestačí.
+- Celostránkové screenshoty vznikají až po těchto kontrolách. Selhání se hlásí s diagnostikou stavů, nikoliv jako falešně úspěšný vizuální test.
+- Změna nemění API, WeeWX, původní MariaDB, GW3000 ani záznamy měření. Úspěšný živý CI běh je nutné teprve potvrdit.
+
 Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místním kalendáři; commit v `main` automaticky neznamená, že je už nasazen na testovacím webu.
 
 ## 2026-11-05
