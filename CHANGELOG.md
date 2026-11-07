@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-07 – Klimatologický atlas, etapa II (žebříčky, archivní dny, grafická ročenka)
+- Srovnání čtyř ročních období rozšířené o žebříček dokončených sezón ze společného endpointu teplot všech let, časově vážené hodnoty, minima 90 % denního i skutečného časového pokrytí a samostatně uvedené neúplné roky.
+- U každého ze čtyř předběžných extrémů je možné vybrat záznam a zobrazit skutečný intervalový denní průběh bez umělého vyplňování mezer, s respektováním Europe/Prague a původu měření.
+- Tisknutelná ročenka má dva SVG grafy měsíčních teplot a srážek ze stejného původního archivu; neúplný měsíc se nezaměňuje za nulu a PDF vzniká přes tiskový dialog.
+- Přidány čisté jednotkové testy i prohlížečové testy světla/tmy a mobilu/desktopu, přístupnost a screenshoty každé nové kapitoly.
+- Čistě frontendové rozšíření, bez zápisů do WeeWX, MariaDB, GW3000 a bez zásahu do odloženého #69 / PR #58 či samostatného PR #73.
+
+
 ## 2026-11-07 – návrh: Klimatologický atlas Loučky, první funkční etapa
 - Editorial hlavní rozcestník 4 tematických kapitol s ponecháním původních grafů, heatmap a anchor URL.
 - Nové stránky Extrémy, Trendy, Srovnání sezón a Meteorologická ročenka s živými read-only endpointy bez vymyšlených dat.

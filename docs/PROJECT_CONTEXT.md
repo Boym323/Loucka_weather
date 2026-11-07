@@ -4,6 +4,16 @@
 
 **Provozní výkonnostní audit:** Issue [#36](https://github.com/Boym323/Loucka_weather/issues/36) byl uzavřen 5. 11. po sloučení změn observer shutdown/profilovací sondy a jejich staging ověření; metodika a omezení jsou v [auditu 5. 11. 2026](API_PERFORMANCE_AUDIT_2026-11-05.md). Následný [Issue #55](https://github.com/Boym323/Loucka_weather/issues/55) stále řeší dlouhodobý trend RSS/heap, cold refresh a živě ověřený SSE shutdown. Krátké profilování **neprokazuje** paměťový leak ani dlouhodobou stabilitu.
 
+## Další etapa Klimatologického atlasu (7. 11. 2026)
+
+Rozpracovaný PR pro druhou etapu doplňuje žebříčky dokončených sezón z
+existujícího `temperature-years` endpointu, detail rekordního dne
+z omezeného read-only `history?resolution=raw` a dva měsíční SVG
+grafy v tisknutelné ročence. Pořadí sezón vyžaduje 90 % denního
+i časového pokrytí a nevydává neúplné záznamy za klimatický normál.
+Neměnit metadata na „nasazeno“, dokud CI a staging smoke skutečně
+nepotvrdí příslušný squash merge commit.
+
 ## Klimatologický atlas – vývojová etapa (7. 11. 2026)
 
 Na samostatné frontend větvi se připravuje nový přehled

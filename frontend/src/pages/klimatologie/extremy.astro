@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import AtlasNav from '../../features/climate/AtlasNav.astro';
+import ExtremeDayDetail from '../../features/climate/ExtremeDayDetail.astro';
 const records=[
  {id:'minTemp',label:'Nejnižší teplota',unit:'°C'},
  {id:'maxTemp',label:'Nejvyšší teplota',unit:'°C'},
@@ -33,13 +34,18 @@ const records=[
    <section class="atlas-panel" aria-labelledby="extreme-timeline">
     <h2 id="extreme-timeline">Časová osa rekordních dnů</h2>
     <p>Seřazené dny archivních extrémů. Před definitivním potvrzením historických rekordů je nutná kontrola původu měření.</p>
-    <div class="atlas-table-scroll" role="region" tabindex="0" aria-label="Seznam rekordních dnů">
+    <div class="atlas-table-scroll atlas-extreme-desktop-timeline" role="region" tabindex="0" aria-label="Seznam rekordních dnů">
      <table class="atlas-table">
       <thead><tr><th scope="col">Datum</th><th scope="col">Jev</th><th scope="col">Hodnota</th><th scope="col">Stav</th></tr></thead>
       <tbody data-extreme-timeline><tr><td colspan="4">Načítám…</td></tr></tbody>
      </table>
     </div>
+    <ol class="atlas-extreme-events" data-extreme-cards
+     aria-label="Předběžné rekordní dny – mobilní časová osa">
+     <li>Načítám archivní dny…</li>
+    </ol>
    </section>
+   <ExtremeDayDetail />
    <section class="atlas-panel" aria-labelledby="extreme-days">
     <h2 id="extreme-days">Charakteristické teplotní dny</h2>
     <div class="atlas-stat-grid">
@@ -82,7 +88,7 @@ const records=[
     if(ctrl.signal.aborted)return;
     if(data.schemaVersion!=='1'||data.status!=='preliminary'||!data.records||
      !data.dayTypes||!data.coverage)throw Error('Nesprávná evidence');
-    const events:{date:string;label:string;value:string}[]=[];
+    const events:{date:string;label:string;value:string;metric:string}[]=[];
     for(const [id,label] of Object.entries(names)){
      const record=data.records[id];
      const valid=record&&Number.isFinite(record.value)&&
@@ -93,7 +99,7 @@ const records=[
      const date=root.querySelector<HTMLElement>('[data-extreme-date="'+id+'"]');
      if(field)field.textContent=display;
      if(date)date.textContent=valid?'Den '+record.localDate+' · bez QC':'Záznam nedostupný';
-     if(valid)events.push({date:record.localDate,label,value:display});
+     if(valid)events.push({date:record.localDate,label,value:display,metric:id});
     }
     const timeline=root.querySelector<HTMLTableSectionElement>('[data-extreme-timeline]');
     if(timeline){
@@ -104,7 +110,41 @@ const records=[
       row.cells[0].textContent='Bez doložených záznamů.';
      }else for(const event of events){
       const row=timeline.insertRow();
-      for(const value of [event.date,event.label,event.value,'Předběžné'])row.insertCell().textContent=value;
+      for(const value of [event.date,event.label,event.value])row.insertCell().textContent=value;
+      const last=row.insertCell();
+      last.append(document.createTextNode('Předběžné · '));
+      const button=document.createElement('button');
+      button.type='button';button.className='atlas-rank-action';
+      button.dataset.extremeDay=event.date;
+      button.dataset.extremeMetric=event.metric;
+      button.textContent='Průběh dne';
+      button.setAttribute('aria-label',event.label+' dne '+event.date+' – otevřít intervalová měření');
+      last.append(button);
+     }
+    }
+    const cards=root.querySelector<HTMLOListElement>('[data-extreme-cards]');
+    if(cards){
+     cards.replaceChildren();
+     if(!events.length){
+      const item=document.createElement('li');
+      item.textContent='Zatím není doložený rekordní den.';
+      cards.append(item);
+     }
+     for(const event of events){
+      const card=document.createElement('li');
+      const date=document.createElement('time');
+      date.dateTime=event.date;date.textContent=event.date;
+      const label=document.createElement('strong');label.textContent=event.label;
+      const value=document.createElement('span');value.textContent=event.value;
+      const note=document.createElement('small');
+      note.textContent='Původní denní souhrn · bez dokončené QC';
+      const action=document.createElement('button');
+      action.type='button';action.className='atlas-rank-action';
+      action.dataset.extremeDay=event.date;
+      action.dataset.extremeMetric=event.metric;
+      action.textContent='Zobrazit průběh dne';
+      action.setAttribute('aria-label','Otevřít intervalový archiv '+event.label+' dne '+event.date);
+      card.append(date,label,value,note,action);cards.append(card);
      }
     }
     for(const key of ['frost','ice','summer','tropical']){
