@@ -43,6 +43,15 @@ export function solarDay(civilDate:string,latitude=LOUCKA_VILLAGE.latitude,longi
   dayLengthMinutes:round(endMinute-beginMinute)};
 }
 
+/** Czech civil date, independent of visitor clock settings or UTC offset. */
+const civilDateFormatter=new Intl.DateTimeFormat('en-GB',{
+ timeZone:'Europe/Prague',year:'numeric',month:'2-digit',day:'2-digit'
+});
+export function pragueCivilDate(at:Date):string{
+ const parts=Object.fromEntries(civilDateFormatter.formatToParts(at).map(p=>[p.type,p.value]));
+ return parts.year+'-'+parts.month+'-'+parts.day;
+}
+
 /** Approximate lunar illumination fraction, not an ephemeris for moonrise. */
 export function lunarPhase(at:Date):{illuminated:number;name:string}{
  const synodic=29.530588853;
