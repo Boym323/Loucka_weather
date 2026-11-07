@@ -100,6 +100,16 @@ try{
     assert.equal(response?.status(),200,path+' should load');
     assert.equal(await page.locator('html').getAttribute('data-theme'),theme);
     assert.equal(await page.locator('.climate-atlas-nav a').count(),5);
+    // An old .atlas-hero grid once displaced and clipped the large heading.
+    const heading=await page.locator('.atlas-edition-hero h1').evaluate(node=>{
+     const rect=node.getBoundingClientRect();
+     const hero=node.closest('.atlas-edition-hero').getBoundingClientRect();
+     return {left:rect.left,heroLeft:hero.left,right:rect.right,heroRight:hero.right};
+    });
+    assert.ok(heading.left-heading.heroLeft<=100,
+     path+' heading displaced by legacy hero layout: '+JSON.stringify(heading));
+    assert.ok(heading.right<=heading.heroRight+2,
+     path+' title overflows editorial hero '+JSON.stringify(heading));
     if(path==='/klimatologie/'){
      assert.equal(await page.locator('.climate-atlas-card').count(),4);
      assert.equal(await page.locator('#teplota-vsechny-roky').count(),1);
