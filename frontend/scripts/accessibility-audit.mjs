@@ -9,7 +9,9 @@ import { readFile, mkdir, writeFile } from 'node:fs/promises';
 const origin = process.env.LOCAL_PREVIEW_URL || 'http://127.0.0.1:4321/';
 const routes = [
   '/', '/aktualne/', '/grafy/', '/klimatologie/', '/kamera/', '/mapy/',
-  '/senzory/', '/rekordy/', '/puda-ovzdusi/', '/stav/', '/o-stanici/'
+  '/senzory/', '/rekordy/', '/puda-ovzdusi/', '/stav/', '/o-stanici/',
+  '/klimatologie/extremy/', '/klimatologie/trendy/',
+  '/klimatologie/sezony/', '/klimatologie/rocenka/'
 ];
 const viewports = [
   { name: 'mobil', width: 390, height: 844 },
