@@ -72,7 +72,7 @@ try{
     assert.ok(shape.documentOverflow<=2,'page horizontal overflow '+shape.documentOverflow);
     const dialBackground=await compass.locator('.wind-gauge-v2').evaluate(
      el=>getComputedStyle(el).backgroundImage);
-    const expectedDial=theme==='dark'?/27,\\s*54,\\s*59/:/246,\\s*251,\\s*249/;
+    const expectedDial=theme==='dark'?/27,\s*54,\s*59/:/246,\s*251,\s*249/;
     assert.match(dialBackground,expectedDial,
      theme+' dial fill must match the color theme, not the legacy light Evergreen style');
 
