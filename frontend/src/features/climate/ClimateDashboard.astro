@@ -4,6 +4,18 @@ const currentYear=Math.min(2100,new Date().getUTCFullYear());
 const defaultYear=currentYear>2009?currentYear-1:currentYear;
 const years=Array.from({length:currentYear-2008},(_,i)=>currentYear-i);
 const months=['Led','Úno','Bře','Dub','Kvě','Čvn','Čvc','Srp','Zář','Říj','Lis','Pro'];
+const climateSections=[
+ {href:'#prehled',label:'Přehled'},
+ {href:'#teplota-vsechny-roky',label:'Teplota všech roků'},
+ {href:'#srovnani-let',label:'Heatmapy a srovnání let'},
+ {href:'#teploty',label:'Teploty'},
+ {href:'#srazky',label:'Srážky'},
+ {href:'#vitr',label:'Vítr'},
+ {href:'#extremy',label:'Extrémy'},
+ {href:'/rekordy/',label:'Historické rekordy'},
+ {href:'#solar-evidence',label:'Sluneční energie'},
+ {href:'#snow-evidence',label:'Sníh'}
+];
 ---
 <div class="climate-page" data-climate-dashboard data-current-year={currentYear}>
  <div class="page-intro climate-intro">
@@ -13,10 +25,14 @@ const months=['Led','Úno','Bře','Dub','Kvě','Čvn','Čvc','Srp','Zář','Ří
   </div>
  </div>
  <nav class="climate-tabs" aria-label="Kategorie klimatologie">
-  <a class="is-active" href="#prehled">Přehled</a><a href="#teplota-vsechny-roky">Teplota všech roků</a><a href="#srovnani-let">Heatmapy a srovnání let</a><a href="#teploty">Teploty</a>
-  <a href="#srazky">Srážky</a><a href="#vitr">Vítr</a><a href="#extremy">Extrémy</a>
-  <a href="/rekordy/">Historické rekordy</a><a href="#solar-evidence">Sluneční energie</a><a href="#snow-evidence">Sníh</a>
+  {climateSections.map((section,index)=><a class={index===0?'is-active':undefined} href={section.href}>{section.label}</a>)}
  </nav>
+ <details class="climate-quick-nav" data-climate-quick-nav>
+  <summary>Vybrat část klimatologie <span aria-hidden="true">▾</span></summary>
+  <nav aria-label="Rychlý přechod na část klimatologie">
+   {climateSections.map(section=><a href={section.href}>{section.label}</a>)}
+  </nav>
+ </details>
  <div class="climate-filter section" id="prehled">
   <div><span class="eyebrow">Historický archiv</span><strong>2009–{currentYear}</strong><span class="source-note">Pouze existující měření, bez doplňování mezer</span></div>
   <label for="climate-year">Rok</label>
@@ -72,6 +88,10 @@ const months=['Led','Úno','Bře','Dub','Kvě','Čvn','Čvc','Srp','Zář','Ří
 </div>
 <script>
  import {getStationCapabilities,getStatistics,getHistoryInterval} from '../../shared/api/client';
+ const quickNav=document.querySelector<HTMLDetailsElement>('[data-climate-quick-nav]');
+ quickNav?.querySelectorAll<HTMLAnchorElement>('a').forEach(link=>{
+  link.addEventListener('click',()=>{quickNav.open=false;});
+ });
  import {pragueMidnightIso,qualitySupported} from '../../shared/domain/statistics';
  import {formatValue} from '../../shared/domain/metrics';
  import * as echarts from 'echarts/core';
