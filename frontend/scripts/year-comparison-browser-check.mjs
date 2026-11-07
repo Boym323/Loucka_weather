@@ -105,6 +105,19 @@ try{
   });
   const response=await page.goto(origin+'klimatologie/',{waitUntil:'domcontentloaded'});
   assert.equal(response?.status(),200);
+  // The mobile climate menu must expose all sections without a horizontal strip.
+  const quickNav=page.locator('[data-climate-quick-nav]');
+  if(width===390){
+   assert.equal(await quickNav.isVisible(),true);
+   assert.equal(await page.locator('.climate-tabs').isVisible(),false);
+   await quickNav.locator('summary').click();
+   assert.equal(await quickNav.locator('nav a').count(),10);
+   await quickNav.locator('a[href="#teplota-vsechny-roky"]').click();
+   assert.equal(await quickNav.evaluate(el=>el.open),false);
+  }else{
+   assert.equal(await quickNav.isVisible(),false);
+   assert.equal(await page.locator('.climate-tabs').isVisible(),true);
+  }
   const all=page.locator('[data-all-years-temperature]');
   assert.equal(await all.count(),1);
   await all.scrollIntoViewIfNeeded();
