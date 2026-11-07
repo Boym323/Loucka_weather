@@ -65,6 +65,39 @@ const daily=(url)=>{
   }))
  };
 };
+const temperatureYears=()=>{
+ const points=[];
+ for(let year=2023;year<=2026;year++){
+  const from=year+'-01-01';
+  const end=year===2026?'2026-11-07':(year+1)+'-01-01';
+  for(const date of calendarDates(from,end)){
+   const next=new Date(Date.parse(date+'T00:00:00Z')+86400000).toISOString().slice(0,10);
+   const seconds=(Date.parse(pragueMidnightIso(next))-Date.parse(pragueMidnightIso(date)))/1000;
+   points.push({date,year:Number(date.slice(0,4)),monthDay:date.slice(5),
+    value:10+(year-2023)*1.5+Math.sin(Number(date.slice(5,7))*1.2)*6,
+    validSeconds:seconds,expectedSeconds:seconds,quality:'derived'});
+  }
+ }
+ return {schemaVersion:'1',metric:'outTemp',unit:'°C',dataset:'original',
+  source:'weewx_daily',qcStatus:'original_unverified',firstYear:2009,
+  endsBefore:'2026-11-07',dataRevision:'synthetic-browser-only',points};
+};
+const raw=(url)=>{
+ const from=Date.parse(url.searchParams.get('from')??'');
+ const to=Date.parse(url.searchParams.get('to')??'');
+ const metric=url.searchParams.get('metric');
+ if(!Number.isFinite(from)||!Number.isFinite(to)||to<=from||to-from>26*3600000)
+  throw Error('Invalid historical day');
+ const points=[];
+ for(let t=from;t<to;t+=300000){
+  points.push({startTime:new Date(t).toISOString(),
+   endTime:new Date(Math.min(to,t+300000)).toISOString(),
+   value:metric==='rain'?(points.length%20===0?1.4:0):10+Math.sin(points.length/26)*5,
+   quality:'derived',source:'weewx_archive',provenance:'browser-only'});
+ }
+ return {schemaVersion:'1',metric,unit:metric==='rain'?'mm':metric==='windGust'?'m/s':'°C',
+  resolution:'raw',dataRevision:'browser-raw-fixture',points};
+};
 const routes=['/klimatologie/','/klimatologie/extremy/','/klimatologie/trendy/',
  '/klimatologie/sezony/','/klimatologie/rocenka/'];
 const browser=await chromium.launch({headless:true});
@@ -79,6 +112,10 @@ try{
      if(u.pathname==='/api/v1/climate/records')result=records;
      else if(u.pathname==='/api/v1/climate/annual-matrix')
       result=yearly(u.searchParams.get('metric'));
+     else if(u.pathname==='/api/v1/climate/temperature-years')
+      result=temperatureYears();
+     else if(u.pathname==='/api/v1/history'&&u.searchParams.get('resolution')==='raw')
+      result=raw(u);
      else if(u.pathname==='/api/v1/history'&&u.searchParams.get('resolution')==='daily')
       result=daily(u);
      else if(u.pathname==='/api/v1/station')
@@ -120,6 +157,13 @@ try{
       document.querySelector('[data-extreme-value="minTemp"]')?.textContent?.includes('-18,2')
       ,null,{timeout:12000});
      assert.equal(await page.locator('[data-extreme-timeline] tr').count(),4);
+     await page.locator('[data-extreme-timeline] [data-extreme-metric="minTemp"]').click();
+     await page.waitForFunction(()=>
+      document.querySelector('[data-extreme-day-status]')?.textContent?.includes('platných intervalů'),
+      null,{timeout:12000});
+     assert.ok(await page.locator('[data-extreme-day-chart] svg').count()>0);
+     assert.match(await page.locator('[data-extreme-day-meta]').textContent()??'',
+      /originální|Původní/i);
     }
     if(path.endsWith('/trendy/')){
      await page.waitForFunction(()=>
@@ -141,12 +185,24 @@ try{
       ,null,{timeout:20000});
      assert.ok(await page.locator('[data-season-chart] svg').count()>0);
      assert.match(await page.locator('[data-season-matched]').textContent()??'',/\d+ \/ \d+/);
+     await page.waitForFunction(()=>
+      document.querySelector('[data-ranking-status]')?.textContent?.includes('Porovnatelných'),
+      null,{timeout:20000});
+     assert.ok(await page.locator('[data-ranking-rows] tr').count()>=2);
+     assert.match(await page.locator('[data-ranking-rows]').textContent()??'',/Léto 2025/);
+     await page.locator('[data-ranking-rows] [data-rank-year="2024"]').click();
+     await page.waitForFunction(()=>
+      document.querySelector('[data-season-first]')?.value==='2024',
+      null,{timeout:12000});
      await page.locator('[data-season-kind]').selectOption('winter');
      await page.locator('[data-season-form] button').click();
      await page.waitForFunction(()=>
       document.querySelector('[data-season-title="second"]')?.textContent?.includes('Zima')
       &&document.querySelector('[data-season-status]')?.textContent?.includes('Srovnání originálního')
       ,null,{timeout:20000});
+     await page.waitForFunction(()=>
+      document.querySelector('[data-ranking-rows]')?.textContent?.includes('Zima 2024/2025')
+      ,null,{timeout:12000});
     }
     if(path.endsWith('/rocenka/')){
      await page.waitForFunction(()=>document.querySelector('[data-yearbook-print]')?.disabled===false,
@@ -154,6 +210,14 @@ try{
      assert.equal(await page.locator('[data-yearbook-title]').textContent(),'2025');
      assert.equal(await page.locator('[data-yearbook-months] tr').count(),12);
      assert.match(await page.locator('[data-yearbook-story]').textContent()??'',/měsíc|Měsíční/);
+     assert.equal(await page.locator('[data-yearbook-temp-chart] svg').count(),1);
+     assert.equal(await page.locator('[data-yearbook-rain-chart] svg').count(),1);
+     assert.equal(await page.locator('[data-yearbook-temp-chart] .atlas-chart-temp-bar').count(),12);
+     assert.equal(await page.locator('[data-yearbook-rain-chart] .atlas-chart-rain-bar').count(),12);
+     await page.emulateMedia({media:'print'});
+     assert.equal(await page.locator('.site-header').evaluate(e=>getComputedStyle(e).display),'none');
+     assert.equal(await page.locator('.atlas-yearbook').evaluate(e=>getComputedStyle(e).display)!=='none',true);
+     await page.emulateMedia({media:'screen'});
     }
     const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
     assert.ok(overflow<=2,path+' horizontal overflow '+overflow+' at '+viewport.width);
