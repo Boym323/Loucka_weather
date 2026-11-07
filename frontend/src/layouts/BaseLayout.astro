@@ -3,6 +3,7 @@ import '../styles/global.css';
 import '../styles/refinement.css';
 import '../styles/atlas-minimal.css';
 import '../styles/observatory-evergreen.css';
+import '../styles/accessibility.css';
 import DeploymentInfo from '../shared/ui/DeploymentInfo.astro';
 import LiveSync from '../shared/ui/LiveSync.astro';
 import MobileDock from '../shared/ui/MobileDock.astro';
@@ -42,7 +43,7 @@ const active = Astro.url.pathname;
   <a class="skip-link" href="#obsah">Přejít k obsahu</a>
   <header class="site-header">
    <div class="wrap header-inner">
-    <a class="brand" href="/" aria-label="Počasí Loučka – úvod">
+    <a class="brand" href="/">
      <span class="brand-symbol" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 5-7 4 4 3-3 6 6"/><path d="M3 19h18"/><path d="M16.5 4.5v3m-1.5-1.5h3"/></svg></span>
      <span class="brand-label"><strong>Počasí Loučka</strong><small>Osobní meteorologická stanice</small></span>
     </a>
@@ -61,7 +62,7 @@ const active = Astro.url.pathname;
      <span class="header-clock" data-prague-clock aria-label="Místní čas v Loučce">--:--</span>
     </div>
     <details class="mobile-nav">
-     <summary aria-label="Otevřít navigaci"><SiteIcon name="menu" size={19} /><span>Menu</span></summary>
+     <summary><SiteIcon name="menu" size={19} /><span>Menu</span></summary>
      <nav aria-label="Mobilní navigace">
       {[...navigation,...secondaryNavigation].map(item => <a href={item.href} aria-current={active === item.href ? 'page' : undefined}>{item.title}</a>)}
      </nav>
