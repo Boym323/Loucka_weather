@@ -178,3 +178,11 @@
 :root[data-theme="dark"] .evergreen-hero .wind-hero .wind-gauge-v2{
  background:radial-gradient(circle,var(--wind-v2-dial) 40%,var(--wind-v2-tile) 100%)!important;
 }
+
+/* The /aktualne detail card has a narrower reading column than the hero.
+   On phones keep source badges legible instead of squeezing two tiny tiles. */
+@media(max-width:600px){
+ .wind-compass-panel:not(.wind-hero) .wind-metrics-v2{
+  grid-template-columns:minmax(0,1fr);
+ }
+}
