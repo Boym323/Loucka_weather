@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-07 – návrh: přesná dokumentace a kontrola závislostí
+- `AGENTS.md`, `README.md` a vstupní `docs/PROJECT_CONTEXT.md` rozlišují staging a produkční veřejný web; historické PR #2 a #4 jsou již sloučené, issue #36 uzavřené a issue #55 stále otevřené.
+- Přidaný týdenní GitHub Actions audit produkčních npm závislostí (API a frontend), spouštěný rovněž při změně lockfile; hlásí `high` a `critical` nálezy, automaticky neopravuje balíčky.
+- Přidán Dependabot pro obě npm části a GitHub Actions, pouze vytváří návrhy PR; neprovádí automatické sloučení ani deploy.
+- Žádné změny meteorologických měření, databází, API runtime nebo GW3000.
+
 Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místním kalendáři; commit v `main` automaticky neznamená, že je už nasazen na testovacím webu.
 
 ## 2026-11-05
