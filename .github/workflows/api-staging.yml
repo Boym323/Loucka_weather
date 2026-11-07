@@ -10,7 +10,7 @@ jobs:
   typecheck-and-inject:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with: { node-version: '24' }
       - name: Check generated metric catalogue matches authoritative JSON
@@ -60,7 +60,7 @@ jobs:
           --health-timeout 5s
           --health-retries 12
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with: { node-version: '24' }
       - run: npm ci --no-audit --no-fund
