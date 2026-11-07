@@ -221,10 +221,10 @@ try{
     }
     const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
     assert.ok(overflow<=2,path+' horizontal overflow '+overflow+' at '+viewport.width);
-    if(path==='/klimatologie/rocenka/'||path==='/klimatologie/'){
-     await page.screenshot({path:target+'/atlas-'+(path.endsWith('rocenka/')?'yearbook':'index')+
-      '-'+viewport.name+'-'+theme+'.png',fullPage:true});
-    }
+    // Keep reviewable captures of every atlas chapter, not just the landing.
+    await page.screenshot({path:target+'/atlas-'+
+     (path==='/klimatologie/'?'index':path.split('/').filter(Boolean).at(-1))+
+     '-'+viewport.name+'-'+theme+'.png',fullPage:true});
    }
    assert.equal(exceptions.length,0,'Unhandled JS: '+exceptions.join('; '));
    console.log('ATLAS BROWSER',viewport.name,theme,'5 routes, real-data-shaped isolated fixtures OK');
