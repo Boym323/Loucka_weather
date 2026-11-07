@@ -1,0 +1,133 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AtlasNav from '../../features/climate/AtlasNav.astro';
+const records=[
+ {id:'minTemp',label:'Nejnižší teplota',unit:'°C'},
+ {id:'maxTemp',label:'Nejvyšší teplota',unit:'°C'},
+ {id:'maxDailyRain',label:'Největší denní úhrn',unit:'mm'},
+ {id:'maxWindGust',label:'Nejsilnější náraz větru',unit:'m/s'}
+];
+---
+<BaseLayout title="Atlas · Extrémy"
+ description="Předběžné extrémy počasí v Loučce: teploty, srážky, vítr a charakteristické dny z původních denních souhrnů WeeWX.">
+ <div class="climate-atlas" data-atlas-extremes>
+  <header class="atlas-hero">
+   <p class="atlas-eyebrow">01 / Extrémy a mimořádné dny</p>
+   <h1 class="atlas-title">Když počasí překonává hranice</h1>
+   <p class="atlas-subtitle">Záznamy, které patří k nejvýraznějším okamžikům místní meteorologické historie. U každého extrému uvádíme archivní den a stav ověření.</p>
+  </header>
+  <AtlasNav active="extremy"/>
+  <div class="atlas-chapter">
+   <section class="atlas-panel" aria-labelledby="extreme-heading">
+    <h2 id="extreme-heading">Předběžné historické extrémy</h2>
+    <p class="atlas-status" role="status" data-extreme-status>Načítám souhrny z originálního archivu…</p>
+    <div class="atlas-stat-grid">
+     {records.map(r=><div class="atlas-stat">
+      <span>{r.label}</span>
+      <strong data-extreme-value={r.id}>—</strong>
+      <small data-extreme-date={r.id}>Datum není zatím k dispozici</small>
+     </div>)}
+    </div>
+    <p class="source-note">Hodnoty jsou vybrány ze starších denních souhrnů WeeWX, nikoliv z forenzně schváleného archivu. Ani fyzikální filtr nevylučuje všechny anomálie.</p>
+   </section>
+   <section class="atlas-panel" aria-labelledby="extreme-timeline">
+    <h2 id="extreme-timeline">Časová osa rekordních dnů</h2>
+    <p>Seřazené dny archivních extrémů. Před definitivním potvrzením historických rekordů je nutná kontrola původu měření.</p>
+    <div class="atlas-table-scroll" role="region" tabindex="0" aria-label="Seznam rekordních dnů">
+     <table class="atlas-table">
+      <thead><tr><th scope="col">Datum</th><th scope="col">Jev</th><th scope="col">Hodnota</th><th scope="col">Stav</th></tr></thead>
+      <tbody data-extreme-timeline><tr><td colspan="4">Načítám…</td></tr></tbody>
+     </table>
+    </div>
+   </section>
+   <section class="atlas-panel" aria-labelledby="extreme-days">
+    <h2 id="extreme-days">Charakteristické teplotní dny</h2>
+    <div class="atlas-stat-grid">
+     {[
+      {id:'frost',label:'Mrazové',hint:'Denní minimum pod 0 °C'},
+      {id:'ice',label:'Ledové',hint:'Denní maximum pod 0 °C'},
+      {id:'summer',label:'Letní',hint:'Denní maximum alespoň 25 °C'},
+      {id:'tropical',label:'Tropické',hint:'Denní maximum alespoň 30 °C'}
+     ].map(item=><div class="atlas-stat">
+      <span>{item.label} dny</span><strong data-extreme-count={item.id}>—</strong><small>{item.hint}</small>
+     </div>)}
+    </div>
+    <p class="atlas-status" data-extreme-coverage>Pokrytí se zjišťuje…</p>
+    <p class="source-note">Počítají se jen dny s platným denním minimem i maximem. Chybějící záznam není den bez mrazu ani bez vedra. Jde o počty v dostupném archivu, nikoliv o srovnatelnou roční četnost.</p>
+   </section>
+  </div>
+ </div>
+</BaseLayout>
+<script>
+ import {formatValue} from '../../shared/domain/metrics';
+ const root=document.querySelector<HTMLElement>('[data-atlas-extremes]');
+ if(root){
+  const ctrl=new AbortController();
+  const names:Record<string,string>={
+   minTemp:'Nejnižší teplota',maxTemp:'Nejvyšší teplota',
+   maxDailyRain:'Největší denní úhrn',maxWindGust:'Nejsilnější náraz větru'
+  };
+  interface Item{value:number;unit:string;localDate:string;quality:string}
+  interface Payload{
+   schemaVersion:string;status:string;
+   records:Record<string,Item|null>;
+   dayTypes:Record<string,number>;
+   coverage:{temperatureDays:number;rainDays:number;windDays:number;calendarDays:number}
+  }
+  void fetch('/api/v1/climate/records',{signal:ctrl.signal,headers:{Accept:'application/json'}})
+   .then(async response=>{
+    if(!response.ok)throw Error('HTTP '+response.status);
+    return response.json() as Promise<Payload>;
+   }).then(data=>{
+    if(ctrl.signal.aborted)return;
+    if(data.schemaVersion!=='1'||data.status!=='preliminary'||!data.records||
+     !data.dayTypes||!data.coverage)throw Error('Nesprávná evidence');
+    const events:{date:string;label:string;value:string}[]=[];
+    for(const [id,label] of Object.entries(names)){
+     const record=data.records[id];
+     const valid=record&&Number.isFinite(record.value)&&
+      /^\d{4}-\d{2}-\d{2}$/.test(record.localDate)&&
+      record.quality==='unverified_original';
+     const display=valid?formatValue(record.value,1)+' '+record.unit:'—';
+     const field=root.querySelector<HTMLElement>('[data-extreme-value="'+id+'"]');
+     const date=root.querySelector<HTMLElement>('[data-extreme-date="'+id+'"]');
+     if(field)field.textContent=display;
+     if(date)date.textContent=valid?'Den '+record.localDate+' · bez QC':'Záznam nedostupný';
+     if(valid)events.push({date:record.localDate,label,value:display});
+    }
+    const timeline=root.querySelector<HTMLTableSectionElement>('[data-extreme-timeline]');
+    if(timeline){
+     timeline.replaceChildren();
+     events.sort((a,b)=>a.date.localeCompare(b.date));
+     if(!events.length){
+      const row=timeline.insertRow();row.insertCell().colSpan=4;
+      row.cells[0].textContent='Bez doložených záznamů.';
+     }else for(const event of events){
+      const row=timeline.insertRow();
+      for(const value of [event.date,event.label,event.value,'Předběžné'])row.insertCell().textContent=value;
+     }
+    }
+    for(const key of ['frost','ice','summer','tropical']){
+     const count=root.querySelector<HTMLElement>('[data-extreme-count="'+key+'"]');
+     const value=data.dayTypes[key];
+     if(count)count.textContent=Number.isSafeInteger(value)&&value>=0?
+      value.toLocaleString('cs-CZ'):'—';
+    }
+    const cov=root.querySelector<HTMLElement>('[data-extreme-coverage]');
+    if(cov){
+     const v=data.coverage;
+     cov.textContent='Dny s dostupným záznamem / kalendářní dny archivu: '+
+      'teplota '+v.temperatureDays+' / '+v.calendarDays+
+      ', srážky '+v.rainDays+' / '+v.calendarDays+
+      ', vítr '+v.windDays+' / '+v.calendarDays+'.';
+    }
+    const status=root.querySelector<HTMLElement>('[data-extreme-status]');
+    if(status){status.textContent='Originální WeeWX · předběžná evidence';status.dataset.state='warning';}
+   }).catch(()=>{
+    if(ctrl.signal.aborted)return;
+    const status=root.querySelector<HTMLElement>('[data-extreme-status]');
+    if(status){status.textContent='Údaje se nepodařilo načíst; neukazujeme náhradní hodnoty.';status.dataset.state='error';}
+   });
+  document.addEventListener('astro:before-swap',()=>ctrl.abort(),{once:true});
+ }
+</script>
