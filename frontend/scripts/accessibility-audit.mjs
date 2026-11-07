@@ -28,14 +28,22 @@ try {
       viewport: { width: viewport.width, height: viewport.height },
       deviceScaleFactor: 1
     });
+    for (const theme of ['light', 'dark']) {
     for (const path of routes) {
       const page = await context.newPage();
+      await page.addInitScript(mode => {
+        try { localStorage.setItem('loucka-theme', mode); } catch {}
+      }, theme);
       try {
         const response = await page.goto(new URL(path.replace(/^\//, ''), origin).href, {
           waitUntil: 'domcontentloaded', timeout: 25000
         });
         if (response?.status() !== 200) {
           throw new Error('HTTP ' + (response?.status() ?? 'no response'));
+        }
+        const activeTheme = await page.locator('html').getAttribute('data-theme');
+        if (activeTheme !== theme) {
+          throw new Error('Theme mismatch: expected ' + theme + ', received ' + activeTheme);
         }
         if (path === '/klimatologie/' && viewport.name === 'mobil') {
           // Scan a revealed menu too, not just the hidden default state.
@@ -57,25 +65,26 @@ try {
           }))
         }));
         checks.push({
-          route: path, viewport: viewport.name, width: viewport.width,
+          route: path, viewport: viewport.name, width: viewport.width, theme,
           violations, incomplete: result.incomplete.map(v => v.id),
           passedRules: result.passes.length
         });
         for (const violation of violations) {
           const target = JSON.stringify(violation.nodes.slice(0, 3).map(n => n.target));
-          console.error('A11Y', viewport.name, path, violation.impact,
+          console.error('A11Y', viewport.name, theme, path, violation.impact,
             violation.id, target);
           if (violation.impact === 'critical' || violation.impact === 'serious') {
-            errors.push(viewport.name + ' ' + path + ': ' + violation.id);
+            errors.push(viewport.name + ' ' + theme + ' ' + path + ': ' + violation.id);
           }
         }
-        console.log('A11Y CHECK', viewport.name, path,
+        console.log('A11Y CHECK', viewport.name, theme, path,
           'violations=' + violations.length, 'passed=' + result.passes.length);
       } catch (error) {
-        errors.push(viewport.name + ' ' + path + ': ' + String(error));
+        errors.push(viewport.name + ' ' + theme + ' ' + path + ': ' + String(error));
       } finally {
         await page.close();
       }
+    }
     }
     await context.close();
   }
