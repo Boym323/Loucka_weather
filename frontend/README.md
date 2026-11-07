@@ -4,7 +4,7 @@
 
 ## Automatická kontrola přístupnosti – 7. 11. 2026
 
-GitHub CI v samostatném **lokálním Astro preview** používá Playwright + pinned axe-core 4.14.0 a kontroluje všech 11 tras na šířkách 390 a 1440 px. Na mobilní klimatologii otevře i navigační menu. Kontroluje pravidla WCAG 2.0/2.1/2.2 úrovní A a AA. Každý běh ukládá strukturovaný artefakt `wcag-browser-audit` s identifikátory pravidel, elementy a popisem porušení. Kritická a závažná porušení znamenají selhání CI; mírnější nálezy se reportují bez automatického schválení.
+GitHub CI v samostatném **lokálním Astro preview** používá Playwright + pinned axe-core 4.14.0 a kontroluje všech 11 tras na šířkách 390 a 1440 px **ve světlém i tmavém motivu** (celkem 44 kombinací). Na mobilní klimatologii otevře i navigační menu. Kontroluje pravidla WCAG 2.0/2.1/2.2 úrovní A a AA. Každý běh ukládá strukturovaný artefakt `wcag-browser-audit` s identifikátory pravidel, elementy a popisem porušení. Kritická a závažná porušení znamenají selhání CI; mírnější nálezy se reportují bez automatického schválení.
 
 Jde o **automatický podmnožinový test**, nikoli plnou certifikaci WCAG či test VoiceOver/Safari. API odpovědi a čerstvost meteorologických hodnot se ověřují v odděleném veřejném smoke; lokální prohlížečový a11y test neprovádí zápisy do DB ani do GW3000.
 

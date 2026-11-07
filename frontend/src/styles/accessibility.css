@@ -40,3 +40,9 @@
  outline:3px solid var(--teal);
  outline-offset:3px;
 }
+
+/* Axe found the historic-card kicker at 3.31:1 on the dark dashboard.
+   Keep the sepia identity while exceeding the 4.5:1 text threshold. */
+:root[data-theme="dark"] .evergreen-spotlight .observatory-history .observatory-kicker{
+ color:#ddb68b;
+}
