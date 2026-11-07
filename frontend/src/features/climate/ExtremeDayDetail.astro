@@ -24,7 +24,8 @@
  import {pragueMidnightIso,nextDate} from '../../shared/domain/statistics';
  import {formatValue} from '../../shared/domain/metrics';
  const root=document.querySelector<HTMLElement>('[data-extreme-detail]');
- const timeline=document.querySelector<HTMLElement>('[data-extreme-timeline]');
+ // Delegate from the whole atlas to support both desktop table and mobile cards.
+ const timeline=document.querySelector<HTMLElement>('[data-atlas-extremes]');
  if(root&&timeline){
   const chart=root.querySelector<HTMLElement>('[data-extreme-day-chart]')!;
   const status=root.querySelector<HTMLElement>('[data-extreme-day-status]')!;
