@@ -73,9 +73,11 @@ Původní Astro HMR vývoj zůstává oddělený: v důvěryhodné LAN jako louc
 
 ## Povinná aktualizace aktivačního helperu při přechodu na staged publish
 
-**Nejdřív změň root-owned aktivační helper, až poté sluč změnu do `main` a povol automatickou synchronizaci.** Starý helper čte pouze `current/.source-commit` a nový kandidát se bez nové verze helperu nesmí publikovat. Zastav timer, připrav helper ze schváleného commitu a ručně ověř `bash -n`. Nespouštěj shell skript přímo z uživatelsky zapisovatelného repozitáře jako root.
+**Nejprve zastav synchronizační timer, pak sluč schválený PR do `main`, aktualizuj pracovní kopii při zastaveném timeru, nainstaluj nový root-owned helper a teprve potom spusť synchronizaci.** Starý helper čte jen `current/.source-commit` a sám nový kandidát nepublikuje. Nespouštěj script přímo z uživatelsky zapisovatelného repozitáře s root právy. Při instalaci validuj obsah commitu/PR.
 
     systemctl disable --now loucka-preview-sync.timer
+    runuser -u loucka -- git -C /home/loucka/Loucka_weather switch main
+    runuser -u loucka -- git -C /home/loucka/Loucka_weather pull --ff-only origin main
     install -D -o root -g root -m 0755 /home/loucka/Loucka_weather/deploy/lxc/loucka-preview-api-activate.sh /usr/local/libexec/loucka-preview-api-activate.sh
     bash -n /usr/local/libexec/loucka-preview-api-activate.sh
     systemctl daemon-reload
@@ -84,7 +86,7 @@ Původní Astro HMR vývoj zůstává oddělený: v důvěryhodné LAN jako louc
     cat /srv/loucka-preview/current/.source-commit
     systemctl enable --now loucka-preview-sync.timer
 
-Tyto příkazy prováděj teprve ve chvíli, kdy je v lokální pracovní kopii **schválený commit nové implementace**, ne ze starého `main`. Před vypnutím/ zapnutím timeru ověř `systemctl cat loucka-preview-sync.service`, že načítá správný root-owned helper. Při selhání se kandidát ponechá v `/srv/loucka-preview/.pending-commit` a veřejný `current` se nepřepne. Backend má stále vlastní restartovací strategii a při chybě nové API revize může vyžadovat ruční rollback. Předchozí frontend release se nemaže.
+Tyto příkazy prováděj **až po schválení PR**; mezi `git pull` a dokončením instalace zůstává timer vypnutý. Před vypnutím/zapnutím timeru ověř `systemctl cat loucka-preview-sync.service`, že načítá správný root-owned helper. Při selhání se kandidát ponechá v `/srv/loucka-preview/.pending-commit` a veřejný `current` se nepřepne. Backend má stále vlastní restartovací strategii a při chybě nové API revize může vyžadovat ruční rollback. Předchozí frontend release se nemaže.
 
 ## IP adresy klientů za Nginx Proxy Managerem
 
