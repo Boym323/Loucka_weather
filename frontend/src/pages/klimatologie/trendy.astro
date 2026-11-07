@@ -1,0 +1,170 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AtlasNav from '../../features/climate/AtlasNav.astro';
+---
+<BaseLayout title="Atlas · Trendy"
+ description="Dlouhodobý vývoj ročních teplot, srážek a větru na meteostanici Loučka od roku 2009. Včetně pokrytí a metodiky.">
+ <div class="climate-atlas" data-atlas-trends>
+  <header class="atlas-hero">
+   <p class="atlas-eyebrow">02 / Vývoj počasí v čase</p>
+   <h1 class="atlas-title">Trendy od roku 2009</h1>
+   <p class="atlas-subtitle">Dlouhodobé změny z vlastních měření. Každý bod je skutečný konsolidovaný roční souhrn, nikoli odhad chybějících let.</p>
+  </header>
+  <AtlasNav active="trendy"/>
+  <section class="atlas-panel" aria-labelledby="trend-chart-title">
+   <h2 id="trend-chart-title">Roční vývoj meteorologické veličiny</h2>
+   <form class="atlas-filters" data-trend-form>
+    <label>Veličina
+     <select data-trend-metric name="metric">
+      <option value="outTemp">Průměrná teplota</option>
+      <option value="rain">Roční srážky</option>
+      <option value="windSpeed">Průměrná rychlost větru</option>
+     </select>
+    </label>
+    <button type="submit">Zobrazit vývoj</button>
+   </form>
+   <p class="atlas-status" data-trend-status role="status">Načítám historický souhrn…</p>
+   <div class="atlas-chart" data-trend-chart role="img" aria-label="Graf ročních hodnot s vyznačením skutečně dostupných let"></div>
+   <div class="atlas-results">
+    <div class="atlas-result"><span>Podložené dokončené roky</span><strong data-trend-valid>—</strong><small>Požadováno dostatečné pokrytí</small></div>
+    <div class="atlas-result"><span>Popisný sklon / 10 let</span><strong data-trend-slope>—</strong><small>Theil–Sen, není test statistické významnosti</small></div>
+    <div class="atlas-result"><span>Roky s jakýmikoli hodnotami</span><strong data-trend-samples>—</strong><small>Bez imputace chybějících let</small></div>
+   </div>
+   <p class="source-note" data-trend-method>Originální WeeWX bez úplné kontroly kvality. Sloupce ukazují jen dostupné záznamy. Trend se vypočítá, jen pokud alespoň 8 dostatečně pokrytých dokončených let zahrnuje nejméně 10 roků.</p>
+  </section>
+  <section class="atlas-panel" aria-labelledby="trend-table-title">
+   <h2 id="trend-table-title">Přehled všech dostupných roků</h2>
+   <p>Roční průměry jsou časově vážené podle dostupného archivu, srážky součtem intervalů. Chybějící hodnoty nejsou dosazeny jako nula.</p>
+   <div class="atlas-table-scroll" role="region" aria-label="Roční klimatologické hodnoty" tabindex="0">
+    <table class="atlas-table">
+     <thead><tr><th scope="col">Rok</th><th scope="col">Hodnota</th><th scope="col">Dny s daty</th><th scope="col">Časové pokrytí</th><th scope="col">Hodnocení</th></tr></thead>
+     <tbody data-trend-rows><tr><td colspan="5">Načítám…</td></tr></tbody>
+    </table>
+   </div>
+   <p class="source-note">Dostatečné pokrytí pro orientační trend vyžaduje alespoň 90 % dní s platnou hodnotou a u teploty/větru též známé časové pokrytí alespoň 90 %. Rok 2026, pokud právě probíhá, se do trendu nezařazuje. Nejde o 30letý klimatologický normál.</p>
+  </section>
+ </div>
+</BaseLayout>
+<script>
+ import {getAnnualMatrix} from '../../shared/api/client';
+ import type {ConsolidatedAnnualYear} from '../../shared/api/client';
+ import {formatValue} from '../../shared/domain/metrics';
+ import {theilSen} from '../../shared/domain/climate-atlas';
+ const root=document.querySelector<HTMLElement>('[data-atlas-trends]');
+ if(root){
+  const form=root.querySelector<HTMLFormElement>('[data-trend-form]')!;
+  const select=root.querySelector<HTMLSelectElement>('[data-trend-metric]')!;
+  const graph=root.querySelector<HTMLElement>('[data-trend-chart]')!;
+  const body=root.querySelector<HTMLTableSectionElement>('[data-trend-rows]')!;
+  const status=root.querySelector<HTMLElement>('[data-trend-status]')!;
+  const controller=new AbortController();
+  let epoch=0;
+  const descriptions={
+   outTemp:{label:'Roční průměrná venkovní teplota',unit:'°C'},
+   rain:{label:'Roční srážkový úhrn',unit:'mm'},
+   windSpeed:{label:'Průměrná rychlost větru',unit:'m/s'}
+  } as const;
+  type Metric=keyof typeof descriptions;
+  const set=(selector:string,value:string)=>{
+   const el=root.querySelector<HTMLElement>(selector);if(el)el.textContent=value;
+  };
+  const eligible=(r:ConsolidatedAnnualYear,metric:Metric)=>r.value!==null&&
+   Number.isFinite(r.value)&&r.periodStatus==='finished'&&
+   r.validDays/r.elapsedDays>=.9&&
+   (metric==='rain'||(r.timeCoverageFraction!==null&&r.timeCoverageFraction>=.9));
+  const draw=(rows:ConsolidatedAnnualYear[],metric:Metric)=>{
+   graph.replaceChildren();
+   const valid=rows.filter(r=>r.value!==null&&Number.isFinite(r.value));
+   if(valid.length===0){graph.textContent='Pro tuto veličinu nejsou podložené roční hodnoty.';return;}
+   const ns='http://www.w3.org/2000/svg';
+   const el=(tag:string)=>document.createElementNS(ns,tag);
+   const svg=el('svg');svg.setAttribute('viewBox','0 0 760 285');
+   svg.setAttribute('role','img');
+   svg.setAttribute('aria-label',descriptions[metric].label+' od roku 2009, pouze dostupné roční hodnoty');
+   const title=el('title');title.textContent=descriptions[metric].label+' · originální archiv';svg.append(title);
+   const xmin=rows[0]!.year,xmax=rows.at(-1)!.year;
+   const values=valid.map(r=>r.value as number);
+   const low=Math.min(...values),high=Math.max(...values);
+   const padding=Math.max(1,(high-low)*.15);const ymin=low-padding,ymax=high+padding;
+   const x=(year:number)=>45+(year-xmin)/Math.max(1,xmax-xmin)*670;
+   const y=(value:number)=>239-(value-ymin)/Math.max(1,ymax-ymin)*195;
+   for(let i=0;i<=4;i++){
+    const level=ymin+(ymax-ymin)*i/4;
+    const grid=el('line');grid.setAttribute('class','chart-grid');
+    for(const [key,value] of Object.entries({x1:45,x2:715,y1:y(level),y2:y(level)}))
+     grid.setAttribute(key,String(value));
+    svg.append(grid);
+    const label=el('text');label.setAttribute('x','4');label.setAttribute('y',String(y(level)+4));
+    label.setAttribute('class','chart-axis');label.textContent=formatValue(level,1);svg.append(label);
+   }
+   const years=[xmin,Math.round((xmin+xmax)/2),xmax];
+   for(const yr of [...new Set(years)]){
+    const label=el('text');label.setAttribute('x',String(x(yr)));label.setAttribute('y','269');
+    label.setAttribute('class','chart-axis');label.setAttribute('text-anchor','middle');label.textContent=String(yr);svg.append(label);
+   }
+   // Gaps do not become invented connecting lines.
+   let segment:string[]=[];
+   const flush=()=>{
+    if(!segment.length)return;
+    const path=el('path');path.setAttribute('class','chart-line');
+    path.setAttribute('d',segment.join(' '));svg.append(path);segment=[];
+   };
+   for(const r of rows){
+    if(r.value===null||!Number.isFinite(r.value)){flush();continue;}
+    segment.push((segment.length?'L':'M')+x(r.year).toFixed(1)+' '+y(r.value).toFixed(1));
+    const dot=el('circle');dot.setAttribute('class','chart-points');
+    dot.setAttribute('cx',String(x(r.year)));dot.setAttribute('cy',String(y(r.value)));
+    dot.setAttribute('r',eligible(r,metric)?'4':'3');dot.setAttribute('opacity',eligible(r,metric)?'1':'.35');
+    const tip=el('title');tip.textContent=r.year+' · '+formatValue(r.value,1)+' '+descriptions[metric].unit+
+     ' · '+r.validDays+'/'+r.elapsedDays+' dnů';dot.append(tip);svg.append(dot);
+   }
+   flush();
+   graph.append(svg);
+  };
+  const refresh=async()=>{
+   const ticket=++epoch;
+   const metric=select.value as Metric;
+   if(!(metric in descriptions))return;
+   status.textContent='Načítám konsolidované roční souhrny…';status.dataset.state='';
+   try{
+    const result=await getAnnualMatrix(metric,controller.signal);
+    if(controller.signal.aborted||ticket!==epoch)return;
+    const rows=result.years.sort((a,b)=>a.year-b.year);
+    const trendRows=rows.filter(r=>eligible(r,metric));
+    const slope=theilSen(trendRows.map(r=>({year:r.year,value:r.value!})));
+    const unit=descriptions[metric].unit;
+    set('[data-trend-valid]',String(trendRows.length));
+    set('[data-trend-samples]',String(rows.filter(r=>r.value!==null).length));
+    set('[data-trend-slope]',slope===null?'Nelze určit':
+     (slope>0?'+':'')+formatValue(slope*10,2)+' '+unit);
+    set('[data-trend-method]',slope===null?
+     'K popisnému sklonu chybí alespoň osm dostatečně pokrytých dokončených let v rozpětí 10 let. Chybějící souhrny nedoplňujeme.':
+     'Theil–Senův sklon z '+trendRows.length+' dokončených let; popisný odhad, nikoliv průkazný klimatický trend. Stanice a její senzory mohly během historie projít změnami.');
+    body.replaceChildren();
+    for(const row of [...rows].reverse()){
+     const tr=body.insertRow();const good=eligible(row,metric);
+     for(const value of [
+      String(row.year),
+      row.value===null?'—':formatValue(row.value,1)+' '+unit,
+      row.validDays+' / '+row.elapsedDays,
+      row.timeCoverageFraction===null?'nezjištěno':
+       Math.round(row.timeCoverageFraction*100)+' %',
+      row.periodStatus==='in_progress'?'Probíhá':good?'Zařazeno do výpočtu':'Neúplné / orientační'
+     ])tr.insertCell().textContent=value;
+    }
+    draw(rows,metric);
+    status.textContent='Originální roční souhrny · bez konečné QC';
+    status.dataset.state='warning';
+   }catch{
+    if(controller.signal.aborted||ticket!==epoch)return;
+    graph.replaceChildren();body.replaceChildren();
+    const row=body.insertRow();row.insertCell().colSpan=5;row.cells[0]!.textContent='Data nelze načíst.';
+    status.textContent='Roční statistiky nejsou dostupné';status.dataset.state='error';
+    for(const key of ['[data-trend-valid]','[data-trend-samples]','[data-trend-slope]'])set(key,'—');
+   }
+  };
+  form.addEventListener('submit',e=>{e.preventDefault();void refresh();});
+  void refresh();
+  document.addEventListener('astro:before-swap',()=>controller.abort(),{once:true});
+ }
+</script>
