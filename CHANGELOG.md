@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-07 – návrh: automatické barvy podle slunce
+- Tři režimy vzhledu: Automaticky (výchozí podle astronomického východu/západu v Loučce), trvale světlý, trvale tmavý. Původní volby z localStorage zachovány.
+- Jedna sdílená funkce pro pražské civilní datum v astronomickém modulu; přepínání i na otevřené kartě, při návratu do popředí a po obnově stránky.
+- Regresní testy letního/zimního dne, hranice slunce, CET/CEST, ručního přepínání i výchozího režimu. Vizuální smoke je pro srovnatelnost nastaven na světlý.
+- Žádné HTTP/SQL požadavky pro motiv, žádný zásah do produkčního WeeWX, GW3000 nebo LXC.
+
+
 ## 2026-11-07 – návrh: WCAG audit ve tmavém motivu
 - Rozšíření testu 11 tras ze 22 na 44 kombinací (desktop/mobil × světlý/tmavý motiv), včetně stavu otevřeného menu klimatologie.
 - Explicitně se ověřuje přepnutí motivu před spuštěním axe-core; těmto testům nestačí vložit tmavou třídu až po renderu.
