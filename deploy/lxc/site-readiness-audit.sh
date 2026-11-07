@@ -21,6 +21,9 @@ checked_json(){
  return 0
 }
 section "Build and public deployment"
+if [[ -r /srv/loucka-preview/.pending-commit ]]; then
+ warning "A build is staged but not yet published (waiting for healthy API)"
+fi
 if [[ -r /srv/loucka-preview/current/deployment.json ]]; then
  jq -c '{branch,commit,deployedAt}' /srv/loucka-preview/current/deployment.json || true
 else critical 'staging deployment metadata missing';fi
