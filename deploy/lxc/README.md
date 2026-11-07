@@ -88,6 +88,12 @@ Původní Astro HMR vývoj zůstává oddělený: v důvěryhodné LAN jako louc
 
 Tyto příkazy prováděj **až po schválení PR**; mezi `git pull` a dokončením instalace zůstává timer vypnutý. Před vypnutím/zapnutím timeru ověř `systemctl cat loucka-preview-sync.service`, že načítá správný root-owned helper. Při selhání se kandidát ponechá v `/srv/loucka-preview/.pending-commit` a veřejný `current` se nepřepne. Backend má stále vlastní restartovací strategii a při chybě nové API revize může vyžadovat ruční rollback. Předchozí frontend release se nemaže.
 
+## Bezpečnostní hlavičky testovacího webu
+
+Interní Nginx nastavuje na HTML odpovědích `X-Robots-Tag: noindex, nofollow`, `X-Content-Type-Options: nosniff` a `Referrer-Policy: strict-origin-when-cross-origin`. U fingerprintovaných assetů, API a `deployment.json` přidává `nosniff` přímo v odpovídajících `location`, protože `add_header` se při přepsání uvnitř `location` z nadřazené úrovně automaticky nedědí. Stav ověř pomocí `curl -I` na skutečné veřejné HTTPS doméně; vnější NPM může hlavičky změnit.
+
+`HSTS` musí konfigurovat vnější HTTPS proxy, nikoli interní HTTP na portu 8080. Přísnou `Content-Security-Policy` nasazuj až po ověření kamerových zdrojů, map, ECharts a browser konzole v report-only režimu. **Zákaz indexace platí pouze pro staging Nginx config** a nesmí se přenést bez úprav na finální produkční web.
+
 ## IP adresy klientů za Nginx Proxy Managerem
 
 Ve výchozím stavu je místní limit `5r/s` vztažen na `$remote_addr`; pokud LXC vidí jen IP NPM, **limitují se všichni návštěvníci dohromady**. Konfigurace nyní podporuje bezpečné přepsání skutečné IP prostřednictvím `X-Forwarded-For`, ale **jen když je přesná IP důvěryhodného NPM explicitně povolena** na stagingu:
