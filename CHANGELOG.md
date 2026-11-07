@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-07 – návrh: staging publikovat až po readiness a bezpečný real IP
+- Sestavení Astro ukládá pouze kandidáta `.pending-commit`; root-owned aktivační helper po ověření API readiness publikuje frontend atomicky jako neprivilegovaný uživatel. Při selhání API zůstává poslední zveřejněný frontend, nikoliv však garantovaný automatický rollback backendu.
+- Nginx může přijmout X-Forwarded-For pouze od explicitně trusted NPM IP z lokálního configu; do instalace přesné trusted IP zůstává původní společný limit 5r/s. Neotvírat port 8080 přímo do internetu.
+- Instalace je dvoukroková: nejprve aktualizovat root-owned helper, teprve potom schválit nasazení. CI kontroluje základní kontrakt pořadí publikace a Bash/Nginx syntaxi.
+- Změna pouze na stagingu, žádné SQL zápisy nebo zásah do GW3000 či produkčního WeeWX. Ověření reálného nasazení zbývá.
+
 Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místním kalendáři; commit v `main` automaticky neznamená, že je už nasazen na testovacím webu.
 
 ## 2026-11-05
