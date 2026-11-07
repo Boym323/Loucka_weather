@@ -157,7 +157,13 @@ try{
       document.querySelector('[data-extreme-value="minTemp"]')?.textContent?.includes('-18,2')
       ,null,{timeout:12000});
      assert.equal(await page.locator('[data-extreme-timeline] tr').count(),4);
-     await page.locator('[data-extreme-timeline] [data-extreme-metric="minTemp"]').click();
+     assert.equal(await page.locator('[data-extreme-cards] li').count(),4);
+     const onPhone=viewport.width<650;
+     const cardsMode=await page.locator('[data-extreme-cards]').evaluate(
+      element=>getComputedStyle(element).display);
+     assert.equal(cardsMode,onPhone?'grid':'none');
+     await page.locator((onPhone?'[data-extreme-cards]':'[data-extreme-timeline]')+
+      ' [data-extreme-metric="minTemp"]').click();
      await page.waitForFunction(()=>
       document.querySelector('[data-extreme-day-status]')?.textContent?.includes('platných intervalů'),
       null,{timeout:12000});
@@ -214,6 +220,8 @@ try{
      assert.equal(await page.locator('[data-yearbook-rain-chart] svg').count(),1);
      assert.equal(await page.locator('[data-yearbook-temp-chart] .atlas-chart-temp-bar').count(),12);
      assert.equal(await page.locator('[data-yearbook-rain-chart] .atlas-chart-rain-bar').count(),12);
+     assert.equal((await page.locator('[data-yearbook-rain-chart] .chart-axis').first().textContent())?.trim(),'0',
+      'rainfall visual scale starts at zero, not negative precipitation');
      await page.emulateMedia({media:'print'});
      assert.equal(await page.locator('.site-header').evaluate(e=>getComputedStyle(e).display),'none');
      assert.equal(await page.locator('.atlas-yearbook').evaluate(e=>getComputedStyle(e).display)!=='none',true);
@@ -221,6 +229,9 @@ try{
     }
     const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
     assert.ok(overflow<=2,path+' horizontal overflow '+overflow+' at '+viewport.width);
+    // Reset scroll position after interactive click so sticky header is not
+    // frozen halfway down a full-page screenshot.
+    await page.evaluate(()=>window.scrollTo({top:0,left:0,behavior:'instant'}));
     // Keep reviewable captures of every atlas chapter, not just the landing.
     await page.screenshot({path:target+'/atlas-'+
      (path==='/klimatologie/'?'index':path.split('/').filter(Boolean).at(-1))+
