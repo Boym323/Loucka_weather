@@ -1,4 +1,4 @@
-import {pragueCivilDate, solarDay} from './astronomy';
+import {pragueCivilDate, solarDay} from './astronomy.ts';
 
 export type ThemePreference='auto'|'light'|'dark';
 export type ThemeAppearance='light'|'dark';
