@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-07 – návrh: automatizovaný WCAG audit všech stránek
+- CI přidává axe-core 4.14.0 k Playwright a kontroluje 11 veřejných tras na 390/1440 px, včetně otevřené mobilní navigace klimatologie.
+- Výstup do `wcag-browser-audit` rozlišuje závažná blokující porušení a ostatní zjištění; automatizovaný audit není úplné ověření WCAG ani Safari/VoiceOver.
+- Kontrola je na izolovaném lokálním Astro preview, nemění meteorologická měření, SQL data, API ani GW3000.
+
+
 ## 2026-11-07 – návrh: přesná dokumentace a kontrola závislostí
 - `AGENTS.md`, `README.md` a vstupní `docs/PROJECT_CONTEXT.md` rozlišují staging a produkční veřejný web; historické PR #2 a #4 jsou již sloučené, issue #36 uzavřené a issue #55 stále otevřené.
 - Přidaný týdenní GitHub Actions audit produkčních npm závislostí (API a frontend), spouštěný rovněž při změně lockfile; hlásí `high` a `critical` nálezy, automaticky neopravuje balíčky.
