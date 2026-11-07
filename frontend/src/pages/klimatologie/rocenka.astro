@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import AtlasNav from '../../features/climate/AtlasNav.astro';
+import YearbookCharts from '../../features/climate/YearbookCharts.astro';
 const currentYear=Number(new Intl.DateTimeFormat('en-GB',{
  timeZone:'Europe/Prague',year:'numeric'
 }).format(new Date()));
@@ -62,6 +63,7 @@ const months=['Leden','Únor','Březen','Duben','Květen','Červen','Červenec',
       </tbody>
      </table>
     </div>
+    <YearbookCharts />
    </section>
    <section aria-labelledby="yearbook-story">
     <div class="chapter"><h3 id="yearbook-story">III. Charakter roku</h3></div>
@@ -82,6 +84,7 @@ const months=['Leden','Únor','Březen','Duben','Květen','Červen','Červenec',
  import {pragueMidnightIso} from '../../shared/domain/statistics';
  import {monthlyRollups} from '../../shared/domain/climate-atlas';
  import {formatValue} from '../../shared/domain/metrics';
+ import {drawYearbookBars,yearbookPlotData} from '../../shared/ui/yearbook-charts';
  const root=document.querySelector<HTMLElement>('[data-atlas-yearbook]');
  if(root){
   const form=root.querySelector<HTMLFormElement>('[data-yearbook-form]')!;
@@ -106,8 +109,15 @@ const months=['Leden','Únor','Březen','Duben','Květen','Červen','Červenec',
   };
   const assemble=async()=>{
    const year=Number(yearSelect.value),ticket=++generation;
-   if(!Number.isInteger(year)||year<2009||year>=new Date().getFullYear())return;
+   const yearInLoucka=Number(new Intl.DateTimeFormat('en-GB',{
+    timeZone:'Europe/Prague',year:'numeric'
+   }).format(new Date()));
+   if(!Number.isInteger(year)||year<2009||year>=yearInLoucka)return;
    print.disabled=true;status.dataset.state='';status.textContent='Načítám originální podklady roku '+year+'…';
+   for(const selector of ['[data-yearbook-temp-chart]','[data-yearbook-rain-chart]']){
+    const holder=root.querySelector<HTMLElement>(selector);
+    if(holder)holder.textContent='Načítám měsíční souhrny…';
+   }
    try{
     // Five bounded, sequential read-only API requests; no unbounded per-month fan-out.
     const tempMatrix=await getAnnualMatrix('outTemp',ctrl.signal);
@@ -124,6 +134,10 @@ const months=['Leden','Únor','Březen','Duben','Květen','Červen','Červenec',
     summary(t,'temperature','°C');summary(r,'rain','mm');summary(w,'wind','m/s');
     const tm=monthlyRollups(dailyTemp.points,year,'mean');
     const rm=monthlyRollups(dailyRain.points,year,'sum');
+    const tempChart=root.querySelector<HTMLElement>('[data-yearbook-temp-chart]');
+    const rainChart=root.querySelector<HTMLElement>('[data-yearbook-rain-chart]');
+    if(tempChart)drawYearbookBars(tempChart,yearbookPlotData(tm),'temperature');
+    if(rainChart)drawYearbookBars(rainChart,yearbookPlotData(rm),'rain');
     tbody.replaceChildren();
     for(let i=0;i<12;i++){
      const temp=tm[i]!,rain=rm[i]!;
@@ -170,6 +184,10 @@ const months=['Leden','Únor','Březen','Duben','Květen','Červen','Červenec',
    }catch{
     if(ctrl.signal.aborted||ticket!==generation)return;
     status.textContent='Ročenku nelze sestavit: chybějí zdrojová data. PDF z neúplného načtení nevytváříme.';
+    for(const selector of ['[data-yearbook-temp-chart]','[data-yearbook-rain-chart]']){
+     const holder=root.querySelector<HTMLElement>(selector);
+     if(holder)holder.textContent='Graf není bez zdrojových měření dostupný.';
+    }
     status.dataset.state='error';print.disabled=true;
    }
   };
