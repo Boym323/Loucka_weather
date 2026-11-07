@@ -2,6 +2,23 @@
 
 **Aktuální vývoj: 1. 11. 2026.** Web vzniká podle uživatelem schváleného devítipanelového tmavého vizuálního návrhu. Testovací náhled: https://dev.pocasi-loucka.eu/. Není to veřejná produkce. Všechny změny do main se sestavují a nasazují přes LXC automaticky; přesná zveřejněná revize je vidět ve webové patičce a v /deployment.json.
 
+## Vzhled: automatický den/noc podle Loučky (7. 11. 2026)
+
+V horní liště je třípolohová volba `Automaticky / Světlý / Tmavý`. Nová
+instalace bez nastavení používá `Automaticky`, jehož den/noc se řídí
+východem a západem Slunce pro Loučku (49.170035° N, 17.876076° E) ze
+stejné funkce `solarDay()` jako karta „Slunce a Měsíc“. Intervaly jsou
+počítané v čase `Europe/Prague`; změny CET/CEST jsou pokryty testy.
+Otevřený web průběžně přehodnocuje stav, po probuzení karty ihned, bez
+HTTP dotazů, geolokace, přístupu ke GW3000 či databázi.
+
+Ruční volby zůstávají uloženy pod existujícím klíčem `loucka-theme`
+(`light`/`dark`), `auto` je nová hodnota; staré ruční volby se
+nepřepisují. Globální grafy dostávají událost `loucka:theme-change`
+jen pokud se reálně změní světlá/tmavá paleta. Kvůli konzistentním
+screenshotům prohlížečové regresní testy explicitně volí světlý motiv;
+samostatné regresní testy ověřují automatický přechod při východu/západu.
+
 ## Automatická kontrola přístupnosti – 7. 11. 2026
 
 GitHub CI v samostatném **lokálním Astro preview** používá Playwright + pinned axe-core 4.14.0 a kontroluje všech 11 tras na šířkách 390 a 1440 px **ve světlém i tmavém motivu** (celkem 44 kombinací). Na mobilní klimatologii otevře i navigační menu. Kontroluje pravidla WCAG 2.0/2.1/2.2 úrovní A a AA. Každý běh ukládá strukturovaný artefakt `wcag-browser-audit` s identifikátory pravidel, elementy a popisem porušení. Kritická a závažná porušení znamenají selhání CI; mírnější nálezy se reportují bez automatického schválení.
@@ -36,8 +53,11 @@ snímku zůstává explicitně neověřená.
 Vizuální implementace používá Astro a existující Fastify API. Nové rozvržení úvodu
 je v `src/pages/index.astro`, design tokeny a rozvržení v
 `src/styles/atlas-minimal.css` (načítá se za `global.css` a
-`refinement.css`). Výchozí motiv je světlý, uložený uživatelský tmavý
-motiv zůstává zachován. `public/atlas-hills.svg` je deklarovaná ilustrace,
+`refinement.css`). Výchozí motiv je **Automaticky** – světlý mezi vypočteným východem a západem
+Slunce v Loučce, jinak tmavý. Volby **Světlý** a **Tmavý** jsou trvalé a
+původní uložený tmavý motiv zůstává zachován. Výpočet používá přesný okamžik
+z browseru a datum v časovém pásmu `Europe/Prague`; jde o přibližný astronomický
+model (terén a počasí mohou viditelné světlo ovlivnit), nikoli měření senzorem. `public/atlas-hills.svg` je deklarovaná ilustrace,
 nikoliv aktuální fotografie.
 
 Úvod se skládá z modulů `CurrentPanel`, `DailySummaryStrip`,
