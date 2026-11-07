@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import AtlasNav from '../../features/climate/AtlasNav.astro';
+import SeasonRanking from '../../features/climate/SeasonRanking.astro';
 import {climateSeasonLabels} from '../../shared/domain/climate-atlas.ts';
 const currentYear=Number(new Intl.DateTimeFormat('en-GB',{
  timeZone:'Europe/Prague',year:'numeric'
@@ -54,6 +55,7 @@ const years=Array.from({length:Math.max(1,currentYear-2008)},(_,i)=>currentYear-
    </div>
    <p class="source-note" data-season-method>Pro zobrazení rozdílu požadujeme platné oboustranné záznamy alespoň u 80 % kalendářních dní. Nulové srážky jsou platná nula, neznámé záznamy zůstávají prázdné.</p>
   </section>
+  <SeasonRanking />
   <section class="atlas-panel" aria-labelledby="season-chart-head">
    <h2 id="season-chart-head">Denní teplotní průběhy</h2>
    <p>Dvě sezóny zarovnané podle měsíce a dne; 29. února se nezaměňuje s 1. březnem. Přerušení čáry představuje chybějící údaj.</p>
