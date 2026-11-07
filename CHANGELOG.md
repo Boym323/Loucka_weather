@@ -6,6 +6,23 @@
 - Instalace je dvoukroková: nejprve aktualizovat root-owned helper, teprve potom schválit nasazení. CI kontroluje základní kontrakt pořadí publikace a Bash/Nginx syntaxi.
 - Změna pouze na stagingu, žádné SQL zápisy nebo zásah do GW3000 či produkčního WeeWX. Ověření reálného nasazení zbývá.
 
+## 2026-11-07 – návrh: přesná dokumentace a kontrola závislostí
+- `AGENTS.md`, `README.md` a vstupní `docs/PROJECT_CONTEXT.md` rozlišují staging a produkční veřejný web; historické PR #2 a #4 jsou již sloučené, issue #36 uzavřené a issue #55 stále otevřené.
+- Přidaný týdenní GitHub Actions audit produkčních npm závislostí (API a frontend), spouštěný rovněž při změně lockfile; hlásí `high` a `critical` nálezy, automaticky neopravuje balíčky.
+- Přidán Dependabot pro obě npm části a GitHub Actions, pouze vytváří návrhy PR; neprovádí automatické sloučení ani deploy.
+- Žádné změny meteorologických měření, databází, API runtime nebo GW3000.
+
+## 2026-11-07 – návrh: lepší mobilní orientace v klimatologii
+- Na mobilu místo dlouhé vodorovně posouvané lišty přidán kompaktní rozbalovací seznam všech deseti sekcí. Výběr kotvy menu automaticky zavře, hlavní meteorologická data i původní URL zůstávají stejné.
+- Na desktopu zůstává původní horizontální navigace. Pro mobil doplněny větší klikací plochy a odsazení cílových sekcí od lepivé hlavičky.
+- Mobilní dock sjednocuje název sekce na „Klima“; izolovaný Chromium regresní test kontroluje otevření, deset odkazů a zavření menu.
+- Žádná změna dat, API, WeeWX, historické QC ani GW3000. Čeká se na CI ověření.
+
+## 2026-11-07 – návrh: důsledná vizuální kontrola klimatologie
+- Veřejný Playwright smoke nově odscrolluje ke grafu teplot všech roků i ke dvěma heatmapám a vyžaduje dokončené načtení originálních API dat, vykreslený SVG graf a skutečně naplněné dny; samotné HTML kontejnery již nestačí.
+- Celostránkové screenshoty vznikají až po těchto kontrolách. Selhání se hlásí s diagnostikou stavů, nikoliv jako falešně úspěšný vizuální test.
+- Změna nemění API, WeeWX, původní MariaDB, GW3000 ani záznamy měření. Úspěšný živý CI běh je nutné teprve potvrdit.
+
 Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místním kalendáři; commit v `main` automaticky neznamená, že je už nasazen na testovacím webu.
 
 ## 2026-11-05

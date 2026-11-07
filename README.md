@@ -1,13 +1,13 @@
 # Loučka Weather
 
-Moderní meteorologický portál pro **https://pocasi-loucka.eu/**. **Stav 1. 11. 2026: rozpracovaný Astro frontend a částečné Fastify API běží na testovacím webu; veřejná produkce nahrazena nebyla.** Původní WeeWX + Belchertown běží dál.
+Moderní meteorologický portál pro **https://pocasi-loucka.eu/**. **Stav ověřený 6. 11. 2026: testovací Astro portál a Fastify API na `dev.pocasi-loucka.eu` prošly veřejným Chromium smoke pro 11 tras / desktop a mobil; na webu byl commit `c8a5ab11`. Není to automatické potvrzení stavu 7. 11. ani přepnutí původního produkčního webu.** Původní WeeWX + Belchertown běží dál.
 
 > **Pro nový chat / Codex / jiné AI:** začni v [docs/PROJECT_CONTEXT.md](docs/PROJECT_CONTEXT.md), následně načti [AGENTS.md](AGENTS.md). Základní dokumenty jsou už v **main**, nikoliv pouze ve větvi benchmarků.
 
 ## Návrh řešení (čeká na finální schválení)
 
 - **Frontend:** Astro + TypeScript, grafy ECharts, preferovat statické stránky a kvalitní mobilní UX.
-- **Datová vrstva v1:** předběžně **Node.js + Fastify + TypeScript**, po ověření reálného provozu, Matomo a šesti jazyků. Go je alternativou pro náročné historické endpointy, Rust případným dávkovým workerem – **zatím je nenasazovat bez prokázané potřeby**.
+- **Datová vrstva stagingu:** nasazený **Node.js 24 + Fastify + TypeScript**; závěrečné schválení produkční architektury a migrace původního webu zůstává otevřené. Srovnání proběhlo podle reálného provozu, Matomo a šesti jazyků. Go je alternativou pro náročné historické endpointy, Rust případným dávkovým workerem – **zatím je nenasazovat bez prokázané potřeby**.
 - **Zdroje:** Ecowitt GW3000 → stávající WeeWX → historická MariaDB. Aplikace pracuje vůči původní DB **read-only**. Rekonstruované hodnoty spravovat zvlášť přes auditované postupy a jejich provenienci.
 - **Datové dotazy:** krátké aktualizace aktuálního počasí; dlouhé historie z cache/agregovaných časových řad; inkrementální přepočítávání dotčených statistik.
 - **Živý režim:** sdílený MQTT/WebSocket feed, nikoli opakovaný SQL dotaz pro každý prohlížeč.
@@ -40,9 +40,9 @@ Referenční implementace a reporty šestijazyčného benchmarku jsou v [`benchm
 - **Žádné plné load testy na živé MariaDB.** Historický benchmark proti produkci už jednou proběhl omylem – hodnotu `isolated_copy=true` v JSON nelze považovat za důkaz izolace.
 - Veřejný repozitář **nesmí obsahovat syrové access logy, osobní IP adresy návštěvníků, interní adresy, přístupové údaje nebo URL kamer**. Publikovány jsou pouze agregáty.
 - Chybějící meteodata nejsou `0`; opravené/rekonstruované hodnoty musí být jasně označené a dohledatelné.
-- Před prvním nasazením ověřit bezpečnost, read-only přístup aplikace, správnost numeriky, přechody CET/CEST a HTTP/MQTT zátěž na stagingu.
+- Před přepnutím **veřejné produkce** ověřit bezpečnost, read-only přístup aplikace, správnost numeriky, CET/CEST a zátěž na stagingu. Staging již běží; úspěšné CI neprokazuje provozní bezpečnost.
 
-**Pozor:** README před audity uvádělo jako první kandidát datové vrstvy Python. Tento návrh je v roce 2026 nahrazen **pracovní preferencí Node.js/Fastify** popsanou v [ADR](docs/ARCHITECTURE_DECISION_2026-10-31.md), nikoli hotovým schválením.
+**Pozor:** Historické ADR popisuje tehdy předběžnou preferenci Node.js/Fastify; na stagingu již běží. Rozhodnutí o produkční migraci je samostatné a původní WeeWX zůstává bez zásahu.
 
 ## Doplňující historické audity a specifikace (PR #1)
 - [Rozhodovací log a původní varianty](DECISIONS.md) – historické závěry doplněné o současný pracovní směr Fastify.
