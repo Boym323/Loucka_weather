@@ -21,6 +21,13 @@ jobs:
           bash -n deploy/lxc/auto-deploy-preview.sh
           bash -n deploy/lxc/site-readiness-audit.sh
           bash -n deploy/lxc/loucka-preview-api-activate.sh
+          # A new static release may only be published by the post-build helper.
+          grep -Fq 'publish_pending() {' deploy/lxc/loucka-preview-api-activate.sh
+          grep -Fq 'pending_tmp=' deploy/lxc/auto-deploy-preview.sh
+          if grep -Fq 'mv -Tf "$WEB/.current.next" "$WEB/current"' deploy/lxc/auto-deploy-preview.sh; then
+            echo 'ERROR: the unprivileged build publishes before API readiness' >&2
+            exit 1
+          fi
           grep -Fqx 'ExecStart=/usr/bin/node dist/src/main.js' deploy/lxc/loucka-weather-api.service
           grep -Fqx 'ExecStartPost=+/usr/local/libexec/loucka-preview-api-activate.sh' deploy/lxc/loucka-preview-sync.service
       - name: Validate collector and local CAP scope tests
@@ -37,3 +44,4 @@ jobs:
           sudo apt-get install -y -qq nginx
           sudo cp deploy/lxc/nginx-preview.conf /etc/nginx/conf.d/loucka-preview.conf
           sudo nginx -t
+          grep -Fq 'X-Robots-Tag "noindex, nofollow"' deploy/lxc/nginx-preview.conf
