@@ -14,7 +14,11 @@ try{
   const context=await browser.newContext({viewport:{width,height:900},deviceScaleFactor:1});
   const page=await context.newPage();
   // Geometry audit must be deterministic regardless of Loučka sunrise/sunset.
-  await page.addInitScript(()=>localStorage.setItem('loucka-theme','light'));
+  await page.addInitScript(()=>{
+   // Seed only the first navigation; explicit manual switches must survive reload.
+   if(localStorage.getItem('loucka-theme')===null)
+    localStorage.setItem('loucka-theme','light');
+  });
 
   let loaded=false;
   for(let attempt=0;attempt<20;attempt++){
