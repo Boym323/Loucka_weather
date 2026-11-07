@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-07 – návrh: lepší mobilní orientace v klimatologii
+- Na mobilu místo dlouhé vodorovně posouvané lišty přidán kompaktní rozbalovací seznam všech deseti sekcí. Výběr kotvy menu automaticky zavře, hlavní meteorologická data i původní URL zůstávají stejné.
+- Na desktopu zůstává původní horizontální navigace. Pro mobil doplněny větší klikací plochy a odsazení cílových sekcí od lepivé hlavičky.
+- Mobilní dock sjednocuje název sekce na „Klima“; izolovaný Chromium regresní test kontroluje otevření, deset odkazů a zavření menu.
+- Žádná změna dat, API, WeeWX, historické QC ani GW3000. Čeká se na CI ověření.
+
 Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místním kalendáři; commit v `main` automaticky neznamená, že je už nasazen na testovacím webu.
 
 ## 2026-11-05
