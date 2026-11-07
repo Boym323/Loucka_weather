@@ -170,3 +170,11 @@
  .wind-compass-panel .wind-metric-v2{border:1px solid CanvasText!important}
  .wind-dial-v2 .wind-pointer-head{fill:Highlight}
 }
+
+/* The old Evergreen hero shipped an !important pale dial for BOTH themes.
+   Use matching specificity and later cascade order to keep the v2 dial dark
+   at night. This fixes low-contrast cardinal letters on the original pale fill. */
+:root[data-theme="light"] .evergreen-hero .wind-hero .wind-gauge-v2,
+:root[data-theme="dark"] .evergreen-hero .wind-hero .wind-gauge-v2{
+ background:radial-gradient(circle,var(--wind-v2-dial) 40%,var(--wind-v2-tile) 100%)!important;
+}
