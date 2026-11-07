@@ -1,0 +1,155 @@
+---
+---
+<section class="atlas-panel atlas-extreme-detail" data-extreme-detail
+ aria-labelledby="extreme-detail-title">
+ <p class="atlas-eyebrow">Historický den / podrobné měření</p>
+ <h2 id="extreme-detail-title">Průběh vybraného rekordního dne</h2>
+ <p>U záznamu v časové ose zvol „Průběh dne“. Zobrazíme skutečná
+  archivní intervalová měření příslušné veličiny v místním čase
+  Loučky, nikoli model nebo dopočítané hodnoty.</p>
+ <p class="atlas-status" data-extreme-day-status role="status">
+  Vyber den z časové osy výše.
+ </p>
+ <div class="atlas-chart" data-extreme-day-chart role="img"
+  aria-label="Intervalový průběh vybraného historického dne">
+  <p class="source-note">Čeká na výběr archivního dne.</p>
+ </div>
+ <p class="source-note" data-extreme-day-meta>
+  Denní rekordy jsou předběžné, čas extrému nelze z denního souhrnu
+  bez dalšího ověření potvrdit. Intervalový graf je pouze kontext.
+ </p>
+</section>
+<script>
+ import {getHistoryInterval} from '../../shared/api/client';
+ import {pragueMidnightIso,nextDate} from '../../shared/domain/statistics';
+ import {formatValue} from '../../shared/domain/metrics';
+ const root=document.querySelector<HTMLElement>('[data-extreme-detail]');
+ const timeline=document.querySelector<HTMLElement>('[data-extreme-timeline]');
+ if(root&&timeline){
+  const chart=root.querySelector<HTMLElement>('[data-extreme-day-chart]')!;
+  const status=root.querySelector<HTMLElement>('[data-extreme-day-status]')!;
+  const meta=root.querySelector<HTMLElement>('[data-extreme-day-meta]')!;
+  const ctrl=new AbortController();
+  let selected=0;
+  const metrics:Record<string,{metric:string;name:string;unit:string;kind:'line'|'bar'}>={
+   minTemp:{metric:'outTemp',name:'Teplota',unit:'°C',kind:'line'},
+   maxTemp:{metric:'outTemp',name:'Teplota',unit:'°C',kind:'line'},
+   maxDailyRain:{metric:'rain',name:'Intervalové srážky',unit:'mm',kind:'bar'},
+   maxWindGust:{metric:'windGust',name:'Náraz větru',unit:'m/s',kind:'line'}
+  };
+  const ns='http://www.w3.org/2000/svg';
+  const el=(tag:string)=>document.createElementNS(ns,tag);
+  const draw=(points:{startTime:string;value:number|null;quality:string}[],
+   from:string,to:string,kind:'line'|'bar',label:string,unit:string)=>{
+   chart.replaceChildren();
+   const a=Date.parse(from),b=Date.parse(to);
+   const valid=points.map(p=>({...p,time:Date.parse(p.startTime)}))
+    .filter(p=>Number.isFinite(p.time)&&p.time>=a&&p.time<b&&
+     p.value!==null&&Number.isFinite(p.value)&&
+     p.quality!=='missing'&&p.quality!=='suspect');
+   if(valid.length===0){
+    chart.textContent='Pro tento den nejsou dostupná platná intervalová měření.';
+    return 0;
+   }
+   const values=valid.map(p=>p.value as number);
+   let low=Math.min(kind==='bar'?0:Math.min(0,...values),...values);
+   let high=Math.max(0,...values);
+   if(low===high)high=low+1;
+   const padding=(high-low)*.1;low-=padding;high+=padding;
+   const x=(time:number)=>43+(time-a)/(b-a)*673;
+   const y=(v:number)=>206-(v-low)/(high-low)*180;
+   const svg=el('svg');svg.setAttribute('viewBox','0 0 760 255');
+   svg.setAttribute('role','img');
+   svg.setAttribute('aria-label',label+' – podložený intervalový průběh');
+   const title=el('title');
+   title.textContent=label+' '+unit+' – skutečný archiv bez dokončené QC';
+   svg.append(title);
+   for(let i=0;i<=4;i++){
+    const v=low+(high-low)*i/4;
+    const line=el('line');
+    for(const [k,val] of Object.entries({x1:43,x2:716,y1:y(v),y2:y(v)}))
+     line.setAttribute(k,String(val));
+    line.setAttribute('class','chart-grid');svg.append(line);
+    const text=el('text');text.setAttribute('class','chart-axis');
+    text.setAttribute('x','3');text.setAttribute('y',String(y(v)+4));
+    text.textContent=formatValue(v,1);svg.append(text);
+   }
+   const timeFormat=new Intl.DateTimeFormat('cs-CZ',{
+    hour:'2-digit',minute:'2-digit',timeZone:'Europe/Prague'
+   });
+   for(let i=0;i<=4;i++){
+    const moment=a+(b-a)*i/4;
+    const label=el('text');label.setAttribute('class','chart-axis');
+    label.setAttribute('x',String(x(moment)));label.setAttribute('y','237');
+    label.setAttribute('text-anchor','middle');
+    label.textContent=timeFormat.format(new Date(moment));svg.append(label);
+   }
+   if(kind==='bar'){
+    const zero=y(0);
+    for(const p of valid){
+     const value=p.value as number;
+     if(value<0)continue;
+     const bar=el('rect');
+     bar.setAttribute('x',String(x(p.time)-1.2));
+     bar.setAttribute('y',String(Math.min(y(value),zero)));
+     bar.setAttribute('width','2.4');
+     bar.setAttribute('height',String(Math.max(1,Math.abs(y(value)-zero))));
+     bar.setAttribute('fill','var(--blue)');
+     const detail=el('title');detail.textContent=timeFormat.format(new Date(p.time))+
+      ' · '+formatValue(value,1)+' '+unit;bar.append(detail);svg.append(bar);
+    }
+   }else{
+    let segment:string[]=[],previous:number|null=null;
+    const flush=()=>{
+     if(!segment.length)return;
+     const path=el('path');path.setAttribute('class','chart-line');
+     path.setAttribute('d',segment.join(' '));svg.append(path);segment=[];
+    };
+    for(const p of points){
+     const time=Date.parse(p.startTime);
+     if(!Number.isFinite(time)||p.value===null||!Number.isFinite(p.value)||
+      p.quality==='missing'||p.quality==='suspect'||time<a||time>=b){
+      flush();previous=null;continue;
+     }
+     if(previous!==null&&time-previous>900000)flush();
+     segment.push((segment.length?'L':'M')+x(time).toFixed(1)+' '+
+      y(p.value).toFixed(1));
+     previous=time;
+    }
+    flush();
+   }
+   chart.append(svg);
+   return valid.length;
+  };
+  timeline.addEventListener('click',event=>{
+   const button=(event.target as HTMLElement).closest<HTMLButtonElement>('[data-extreme-day]');
+   if(!button)return;
+   const date=button.dataset.extremeDay??'',key=button.dataset.extremeMetric??'';
+   if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!(key in metrics))return;
+   const metric=metrics[key]!;
+   const seq=++selected;
+   status.textContent='Načítám skutečný archiv dne '+date+'…';status.dataset.state='';
+   chart.textContent='Načítám intervalové hodnoty…';
+   meta.textContent='Zdroj: original WeeWX · předběžná historická evidence.';
+   void (async()=>{
+    try{
+     const from=pragueMidnightIso(date),to=pragueMidnightIso(nextDate(date));
+     const data=await getHistoryInterval(metric.metric,from,to,'raw',ctrl.signal);
+     if(ctrl.signal.aborted||seq!==selected)return;
+     const count=draw(data.points,from,to,metric.kind,metric.name,metric.unit);
+     status.textContent=date+' · '+metric.name+' · '+count+' platných intervalů';
+     status.dataset.state=count?'warning':'error';
+     meta.textContent='Původní intervalová měření '+date+' (Europe/Prague). '+
+      'Denní maximum/minimum nemusí přesně odpovídat intervalu a předběžná evidence neprošla konečnou QC.';
+    }catch{
+     if(ctrl.signal.aborted||seq!==selected)return;
+     chart.textContent='Intervalová data nejsou dostupná. Nenahrazujeme je modelovým průběhem.';
+     status.textContent='Podrobnosti dne nelze načíst';status.dataset.state='error';
+    }
+   })();
+   root.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?
+    'auto':'smooth',block:'start'});
+  });
+  document.addEventListener('astro:before-swap',()=>ctrl.abort(),{once:true});
+ }
+</script>
