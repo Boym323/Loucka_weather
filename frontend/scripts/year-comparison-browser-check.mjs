@@ -193,8 +193,10 @@ try{
   },null,{timeout:15000});
   assert.equal(await first.locator('[data-month-day="01-01"].is-missing').count(),0);
   assert.equal(await section.locator('.year-compare-swatch').count(),9);
-  await page.locator('[data-theme-toggle]').click();
-  assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
+  await page.locator('[data-theme-picker] summary').click();
+  await page.locator('[data-theme-choice="dark"]').click();
+  await page.waitForFunction(()=>document.documentElement.dataset.theme==='dark');
+  assert.equal(await page.locator('html').getAttribute('data-theme-preference'),'dark');
   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
   assert.ok(overflow<=2,'horizontal overflow '+overflow+' at '+width);
   // ClimateDashboard's separate frost evidence also requests daily outTemp.

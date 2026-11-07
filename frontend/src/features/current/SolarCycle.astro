@@ -24,16 +24,10 @@
  <p class="observatory-source-note" data-solar-note>Orientační výpočet pro polohu obce Loučka, nikoli naměřené hodnoty; místní terén může skutečný východ a západ ovlivnit.</p>
 </section>
 <script>
- import {solarDay,lunarPhase} from '../../shared/domain/astronomy';
+ import {solarDay,lunarPhase,pragueCivilDate} from '../../shared/domain/astronomy';
  const element=document.querySelector<HTMLElement>('[data-solar-cycle]');
  if(element){
   const controller=new AbortController();
-  const dateParts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Prague',
-   year:'numeric',month:'2-digit',day:'2-digit'});
-  const localDate=(at:Date)=>{
-   const items=Object.fromEntries(dateParts.formatToParts(at).map(p=>[p.type,p.value]));
-   return items.year+'-'+items.month+'-'+items.day;
-  };
   const time=new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',hour:'2-digit',minute:'2-digit'});
   const set=(key:string,value:string)=>{
    const target=element.querySelector<HTMLElement>('[data-'+key+']');
@@ -42,7 +36,7 @@
   const draw=()=>{
    if(controller.signal.aborted)return;
    const now=new Date();
-   const sun=solarDay(localDate(now));
+   const sun=solarDay(pragueCivilDate(now));
    if(sun){
     set('solar-rise',time.format(sun.sunrise));
     set('solar-set',time.format(sun.sunset));
