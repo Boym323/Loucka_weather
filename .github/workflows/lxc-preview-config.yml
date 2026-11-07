@@ -44,3 +44,4 @@ jobs:
           sudo apt-get install -y -qq nginx
           sudo cp deploy/lxc/nginx-preview.conf /etc/nginx/conf.d/loucka-preview.conf
           sudo nginx -t
+          grep -Fq 'X-Robots-Tag "noindex, nofollow"' deploy/lxc/nginx-preview.conf
