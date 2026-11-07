@@ -40,6 +40,10 @@ const records=[
       <tbody data-extreme-timeline><tr><td colspan="4">Načítám…</td></tr></tbody>
      </table>
     </div>
+    <ol class="atlas-extreme-events" data-extreme-cards
+     aria-label="Předběžné rekordní dny – mobilní časová osa">
+     <li>Načítám archivní dny…</li>
+    </ol>
    </section>
    <ExtremeDayDetail />
    <section class="atlas-panel" aria-labelledby="extreme-days">
@@ -116,6 +120,31 @@ const records=[
       button.textContent='Průběh dne';
       button.setAttribute('aria-label',event.label+' dne '+event.date+' – otevřít intervalová měření');
       last.append(button);
+     }
+    }
+    const cards=root.querySelector<HTMLOListElement>('[data-extreme-cards]');
+    if(cards){
+     cards.replaceChildren();
+     if(!events.length){
+      const item=document.createElement('li');
+      item.textContent='Zatím není doložený rekordní den.';
+      cards.append(item);
+     }
+     for(const event of events){
+      const card=document.createElement('li');
+      const date=document.createElement('time');
+      date.dateTime=event.date;date.textContent=event.date;
+      const label=document.createElement('strong');label.textContent=event.label;
+      const value=document.createElement('span');value.textContent=event.value;
+      const note=document.createElement('small');
+      note.textContent='Původní denní souhrn · bez dokončené QC';
+      const action=document.createElement('button');
+      action.type='button';action.className='atlas-rank-action';
+      action.dataset.extremeDay=event.date;
+      action.dataset.extremeMetric=event.metric;
+      action.textContent='Zobrazit průběh dne';
+      action.setAttribute('aria-label','Otevřít intervalový archiv '+event.label+' dne '+event.date);
+      card.append(date,label,value,note,action);cards.append(card);
      }
     }
     for(const key of ['frost','ice','summer','tropical']){
