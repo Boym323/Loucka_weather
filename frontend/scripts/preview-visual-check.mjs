@@ -276,6 +276,47 @@ try{
        errors.push(size.name+': '+metric+' annual summary missing: '+value);
      }
     }
+    // Both comparison views load only when scrolled into the viewport.
+    // DOM existence and a reachable API endpoint do not prove the charts rendered.
+    if(path==='/klimatologie/'){
+     await page.locator('[data-all-years-temperature]').scrollIntoViewIfNeeded({timeout:12000});
+     const allYearsReady=await page.waitForFunction(()=>{
+      const root=document.querySelector('[data-all-years-temperature]');
+      const status=root?.querySelector('[data-temperature-status]')?.textContent?.trim()??'';
+      const svg=root?.querySelector('[data-temperature-chart] svg');
+      const years=root?.querySelectorAll('[data-temperature-year]').length??0;
+      const summary=root?.querySelector('[data-temperature-summary]')?.textContent??'';
+      return status.startsWith('Archiv WeeWX')&&svg!==null&&years>=5&&summary.includes('Zobrazeno');
+     },null,{timeout:45000}).then(()=>true).catch(()=>false);
+     if(!allYearsReady){
+      const state=await page.evaluate(()=>({
+       status:document.querySelector('[data-temperature-status]')?.textContent?.trim(),
+       svg:!!document.querySelector('[data-temperature-chart] svg'),
+       years:document.querySelectorAll('[data-temperature-year]').length,
+       summary:document.querySelector('[data-temperature-summary]')?.textContent?.trim()
+      }));
+      errors.push(size.name+': all-years chart not rendered: '+JSON.stringify(state));
+     }else console.log('LIVE ALL-YEARS TEMPERATURE',size.name,'real API and SVG verified');
+
+     await page.locator('[data-year-comparison]').scrollIntoViewIfNeeded({timeout:12000});
+     const comparisonReady=await page.waitForFunction(()=>{
+      const root=document.querySelector('[data-year-comparison]');
+      const status=root?.querySelector('[data-compare-status]')?.textContent?.trim()??'';
+      const first=root?.querySelectorAll('[data-heatmap-cells="first"] .year-heatmap-day').length??0;
+      const second=root?.querySelectorAll('[data-heatmap-cells="second"] .year-heatmap-day').length??0;
+      const svg=root?.querySelector('[data-compare-chart] svg');
+      return status.startsWith('Původní archiv')&&first>=365&&second>=365&&svg!==null;
+     },null,{timeout:45000}).then(()=>true).catch(()=>false);
+     if(!comparisonReady){
+      const state=await page.evaluate(()=>({
+       status:document.querySelector('[data-compare-status]')?.textContent?.trim(),
+       first:document.querySelectorAll('[data-heatmap-cells="first"] .year-heatmap-day').length,
+       second:document.querySelectorAll('[data-heatmap-cells="second"] .year-heatmap-day').length,
+       svg:!!document.querySelector('[data-compare-chart] svg')
+      }));
+      errors.push(size.name+': year comparison not rendered: '+JSON.stringify(state));
+     }else console.log('LIVE YEAR COMPARISON',size.name,'real heatmaps and SVG verified');
+    }
     const state=await page.evaluate(()=>({
      title:document.title,
      brand:!!document.querySelector('.brand'),

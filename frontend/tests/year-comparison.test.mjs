@@ -59,7 +59,8 @@ test('heatmaps are mounted in climatology with real API and progress UI',async()
  const dashboard=await file('src/features/climate/ClimateDashboard.astro');
  const component=await file('src/features/climate/YearComparison.astro');
  assert.match(page,/YearComparison/);
- assert.match(dashboard,/href="#srovnani-let"/);
+ assert.match(dashboard, /href:'#srovnani-let',label:'Heatmapy a srovnání let'/);
+ assert.match(dashboard, /climateSections\.map/);
  assert.match(component,/getHistoryInterval/);
  assert.match(component,/dailyValues/);
  assert.match(component,/is-missing/);
