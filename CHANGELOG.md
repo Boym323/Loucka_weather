@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-07 – návrh: odstranění potvrzených bariér přístupnosti
+- První axe-core CI běh ověřil 22 kombinací stránky a viewportu a nalezl 39 závažných výskytů porušení pravidel, převážně kontrast a nesoulad mezi viditelným a přístupným názvem sdílené navigace.
+- Opraveny přístupné názvy značky, mobilních rozbalovacích menu a odkazu na kameru. Horizontálně posuvné oblasti klimatologické tabulky a mapových záložek jsou dosažitelné klávesnicí.
+- Samostatná poslední vrstva `accessibility.css` cíleně opravuje slabý kontrast popisků z meteorologických panelů, radaru, ovládání historie a map. Konkrétní výsledky potvrdí následné axe-core CI, nikoli jen statická kontrola barev.
+- Žádná změna meteo dat, API, GW3000 ani nasazovacích helperů.
+
+
 ## 2026-11-07 – návrh: automatizovaný WCAG audit všech stránek
 - CI přidává axe-core 4.14.0 k Playwright a kontroluje 11 veřejných tras na 390/1440 px, včetně otevřené mobilní navigace klimatologie.
 - Výstup do `wcag-browser-audit` rozlišuje závažná blokující porušení a ostatní zjištění; automatizovaný audit není úplné ověření WCAG ani Safari/VoiceOver.
