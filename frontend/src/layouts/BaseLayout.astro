@@ -5,6 +5,7 @@ import '../styles/atlas-minimal.css';
 import '../styles/observatory-evergreen.css';
 import '../styles/accessibility.css';
 import '../styles/theme-picker.css';
+import '../styles/climate-atlas.css';
 import DeploymentInfo from '../shared/ui/DeploymentInfo.astro';
 import LiveSync from '../shared/ui/LiveSync.astro';
 import MobileDock from '../shared/ui/MobileDock.astro';
@@ -58,11 +59,11 @@ const active = Astro.url.pathname;
      <span class="brand-label"><strong>Počasí Loučka</strong><small>Osobní meteorologická stanice</small></span>
     </a>
     <nav aria-label="Hlavní navigace" class="nav">
-     {navigation.map(item => <a href={item.href} aria-current={active === item.href ? 'page' : undefined}>{item.title}</a>)}
+     {navigation.map(item => <a href={item.href} aria-current={(active === item.href || (item.href === '/klimatologie/' && active.startsWith('/klimatologie/'))) ? 'page' : undefined}>{item.title}</a>)}
      <details class="atlas-more">
       <summary>Více <SiteIcon name="chevron-down" size={16} /></summary>
       <div class="atlas-more-list">
-       {secondaryNavigation.map(item => <a href={item.href} aria-current={active === item.href ? 'page' : undefined}>{item.title}</a>)}
+       {secondaryNavigation.map(item => <a href={item.href} aria-current={(active === item.href || (item.href === '/klimatologie/' && active.startsWith('/klimatologie/'))) ? 'page' : undefined}>{item.title}</a>)}
       </div>
      </details>
     </nav>
@@ -74,7 +75,7 @@ const active = Astro.url.pathname;
     <details class="mobile-nav">
      <summary><SiteIcon name="menu" size={19} /><span>Menu</span></summary>
      <nav aria-label="Mobilní navigace">
-      {[...navigation,...secondaryNavigation].map(item => <a href={item.href} aria-current={active === item.href ? 'page' : undefined}>{item.title}</a>)}
+      {[...navigation,...secondaryNavigation].map(item => <a href={item.href} aria-current={(active === item.href || (item.href === '/klimatologie/' && active.startsWith('/klimatologie/'))) ? 'page' : undefined}>{item.title}</a>)}
      </nav>
     </details>
    </div>

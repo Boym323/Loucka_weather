@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-07 – návrh: Klimatologický atlas Loučky, první funkční etapa
+- Editorial hlavní rozcestník 4 tematických kapitol s ponecháním původních grafů, heatmap a anchor URL.
+- Nové stránky Extrémy, Trendy, Srovnání sezón a Meteorologická ročenka s živými read-only endpointy bez vymyšlených dat.
+- Výpočty pokrytí, časově i kalendářně správná zima, chybějící/neplatné záznamy ≠ nula, popisný Theil–Sen jen z dostatečně pokrytých dokončených let.
+- Tisknutelná A4 ročenka přes prohlížeč, originální roční a denní podklady, automatické věty pouze při dostatečném pokrytí.
+- CI: browser fixture test nových obrazovek, 15 tras pro staging smoke a oba motivy v axe-core na 60 kombinacích.
+- Bez zásahů do original WeeWX, GW3000, MariaDB a odloženého issue #69 / draft PR #58.
+
+
 ## 2026-11-07 – návrh: automatické barvy podle slunce
 - Tři režimy vzhledu: Automaticky (výchozí podle astronomického východu/západu v Loučce), trvale světlý, trvale tmavý. Původní volby z localStorage zachovány.
 - Jedna sdílená funkce pro pražské civilní datum v astronomickém modulu; přepínání i na otevřené kartě, při návratu do popředí a po obnově stránky.

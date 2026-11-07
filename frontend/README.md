@@ -2,6 +2,43 @@
 
 **Aktuální vývoj: 1. 11. 2026.** Web vzniká podle uživatelem schváleného devítipanelového tmavého vizuálního návrhu. Testovací náhled: https://dev.pocasi-loucka.eu/. Není to veřejná produkce. Všechny změny do main se sestavují a nasazují přes LXC automaticky; přesná zveřejněná revize je vidět ve webové patičce a v /deployment.json.
 
+## Klimatologický atlas – etapa I (7. 11. 2026)
+
+Atlas rozšiřuje existující `/klimatologie/` o redakčně pojatý přehled a
+čtyři samostatné kapitoly, zatímco **původní anchors** a komponenty
+`ClimateDashboard`, `AllYearsTemperature`, `YearComparison` zůstávají
+funkční na původní stránce:
+
+- `/klimatologie/extremy/` – ověřený *původ* a **předběžné** hodnoty
+  `GET /api/v1/climate/records`, čtyři extrémy, časová osa a počty
+  charakteristických teplotních dní. Nikoli definitivně potvrzené rekordy.
+- `/klimatologie/trendy/` – `GET /api/v1/climate/annual-matrix`
+  (outTemp, rain, windSpeed); graf a tabulka všech let včetně pokrytí.
+  Popisný Theil–Senův sklon vzniká pouze z nejméně 8 dokončených roků
+  v rozmezí nejméně 10 let, s min. 90 % platných dnů a u průměrných
+  veličin i prokazatelným časovým pokrytím 90 %. Jde o popisné lokální
+  měření, **ne statistickou významnost ani WMO 30letý normál**.
+- `/klimatologie/sezony/` – čtyři meteorologické sezóny, dvě dokončené
+  sezóny z originálního `GET /api/v1/history` (daily, outTemp/rain);
+  zima prosinec–únor přes hranici roku, CET/CEST, 29. únor zvlášť;
+  průměry a součty společných platných dnů, nejméně 80 % společného
+  kalendáře pro porovnávací rozdíl. Každé období má samostatně uvedené
+  pokrytí; chybějící srážky nejsou nuly.
+- `/klimatologie/rocenka/` – výběr dokončeného roku, 3 konsolidované
+  roční souhrny a jen 2 denní API dotazy pro 12měsíční tabulku.
+  Automatické formulace jen při dostatečné úplnosti, náhled A4
+  a `window.print()` jako tisk / **Uložit do PDF** přes systémový dialog.
+  Nejde o serverově generovaný PDF soubor.
+
+Atlas nepřidává endpoint ani nezapisuje do originální/rekonstruované
+MariaDB, WeeWX či GW3000. Před nasazením se ověří CI, 15 tras v browser
+smoke, 60 variant v axe-core (15 tras × 2 šířky × 2 barevné motivy) a
+izolovaný browser fixture test `scripts/climate-atlas-browser-check.mjs`.
+Browser fixture není živá data meteostanice. V důsledku nehotové
+forenzní rekonstrukce i změn čidel jsou všechny historické závěry
+orientační. Další etapa může dodat serverový agregovaný sezónní kontrakt,
+schválené QC a strukturovanou tiskovou ročenku s archivními fotografiemi.
+
 ## Vzhled: automatický den/noc podle Loučky (7. 11. 2026)
 
 V horní liště je třípolohová volba `Automaticky / Světlý / Tmavý`. Nová

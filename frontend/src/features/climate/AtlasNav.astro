@@ -1,0 +1,18 @@
+---
+interface Props { active: 'prehled'|'extremy'|'trendy'|'sezony'|'rocenka' }
+const {active}=Astro.props;
+const entries=[
+ {id:'prehled',url:'/klimatologie/',name:'Atlas',no:'00',subtitle:'Rozcestník'},
+ {id:'extremy',url:'/klimatologie/extremy/',name:'Extrémy',no:'01',subtitle:'Historické milníky'},
+ {id:'trendy',url:'/klimatologie/trendy/',name:'Trendy',no:'02',subtitle:'Vývoj veličin'},
+ {id:'sezony',url:'/klimatologie/sezony/',name:'Sezóny',no:'03',subtitle:'Srovnání období'},
+ {id:'rocenka',url:'/klimatologie/rocenka/',name:'Ročenka',no:'04',subtitle:'Příběh roku'}
+] as const;
+---
+<nav class="climate-atlas-nav" aria-label="Kapitoly Klimatologického atlasu">
+ {entries.map(item=><a href={item.url} aria-current={item.id===active?'page':undefined}>
+  <span class="atlas-chapter-number">{item.no}</span>
+  <span class="atlas-chapter-name">{item.name}</span>
+  <small>{item.subtitle}</small>
+ </a>)}
+</nav>

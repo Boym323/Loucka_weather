@@ -1,0 +1,221 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AtlasNav from '../../features/climate/AtlasNav.astro';
+import {climateSeasonLabels} from '../../shared/domain/climate-atlas.ts';
+const currentYear=Number(new Intl.DateTimeFormat('en-GB',{
+ timeZone:'Europe/Prague',year:'numeric'
+}).format(new Date()));
+const years=Array.from({length:Math.max(1,currentYear-2008)},(_,i)=>currentYear-i);
+---
+<BaseLayout title="Atlas · Srovnání sezón"
+ description="Srovnej jaro, léto, podzim a zimu ve dvou letech v Loučce. Jen skutečně dostupné společné dny teplot a srážek z WeeWX.">
+ <div class="climate-atlas" data-atlas-seasons>
+  <header class="atlas-edition-hero">
+   <p class="atlas-eyebrow">03 / Roční období</p>
+   <h1 class="atlas-title">Které léto bylo teplejší?</h1>
+   <p class="atlas-subtitle">Vyber dvě dokončené sezóny a porovnej jejich skutečná denní měření. Rozdíl počítáme jen ve dnech, kdy jsou podklady v obou obdobích.</p>
+  </header>
+  <AtlasNav active="sezony"/>
+  <section class="atlas-panel" aria-labelledby="season-head">
+   <h2 id="season-head">Srovnání dvou sezón</h2>
+   <form class="atlas-filters" data-season-form>
+    <label>Roční období
+     <select data-season-kind name="season">
+      {Object.entries(climateSeasonLabels).map(([id,label])=><option value={id} selected={id==='summer'}>{label}</option>)}
+     </select>
+    </label>
+    <label>První období
+     <select data-season-first name="first">
+      {years.map(y=><option value={y} selected={y===currentYear-2}>{y}</option>)}
+     </select>
+    </label>
+    <label>Druhé období
+     <select data-season-second name="second">
+      {years.map(y=><option value={y} selected={y===currentYear-1}>{y}</option>)}
+     </select>
+    </label>
+    <button type="submit">Porovnat sezóny</button>
+   </form>
+   <p class="atlas-status" data-season-status role="status">Připravuji historické sezóny…</p>
+   <div class="atlas-compare-grid" aria-label="Souhrny vybraných sezón">
+    {['first','second'].map(key=><section class="atlas-compare-box" aria-label={key==='first'?'První sezóna':'Druhá sezóna'}>
+     <h3 data-season-title={key}>—</h3>
+     <div class="atlas-reading"><span>Průměr dostupných denních teplot</span><strong data-season-temperature={key}>—</strong></div>
+     <div class="atlas-reading"><span>Součet dostupných denních srážek</span><strong data-season-rain={key}>—</strong></div>
+     <small data-season-coverage={key}>Zjišťuji úplnost…</small>
+     <div class="atlas-coverage" aria-hidden="true"><span data-season-bar={key} style="width:0%"></span></div>
+    </section>)}
+   </div>
+   <h3>Rozdíl na společných dnech</h3>
+   <div class="atlas-results">
+    <div class="atlas-result"><span>Společně měřené dny (teplota)</span><strong data-season-matched>—</strong><small>Stejné datum v obou sezónách</small></div>
+    <div class="atlas-result"><span>Průměrná teplota · druhá − první</span><strong data-season-temp-diff>—</strong><small>Průměr pouze společných denních průměrů</small></div>
+    <div class="atlas-result"><span>Srážky · druhá − první</span><strong data-season-rain-diff>—</strong><small>Součet pouze společných denních úhrnů</small></div>
+   </div>
+   <p class="source-note" data-season-method>Pro zobrazení rozdílu požadujeme platné oboustranné záznamy alespoň u 80 % kalendářních dní. Nulové srážky jsou platná nula, neznámé záznamy zůstávají prázdné.</p>
+  </section>
+  <section class="atlas-panel" aria-labelledby="season-chart-head">
+   <h2 id="season-chart-head">Denní teplotní průběhy</h2>
+   <p>Dvě sezóny zarovnané podle měsíce a dne; 29. února se nezaměňuje s 1. březnem. Přerušení čáry představuje chybějící údaj.</p>
+   <div class="atlas-chart" data-season-chart role="img" aria-label="Dvě křivky dostupných denních teplot vybraných sezón"></div>
+   <p class="source-note">Zdroj: originální denní souhrny WeeWX (Europe/Prague), dataset original. Denní průměry zde nejsou časově váženým sezónním průměrem; srážky nebyly forenzně schváleny.</p>
+  </section>
+ </div>
+</BaseLayout>
+<script>
+ import {getHistoryInterval} from '../../shared/api/client';
+ import {pragueMidnightIso} from '../../shared/domain/statistics';
+ import {seasonWindow,periodRollup,matchSeasonDays,calendarDates} from '../../shared/domain/climate-atlas';
+ import type {ClimateSeason,PeriodRollup} from '../../shared/domain/climate-atlas';
+ import {formatValue} from '../../shared/domain/metrics';
+ import {pragueCivilDate} from '../../shared/domain/astronomy';
+ const root=document.querySelector<HTMLElement>('[data-atlas-seasons]');
+ if(root){
+  const form=root.querySelector<HTMLFormElement>('[data-season-form]')!;
+  const kind=root.querySelector<HTMLSelectElement>('[data-season-kind]')!;
+  const first=root.querySelector<HTMLSelectElement>('[data-season-first]')!;
+  const second=root.querySelector<HTMLSelectElement>('[data-season-second]')!;
+  const status=root.querySelector<HTMLElement>('[data-season-status]')!;
+  const chart=root.querySelector<HTMLElement>('[data-season-chart]')!;
+  const ctrl=new AbortController();
+  let generation=0;
+  const today=pragueCivilDate(new Date());
+  type Selection={year:number;from:string;toExclusive:string;label:string};
+  const set=(selector:string,value:string)=>{
+   const target=root.querySelector<HTMLElement>(selector);if(target)target.textContent=value;
+  };
+  const available=(season:ClimateSeason)=>[...first.options].filter(option=>
+   seasonWindow(Number(option.value),season).toExclusive<=today).map(o=>Number(o.value));
+  const updateOptions=()=>{
+   const season=kind.value as ClimateSeason;
+   const allowed=available(season);
+   for(const select of [first,second]){
+    for(const option of select.options)option.disabled=!allowed.includes(Number(option.value));
+    if(!allowed.includes(Number(select.value)))select.value=String(allowed[0]??2009);
+   }
+   if(first.value===second.value&&allowed.length>1)
+    first.value=String(allowed.find(y=>String(y)!==second.value)??allowed[0]);
+  };
+  const selection=(year:number,season:ClimateSeason):Selection=>({year,...seasonWindow(year,season)});
+  const load=async(select:Selection)=>{
+   const from=pragueMidnightIso(select.from),to=pragueMidnightIso(select.toExclusive);
+   const temperature=await getHistoryInterval('outTemp',from,to,'daily',ctrl.signal);
+   const rain=await getHistoryInterval('rain',from,to,'daily',ctrl.signal);
+   return {
+    temperature:periodRollup(temperature.points,select.from,select.toExclusive,'mean'),
+    rain:periodRollup(rain.points,select.from,select.toExclusive,'sum')
+   };
+  };
+  const renderSeason=(key:'first'|'second',title:string,
+   data:{temperature:PeriodRollup;rain:PeriodRollup})=>{
+   set('[data-season-title="'+key+'"]',title);
+   set('[data-season-temperature="'+key+'"]',
+    data.temperature.value===null?'—':formatValue(data.temperature.value,1)+' °C');
+   set('[data-season-rain="'+key+'"]',
+    data.rain.value===null?'—':formatValue(data.rain.value,1)+' mm');
+   set('[data-season-coverage="'+key+'"]',
+    'Teplota '+data.temperature.validDays+'/'+data.temperature.expectedDays+
+    ' dní; srážky '+data.rain.validDays+'/'+data.rain.expectedDays+' dní');
+   const bar=root.querySelector<HTMLElement>('[data-season-bar="'+key+'"]');
+   if(bar)bar.style.width=Math.round(data.temperature.coverage*100)+'%';
+  };
+  const draw=(a:PeriodRollup,b:PeriodRollup)=>{
+   chart.replaceChildren();
+   const firstDays=[...a.days];
+   const keys=[...new Set([...firstDays.map(([d])=>d.slice(5)),
+    ...[...b.days.keys()].map(d=>d.slice(5))])];
+   const firstMap=new Map(firstDays.map(([d,v])=>[d.slice(5),v]));
+   const secondMap=new Map([...b.days].map(([d,v])=>[d.slice(5),v]));
+   const all=[...firstMap.values(),...secondMap.values()].filter(
+    (v):v is number=>v!==null);
+   if(!all.length){chart.textContent='Není dostupný platný teplotní průběh.';return;}
+   const low=Math.min(...all)-2,high=Math.max(...all)+2;
+   const x=(index:number)=>36+index/Math.max(1,keys.length-1)*675;
+   const y=(value:number)=>220-(value-low)/Math.max(1,high-low)*185;
+   const ns='http://www.w3.org/2000/svg';
+   const el=(tag:string)=>document.createElementNS(ns,tag);
+   const svg=el('svg');svg.setAttribute('viewBox','0 0 760 270');
+   svg.setAttribute('role','img');svg.setAttribute('aria-label','Denní teplota první a druhé sezóny, bez propojení chybějících dnů');
+   const title=el('title');title.textContent='Denní průběh obou sezón, originální denní souhrny';svg.append(title);
+   for(let n=0;n<=4;n++){
+    const grid=el('line');const level=35+185*n/4;
+    grid.setAttribute('class','chart-grid');
+    for(const [attr,value] of Object.entries({x1:36,x2:711,y1:level,y2:level}))grid.setAttribute(attr,String(value));
+    svg.append(grid);
+   }
+   for(const [map,color] of [[firstMap,'var(--teal)'],[secondMap,'var(--gold)']] as const){
+    let points:string[]=[];
+    const flush=()=>{
+     if(!points.length)return;
+     const path=el('path');path.setAttribute('d',points.join(' '));
+     path.setAttribute('fill','none');path.setAttribute('stroke',color);
+     path.setAttribute('stroke-width','2.5');path.setAttribute('stroke-linecap','round');
+     path.setAttribute('stroke-linejoin','round');svg.append(path);points=[];
+    };
+    for(let i=0;i<keys.length;i++){
+     const value=map.get(keys[i]!);
+     if(value===null||value===undefined){flush();continue;}
+     points.push((points.length?'L':'M')+x(i).toFixed(1)+' '+y(value).toFixed(1));
+    }
+    flush();
+   }
+   const labels=[
+    {x:45,label:'První sezóna',color:'var(--teal)'},
+    {x:280,label:'Druhá sezóna',color:'var(--gold)'}
+   ];
+   for(const legend of labels){
+    const dash=el('line');dash.setAttribute('x1',String(legend.x));dash.setAttribute('x2',String(legend.x+24));
+    dash.setAttribute('y1','252');dash.setAttribute('y2','252');dash.setAttribute('stroke',legend.color);
+    dash.setAttribute('stroke-width','3');svg.append(dash);
+    const label=el('text');label.setAttribute('x',String(legend.x+30));label.setAttribute('y','256');
+    label.setAttribute('class','chart-axis');label.textContent=legend.label;svg.append(label);
+   }
+   chart.append(svg);
+  };
+  const refresh=async()=>{
+   updateOptions();
+   const season=kind.value as ClimateSeason;
+   const left=selection(Number(first.value),season),right=selection(Number(second.value),season);
+   if(left.year===right.year){
+    status.textContent='Vyber dva různé roky.';status.dataset.state='warning';return;
+   }
+   const ticket=++generation;
+   status.textContent='Načítám dva skutečné sezónní intervaly…';status.dataset.state='';
+   try{
+    // Two bounded daily calls per season, sequentially, to respect proxy rate limits.
+    const leftData=await load(left);
+    const rightData=await load(right);
+    if(ctrl.signal.aborted||ticket!==generation)return;
+    renderSeason('first',left.label,leftData);
+    renderSeason('second',right.label,rightData);
+    const temps=matchSeasonDays(leftData.temperature,rightData.temperature,'mean');
+    const rain=matchSeasonDays(leftData.rain,rightData.rain,'sum');
+    set('[data-season-matched]',temps.commonDays+' / '+temps.possibleDays);
+    set('[data-season-temp-diff]',temps.sufficient&&temps.difference!==null?
+     (temps.difference>0?'+':'')+formatValue(temps.difference,1)+' °C':'Nelze srovnat');
+    set('[data-season-rain-diff]',rain.sufficient&&rain.difference!==null?
+     (rain.difference>0?'+':'')+formatValue(rain.difference,1)+' mm':'Nelze srovnat');
+    set('[data-season-method]',temps.sufficient&&rain.sufficient?
+     'Rozdíly používají výhradně společné platné kalendářní dny. Nejde o plné klimatologické normály.':
+     'Některá veličina nemá alespoň 80 % společných dní. Její rozdíl neuvádíme; chybějící hodnoty nejsou nuly.');
+    draw(leftData.temperature,rightData.temperature);
+    status.textContent='Srovnání originálního archivu · bez definitivní QC';
+    status.dataset.state=(temps.sufficient&&rain.sufficient)?'':'warning';
+   }catch{
+    if(ctrl.signal.aborted||ticket!==generation)return;
+    chart.replaceChildren();chart.textContent='Podkladová data se nepodařilo načíst.';
+    status.textContent='Sezónní souhrny nedostupné';status.dataset.state='error';
+    for(const selector of [
+     '[data-season-temp-diff]','[data-season-rain-diff]','[data-season-matched]',
+     '[data-season-temperature="first"]','[data-season-temperature="second"]',
+     '[data-season-rain="first"]','[data-season-rain="second"]'
+    ])set(selector,'—');
+   }
+  };
+  kind.addEventListener('change',()=>{updateOptions();});
+  form.addEventListener('submit',e=>{e.preventDefault();void refresh();});
+  updateOptions();
+  void refresh();
+  document.addEventListener('astro:before-swap',()=>ctrl.abort(),{once:true});
+ }
+</script>
