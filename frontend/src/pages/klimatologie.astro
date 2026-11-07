@@ -1,12 +1,53 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import AtlasNav from '../features/climate/AtlasNav.astro';
 import ClimateDashboard from '../features/climate/ClimateDashboard.astro';
 import YearComparison from '../features/climate/YearComparison.astro';
 import AllYearsTemperature from '../features/climate/AllYearsTemperature.astro';
 ---
-<BaseLayout title="Klimatologie">
- <ClimateDashboard />
- <AllYearsTemperature />
- <YearComparison />
- <p class="source-note">Podrobnější přehled orientačních historických extrémů najdeš na <a href="/rekordy/">stránce rekordů</a>.</p>
+<BaseLayout title="Klimatologický atlas Loučky"
+ description="Klimatologický atlas Loučky: extrémy, roční trendy, srovnání sezón a meteorologické ročenky z původního archivu od roku 2009.">
+ <div class="climate-atlas">
+  <header class="atlas-hero">
+   <p class="atlas-eyebrow">Počasí Loučka · meteorologický archiv od roku 2009</p>
+   <h1 class="atlas-title">Klimatologický atlas Loučky</h1>
+   <p class="atlas-subtitle">Co si Loučka pamatuje o svém počasí? Prozkoumej výjimečné dny, porovnej roční období, sleduj dlouhodobý vývoj a sestav si osobní meteorologickou ročenku.</p>
+  </header>
+  <AtlasNav active="prehled" />
+  <div class="climate-atlas-grid" aria-label="Kapitoly atlasu">
+   <a class="climate-atlas-card" href="/klimatologie/extremy/">
+    <span class="number">01 / HISTORICKÉ MILNÍKY</span>
+    <h2>Extrémy</h2>
+    <p>Nejnižší a nejvyšší naměřená teplota, srážkové epizody, vítr a významné kalendářní dny.</p>
+    <span class="chapter-link">Prozkoumat rekordy</span>
+   </a>
+   <a class="climate-atlas-card" href="/klimatologie/trendy/">
+    <span class="number">02 / VÝVOJ V ČASE</span>
+    <h2>Trendy</h2>
+    <p>Roční souhrny, pokrytí archivu a robustní popis změn teploty, srážek a větru.</p>
+    <span class="chapter-link">Otevřít trendy</span>
+   </a>
+   <a class="climate-atlas-card" href="/klimatologie/sezony/">
+    <span class="number">03 / KALENDÁŘ POČASÍ</span>
+    <h2>Srovnání sezón</h2>
+    <p>Porovnej dvě jara, léta, podzimy nebo zimy na společně dostupných dnech.</p>
+    <span class="chapter-link">Vybrat roční období</span>
+   </a>
+   <a class="climate-atlas-card" href="/klimatologie/rocenka/">
+    <span class="number">04 / OSOBNÍ ARCHIV</span>
+    <h2>Meteorologická ročenka</h2>
+    <p>Vytvoř přehled konkrétního roku z doložených měření a vytiskni jej do PDF.</p>
+    <span class="chapter-link">Vytvořit ročenku</span>
+   </a>
+  </div>
+  <p class="climate-atlas-note">Atlas pracuje s originálními denními souhrny WeeWX. Data mohou obsahovat výpadky a neověřené historické anomálie; rekordy i odhady vývoje jsou proto předběžné, nikoli certifikované klimatologické normály.</p>
+  <div class="atlas-legacy-area" id="datovy-archiv">
+   <h2 class="atlas-section-heading">Datový archiv a dosavadní grafy</h2>
+   <p class="source-note">Stávající klimatologická analýza, teplota všech let, heatmapy a roční srovnání jsou zachovány. Původní odkazy na jednotlivé grafy zůstávají platné.</p>
+   <ClimateDashboard />
+   <AllYearsTemperature />
+   <YearComparison />
+   <p class="source-note">Podrobné <a href="/rekordy/">předběžné historické rekordy</a> najdeš i na původní stránce.</p>
+  </div>
+ </div>
 </BaseLayout>
