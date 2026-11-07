@@ -35,6 +35,7 @@ jobs:
           node --check scripts/preview-visual-check.mjs
           node --check scripts/live-browser-check.mjs
           node --check scripts/accessibility-audit.mjs
+          node --check scripts/theme-browser-check.mjs
       - name: Unit tests
         run: npm test
       - name: Build static website
@@ -47,6 +48,7 @@ jobs:
           node scripts/evergreen-layout-audit.mjs
           node scripts/year-comparison-browser-check.mjs
           node scripts/accessibility-audit.mjs
+          node scripts/theme-browser-check.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
