@@ -4,10 +4,12 @@ import '../styles/refinement.css';
 import '../styles/atlas-minimal.css';
 import '../styles/observatory-evergreen.css';
 import '../styles/accessibility.css';
+import '../styles/theme-picker.css';
 import DeploymentInfo from '../shared/ui/DeploymentInfo.astro';
 import LiveSync from '../shared/ui/LiveSync.astro';
 import MobileDock from '../shared/ui/MobileDock.astro';
 import SiteIcon from '../shared/ui/SiteIcon.astro';
+import ThemePicker from '../shared/ui/ThemePicker.astro';
 interface Props { title: string; description?: string }
 const { title, description = 'Meteorologická měření ze stanice Počasí Loučka.' } = Astro.props;
 const navigation = [
@@ -36,7 +38,15 @@ const active = Astro.url.pathname;
   <meta name="theme-color" content="#F6F9FB" />
   <title>{title} | Počasí Loučka</title>
   <script is:inline>
-   try { document.documentElement.dataset.theme = localStorage.getItem('loucka-theme') === 'dark' ? 'dark' : 'light'; } catch {}
+   // Early bootstrap preserves manual choices before the theme module evaluates.
+   // Automatic day/night is resolved from Loučka sunrise/sunset by ThemePicker.
+   try {
+    const choice=localStorage.getItem('loucka-theme');
+    const preference=choice==='light'||choice==='dark'?choice:'auto';
+    document.documentElement.dataset.themePreference=preference;
+    document.documentElement.dataset.theme=preference==='auto'?
+     (matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):preference;
+   } catch { document.documentElement.dataset.themePreference='auto'; }
   </script>
  </head>
  <body>
@@ -58,7 +68,7 @@ const active = Astro.url.pathname;
     </nav>
     <div class="header-actions">
      <LiveSync />
-     <button type="button" class="theme-toggle" data-theme-toggle aria-label="Přepnout světlý a tmavý motiv" title="Přepnout motiv"><span class="atlas-theme-icon"><SiteIcon name="moon" size={18}/></span><span class="theme-name">Motiv</span></button>
+     <ThemePicker />
      <span class="header-clock" data-prague-clock aria-label="Místní čas v Loučce">--:--</span>
     </div>
     <details class="mobile-nav">
@@ -73,14 +83,6 @@ const active = Astro.url.pathname;
   <MobileDock />
   <footer class="site-footer"><div class="wrap footer-inner"><span>© Počasí Loučka · vývojový náhled</span><DeploymentInfo /><a href="/o-stanici/">O projektu a zdrojích dat</a></div></footer>
   <script>
-   const switcher=document.querySelector<HTMLButtonElement>('[data-theme-toggle]');
-   switcher?.addEventListener('click',()=>{
-    const mode=document.documentElement.dataset.theme==='light'?'dark':'light';
-    document.documentElement.dataset.theme=mode;
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content',mode==='light'?'#F8FAFA':'#111B22');
-    try {localStorage.setItem('loucka-theme',mode);}catch{}
-    window.dispatchEvent(new Event('loucka:theme-change'));
-   });
    const clock=document.querySelector<HTMLElement>('[data-prague-clock]');
    const tick=()=>{if(clock)clock.textContent=new Intl.DateTimeFormat('cs-CZ',{dateStyle:'short',timeStyle:'short',timeZone:'Europe/Prague'}).format(new Date());};
    tick(); setInterval(tick,60_000);
