@@ -19,7 +19,7 @@ export function drawYearbookBars(
  target:HTMLElement,months:readonly MonthPlotData[],kind:'temperature'|'rain'
 ):void{
  target.replaceChildren();
- const valid=months.filter(m=>m.value!==null);
+ const valid=months.filter(m=>m.value!==null&&(kind!=='rain'||m.value>=0));
  if(!valid.length){
   target.textContent='Pro žádný měsíc nejsou k dispozici dostatečně pokrytá denní data.';
   return;
@@ -38,9 +38,9 @@ export function drawYearbookBars(
  const values=valid.map(m=>m.value as number);
  let low=Math.min(0,...values),high=Math.max(0,...values);
  if(low===high)high=low+1;
- const extent=high-low;
- const padding=extent*.10;
- low-=padding;high+=padding;
+ const padding=(high-low)*.10;
+ if(kind==='rain'){low=0;high+=padding;}
+ else{low-=padding;high+=padding;}
  const y=(value:number)=>211-(value-low)/(high-low)*185;
  const baseline=y(0);
  for(let tick=0;tick<=4;tick++){
@@ -64,7 +64,7 @@ export function drawYearbookBars(
   const x=49+(month.month-1)*58;
   const bar=element('rect');bar.setAttribute('x',String(x));
   bar.setAttribute('width','32');bar.setAttribute('rx','3');
-  if(month.value===null){
+  if(month.value===null||(kind==='rain'&&month.value<0)){
    bar.setAttribute('y','24');bar.setAttribute('height','187');
    bar.setAttribute('class','atlas-chart-missing');
   }else{
