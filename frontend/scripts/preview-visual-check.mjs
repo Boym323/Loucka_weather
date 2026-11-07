@@ -65,6 +65,9 @@ const browser=await chromium.launch({headless:true});
 try{
  for(const size of sizes){
   const page=await browser.newPage({viewport:{width:size.width,height:size.height},deviceScaleFactor:1});
+  // Screenshot baseline is intentionally light; auto day/night has its own tests.
+  await page.addInitScript(()=>localStorage.setItem('loucka-theme','light'));
+
   page.on('pageerror',error=>errors.push(size.name+': JavaScript exception: '+error.message));
   for(const [name,path] of routes){
    try{
