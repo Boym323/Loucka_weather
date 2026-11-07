@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import AtlasNav from '../../features/climate/AtlasNav.astro';
+import ExtremeDayDetail from '../../features/climate/ExtremeDayDetail.astro';
 const records=[
  {id:'minTemp',label:'Nejnižší teplota',unit:'°C'},
  {id:'maxTemp',label:'Nejvyšší teplota',unit:'°C'},
@@ -40,6 +41,7 @@ const records=[
      </table>
     </div>
    </section>
+   <ExtremeDayDetail />
    <section class="atlas-panel" aria-labelledby="extreme-days">
     <h2 id="extreme-days">Charakteristické teplotní dny</h2>
     <div class="atlas-stat-grid">
@@ -82,7 +84,7 @@ const records=[
     if(ctrl.signal.aborted)return;
     if(data.schemaVersion!=='1'||data.status!=='preliminary'||!data.records||
      !data.dayTypes||!data.coverage)throw Error('Nesprávná evidence');
-    const events:{date:string;label:string;value:string}[]=[];
+    const events:{date:string;label:string;value:string;metric:string}[]=[];
     for(const [id,label] of Object.entries(names)){
      const record=data.records[id];
      const valid=record&&Number.isFinite(record.value)&&
@@ -93,7 +95,7 @@ const records=[
      const date=root.querySelector<HTMLElement>('[data-extreme-date="'+id+'"]');
      if(field)field.textContent=display;
      if(date)date.textContent=valid?'Den '+record.localDate+' · bez QC':'Záznam nedostupný';
-     if(valid)events.push({date:record.localDate,label,value:display});
+     if(valid)events.push({date:record.localDate,label,value:display,metric:id});
     }
     const timeline=root.querySelector<HTMLTableSectionElement>('[data-extreme-timeline]');
     if(timeline){
@@ -104,7 +106,16 @@ const records=[
       row.cells[0].textContent='Bez doložených záznamů.';
      }else for(const event of events){
       const row=timeline.insertRow();
-      for(const value of [event.date,event.label,event.value,'Předběžné'])row.insertCell().textContent=value;
+      for(const value of [event.date,event.label,event.value])row.insertCell().textContent=value;
+      const last=row.insertCell();
+      last.append(document.createTextNode('Předběžné · '));
+      const button=document.createElement('button');
+      button.type='button';button.className='atlas-rank-action';
+      button.dataset.extremeDay=event.date;
+      button.dataset.extremeMetric=event.metric;
+      button.textContent='Průběh dne';
+      button.setAttribute('aria-label',event.label+' dne '+event.date+' – otevřít intervalová měření');
+      last.append(button);
      }
     }
     for(const key of ['frost','ice','summer','tropical']){
