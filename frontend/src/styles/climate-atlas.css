@@ -1,0 +1,192 @@
+/* Klimatologický atlas: durable editorial navigation, accessible data cards,
+   real-source visualizations and print-friendly yearbook. Both theme palettes. */
+.climate-atlas{
+ --atlas-accent:var(--teal);
+ --atlas-paper:var(--panel);
+ --atlas-rule:var(--line);
+ --atlas-soft:var(--panel-2);
+ color:var(--text);
+}
+.climate-atlas *{min-width:0}
+.climate-atlas .atlas-eyebrow{
+ margin:0;font-size:11px;font-weight:700;letter-spacing:.17em;text-transform:uppercase;
+ color:var(--teal);
+}
+.climate-atlas .atlas-title{
+ font-size:clamp(30px,4vw,56px);line-height:1.08;letter-spacing:-.045em;
+ font-weight:550;max-width:19ch;margin:7px 0 14px;
+}
+.climate-atlas .atlas-subtitle{
+ max-width:71ch;line-height:1.6;font-size:clamp(14px,1.5vw,17px);
+ color:var(--muted);margin:0;
+}
+.climate-atlas .atlas-hero{
+ background:linear-gradient(125deg,var(--panel),var(--panel-2));
+ border:1px solid var(--line);border-radius:20px;
+ padding:clamp(22px,4vw,46px);margin-bottom:16px;
+ position:relative;overflow:hidden;
+}
+.climate-atlas .atlas-hero::after{
+ content:'';position:absolute;pointer-events:none;right:-55px;top:-80px;
+ width:260px;height:260px;border-radius:50%;
+ border:1px solid color-mix(in srgb,var(--teal) 28%,transparent);
+ box-shadow:0 0 0 38px color-mix(in srgb,var(--teal) 5%,transparent),
+ 0 0 0 78px color-mix(in srgb,var(--teal) 3%,transparent);
+}
+.climate-atlas .atlas-hero>*{position:relative;z-index:1}
+.climate-atlas-nav{
+ display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;
+ padding:5px;background:var(--panel);border:1px solid var(--line);
+ border-radius:15px;margin:0 0 24px;
+}
+.climate-atlas-nav>a{
+ text-decoration:none;display:flex;flex-direction:column;gap:3px;
+ padding:13px 14px;border-radius:10px;color:var(--text);border:1px solid transparent;
+}
+.climate-atlas-nav>a[aria-current="page"]{border-color:var(--line);background:var(--panel-2)}
+.climate-atlas-nav>a:hover{background:var(--panel-2)}
+.climate-atlas-nav .atlas-chapter-number{font-size:11px;letter-spacing:.1em;color:var(--teal)}
+.climate-atlas-nav .atlas-chapter-name{font-size:15px;font-weight:700}
+.climate-atlas-nav small{font-size:11px;color:var(--muted);line-height:1.3}
+.climate-atlas-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:22px}
+.climate-atlas-card{
+ display:flex;flex-direction:column;gap:12px;min-height:190px;
+ padding:25px;border:1px solid var(--line);border-radius:16px;
+ background:var(--panel);color:var(--text);text-decoration:none;
+}
+.climate-atlas-card:hover{border-color:var(--teal);background:var(--panel-2)}
+.climate-atlas-card .number{color:var(--teal);font-size:12px;letter-spacing:.12em}
+.climate-atlas-card h2{font-size:clamp(21px,2.2vw,28px);margin:0;letter-spacing:-.025em}
+.climate-atlas-card p{margin:0;color:var(--muted);line-height:1.55}
+.climate-atlas-card .chapter-link{margin-top:auto;font-weight:650;font-size:13px;color:var(--teal)}
+.climate-atlas-note{
+ padding:14px 18px;border:1px solid var(--line);border-radius:12px;
+ color:var(--muted);background:var(--panel-2);font-size:13px;line-height:1.6;
+}
+.climate-atlas .atlas-section-heading{font-size:24px;margin:32px 0 12px}
+.climate-atlas .atlas-legacy-area{margin-top:32px}
+.climate-atlas .atlas-chapter{
+ display:grid;gap:19px;margin:20px 0 0;
+}
+.climate-atlas .atlas-panel{
+ border:1px solid var(--line);border-radius:16px;padding:clamp(17px,3vw,27px);
+ background:var(--panel);
+}
+.climate-atlas .atlas-panel h2{font-size:clamp(19px,2vw,25px);margin:0 0 9px}
+.climate-atlas .atlas-panel h3{font-size:17px;margin:0 0 8px}
+.climate-atlas .atlas-panel>p{color:var(--muted)}
+.climate-atlas .atlas-stat-grid{
+ display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;
+}
+.climate-atlas .atlas-stat{
+ border:1px solid var(--line);border-radius:12px;
+ padding:18px;background:var(--panel-2);display:flex;flex-direction:column;gap:7px;
+}
+.climate-atlas .atlas-stat>span{font-size:12px;color:var(--muted);line-height:1.35}
+.climate-atlas .atlas-stat>strong{font-size:clamp(21px,2.5vw,30px);line-height:1.15;font-weight:600;overflow-wrap:anywhere}
+.climate-atlas .atlas-stat>small{color:var(--muted);font-size:12px;line-height:1.4}
+.climate-atlas .atlas-filters{
+ display:flex;flex-wrap:wrap;gap:13px;align-items:flex-end;margin-bottom:18px;
+}
+.climate-atlas .atlas-filters label{display:grid;gap:6px;font-size:12px;color:var(--muted);font-weight:650}
+.climate-atlas .atlas-filters select{
+ min-height:43px;min-width:150px;max-width:100%;padding:8px 11px;
+ border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);
+}
+.climate-atlas .atlas-filters button,.climate-atlas .atlas-action{
+ min-height:43px;padding:9px 15px;border:1px solid var(--teal);border-radius:8px;
+ background:var(--teal);color:var(--bg);font-size:13px;font-weight:650;
+}
+.climate-atlas .atlas-filters button:hover,.climate-atlas .atlas-action:hover{filter:brightness(.92)}
+.climate-atlas .atlas-filters button:disabled{opacity:.55}
+.climate-atlas .atlas-status{color:var(--muted);font-size:13px;line-height:1.55}
+.climate-atlas .atlas-status[data-state="error"]{color:var(--red)}
+.climate-atlas .atlas-status[data-state="warning"]{color:var(--gold)}
+.climate-atlas .atlas-table-scroll{overflow-x:auto;max-width:100%;border:1px solid var(--line);border-radius:10px}
+.climate-atlas .atlas-table{width:100%;border-collapse:collapse;font-size:13px;min-width:530px}
+.climate-atlas .atlas-table th,.climate-atlas .atlas-table td{
+ padding:11px 13px;border-bottom:1px solid var(--line);text-align:left;
+}
+.climate-atlas .atlas-table th{
+ color:var(--muted);font-size:12px;background:var(--panel-2);font-weight:700;
+}
+.climate-atlas .atlas-table tr:last-child td{border-bottom:0}
+.climate-atlas .atlas-table td:not(:first-child){font-variant-numeric:tabular-nums}
+.climate-atlas .atlas-chart{
+ width:100%;min-height:195px;margin-top:8px;
+}
+.climate-atlas .atlas-chart svg{display:block;width:100%;height:auto;max-height:350px}
+.climate-atlas .atlas-chart .chart-grid{stroke:var(--line);stroke-width:1}
+.climate-atlas .atlas-chart .chart-line{stroke:var(--teal);stroke-width:2.5;fill:none;stroke-linejoin:round;stroke-linecap:round}
+.climate-atlas .atlas-chart .chart-points{fill:var(--teal)}
+.climate-atlas .atlas-chart .chart-axis{fill:var(--muted);font-size:11px}
+.climate-atlas .atlas-results{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin:10px 0}
+.climate-atlas .atlas-result{padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--panel-2)}
+.climate-atlas .atlas-result span,.climate-atlas .atlas-result small{display:block;color:var(--muted);font-size:12px}
+.climate-atlas .atlas-result strong{display:block;font-size:23px;line-height:1.4;margin:5px 0;font-variant-numeric:tabular-nums}
+.climate-atlas .atlas-compare-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.climate-atlas .atlas-compare-box{border:1px solid var(--line);border-radius:12px;padding:16px;background:var(--panel-2)}
+.climate-atlas .atlas-compare-box h3{margin:0 0 9px}
+.climate-atlas .atlas-compare-box .atlas-reading{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding:9px 0}
+.climate-atlas .atlas-compare-box .atlas-reading:last-child{border-bottom:0}
+.climate-atlas .atlas-compare-box .atlas-reading strong{font-variant-numeric:tabular-nums}
+.climate-atlas .atlas-coverage{height:7px;border-radius:20px;background:var(--line);overflow:hidden;margin:9px 0}
+.climate-atlas .atlas-coverage>span{display:block;height:100%;background:var(--teal)}
+.climate-atlas .atlas-yearbook{
+ background:var(--panel);border:1px solid var(--line);border-radius:18px;
+ padding:clamp(23px,4vw,50px);
+}
+.climate-atlas .atlas-yearbook-header{
+ padding-bottom:20px;margin-bottom:26px;border-bottom:1px solid var(--line);
+}
+.climate-atlas .atlas-yearbook-header h2{
+ font-size:clamp(37px,5vw,68px);font-weight:500;line-height:1.05;margin:13px 0;
+ letter-spacing:-.045em;
+}
+.climate-atlas .atlas-yearbook-header p{color:var(--muted);max-width:60ch;line-height:1.6}
+.climate-atlas .atlas-yearbook .atlas-stat-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.climate-atlas .atlas-yearbook table{width:100%;border-collapse:collapse;font-size:12px}
+.climate-atlas .atlas-yearbook th,.climate-atlas .atlas-yearbook td{padding:9px;border-bottom:1px solid var(--line);text-align:left}
+.climate-atlas .atlas-yearbook th{color:var(--muted)}
+.climate-atlas .atlas-yearbook .chapter{margin:30px 0 12px;border-bottom:1px solid var(--line);padding-bottom:10px}
+.climate-atlas .atlas-yearbook .chapter h3{font-size:21px;margin:0}
+.climate-atlas .atlas-yearbook-footer{margin-top:28px;font-size:12px;color:var(--muted);line-height:1.6}
+.climate-atlas .atlas-print-note{font-size:12px;color:var(--muted)}
+@media(max-width:900px){
+ .climate-atlas-nav{grid-template-columns:repeat(5,minmax(0,1fr))}
+ .climate-atlas-nav>a{padding:12px 8px}
+ .climate-atlas-nav small{display:none}
+ .climate-atlas .atlas-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:650px){
+ .climate-atlas .atlas-hero{padding:24px 18px}
+ .climate-atlas-nav{display:flex;overflow-x:auto;scroll-snap-type:x proximity}
+ .climate-atlas-nav>a{flex:0 0 105px;scroll-snap-align:start}
+ .climate-atlas-grid{grid-template-columns:1fr}
+ .climate-atlas-card{min-height:155px;padding:19px}
+ .climate-atlas .atlas-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .climate-atlas .atlas-results{grid-template-columns:1fr}
+ .climate-atlas .atlas-compare-grid{grid-template-columns:1fr}
+ .climate-atlas .atlas-yearbook .atlas-stat-grid{grid-template-columns:1fr}
+ .climate-atlas .atlas-stat>strong{font-size:24px}
+ .climate-atlas .atlas-filters label{flex:1 1 135px}
+ .climate-atlas .atlas-filters select{min-width:0;width:100%}
+ .climate-atlas .atlas-yearbook{padding:22px 15px}
+}
+@media print{
+ @page{size:A4;margin:15mm}
+ :root{color-scheme:light!important}
+ .site-header,.site-footer,.mobile-dock,.climate-atlas-nav,.atlas-hero,
+ .atlas-filters,.atlas-screen-only,.atlas-print-note,.skip-link{display:none!important}
+ html,body,.content,.wrap{background:#fff!important;color:#162b2b!important;
+  width:auto!important;max-width:none!important;margin:0!important;padding:0!important}
+ .climate-atlas .atlas-yearbook{background:#fff!important;color:#162b2b!important;
+  border:0!important;padding:0!important;border-radius:0!important}
+ .climate-atlas .atlas-stat,.climate-atlas .atlas-panel{background:#fff!important;
+  border-color:#bbb!important;color:#162b2b!important}
+ .climate-atlas .atlas-stat>span,.climate-atlas .atlas-stat>small,
+ .climate-atlas .atlas-yearbook p{color:#304444!important}
+ .climate-atlas .atlas-stat,.climate-atlas .atlas-yearbook table tr{
+  break-inside:avoid;page-break-inside:avoid}
+ .climate-atlas .atlas-chart,.climate-atlas .atlas-yearbook .chapter{break-inside:avoid}
+}
