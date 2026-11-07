@@ -49,14 +49,14 @@ jobs:
           node scripts/year-comparison-browser-check.mjs
           node scripts/accessibility-audit.mjs
           node scripts/theme-browser-check.mjs
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: evergreen-layout-audit
           path: frontend/test-results/layout-audit
           retention-days: 7
           if-no-files-found: ignore
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: wcag-browser-audit
