@@ -5,8 +5,8 @@
 ## Co se děje
 - Timer každé cca 2 minuty načte GitHub main pomocí fetch + merge --ff-only. Odmítne přepsat lokálně upravené sledované soubory.
 - Před publikováním spustí npm ci, Fastify testy, Astro check, frontend unit testy a Astro build.
-- Výstup dist/ kopíruje do release složky označené celým commit SHA. Symlink current se změní až po úspěšném buildu. Předchozí build zůstává.
-- Fastify z /api běží jako neprivilegovaná systemd služba na 127.0.0.1:3100. Produkční proces Node běží **bez `--watch`**: při pádu jej restartuje systemd. Po úspěšném sestavení a zveřejnění nového commitu root-owned aktivační helper restartuje API, počká na `/healthz` a `/readyz` a uloží poslední úspěšně aktivovaný commit. Při každém běhu timeru zdravé API se stejným commitem nerestartuje.
+- Výstup dist/ kopíruje do release složky označené celým commit SHA a uloží kandidáta `.pending-commit`. **Symlink `current` se změní až po úspěšném sestavení a kontrole `/healthz` + `/readyz` API**. Při selhání API zůstane dosavadní frontend zveřejněný.
+- Fastify z /api běží jako neprivilegovaná systemd služba na 127.0.0.1:3100. Node běží **bez `--watch`**. Po sestavení nového commitu root-owned helper aktivuje API, ověří `/healthz` a `/readyz`, jako uživatel `loucka` publikuje připravený frontend a uloží poslední aktivovaný commit. Zdravé API se stejným obsahem `api/` se nerestartuje. **Toto je gating publikace HTML, nikoliv plnohodnotný blue/green rollback backendu:** při chybném restartu API musí operátor obnovit také jeho předchozí binární verzi.
 - nginx na TCP 8080 obsluhuje statický web a proxy /api/v1 na localhost 3100. Vnější TLS + Access List nastav v již existujícím Nginx Proxy Manageru. **Nesmí být otevřený přímo do internetu port 8080, 3100 nebo 4321.**
 
 ## Jednorázová instalace
@@ -70,6 +70,32 @@ Pro sledování:
     journalctl -fu loucka-preview-sync.service
 
 Původní Astro HMR vývoj zůstává oddělený: v důvěryhodné LAN jako loucka můžeš spustit cd ~/Loucka_weather/frontend && npm run dev -- --host 0.0.0.0. Synchronizace stejné pracovní kopie přes Git automaticky projeví změny v běžícím Vite.
+
+## Povinná aktualizace aktivačního helperu při přechodu na staged publish
+
+**Nejdřív změň root-owned aktivační helper, až poté sluč změnu do `main` a povol automatickou synchronizaci.** Starý helper čte pouze `current/.source-commit` a nový kandidát se bez nové verze helperu nesmí publikovat. Zastav timer, připrav helper ze schváleného commitu a ručně ověř `bash -n`. Nespouštěj shell skript přímo z uživatelsky zapisovatelného repozitáře jako root.
+
+    systemctl disable --now loucka-preview-sync.timer
+    install -D -o root -g root -m 0755 /home/loucka/Loucka_weather/deploy/lxc/loucka-preview-api-activate.sh /usr/local/libexec/loucka-preview-api-activate.sh
+    bash -n /usr/local/libexec/loucka-preview-api-activate.sh
+    systemctl daemon-reload
+    systemctl start loucka-preview-sync.service
+    journalctl -u loucka-preview-sync.service -n 60 --no-pager
+    cat /srv/loucka-preview/current/.source-commit
+    systemctl enable --now loucka-preview-sync.timer
+
+Tyto příkazy prováděj teprve ve chvíli, kdy je v lokální pracovní kopii **schválený commit nové implementace**, ne ze starého `main`. Před vypnutím/ zapnutím timeru ověř `systemctl cat loucka-preview-sync.service`, že načítá správný root-owned helper. Při selhání se kandidát ponechá v `/srv/loucka-preview/.pending-commit` a veřejný `current` se nepřepne. Backend má stále vlastní restartovací strategii a při chybě nové API revize může vyžadovat ruční rollback. Předchozí frontend release se nemaže.
+
+## IP adresy klientů za Nginx Proxy Managerem
+
+Ve výchozím stavu je místní limit `5r/s` vztažen na `$remote_addr`; pokud LXC vidí jen IP NPM, **limitují se všichni návštěvníci dohromady**. Konfigurace nyní podporuje bezpečné přepsání skutečné IP prostřednictvím `X-Forwarded-For`, ale **jen když je přesná IP důvěryhodného NPM explicitně povolena** na stagingu:
+
+    install -d -o root -g root -m 0755 /etc/nginx/loucka-trusted-proxy
+    # Nahraď dokumentační IP skutečnou adresou NPM, kterou vidí LXC:
+    printf 'set_real_ip_from %s;\n' '192.0.2.10' > /etc/nginx/loucka-trusted-proxy/10-npm.conf
+    nginx -t && systemctl reload nginx
+
+Adresa `192.0.2.10` je výhradně dokumentační příklad; **nikdy ji slepě nekopíruj do reálného prostředí**. Důvěryhodnou adresu zjisti z vlastní konfigurace NPM a přístupu k síti LXC. **Nikdy** nenastavuj `set_real_ip_from 0.0.0.0/0`, celou privátní síť nebo náhodné rozsahy. Zajisti, aby TCP 8080 bylo dostupné pouze od NPM/důvěryhodné LAN; jinak by přímé požadavky mohly obcházet proxy. NPM musí do `X-Forwarded-For` korektně přidávat skutečného klienta. Na LXC ověř výstup `nginx -T` a že účinná `$remote_addr` rozlišuje různé klienty; neloguj jejich IP do veřejného repozitáře. Opravu nelze označit za kompletní bez tohoto provozního kroku.
 
 ## NPM a přístup
 Nastav v NPM Proxy Host pro vlastní testovací subdoménu (například dev.pocasi-loucka.eu *pouze pokud ji vlastníš a DNS správně směruje*), Forward Hostname/IP = IP testovacího LXC, Forward Port = 8080, SSL certifikát/Force SSL a Access List omezující návštěvníky. Nepovoluj 8080 na routeru směrem z internetu; NPM se k němu připojí po LAN. Vnější testovací web **nepatří do veřejného provozu**: backend není produkčně hardenovaný.
