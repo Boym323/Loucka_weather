@@ -2,6 +2,43 @@
 
 **Aktuální vývoj: 1. 11. 2026.** Web vzniká podle uživatelem schváleného devítipanelového tmavého vizuálního návrhu. Testovací náhled: https://dev.pocasi-loucka.eu/. Není to veřejná produkce. Všechny změny do main se sestavují a nasazují přes LXC automaticky; přesná zveřejněná revize je vidět ve webové patičce a v /deployment.json.
 
+## Klimatologický atlas – etapa II (7. 11. 2026)
+
+Druhá etapa rozšiřuje stávající kapitoly bez změn na serveru nebo
+ve zdrojové MariaDB:
+
+- **Srovnání sezón**: pod dřívějším porovnáním je žebříček všech
+  *dokončených* jarních, letních, podzimních a zimních období. Čerpá
+  **jediný read-only** `/api/v1/climate/temperature-years`, používá
+  časově vážený průměr platně měřených dnů. Do pořadí vstupují pouze
+  sezóny s alespoň 90 % platných kalendářních dnů a 90 % skutečného
+  času. Jednotlivý den musí mít minimálně 80 % časové úplnosti;
+  `partial`, `missing`, `suspect` záznamy se nepočítají. Nekompletní
+  sezóny jsou samostatně vysvětlené, lze z tabulky přímo nastavit
+  porovnání dvou sezón. Správně zohledněno CET/CEST a zimy přes roky.
+- **Extrémy**: čtyři známé předběžné denní rekordy mají akci
+  `Průběh dne`. Detail načte jediný omezený read-only `/api/v1/history`
+  s `resolution=raw` a příslušnou veličinou a místním kalendářním dnem
+  (23/24/25 hodin, nepřesahuje 1000 bodů). Pro teploty/nárazy je
+  přerušovaný průběh, pro intervalové srážky sloupce. Denní souhrn
+  automaticky nepotvrzuje přesný čas extrému; nedostupná intervalová
+  data nevytvářejí umělou křivku.
+- **Ročenka**: dva responzivní, tisknutelné SVG měsíční sloupcové grafy
+  teploty a srážek z **již načtených** denních souhrnů. Graf vykresluje
+  jen měsíce s alespoň 80 % platných dnů; řádná nula 0 mm se zachová,
+  neúplný měsíc má samostatný přerušovaný symbol. Tisk A4 obsahuje
+  grafy, plný datový přehled a metodiku; export je nativní dialog
+  prohlížeče, nikoliv serverově generované PDF.
+
+**Ověřování**: `frontend/tests/climate-atlas-chapter-two.test.mjs`
+kontroluje zimní překryv, přestupný rok, CET/CEST, nulové a neplatné
+hodnoty, hranice pokrytí a čitelnost vstupů grafů;
+`frontend/scripts/climate-atlas-browser-check.mjs` má izolované
+prohlížečové fixture v obou motivech a šířkách, porovnání, detail
+extrému, tiskový režim a screenshoty všech pěti kapitol. Stále jde
+o historický archiv bez dokončené forenzní kontroly a nikoliv
+o standardní klimatologický normál.
+
 ## Klimatologický atlas – etapa I (7. 11. 2026)
 
 Atlas rozšiřuje existující `/klimatologie/` o redakčně pojatý přehled a
