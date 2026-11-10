@@ -97,3 +97,19 @@ Doporučeno `systemd EnvironmentFile` s oprávněním 0600 mimo Git. Chybějíc�
 ## Konsolidované roční pohledy (read-only)
 
 GET /api/v1/climate/annual-matrix?metric=outTemp&units=metricwx&dataset=original vrací roky od 2009 se stavem QC, časovým pokrytím a metodikou vážených průměrů. Podrobnosti: docs/ANNUAL_CONSOLIDATION_2026-11-03.md. Zdrojové archive a rekonstrukce se nemění.
+
+## Historický QC screening – pouze on-demand / read-only
+
+Opakovatelný CLI report `npm run qc:report -- --from 2026-10-10T00:00:00Z --to 2026-10-11T00:00:00Z`
+pro původní měření a LuhaMet / ILOUKA4. Čte pouze přes zvláštní MariaDB účet s
+opravením SELECT, vyžaduje `WEATHER_QC_READ_ONLY=YES` a `WEATHER_STAGING_ENABLED=YES`,
+max. 7 dní na jeden běh. Není to HTTP endpoint a neprovádí korekce.
+
+Výstup je JSON: kontrola čidel, časových překryvů a konstantních hodnot,
+bias/MAE/RMSE a orientační spolehlivost spárovaných časů, návrhy pouze
+k ruční kontrole (`needs_manual_review`, nikdy `approved`).
+
+Úplný bezpečný postup s odděleným účtem, omezeními a příkazy:
+[docs/QC_READ_ONLY_2026-11-10.md](../docs/QC_READ_ONLY_2026-11-10.md).
+Zavedení účtu a případné periodické spouštění na stagingu vyžaduje
+samostatné schválení a ověřený první provozní výstup.
