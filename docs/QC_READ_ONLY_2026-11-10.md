@@ -68,8 +68,8 @@ hodnotu, která by se měla automaticky zapsat jako měření Loučky.
 Pro staging je možné opětovně použít stávající účet `loucka_web_ro`,
 pokud má pouze granty:
 `USAGE ON *.*`,
-`SELECT ON \`pocasi-loucka.eu\`.*` a
-`SELECT ON \`loucka_reconstruction\`.\`reference_observations\``.
+`SELECT ON pocasi-loucka.eu.*` a
+`SELECT ON loucka_reconstruction.reference_observations`.
 Druhou volbou je nový samostatný účet s přesnými tabulkovými SELECT granty.
 Ani jedna možnost nevyžaduje změnu původních dat. Zpráva nesmí obsahovat
 heslo ani jeho hash.
