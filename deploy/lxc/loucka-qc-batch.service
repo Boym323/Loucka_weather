@@ -1,0 +1,33 @@
+[Unit]
+Description=Loucka weather historical QC - advisory, SELECT-only, one week per run
+Documentation=https://github.com/Boym323/Loucka_weather/blob/main/docs/QC_READ_ONLY_2026-11-10.md
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=/etc/loucka-weather/qc.env
+ConditionPathExists=/home/loucka/Loucka_weather/api/scripts/qc-batch.mjs
+
+[Service]
+Type=oneshot
+User=loucka
+Group=loucka
+WorkingDirectory=/home/loucka/Loucka_weather/api
+EnvironmentFile=/etc/loucka-weather/qc.env
+ExecStart=/usr/bin/node /home/loucka/Loucka_weather/api/scripts/qc-batch.mjs --from 2009-01-01T00:00:00Z --to 2026-11-10T00:00:00Z --output-dir /var/lib/loucka-qc --max-windows 1
+UMask=0077
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/lib/loucka-qc
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+MemoryMax=256M
+CPUQuota=50%
+TimeoutStartSec=120s
+Nice=10
+StandardOutput=journal
+StandardError=journal
