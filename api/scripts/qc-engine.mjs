@@ -109,9 +109,11 @@ function inspect(rows,station,window){
   let evaluated=0,rejected=0;
   const rejectedRows=[];
   for(const entry of entries){
-    if(entry.time<window.start||entry.time>=window.end)continue;
-    evaluated++;
     const slot=slotFor(entry.time);
+    // Reference timestamps can be a few seconds before UTC boundary; assess their aligned slot.
+    if(station==='loucka'?(entry.time<window.start||entry.time>=window.end):
+       (slot<window.start||slot>=window.end))continue;
+    evaluated++;
     if(!entry.flags.length&&entry.temperature!==null&&slots.get(slot)?.length===1)
       accepted.set(slot,entry);
     else{
@@ -175,7 +177,7 @@ function compare(own,reference,window,station){
   const badRows=own.summary.rejectedRows+reference.summary.rejectedRows;
   const totalRows=own.summary.totalRows+reference.summary.totalRows;
   const rejectedFraction=totalRows?badRows/totalRows:1;
-  const score=Math.round(100*(0.35*Math.min(1,matchedFraction/.8)+
+  const score=pairs===0?0:Math.round(100*(0.35*Math.min(1,matchedFraction/.8)+
     0.25*Math.min(1,pairs/144)+0.25*Math.max(0,1-(mae??5)/5)+
     0.15*(1-rejectedFraction)));
   const level=pairs===0?'insufficient':
