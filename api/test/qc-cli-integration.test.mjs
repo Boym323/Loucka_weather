@@ -115,6 +115,45 @@ test('QC CLI uses real SELECT-only cross-schema MariaDB and rejects admin creden
   assert.match(writer.stderr,/SELECT-only/);
   await admin.query('REVOKE UPDATE ON '+ownTable+" FROM 'qc_reader_ci'@'%'");
 
+  // Accelerated catch-up still runs the exact SELECT-only qc-report for each
+  // 7-day slice; test resumability and cap on an ephemeral CI-only database.
+  const fastFolder=mkdtempSync(join(tmpdir(),'loucka-qc-catchup-'));
+  chmodSync(fastFolder,0o700);
+  t.after(()=>rmSync(fastFolder,{recursive:true,force:true}));
+  const fastArgs=['scripts/qc-batch.mjs','--from','2026-10-10T00:00:00Z',
+    '--to','2026-10-25T00:00:00Z','--output-dir',fastFolder,
+    '--station','luhamet_sehradice','--catch-up','--delay-ms','1000'];
+  const firstFast=spawnSync(process.execPath,[...fastArgs,'--max-windows','2'],
+    {cwd:process.cwd(),env,encoding:'utf8',timeout:15000});
+  assert.equal(firstFast.status,0,firstFast.stderr);
+  const firstLines=firstFast.stdout.trim().split('\n').map(line=>JSON.parse(line));
+  const firstResult=firstLines.at(-1);
+  assert.equal(firstResult.mode,'catch-up');
+  assert.equal(firstResult.processedThisRun,2);
+  assert.equal(firstResult.pendingWindows,1);
+  assert.equal(firstResult.safety.databaseWrites,0);
+  assert.equal(readdirSync(fastFolder).filter(n=>n.endsWith('.json')).length,2);
+  const secondFast=spawnSync(process.execPath,[...fastArgs,'--max-windows','2'],
+    {cwd:process.cwd(),env,encoding:'utf8',timeout:15000});
+  assert.equal(secondFast.status,0,secondFast.stderr);
+  const secondResult=JSON.parse(secondFast.stdout.trim().split('\n').at(-1));
+  assert.equal(secondResult.processedThisRun,1);
+  assert.equal(secondResult.pendingWindows,0);
+  assert.equal(readdirSync(fastFolder).filter(n=>n.endsWith('.json')).length,3);
+  const repeatFast=spawnSync(process.execPath,[...fastArgs,'--max-windows','2'],
+    {cwd:process.cwd(),env,encoding:'utf8',timeout:15000});
+  assert.equal(repeatFast.status,0,repeatFast.stderr);
+  assert.equal(JSON.parse(repeatFast.stdout).processedThisRun,0);
+  const offline=spawnSync(process.execPath,['scripts/qc-batch.mjs',
+    '--from','2026-10-10T00:00:00Z','--to','2026-10-25T00:00:00Z',
+    '--output-dir',fastFolder,'--station','luhamet_sehradice','--summary'],
+    {cwd:process.cwd(),env:{},encoding:'utf8',timeout:15000});
+  assert.equal(offline.status,0,offline.stderr);
+  assert.equal(JSON.parse(offline.stdout).processedWindows,3);
+  assert.equal(JSON.parse(offline.stdout).pendingWindows,0);
+  for(const name of readdirSync(fastFolder).filter(n=>n.endsWith('.json')))
+    assert.equal(statSync(join(fastFolder,name)).mode&0o777,0o600);
+
   const privileged=spawnSync(process.execPath,args,{cwd:process.cwd(),
     env:{...env,WEATHER_QC_DB_USER:'root',WEATHER_QC_DB_PASSWORD:'root'},
     encoding:'utf8',timeout:15000});

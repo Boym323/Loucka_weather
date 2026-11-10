@@ -248,3 +248,93 @@ plánovaného provozu prověř chybu a případné zaseknuté `.qc-batch.lock`.
 Dílčí `--summary` není diagnostikou dlouhodobého bias/MAE;
 před ručním schválením je nutné otevřít detail konkrétního JSON reportu.
 Referenční stanice se nikdy nepřepisují jako vlastní měření Loučky.
+
+
+## Jednorázové zrychlené dokončení celé historie (opt-in)
+
+Po úspěšném ověření původního automatického 15minutového timeru lze
+jednorázově projít zbývající historii rychleji, **stále pouze sérií
+samostatných, nejvýše 7denních SELECT dotazů**, nikoli neomezenou
+SQL dávkou. Volba `--catch-up` je výslovná; běžný timer bez této volby
+nadále vykoná právě jeden sedmidenní úsek a skončí.
+
+Důležité bezpečnostní vlastnosti:
+- Zkontrolované již existující JSON reporty zůstanou zachované,
+  při opakování se přeskočí. Uložené reporty jsou privátní `0600`.
+- Zrychlený sken drží po celou dobu stejný zámek `.qc-batch.lock`
+  jako běžné dávky; při jiné současné instanci fail-closed.
+- `--max-windows` je pro tento režim maximálně 1000 nových oken,
+  `--delay-ms` povoluje jen 1000–60000 ms; výchozí 2000 ms.
+- Pokud QC odhalí problém, selže SQL nebo narazí na neplatný uložený
+  report, **zastaví se** a nevydá částečné období za úspěšné.
+- Při bezpečném ukončení dostane proces SIGTERM, neprobíhá žádné
+  automatické doplnění historie. Po restartu lze navázat.
+- Root-owned `qc.env`, only-SELECT účet `loucka_web_ro`,
+  systemd sandbox, CPU 50 %, RAM 256 MiB.
+- Počítá se neměnný auditní cutoff `2026-11-10T00:00:00Z`,
+  nikoli nové dny v následujících týdnech.
+
+### 1. Zastavit pomalý timer a ověřit staging verzi
+
+```bash
+systemctl disable --now loucka-qc-batch.timer
+systemctl stop loucka-qc-batch.service
+systemctl is-active loucka-qc-batch.timer || true
+
+runuser -u loucka -- git -C /home/loucka/Loucka_weather \
+  rev-parse --short HEAD
+```
+
+**Nespouštět catch-up na starší verzi**, která nezná volbu
+`--catch-up`. Neodstraňovat původní JSON a nepřepisovat `qc.env`.
+
+### 2. Spustit jeden zrychlený systemd proces bez blokování konzole
+
+```bash
+systemd-run --unit=loucka-qc-catchup --collect \
+  -p Type=exec \
+  -p User=loucka -p Group=loucka \
+  -p WorkingDirectory=/home/loucka/Loucka_weather/api \
+  -p EnvironmentFile=/etc/loucka-weather/qc.env \
+  -p NoNewPrivileges=yes -p ProtectSystem=strict \
+  -p ProtectHome=read-only \
+  -p ReadWritePaths=/var/lib/loucka-qc \
+  -p PrivateTmp=yes -p PrivateDevices=yes \
+  -p RestrictSUIDSGID=yes \
+  -p RestrictAddressFamilies="AF_UNIX AF_INET AF_INET6" \
+  -p MemoryMax=256M -p CPUQuota=50% -p Nice=10 \
+  -p RuntimeMaxSec=4h -p TimeoutStopSec=120s \
+  /usr/bin/node /home/loucka/Loucka_weather/api/scripts/qc-batch.mjs \
+  --from 2009-01-01T00:00:00Z --to 2026-11-10T00:00:00Z \
+  --output-dir /var/lib/loucka-qc \
+  --catch-up --max-windows 1000 --delay-ms 2000
+```
+
+Předchozí funkční timer se **nesmí** současně zapínat.
+`systemd-run` neprovede žádné automatické přepisování dat ani
+změnu DB oprávnění. Při limitu prostředků nemusí proběhnout celý scan
+v jednom čtyřhodinovém běhu; v takovém případě lze po kontrole chyby
+pokračovat stejným příkazem, který hotová okna přeskočí.
+
+### 3. Průběžné sledování, opakování a zastavení
+
+```bash
+journalctl -u loucka-qc-catchup.service -n 40 --no-pager
+systemctl status loucka-qc-catchup.service --no-pager
+
+runuser -u loucka -- node \
+  /home/loucka/Loucka_weather/api/scripts/qc-batch.mjs \
+  --from 2009-01-01T00:00:00Z --to 2026-11-10T00:00:00Z \
+  --output-dir /var/lib/loucka-qc --summary
+
+# Zastavit jednorázový běh (hotové JSON zůstanou zachované):
+systemctl stop loucka-qc-catchup.service
+```
+
+`pendingWindows=0` znamená zpracováno všech 932 UTC oken,
+**nikoliv** že jsou všechny měřicí hodnoty v pořádku nebo že se
+automaticky schválila jejich rekonstrukce.
+
+**Pozor:** v letech bez originálu i referencí může být `candidateCount=0`,
+ačkoli jde o úplný výpadek; přehled chybějících dat je úkolem další QC
+etapy. Neinterpretovat nulový počet kandidátů jako bezchybnou historii.

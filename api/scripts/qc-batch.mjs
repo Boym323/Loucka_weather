@@ -1,12 +1,16 @@
 #!/usr/bin/env node
 /** Incremental QC scanning, opt-in only. Writes private JSON reports, never SQL. */
 import {spawnSync} from 'node:child_process';
+import {setTimeout as sleep} from 'node:timers/promises';
 import {openSync,closeSync,readFileSync,writeFileSync,renameSync,unlinkSync,
   readdirSync,lstatSync,existsSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {planQcWindows,reportFilename,validateQcReport,summarizeQcReports}
   from './qc-batch-lib.mjs';
+
+let gracefulStop=false;
+for(const signal of ['SIGINT','SIGTERM'])process.on(signal,()=>{gracefulStop=true;});
 
 function cli(args){
   if(args.includes('--help')){
@@ -15,22 +19,31 @@ function cli(args){
   const options=new Map();
   for(let i=0;i<args.length;i++){
     const key=args[i];
-    if(!['--from','--to','--output-dir','--max-windows','--station','--summary','--dry-run'].includes(key)||
+    if(!['--from','--to','--output-dir','--max-windows','--station','--summary','--dry-run','--catch-up','--delay-ms'].includes(key)||
        options.has(key))throw new Error('Unknown or duplicated argument');
-    if(key==='--summary'||key==='--dry-run')options.set(key,true);
+    if(key==='--summary'||key==='--dry-run'||key==='--catch-up')options.set(key,true);
     else if(!args[i+1]||args[i+1].startsWith('--'))throw new Error('Missing argument value');
     else options.set(key,args[++i]);
   }
-  const max=Number(options.get('--max-windows')??1);
-  if(!Number.isSafeInteger(max)||max<1||max>4)
-    throw new Error('max-windows must be an integer from 1 to 4');
+  const catchUp=!!options.get('--catch-up');
+  if(catchUp&&(options.has('--summary')||options.has('--dry-run')))
+    throw new Error('Catch-up mode cannot be combined with dry-run or summary');
+  if(options.has('--delay-ms')&&!catchUp)
+    throw new Error('delay-ms requires explicit catch-up mode');
+  const max=Number(options.get('--max-windows')??(catchUp?1000:1));
+  if(!Number.isSafeInteger(max)||max<1||max>(catchUp?1000:4))
+    throw new Error(catchUp?'max-windows must be 1..1000 in catch-up mode':
+      'max-windows must be 1..4 in scheduled mode');
+  const delayMs=Number(options.get('--delay-ms')??2000);
+  if(!Number.isSafeInteger(delayMs)||delayMs<1000||delayMs>60000)
+    throw new Error('delay-ms must be an integer from 1000 to 60000');
   const dir=options.get('--output-dir');
   if(typeof dir!=='string'||!path.isAbsolute(dir))
     throw new Error('An absolute --output-dir is required');
   const stations=options.has('--station')?options.get('--station').split(','):undefined;
   const windows=planQcWindows(options.get('--from'),options.get('--to'),stations);
-  return {dir:path.resolve(dir),windows,max,summary:!!options.get('--summary'),
-    dryRun:!!options.get('--dry-run')};
+  return {dir:path.resolve(dir),windows,max,catchUp,delayMs,
+    summary:!!options.get('--summary'),dryRun:!!options.get('--dry-run')};
 }
 function privateDirectory(dir){
   const info=lstatSync(dir);
@@ -72,18 +85,18 @@ function scan(window){
     throw new Error('Read-only QC child process failed; see secure service journal');
   return validateQcReport(JSON.parse(result.stdout),window);
 }
-function withLock(dir,callback){
+async function withLock(dir,callback){
   const file=path.join(dir,'.qc-batch.lock');
   const fd=openSync(file,'wx',0o600);
   try{
     writeFileSync(fd,'PID='+process.pid+'; QC read-only batch\n');
-    return callback();
+    return await callback();
   }finally{
     closeSync(fd);
     unlinkSync(file);
   }
 }
-function main(){
+async function main(){
   const options=cli(process.argv.slice(2));
   if(options.help){
     process.stdout.write([
@@ -92,7 +105,11 @@ function main(){
       '  --to 2026-11-10T00:00:00Z --output-dir /var/lib/loucka-qc',
       '  [--max-windows 1..4] [--station luhamet_sehradice,wu_ilouka4]',
       '  [--dry-run] [--summary]',
-      'Existing validated reports are skipped. Each new run processes at most 4 x 7 UTC days.',
+      '  [--catch-up --max-windows 1000 --delay-ms 2000]',
+      'Catch-up is explicit and processes 7-day bounded SELECTs sequentially,',
+      'with at least a 1-second pause between each newly scanned week.',
+      'Stop the loucka-qc-batch.timer before starting catch-up.',
+      'Existing validated reports are skipped; default scheduled runs process at most 4 weeks.',
       'Folder must already exist, be owned by the caller, mode 0700 and outside public web/Git.',
       'The underlying qc-report CLI requires staging flags and a SELECT-only DB account.'
     ].join('\n')+'\n');
@@ -110,7 +127,8 @@ function main(){
   if(options.dryRun){
     process.stdout.write(JSON.stringify({mode:'dry-run',plannedWindows:seen.length,
       completedWindows:seen.length-missing.length,pendingWindows:missing.length,
-      nextWindows:missing.slice(0,options.max).map(x=>x.window)},null,2)+'\n');
+      nextWindows:missing.slice(0,Math.min(options.max,4)).map(x=>x.window),
+      maxWindowsThisRun:options.max,catchUp:options.catchUp},null,2)+'\n');
     return;
   }
   const selected=missing.slice(0,options.max);
@@ -119,9 +137,15 @@ function main(){
       plannedWindows:seen.length,processedThisRun:0,pendingWindows:0})+'\n');
     return;
   }
-  const completed=withLock(options.dir,()=>{
+  const completed=await withLock(options.dir,async()=>{
     const done=[];
     for(const item of selected){
+      if(gracefulStop)break;
+      // The pause is between bounded DB reads, not inside an SQL transaction.
+      if(options.catchUp&&done.length){
+        await sleep(options.delayMs);
+        if(gracefulStop)break;
+      }
       const existing=checkedFile(options.dir,item.window);
       if(existing.report)continue;
       const report=scan(item.window);
@@ -130,19 +154,35 @@ function main(){
         acceptedOriginal:report.sourceQuality.loucka.acceptedSlots,
         candidateCount:report.candidates.total,
         truncated:report.candidates.truncated});
+      // Keep logs compact: every 25 completed weeks and the first week.
+      if(options.catchUp&&(done.length===1||done.length%25===0)){
+        process.stdout.write(JSON.stringify({event:'catch_up_progress',
+          completedThisRun:done.length,remainingWindows:missing.length-done.length,
+          lastWindowTo:item.window.to,
+          safety:{automaticCorrections:false,databaseWrites:0}})+'\n');
+      }
     }
     return done;
   });
+  if(options.catchUp){
+    process.stdout.write(JSON.stringify({
+      status:gracefulStop?'stopped':'screening_only',mode:'catch-up',
+      plannedWindows:seen.length,processedThisRun:completed.length,
+      pendingWindows:missing.length-completed.length,
+      lastCompleted:completed.at(-1)??null,
+      safety:{automaticCorrections:false,automaticApprovals:false,databaseWrites:0}
+    })+'\n');
+    return;
+  }
   process.stdout.write(JSON.stringify({status:'screening_only',plannedWindows:seen.length,
     processedThisRun:completed.length,
     pendingWindows:missing.length-completed.length,
     reports:completed,safety:{automaticCorrections:false,databaseWrites:0}},null,2)+'\n');
 }
-try{main();}
-catch(error){
+main().catch(error=>{
   // No database driver stack traces, credentials or raw SQL ever reach stdout.
-  const safe=error instanceof Error&&/^(Unknown|Missing argument|max-windows|An absolute|Expected|Timestamp|QC history|Only allowlisted|Window must|Output directory|QC reports|Existing report|Invalid or potentially unsafe|QC report|EEXIST)/.test(error.message);
+  const safe=error instanceof Error&&/^(Unknown|Missing argument|max-windows|An absolute|Expected|Timestamp|QC history|Only allowlisted|Window must|Output directory|QC reports|Existing report|Invalid or potentially unsafe|QC report|Catch-up|delay-ms|EEXIST)/.test(error.message);
   process.stderr.write('QC batch failed: '+(safe?error.message:
     'check protected output directory, report validity and private service journal')+'\n');
   process.exitCode=1;
-}
+});
