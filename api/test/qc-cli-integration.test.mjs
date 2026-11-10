@@ -89,6 +89,32 @@ test('QC CLI uses real SELECT-only cross-schema MariaDB and rejects admin creden
   assert.equal(JSON.parse(summary.stdout).processedWindows,1);
   assert.equal(JSON.parse(summary.stdout).reliabilityByStation.luhamet_sehradice.matchedPairs,2);
 
+  // Reproduce the already existing dev account: schema-wide SELECT on
+  // original weather data, and table-only SELECT on the reference observations.
+  await admin.query('REVOKE SELECT ON '+ownTable+" FROM 'qc_reader_ci'@'%'");
+  await admin.query('GRANT SELECT ON '+ownDb+".* TO 'qc_reader_ci'@'%'");
+  const existingReader=spawnSync(process.execPath,args,
+    {cwd:process.cwd(),env,encoding:'utf8',timeout:15000});
+  assert.equal(existingReader.status,0,existingReader.stderr);
+  assert.equal(JSON.parse(existingReader.stdout).comparisons.luhamet_sehradice.matchedPairs,2);
+
+  // Reference database-wide access is still forbidden.
+  await admin.query('GRANT SELECT ON '+refDb+".* TO 'qc_reader_ci'@'%'");
+  const widenedReference=spawnSync(process.execPath,args,
+    {cwd:process.cwd(),env,encoding:'utf8',timeout:15000});
+  assert.notEqual(widenedReference.status,0);
+  assert.match(widenedReference.stderr,/SELECT-only/);
+  await admin.query('REVOKE SELECT ON '+refDb+".* FROM 'qc_reader_ci'@'%'");
+
+  // Write-capable grants remain rejected before a weather query.
+  await admin.query('GRANT UPDATE ON '+ownTable+" TO 'qc_reader_ci'@'%'");
+  const writer=spawnSync(process.execPath,args,
+    {cwd:process.cwd(),env,encoding:'utf8',timeout:15000});
+  assert.notEqual(writer.status,0);
+  assert.equal(writer.stdout,'');
+  assert.match(writer.stderr,/SELECT-only/);
+  await admin.query('REVOKE UPDATE ON '+ownTable+" FROM 'qc_reader_ci'@'%'");
+
   const privileged=spawnSync(process.execPath,args,{cwd:process.cwd(),
     env:{...env,WEATHER_QC_DB_USER:'root',WEATHER_QC_DB_PASSWORD:'root'},
     encoding:'utf8',timeout:15000});

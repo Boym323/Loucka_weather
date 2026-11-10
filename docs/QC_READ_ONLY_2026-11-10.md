@@ -20,7 +20,12 @@ importované reference.
   **nepouštět nárazové plošné SELECTy přes celý historický archiv**.
 - Účet musí mít **pouze SELECT**. Před každým reportem kontrolujeme
   `SHOW GRANTS`; přítomnost jiných typů grantů se odmítne.
-  Doporučený účet má SELECT jen pro dvě uvedené tabulky.
+  Podporujeme buď samostatný účet s SELECT na dvě vyjmenované tabulky,
+  nebo existující staging účet s SELECT na **celé původní schéma**
+  `pocasi-loucka.eu` a SELECT na **jedinou tabulku**
+  `loucka_reconstruction.reference_observations`.
+  Global SELECT, wildcard na `loucka_reconstruction`, jiné schéma a zápisová
+  oprávnění zůstávají zakázané.
   Samotný SQL klient vykonává jen `SHOW GRANTS` a omezené, parametrizované
   `SELECT ... ORDER BY ... LIMIT`. Heslo nikdy nevypisovat.
 - Protokol je JSON na standardní výstup; bez zápisu do databáze, bez
@@ -60,12 +65,14 @@ hodnotu, která by se měla automaticky zapsat jako měření Loučky.
 
 ## Spuštění na odděleném staging LXC
 
-Nejdříve vytvořit **nového odděleného MariaDB čtenáře**, nikoli použít
-administrátorské heslo. Udělit jen práva SELECT na
-`pocasi-loucka.eu.archive` a
-`loucka_reconstruction.reference_observations`.
-Pro tento krok není potřeba ani dovoleno měnit historii nebo
-rekonstrukční tabulky.
+Pro staging je možné opětovně použít stávající účet `loucka_web_ro`,
+pokud má pouze granty:
+`USAGE ON *.*`,
+`SELECT ON pocasi-loucka.eu.*` a
+`SELECT ON loucka_reconstruction.reference_observations`.
+Druhou volbou je nový samostatný účet s přesnými tabulkovými SELECT granty.
+Ani jedna možnost nevyžaduje změnu původních dat. Zpráva nesmí obsahovat
+heslo ani jeho hash.
 
 Rootem spravovaný EnvironmentFile (0600, mimo Git):
 ```ini
@@ -73,7 +80,7 @@ WEATHER_STAGING_ENABLED=YES
 WEATHER_QC_READ_ONLY=YES
 WEATHER_QC_DB_HOST=ADRESA_DB
 WEATHER_QC_DB_PORT=3306
-WEATHER_QC_DB_USER=SAMOSTATNY_SELECT_UCET
+WEATHER_QC_DB_USER=loucka_web_ro
 WEATHER_QC_DB_PASSWORD=TAJNE_HESLO
 ```
 
@@ -127,8 +134,9 @@ ověřené, již existující reporty se bezpečně přeskočí. Není zde žád
 automatický plánovač, timer ani DB writer.
 
 **Nejdřív ověř oprávnění účtu a jeden krátký report podle návodu výše.**
-Účet `qc_reader` musí mít SELECT přesně na dvě tabulky, nikoli celé schéma
-ani server. Běh s wildcard SELECT granty selže (princip nejmenších práv).
+Účet musí mít pouze povolená čtecí oprávnění (viz výše). Výjimka
+z tabulkové granularizace je **jen původní schéma** pro existující dev účet;
+globální SELECT a přístup k celému referenčnímu schématu se zamítají.
 Pro skutečné zpracování používej privátní adresář, např.:
 ```bash
 install -d -o loucka -g loucka -m 0700 /var/lib/loucka-qc

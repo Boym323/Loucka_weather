@@ -8,7 +8,7 @@ const usage=[
   'All timestamps must be aligned to UTC 5-minute boundaries; max window: 7 days.',
   'Required: WEATHER_STAGING_ENABLED=YES, WEATHER_QC_READ_ONLY=YES,',
   'WEATHER_QC_DB_HOST, WEATHER_QC_DB_USER, WEATHER_QC_DB_PASSWORD.',
-  'Use a dedicated MariaDB account with SELECT on original archive and reference_observations ONLY.',
+  'Read-only grants: SELECT on original archive table OR its database, plus SELECT on reference_observations.',
   'Output is advisory JSON on stdout; no database/file writes or automatic corrections.'
 ].join('\n');
 function argumentsFromCli(args){
@@ -44,18 +44,24 @@ function config(){
 }
 function assertSelectOnly(rows){
   const grants=rows.flatMap(row=>Object.values(row)).filter(v=>typeof v==='string');
-  const allowed=new Set([source,reference]);
-  const seen=new Set();
-  let safe=grants.length>0;
+  // Existing web reader may have SELECT on its original WeeWX schema.
+  // Allow that *one* broader read-only scope, never global grants, additional
+  // schemas, a reference-schema wildcard, or any write-capable permission.
+  const sourceSchema=source.slice(0,source.lastIndexOf('.'));
+  const acceptedOriginal=new Set([source,sourceSchema+'.*']);
+  let originalReadable=false,referenceReadable=false,safe=grants.length>0;
   for(const line of grants){
     if(/\bWITH GRANT OPTION\b/i.test(line)){safe=false;break;}
     if(/^GRANT USAGE ON \*\.\* TO /i.test(line))continue;
-    const match=/^GRANT SELECT ON (`[^`]+`\.`[^`]+`) TO /i.exec(line);
-    if(!match||!allowed.has(match[1])){safe=false;break;}
-    seen.add(match[1]);
+    const match=/^GRANT SELECT ON (`[^`]+`\.(?:`[^`]+`|\*)) TO /i.exec(line);
+    if(!match){safe=false;break;}
+    const scope=match[1];
+    if(acceptedOriginal.has(scope))originalReadable=true;
+    else if(scope===reference)referenceReadable=true;
+    else {safe=false;break;}
   }
-  if(!safe||seen.size!==allowed.size)
-    throw new Error('QC credentials must be SELECT-only for the two exact source tables');
+  if(!safe||!originalReadable||!referenceReadable)
+    throw new Error('QC credentials must be SELECT-only on the original archive/schema and exact reference table');
 }
 const qt=name=>String.fromCharCode(96)+name+String.fromCharCode(96);
 const isolatedFixture=process.env.CI==='true'&&process.env.GITHUB_ACTIONS==='true'&&

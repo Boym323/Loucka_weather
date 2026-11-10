@@ -109,6 +109,13 @@ Výstup je JSON: kontrola čidel, časových překryvů a konstantních hodnot,
 bias/MAE/RMSE a orientační spolehlivost spárovaných časů, návrhy pouze
 k ruční kontrole (`needs_manual_review`, nikdy `approved`).
 
+Vhodný je i stávající vývojový účet `loucka_web_ro`, pokud má
+pouze SELECT na původní schéma `pocasi-loucka.eu` a dodatečný SELECT
+přesně na `loucka_reconstruction.reference_observations`. QC kontrola
+grantů povolí tuto jednu výjimku pro původní schéma; globální SELECT
+nebo zápisová práva nadále odmítá. Heslo se přebírá na LXC ze
+soukromého `api.env` do `qc.env`, bez vypisování či uložení do Git.
+
 Úplný bezpečný postup s odděleným účtem, omezeními a příkazy:
 [docs/QC_READ_ONLY_2026-11-10.md](../docs/QC_READ_ONLY_2026-11-10.md).
 Zavedení účtu a případné periodické spouštění na stagingu vyžaduje
