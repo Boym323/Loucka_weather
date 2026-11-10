@@ -141,3 +141,18 @@ Jednotky jsou **pouze ve zdrojovém repozitáři**, žádný proces či timer
 se jejich mergem na LXC automaticky nezapne. Ruční instalace a kontrola
 v `docs/QC_READ_ONLY_2026-11-10.md`. Screening nemění původní měření,
 QC schválení ani denní souhrny, pouze privátní JSON reporty.
+
+### Jednorázový zrychlený audit (bez 15minutového timeru)
+
+Po ověřených staging testech lze použít `qc-batch.mjs --catch-up`.
+Při jednom spuštění přečte zbývající historii sekvenčně po 7denních
+oknech (výchozí prodleva 2 s, nejméně 1 s), zachová již validované
+0600 JSON reporty a při chybě skončí, aniž by měnil databázi.
+Standardní `qc-batch` pro timer zůstává bez `--catch-up` nezměněný:
+nejvýše čtyři nová okna na samostatný běh.
+
+Před jednorázovým auditem **vypnout** `loucka-qc-batch.timer`, jinak
+by pravidelná služba soutěžila o stejný zámek a zatěžovala DB.
+Spuštění přes izolovaný transient `systemd-run` s 256 MiB RAM,
+50 % CPU a nejvýše 4 hodinami, logy a postup zastavení:
+`docs/QC_READ_ONLY_2026-11-10.md`.
