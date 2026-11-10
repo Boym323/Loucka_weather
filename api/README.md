@@ -130,3 +130,14 @@ atomicky s právy 0600; existující validovaný úsek je možné bezpečně př
 Volby `--dry-run` a `--summary` nepotřebují připojení k MariaDB.
 Dokončené QC úseky nejsou schválenými opravami a v databázi nic nemění.
 Návod a model hrozeb: `docs/QC_READ_ONLY_2026-11-10.md`.
+
+### Volitelný stagingový systemd timer QC
+
+Po ověření dvou skutečných staging reportů (2017-05-13 až 20,
+2026-10-10 až 11) je připravená volitelná dvojice `deploy/lxc/loucka-qc-batch.service`
+a `deploy/lxc/loucka-qc-batch.timer`. Jeden běh znamená právě jeden nový
+sedmidenní UTC úsek, timer má interval 15 minut a nízké limity zdrojů.
+Jednotky jsou **pouze ve zdrojovém repozitáři**, žádný proces či timer
+se jejich mergem na LXC automaticky nezapne. Ruční instalace a kontrola
+v `docs/QC_READ_ONLY_2026-11-10.md`. Screening nemění původní měření,
+QC schválení ani denní souhrny, pouze privátní JSON reporty.

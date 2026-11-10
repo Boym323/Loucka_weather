@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-10 – volitelný systemd timer pro historický QC screening
+- Po úspěšných staging datech (2017-05-13–20: 0 původních řádků, 2 016 platných LuhaMet; 2026-10-10: Loučka 288, LuhaMet 287, ILOUKA4 288, všechny páry strong) připraveny jednotky pro postupné prověřování období 2009-01-01 až 2026-11-10 UTC.
+- Timer se **neinstaluje ani neaktivuje sám**. Opt-in každých 15 minut zpracovává jen jeden sedmidenní úsek, používá pouze SELECT-only účet, privátní JSON reporty, omezené CPU/RAM a systemd sandbox.
+- Nejsou žádné zápisy do původních meteodat, žádné automatické schválení, korekce ani přenos referenční stanice za Loučku. CI guardrail testy ověřují konfiguraci jednotek.
+
+
 ## 2026-11-10 – QC: podpora stávajícího čtecího databázového účtu
 - QC nyní akceptuje SELECT na celé původní WeeWX schéma spolu se SELECT přesně na referenční tabulku.
 - Nadále odmítá neznámé granty, práva zápisu, globální SELECT a SELECT na celé referenční schéma. Syntetický MariaDB CI test reprodukuje obě podporované varianty i odmítnutá rozšíření.

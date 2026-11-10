@@ -1,0 +1,13 @@
+[Unit]
+Description=Gradual historical Loucka QC scan (one read-only UTC week every 15 minutes)
+Documentation=https://github.com/Boym323/Loucka_weather/blob/main/docs/QC_READ_ONLY_2026-11-10.md
+
+[Timer]
+OnCalendar=*-*-* *:00/15:00
+RandomizedDelaySec=120s
+AccuracySec=1min
+Persistent=true
+Unit=loucka-qc-batch.service
+
+[Install]
+WantedBy=timers.target

@@ -179,3 +179,72 @@ Před finální certifikací nutno kontrolovat i sousední úseky, DST a
 historii změn stanice. `matchedPairs` není počet nezávislých dní.
 Sumy klimatologie a roční průměry se tímto nástrojem nemění; jde jen o
 vstupní kontrolu dat před samostatným schvalovacím procesem.
+
+## Opatrný plánovaný screening (systemd, pouze staging, 10. 11. 2026)
+
+Dva soubory v `deploy/lxc/loucka-qc-batch.service` a
+`deploy/lxc/loucka-qc-batch.timer` **nejsou nasazené samy o sobě**.
+Aktivace je vědomý provozní krok na staging LXC až po úspěšném
+jednorázovém `systemd-run` s reálnými daty. Ověřeno na stagingu:
+2017-05-13 až 2017-05-20 (Loučka 0, LuhaMet 2016)
+a 2026-10-10 až 2026-10-11 (Loučka 288, LuhaMet 287,
+ILOUKA4 288; žádné odmítnuté záznamy). Hodnocení strong ve druhém
+okně neprokazuje dlouhodobou kalibraci stanic.
+
+Timer plánuje nejvýše **jeden nový sedmidenní UTC úsek za 15 minut**,
+s 0–120s náhodným odkladem; žádný souběh stejné systemd služby.
+Služba má 256M limit paměti, 50% limit CPU a maximálně 120 sekund na běh,
+startuje jako `loucka` bez zvýšených oprávnění, s root-owned `qc.env`
+a jediným zapisovatelným adresářem `/var/lib/loucka-qc`.
+Příkaz používá fixní rozsah **2009-01-01T00:00:00Z až 2026-11-10T00:00:00Z**:
+nové dny po tomto cutoffu se automaticky nepřidávají, aby bylo
+auditní období a názvy reportů deterministické. Po dokončení vypni timer
+nebo explicitně naplánuj další audit.
+
+### Ruční instalace jednotek na staging LXC
+
+```bash
+set -euo pipefail
+test -f /etc/loucka-weather/qc.env
+test "$(stat -c '%U:%G %a' /etc/loucka-weather/qc.env)" = "root:root 600"
+test "$(stat -c '%U:%G %a' /var/lib/loucka-qc)" = "loucka:loucka 700"
+runuser -u loucka -- git -C /home/loucka/Loucka_weather rev-parse --short HEAD
+
+install -o root -g root -m 0644   /home/loucka/Loucka_weather/deploy/lxc/loucka-qc-batch.service   /etc/systemd/system/loucka-qc-batch.service
+install -o root -g root -m 0644   /home/loucka/Loucka_weather/deploy/lxc/loucka-qc-batch.timer   /etc/systemd/system/loucka-qc-batch.timer
+systemd-analyze verify /etc/systemd/system/loucka-qc-batch.service   /etc/systemd/system/loucka-qc-batch.timer
+systemctl daemon-reload
+
+# Nejprve jediný ruční běh a kontrola výsledku.
+systemctl start loucka-qc-batch.service
+systemctl show loucka-qc-batch.service -p Result -p ExecMainStatus -p ActiveState
+journalctl -u loucka-qc-batch.service -n 30 --no-pager
+
+# Teprve pokud je výsledek vyhovující, zapni plánovač:
+systemctl enable --now loucka-qc-batch.timer
+systemctl list-timers --all loucka-qc-batch.timer
+```
+
+### Sledování a zastavení
+
+```bash
+systemctl status loucka-qc-batch.timer --no-pager
+journalctl -u loucka-qc-batch.service -n 50 --no-pager
+runuser -u loucka -- /usr/bin/node   /home/loucka/Loucka_weather/api/scripts/qc-batch.mjs   --from 2009-01-01T00:00:00Z --to 2026-11-10T00:00:00Z   --output-dir /var/lib/loucka-qc --summary
+
+# Kdykoli lze zastavit plánované skeny, JSON reporty zůstanou:
+systemctl disable --now loucka-qc-batch.timer
+```
+
+`pendingWindows=0` značí dokončení všech plánovaných úseků
+(v rozsahu tohoto pevného cutoffu), **ne** schválení rekonstrukce.
+Dvě dřívější namátkově zvolená časová okna nesouhlasí s týdenní
+mřížkou začínající 2009-01-01; při souhrnu celé historie se proto
+nepočítají mezi dokončená okna. To je očekávané, nikoli ztráta dat.
+
+Pokud služba selže, zůstává u posledního správně dokončeného JSON;
+žádné porušené/neúplné období se neoznačí jako hotové. Před obnovením
+plánovaného provozu prověř chybu a případné zaseknuté `.qc-batch.lock`.
+Dílčí `--summary` není diagnostikou dlouhodobého bias/MAE;
+před ručním schválením je nutné otevřít detail konkrétního JSON reportu.
+Referenční stanice se nikdy nepřepisují jako vlastní měření Loučky.
