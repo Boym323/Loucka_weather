@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-10 – oprava: staging timer po pozdní aktivaci skutečně plánuje další běh
+- `OnBootSec=45s` nahrazeno `OnActiveSec=45s`, aby se první kontrola naplánovala i po ručním opětovném zapnutí timeru dlouho po startu LXC; další běhy zůstávají relativní k dokončení synchronizace přes `OnUnitInactiveSec=2min`.
+- `AccuracySec=10s` upřesňuje plánování; odstraněno zavádějící `Persistent=true`, které u monotónních timerů nemá požadovaný účinek.
+- Doplněn regresní test a kontrolní postup reinstalace root-owned timer unit bez restartu LXC.
+
+
 ## 2026-11-10 – příprava bezpečného staging release gate (#58 a #69)
 - Sestavení Astro ukládá pouze kandidáta `.pending-commit`; root-owned aktivační helper po ověření API readiness publikuje frontend atomicky jako neprivilegovaný uživatel. Při selhání API zůstává poslední zveřejněný frontend, nikoliv však garantovaný automatický rollback backendu.
 - Nginx může přijmout X-Forwarded-For pouze od explicitně trusted NPM IP z lokálního configu; do instalace přesné trusted IP zůstává původní společný limit 5r/s. Neotvírat port 8080 přímo do internetu.
