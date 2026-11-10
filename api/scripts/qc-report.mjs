@@ -44,11 +44,18 @@ function config(){
 }
 function assertSelectOnly(rows){
   const grants=rows.flatMap(row=>Object.values(row)).filter(v=>typeof v==='string');
-  const forbidden=/\b(?:ALL PRIVILEGES|INSERT|UPDATE|DELETE|ALTER|CREATE|DROP|TRIGGER|EVENT|FILE|SUPER|RELOAD|GRANT OPTION|REFERENCES|LOCK TABLES|PROCESS|EXECUTE)\b/i;
-  if(!grants.length||grants.some(line=>forbidden.test(line)||
-       !/^GRANT (?:USAGE|SELECT) ON /i.test(line))||
-     !grants.some(line=>/^GRANT SELECT ON /i.test(line)))
-    throw new Error('QC credentials must be SELECT-only');
+  const allowed=new Set([source,reference]);
+  const seen=new Set();
+  let safe=grants.length>0;
+  for(const line of grants){
+    if(/\bWITH GRANT OPTION\b/i.test(line)){safe=false;break;}
+    if(/^GRANT USAGE ON \*\.\* TO /i.test(line))continue;
+    const match=/^GRANT SELECT ON (`[^`]+`\.`[^`]+`) TO /i.exec(line);
+    if(!match||!allowed.has(match[1])){safe=false;break;}
+    seen.add(match[1]);
+  }
+  if(!safe||seen.size!==allowed.size)
+    throw new Error('QC credentials must be SELECT-only for the two exact source tables');
 }
 const qt=name=>String.fromCharCode(96)+name+String.fromCharCode(96);
 const isolatedFixture=process.env.CI==='true'&&process.env.GITHUB_ACTIONS==='true'&&
