@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-10 – návrh: pouze čtecí QC screening vlastních a referenčních měření (issue #80)
+- Nový izolovaný nástroj `api/scripts/qc-engine.mjs` + jednorázový CLI `qc-report.mjs`, nikoliv veřejný endpoint ani automatický DB writer.
+- Kontrola senzorových sentinelů (0 °C + 0 % RH), fyzikálního rozmezí, jednotek, dlouhých konstant, překrývajících se intervalů a časových offsetů; párování Loučka / LuhaMet / ILOUKA4 po pětiminutových slotech s deduplikací.
+- Orientační spolehlivost vyjadřuje počet párů, bias, MAE, RMSE, p95, vyřazené vzorky a pokrytí; kandidáti pouze `needs_manual_review`, žádné navrhované automatické hodnoty Loučky.
+- Omezit každý běh na max. 7 UTC dní, 2800 řádků na zdroj, povinný samostatný SELECT-only účet kontrolovaný přes `SHOW GRANTS`; CI využívá izolovanou syntetickou MariaDB.
+- Neprovádí zápisy do produkční MariaDB, `loucka_reconstruction`, WeeWX ani GW3000. Před případným plánovaným provozem samostatně ověřit oprávnění a výstup na stagingu.
+
+
 ## 2026-11-10 – oprava: staging timer po pozdní aktivaci skutečně plánuje další běh
 - `OnBootSec=45s` nahrazeno `OnActiveSec=45s`, aby se první kontrola naplánovala i po ručním opětovném zapnutí timeru dlouho po startu LXC; další běhy zůstávají relativní k dokončení synchronizace přes `OnUnitInactiveSec=2min`.
 - `AccuracySec=10s` upřesňuje plánování; odstraněno zavádějící `Persistent=true`, které u monotónních timerů nemá požadovaný účinek.
