@@ -8,7 +8,7 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
   <div class="panel-title"><SiteIcon name="radar" size={18}/><h2 id="radar-heading">Srážkový radar – Loučka a okolí</h2></div>
   <span class="status-chip" data-radar-status role="status">Načítám radar</span>
  </div>
- <div class="radar-map" data-radar-map aria-label="Radar srážek na podkladě OpenStreetMap">
+ <div class="radar-map" data-radar-map role="group" aria-label="Radar srážek na podkladě OpenStreetMap">
   <div class="radar-world">
    <div data-radar-base class="radar-base" aria-hidden="true"></div>
    <img class="radar-overlay" data-radar-overlay alt="" hidden />

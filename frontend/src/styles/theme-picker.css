@@ -1,0 +1,38 @@
+/* Three explicit modes; the automatic one is anchored to Loučka, not OS time. */
+.theme-picker{position:relative;z-index:70;flex:0 0 auto}
+.theme-picker>summary{list-style:none;cursor:pointer;white-space:nowrap}
+.theme-picker>summary::-webkit-details-marker{display:none}
+.theme-picker>summary::marker{content:''}
+.theme-picker[open]>.theme-toggle{border-color:var(--teal)}
+.theme-current{font-size:11px;font-weight:600;color:var(--muted)}
+.theme-picker-menu{
+ position:absolute;right:0;top:calc(100% + 9px);z-index:95;
+ width:min(292px,calc(100vw - 24px));padding:10px;
+ background:var(--panel);color:var(--text);border:1px solid var(--line);
+ border-radius:14px;box-shadow:0 16px 42px #00101b40;
+}
+.theme-picker-heading{display:block;font-size:13px;padding:5px 9px 10px}
+.theme-picker-menu button{
+ display:flex;align-items:center;gap:11px;width:100%;min-height:48px;
+ padding:9px 11px;text-align:left;border:1px solid transparent;
+ border-radius:9px;background:transparent;color:var(--text);cursor:pointer
+}
+.theme-picker-menu button>span:first-child{
+ flex:0 0 24px;font-size:22px;line-height:1;text-align:center;color:var(--teal)
+}
+.theme-picker-menu button strong,.theme-picker-menu button small{display:block}
+.theme-picker-menu button strong{font-size:13px}
+.theme-picker-menu button small{font-size:11px;margin-top:2px;color:var(--muted)}
+.theme-picker-menu button[aria-pressed="true"]{
+ border-color:var(--teal);background:var(--panel-2)
+}
+.theme-picker-menu button:hover{background:var(--panel-2)}
+.theme-picker-menu button:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.theme-picker-menu>p{
+ color:var(--muted);border-top:1px solid var(--line);
+ margin:7px 2px 0;padding:9px 7px 3px;font-size:11px;line-height:1.45
+}
+@media(max-width:650px){
+ .theme-current{display:none}
+ .theme-picker>.theme-toggle{min-width:39px;padding:6px;justify-content:center}
+}

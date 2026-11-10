@@ -1,0 +1,83 @@
+<details class="theme-picker" data-theme-picker>
+ <summary class="theme-toggle" title="Změnit vzhled webu">
+  <span class="atlas-theme-icon" data-theme-icon aria-hidden="true">◐</span>
+  <span class="theme-name">Motiv</span>
+  <span class="theme-current" data-theme-current aria-hidden="true">Auto</span>
+ </summary>
+ <div class="theme-picker-menu" role="group" aria-label="Barevný režim webu">
+  <strong class="theme-picker-heading">Barevný režim</strong>
+  <button type="button" data-theme-choice="auto" aria-pressed="true">
+   <span aria-hidden="true">◐</span><span><strong>Automaticky</strong><small>Podle slunce v Loučce</small></span>
+  </button>
+  <button type="button" data-theme-choice="light" aria-pressed="false">
+   <span aria-hidden="true">☀</span><span><strong>Světlý</strong><small>Vždy světlé barvy</small></span>
+  </button>
+  <button type="button" data-theme-choice="dark" aria-pressed="false">
+   <span aria-hidden="true">☾</span><span><strong>Tmavý</strong><small>Vždy tmavé barvy</small></span>
+  </button>
+  <p>V automatickém režimu se motiv mění při východu a západu Slunce. Časy jsou orientační.</p>
+ </div>
+</details>
+<script>
+ import {appearanceAt,nextThemeTransition,storedThemePreference} from '../domain/theme';
+ import type {ThemePreference} from '../domain/theme';
+ const picker=document.querySelector<HTMLDetailsElement>('[data-theme-picker]');
+ if(picker){
+  const root=document.documentElement;
+  const options=[...picker.querySelectorAll<HTMLButtonElement>('[data-theme-choice]')];
+  const icon=picker.querySelector<HTMLElement>('[data-theme-icon]');
+  const summary=picker.querySelector<HTMLElement>('.theme-toggle');
+  const current=picker.querySelector<HTMLElement>('[data-theme-current]');
+  let preference:ThemePreference='auto';
+  try{preference=storedThemePreference(localStorage.getItem('loucka-theme'));}catch{}
+  let timer:ReturnType<typeof setTimeout>|undefined;
+  const update=()=>{
+   const resolved=appearanceAt(preference,new Date());
+   const before=root.dataset.theme;
+   root.dataset.theme=resolved;
+   root.dataset.themePreference=preference;
+   root.dataset.themeReady='true';
+   document.querySelector('meta[name="theme-color"]')?.setAttribute('content',
+    resolved==='light'?'#F8FAFA':'#111B22');
+   for(const button of options){
+    const active=button.dataset.themeChoice===preference;
+    button.setAttribute('aria-pressed',String(active));
+   }
+   const label=preference==='auto'?'Auto · '+(resolved==='light'?'den':'noc'):
+    preference==='light'?'Světlý':'Tmavý';
+   if(current)current.textContent=label;
+   if(icon)icon.textContent=preference==='auto'?'◐':resolved==='light'?'☀':'☾';
+   if(summary)summary.title='Vzhled: '+label+'. Vybrat jiný motiv';
+   if(before!==resolved)window.dispatchEvent(new Event('loucka:theme-change'));
+  };
+  const refresh=()=>{
+   if(timer!==undefined)clearTimeout(timer);
+   update();
+   if(preference==='auto'){
+    const next=nextThemeTransition(new Date());
+    // Wake no later than one minute after a time change; also handle BFCache.
+    const delay=next?Math.min(60_000,Math.max(250,next.getTime()-Date.now()+250)):60_000;
+    timer=setTimeout(refresh,delay);
+   }
+  };
+  for(const button of options){
+   button.addEventListener('click',()=>{
+    const selected=button.dataset.themeChoice;
+    if(selected!=='auto'&&selected!=='light'&&selected!=='dark')return;
+    preference=selected;
+    try{localStorage.setItem('loucka-theme',preference);}catch{}
+    picker.open=false;
+    refresh();
+    summary?.focus();
+   });
+  }
+  document.addEventListener('visibilitychange',()=>{
+   if(document.visibilityState==='visible')refresh();
+  });
+  window.addEventListener('pageshow',()=>{refresh();});
+  document.addEventListener('astro:before-swap',()=>{
+   if(timer!==undefined)clearTimeout(timer);
+  },{once:true});
+  refresh();
+ }
+</script>

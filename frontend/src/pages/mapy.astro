@@ -5,7 +5,7 @@ import ModelWeatherLayer from '../features/maps/ModelWeatherLayer.astro';
 ---
 <BaseLayout title="Meteorologické mapy" description="Meteorologická mapa Loučky a okolí, radarové snímky s časovou osou.">
  <div class="page-intro"><span class="eyebrow">Meteorologické mapy a radar</span><h1>Meteorologické mapy</h1><p>Skutečné radarové snímky a volitelné modelové body teploty a větru, vždy jasně oddělené podle zdroje.</p></div>
- <div class="map-tabs" aria-label="Dostupné mapové vrstvy"><span class="chart-tab is-active">Radarové srážky</span><span class="chart-tab muted">Satelit – nepřipojeno</span><span class="chart-tab muted">Blesky – nepřipojeno</span><span class="chart-tab">Teplota a vítr · model</span></div>
+ <div class="map-tabs" role="group" aria-label="Dostupné mapové vrstvy" tabindex="0"><span class="chart-tab is-active">Radarové srážky</span><span class="chart-tab muted">Satelit – nepřipojeno</span><span class="chart-tab muted">Blesky – nepřipojeno</span><span class="chart-tab">Teplota a vítr · model</span></div>
  <div class="map-page-layout">
   <div class="map-page-primary"><RadarPanel /></div>
   <aside class="map-page-sidebar">

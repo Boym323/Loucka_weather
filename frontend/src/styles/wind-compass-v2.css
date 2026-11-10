@@ -1,0 +1,188 @@
+/* Wind Compass 2.0: single isolated late override for both themes/variants.
+   Bearing arrow points OUTWARD to the compass bearing the wind comes FROM.
+   The scale is direction-only: wind-speed metrics have their own readouts. */
+.wind-compass-panel{
+ --wind-v2-ink:#1d4852;
+ --wind-v2-muted:#426068;
+ --wind-v2-accent:#087889;
+ --wind-v2-ring:#8eafb3;
+ --wind-v2-ring-light:#b9d0d1;
+ --wind-v2-dial:#f6fbf9;
+ --wind-v2-core:#fff;
+ --wind-v2-tile:#eef6f3;
+ --wind-v2-tile-border:#cfdfdb;
+}
+:root[data-theme="dark"] .wind-compass-panel{
+ --wind-v2-ink:#e9f5f2;
+ --wind-v2-muted:#b7d0cc;
+ --wind-v2-accent:#82ddd1;
+ --wind-v2-ring:#7bb5ba;
+ --wind-v2-ring-light:#416c70;
+ --wind-v2-dial:#1b363b;
+ --wind-v2-core:#1c3a40;
+ --wind-v2-tile:#25434a;
+ --wind-v2-tile-border:#41676c;
+}
+.wind-compass-panel .wind-layout-v2{
+ gap:18px;min-width:0;align-items:center;justify-content:flex-start;
+}
+.wind-compass-panel .wind-gauge-v2{
+ position:relative;width:174px;height:174px;max-width:none;
+ flex:0 0 auto;aspect-ratio:1;border-radius:50%;
+ border:1px solid var(--wind-v2-ring)!important;
+ background:radial-gradient(circle,var(--wind-v2-dial) 40%,var(--wind-v2-tile) 100%)!important;
+ box-shadow:0 7px 21px #072d3012,inset 0 0 0 6px #ffffff09!important;
+ overflow:visible;
+}
+.wind-compass-panel .wind-gauge-v2::before,
+.wind-compass-panel .wind-gauge-v2::after{content:none!important}
+.wind-compass-panel .wind-dial-v2{width:100%;height:100%;display:block;overflow:visible}
+.wind-dial-v2 .wind-dial-ring{fill:none;stroke:var(--wind-v2-ring);stroke-width:1.3;opacity:.85}
+.wind-dial-v2 .wind-dial-ring-inner{
+ fill:none;stroke:var(--wind-v2-ring-light);stroke-width:1;stroke-dasharray:1 7;opacity:.9;
+}
+.wind-dial-v2 .wind-tick-major{stroke:var(--wind-v2-ring);stroke-width:1.6;stroke-linecap:round;opacity:.65}
+.wind-dial-v2 .wind-cardinal-text{
+ fill:var(--wind-v2-ink);font-size:13px;font-weight:700;text-anchor:middle;
+}
+.wind-dial-v2 .wind-pointer-head{fill:var(--wind-v2-accent)}
+.wind-dial-v2 .wind-pointer-stem{fill:none;stroke:var(--wind-v2-accent);stroke-width:2;stroke-linecap:round;opacity:.6}
+.wind-bearing-v2{
+ transform-box:view-box;transform-origin:100px 100px;
+ transition:transform .55s cubic-bezier(.22,.8,.25,1),opacity .18s;
+}
+.wind-gauge-v2[data-wind-valid="false"] .wind-bearing-v2{opacity:0}
+.wind-compass-panel .wind-core-v2{
+ position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+ width:46%;height:46%;border-radius:50%;
+ display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+ background:var(--wind-v2-core);
+ border:1px solid var(--wind-v2-tile-border);
+ box-shadow:0 4px 15px #0b303017;
+ pointer-events:none;
+}
+.wind-compass-panel .wind-gauge-v2 .wind-degrees{
+ color:var(--wind-v2-ink)!important;margin:0!important;line-height:1;
+ font-variant-numeric:tabular-nums lining-nums;white-space:nowrap;
+ font-size:29px!important;letter-spacing:-.045em;
+}
+.wind-compass-panel .wind-gauge-v2 .wind-degrees strong{
+ font-size:inherit!important;font-weight:650!important;
+}
+.wind-compass-panel .wind-gauge-v2 .wind-degrees>span{
+ font-size:.49em!important;color:var(--wind-v2-muted)!important;
+ vertical-align:top;margin-left:1px;
+}
+.wind-compass-panel .wind-sector-short-v2{
+ margin:0;color:var(--wind-v2-accent);font-size:12px;font-weight:750;
+ line-height:1.2;letter-spacing:.07em;
+}
+.wind-compass-panel .wind-readout-v2{
+ flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:5px;
+}
+.wind-compass-panel .wind-readout-v2 .observatory-wind-direction{
+ color:var(--wind-v2-ink)!important;font-size:13px;font-weight:650;margin:0;
+ line-height:1.35;overflow-wrap:anywhere;
+}
+.wind-compass-panel .wind-readout-v2 [data-wind-description]{
+ display:block;font-size:11px;line-height:1.4;color:var(--wind-v2-muted);
+ margin:0;overflow-wrap:anywhere;
+}
+.wind-compass-panel .wind-metrics-v2{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:7px;margin-top:5px;min-width:0;
+}
+.wind-compass-panel .wind-metric-v2{
+ min-width:0;display:flex;flex-direction:column;gap:3px;
+ background:var(--wind-v2-tile);border:1px solid var(--wind-v2-tile-border);
+ border-radius:11px;padding:10px 11px;
+}
+.wind-compass-panel .wind-metric-v2>span{
+ font-size:12px;color:var(--wind-v2-muted)!important;line-height:1.3;
+}
+.wind-compass-panel .wind-metric-v2>strong{
+ color:var(--wind-v2-ink)!important;font-size:20px;font-weight:650;
+ white-space:nowrap;font-variant-numeric:tabular-nums lining-nums;
+ line-height:1.15;
+}
+.wind-compass-panel .wind-metric-v2>strong small{
+ color:var(--wind-v2-muted)!important;font-size:11px;font-weight:500;
+}
+.wind-compass-panel .wind-metric-v2>small{
+ color:var(--wind-v2-muted)!important;font-size:11px;line-height:1.4;
+ overflow-wrap:anywhere;
+}
+.wind-compass-panel>.observatory-source-note{
+ color:var(--wind-v2-muted)!important;font-size:12px;line-height:1.45;
+}
+/* The hero is a narrow three-column dashboard: preserve the side-by-side instrument
+   and a single column of compact reading tiles. */
+.evergreen-hero .wind-hero .wind-layout-v2{
+ display:flex;justify-content:center;align-items:center;gap:10px;
+ min-width:0;margin:8px 0 12px;
+}
+.evergreen-hero .wind-hero .wind-gauge-v2{
+ width:134px;height:134px;max-width:none;flex-shrink:0;
+}
+.evergreen-hero .wind-hero .wind-gauge-v2 .wind-degrees{font-size:23px!important}
+.evergreen-hero .wind-hero .wind-sector-short-v2{font-size:10px}
+.evergreen-hero .wind-hero .wind-metrics-v2{
+ grid-template-columns:minmax(0,1fr);gap:6px;
+}
+.evergreen-hero .wind-hero .wind-metric-v2{padding:7px 9px;gap:2px}
+.evergreen-hero .wind-hero .wind-metric-v2>strong{font-size:18px}
+@media(max-width:900px){
+ .evergreen-hero .wind-hero .wind-layout-v2{
+  display:grid;grid-template-columns:110px minmax(0,1fr);gap:16px;
+  justify-content:start;
+ }
+ .evergreen-hero .wind-hero .wind-gauge-v2{width:110px;height:110px}
+ .evergreen-hero .wind-hero .wind-gauge-v2 .wind-degrees{font-size:20px!important}
+ .evergreen-hero .wind-hero .wind-metrics-v2{
+  grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;
+ }
+ .evergreen-hero .wind-hero .wind-metric-v2>strong{font-size:16px}
+}
+@media(max-width:600px){
+ .wind-compass-panel .wind-gauge-v2{width:142px;height:142px}
+ .wind-compass-panel .wind-gauge-v2 .wind-degrees{font-size:24px!important}
+ .evergreen-hero .wind-hero .wind-layout-v2{
+  grid-template-columns:108px minmax(0,1fr);gap:12px;
+ }
+ .evergreen-hero .wind-hero .wind-gauge-v2{width:108px;height:108px}
+ .evergreen-hero .wind-hero .wind-metric-v2{padding:7px 6px}
+}
+@media(max-width:359px){
+ .evergreen-hero .wind-hero .wind-layout-v2{grid-template-columns:94px minmax(0,1fr);gap:9px}
+ .evergreen-hero .wind-hero .wind-gauge-v2{width:94px;height:94px}
+ .evergreen-hero .wind-hero .wind-gauge-v2 .wind-degrees{font-size:17px!important}
+ .evergreen-hero .wind-hero .wind-sector-short-v2{font-size:9px}
+ .evergreen-hero .wind-hero .wind-metrics-v2{grid-template-columns:1fr;gap:5px}
+ .evergreen-hero .wind-hero .wind-metric-v2{padding:5px 8px}
+ .evergreen-hero .wind-hero .wind-metric-v2>strong{font-size:16px}
+}
+@media(prefers-reduced-motion:reduce){
+ .wind-bearing-v2{transition:none!important}
+}
+@media(forced-colors:active){
+ .wind-compass-panel .wind-gauge-v2,
+ .wind-compass-panel .wind-core-v2,
+ .wind-compass-panel .wind-metric-v2{border:1px solid CanvasText!important}
+ .wind-dial-v2 .wind-pointer-head{fill:Highlight}
+}
+
+/* The old Evergreen hero shipped an !important pale dial for BOTH themes.
+   Use matching specificity and later cascade order to keep the v2 dial dark
+   at night. This fixes low-contrast cardinal letters on the original pale fill. */
+:root[data-theme="light"] .evergreen-hero .wind-hero .wind-gauge-v2,
+:root[data-theme="dark"] .evergreen-hero .wind-hero .wind-gauge-v2{
+ background:radial-gradient(circle,var(--wind-v2-dial) 40%,var(--wind-v2-tile) 100%)!important;
+}
+
+/* The /aktualne detail card has a narrower reading column than the hero.
+   On phones keep source badges legible instead of squeezing two tiny tiles. */
+@media(max-width:600px){
+ .wind-compass-panel:not(.wind-hero) .wind-metrics-v2{
+  grid-template-columns:minmax(0,1fr);
+ }
+}

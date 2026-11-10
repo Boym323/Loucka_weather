@@ -1,0 +1,48 @@
+/* Targeted fixes verified against the 2026-11-07 axe-core WCAG 2.2 AA
+   baseline. This file is deliberately imported LAST so legacy presentation
+   layers cannot override readable controls, labels, or keyboard focus. */
+:root[data-theme="light"] .live-archive-indicator,
+:root[data-theme="light"] .live-archive-indicator.live-connected{
+ color:#3d555e;
+ font-size:11px;
+}
+:root[data-theme="light"] .evergreen-hero .current-panel .metric-card .metric-note{
+ color:#486066!important;
+}
+:root[data-theme="light"] .evergreen-hero .wind-speed-pair>div>small{
+ color:#486066;
+}
+:root[data-theme="light"] .evergreen-hero .evergreen-daily .daily-brief-status{
+ color:#405c60!important;
+}
+:root[data-theme="light"] [data-moon-illumination]{
+ color:#874710;
+}
+:root[data-theme="light"] .radar-panel .preview-footer a{
+ color:#176878;
+}
+:root[data-theme="light"] .history-apply,
+:root[data-theme="light"] .map-tabs .is-active,
+:root[data-theme="light"] .camera-mode-tabs .is-active{
+ color:#fff!important;
+}
+:root[data-theme="dark"] .history-apply,
+:root[data-theme="dark"] .map-tabs .is-active,
+:root[data-theme="dark"] .camera-mode-tabs .is-active{
+ color:#07353b!important;
+}
+:root[data-theme="light"] .map-tabs .muted{
+ opacity:1;
+ color:#52645f;
+}
+/* A horizontally scrollable region must be reachable with the keyboard. */
+.map-tabs:focus-visible,.climate-table-wrap:focus-visible{
+ outline:3px solid var(--teal);
+ outline-offset:3px;
+}
+
+/* Axe found the historic-card kicker at 3.31:1 on the dark dashboard.
+   Keep the sepia identity while exceeding the 4.5:1 text threshold. */
+:root[data-theme="dark"] .evergreen-spotlight .observatory-history .observatory-kicker{
+ color:#ddb68b;
+}

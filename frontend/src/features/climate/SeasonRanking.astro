@@ -1,0 +1,156 @@
+---
+---
+<section class="atlas-panel atlas-ranking" data-season-ranking
+ aria-labelledby="atlas-ranking-title">
+ <div class="atlas-ranking-heading">
+  <div>
+   <p class="atlas-eyebrow">Žebříček na základě dostupných dat</p>
+   <h2 id="atlas-ranking-title">Nejteplejší a nejchladnější sezóny</h2>
+   <p>Každá dokončená sezóna od roku 2009. Hodnocení používá časově
+    váženou teplotu pouze platně změřených dnů.</p>
+  </div>
+ </div>
+ <p class="atlas-status" data-ranking-status role="status">Načítám časovou řadu teplot všech let…</p>
+ <div class="atlas-ranking-podium" aria-label="Krajní sezóny s dostatečným pokrytím">
+  <div class="atlas-result">
+   <span>Nejteplejší dostupná sezóna</span>
+   <strong data-ranking-warmest>—</strong>
+   <small data-ranking-warmest-year>Bez podkladu</small>
+  </div>
+  <div class="atlas-result">
+   <span>Nejchladnější dostupná sezóna</span>
+   <strong data-ranking-coldest>—</strong>
+   <small data-ranking-coldest-year>Bez podkladu</small>
+  </div>
+ </div>
+ <div class="atlas-table-scroll" role="region" tabindex="0"
+  aria-label="Žebříček ročních období podle průměrné teploty">
+  <table class="atlas-table">
+   <thead><tr>
+    <th scope="col">Pořadí</th><th scope="col">Sezóna</th>
+    <th scope="col">Teplota</th><th scope="col">Dny s platným měřením</th>
+    <th scope="col">Časové pokrytí</th><th scope="col">Akce</th>
+   </tr></thead>
+   <tbody data-ranking-rows><tr><td colspan="6">Načítám…</td></tr></tbody>
+  </table>
+ </div>
+ <details class="atlas-ranking-exclusions">
+  <summary data-ranking-excluded-count>Sezóny nezařazené do žebříčku</summary>
+  <p>Neúplné sezóny jsou uvedeny odděleně; chybějící dny se nezapočítávají jako nula.</p>
+  <div class="atlas-table-scroll" role="region" tabindex="0" aria-label="Neúplné sezóny">
+   <table class="atlas-table">
+    <thead><tr><th scope="col">Sezóna</th><th scope="col">Platné dny</th>
+     <th scope="col">Časové pokrytí</th></tr></thead>
+    <tbody data-ranking-excluded><tr><td colspan="3">Čeká na archiv.</td></tr></tbody>
+   </table>
+  </div>
+ </details>
+ <p class="source-note">Hranice pro zařazení: nejméně 90 % kalendářních dní a
+  90 % času. Dny s méně než 80 % pokrytí nebo s podezřelou hodnotou
+  se nepoužijí. Jde o <strong>předběžný žebříček originálního archivu</strong>,
+  nikoli o certifikovanou klimatologickou charakteristiku. Sezónní
+  teplota je vážená platnými sekundami, nikoli aritmetickým průměrem
+  všech kalendářních dní.</p>
+</section>
+<script>
+ import {getTemperatureYears} from '../../shared/api/client';
+ import {temperatureSeasonRanking} from '../../shared/domain/season-ranking';
+ import type {TemperatureYears} from '../../shared/domain/temperature-years';
+ import type {ClimateSeason} from '../../shared/domain/climate-atlas';
+ import {formatValue} from '../../shared/domain/metrics';
+ const root=document.querySelector<HTMLElement>('[data-season-ranking]');
+ const season=document.querySelector<HTMLSelectElement>('[data-season-kind]');
+ if(root&&season){
+  const status=root.querySelector<HTMLElement>('[data-ranking-status]')!;
+  const body=root.querySelector<HTMLTableSectionElement>('[data-ranking-rows]')!;
+  const excludedBody=root.querySelector<HTMLTableSectionElement>('[data-ranking-excluded]')!;
+  const counter=root.querySelector<HTMLElement>('[data-ranking-excluded-count]')!;
+  const form=document.querySelector<HTMLFormElement>('[data-season-form]');
+  const first=document.querySelector<HTMLSelectElement>('[data-season-first]');
+  const second=document.querySelector<HTMLSelectElement>('[data-season-second]');
+  const ctrl=new AbortController();
+  let loaded:TemperatureYears|null=null;
+  const set=(selector:string,value:string)=>{
+   const el=root.querySelector<HTMLElement>(selector);if(el)el.textContent=value;
+  };
+  const render=()=>{
+   if(!loaded)return;
+   try{
+    const result=temperatureSeasonRanking(loaded,season.value as ClimateSeason);
+    body.replaceChildren();excludedBody.replaceChildren();
+    counter.textContent='Nezařazené sezóny: '+result.excluded.length;
+    const warm=result.ranked[0],cold=result.ranked.at(-1);
+    set('[data-ranking-warmest]',warm?formatValue(warm.mean,1)+' °C':'—');
+    set('[data-ranking-coldest]',cold?formatValue(cold.mean,1)+' °C':'—');
+    set('[data-ranking-warmest-year]',warm?.label??'Nedostatečné pokrytí');
+    set('[data-ranking-coldest-year]',cold?.label??'Nedostatečné pokrytí');
+    if(!result.ranked.length){
+     const row=body.insertRow();row.insertCell().colSpan=6;
+     row.cells[0]!.textContent='Žádná sezóna nesplňuje podmínky pokrytí.';
+    }
+    result.ranked.forEach((item,index)=>{
+     const row=body.insertRow();
+     for(const value of [
+      String(index+1),item.label,formatValue(item.mean,1)+' °C',
+      item.validDays+' / '+item.expectedDays,
+      Math.round(item.timeCoverage*100)+' %'
+     ])row.insertCell().textContent=value;
+     const action=row.insertCell();
+     const button=document.createElement('button');
+     button.type='button';button.className='atlas-rank-action';
+     button.dataset.rankYear=String(item.year);
+     button.textContent='Porovnat';
+     button.setAttribute('aria-label','Porovnat '+item.label+' s jinou sezónou');
+     action.append(button);
+    });
+    if(!result.excluded.length){
+     const row=excludedBody.insertRow();row.insertCell().colSpan=3;
+     row.cells[0]!.textContent='Žádné nezařazené dokončené sezóny.';
+    }
+    for(const item of result.excluded){
+     const row=excludedBody.insertRow();
+     for(const value of [item.label,
+      item.validDays+' / '+item.expectedDays,
+      Math.round(item.timeCoverage*100)+' %'])row.insertCell().textContent=value;
+    }
+    status.textContent='Porovnatelných sezón: '+result.ranked.length+
+     ' · originální měření bez dokončené kontroly kvality.';
+    status.dataset.state='warning';
+   }catch{
+    body.replaceChildren();excludedBody.replaceChildren();
+    status.textContent='Žebříček nelze vyhodnotit z dostupných údajů.';
+    status.dataset.state='error';
+   }
+  };
+  const load=async()=>{
+   try{
+    loaded=await getTemperatureYears(ctrl.signal);
+    if(ctrl.signal.aborted)return;
+    render();
+   }catch{
+    if(ctrl.signal.aborted)return;
+    status.textContent='Celá teplotní řada není dostupná. Žebříček nesestavujeme.';
+    status.dataset.state='error';
+    body.replaceChildren();
+   }
+  };
+  season.addEventListener('change',render);
+  body.addEventListener('click',event=>{
+   const target=(event.target as HTMLElement).closest<HTMLButtonElement>('[data-rank-year]');
+   if(!target||!first||!second||!form)return;
+   const year=target.dataset.rankYear!;
+   if(first.querySelector('option[value="'+year+'"]:not(:disabled)')===null)return;
+   first.value=year;
+   if(second.value===year){
+    const candidate=[...second.options].find(o=>!o.disabled&&o.value!==year);
+    if(!candidate)return;
+    second.value=candidate.value;
+   }
+   form.requestSubmit();
+   form.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?
+    'instant':'smooth',block:'start'});
+  });
+  void load();
+  document.addEventListener('astro:before-swap',()=>ctrl.abort(),{once:true});
+ }
+</script>

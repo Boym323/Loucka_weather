@@ -1,10 +1,64 @@
 # Changelog
 
-## 2026-11-07 – návrh: staging publikovat až po readiness a bezpečný real IP
+## 2026-11-10 – příprava bezpečného staging release gate (#58 a #69)
 - Sestavení Astro ukládá pouze kandidáta `.pending-commit`; root-owned aktivační helper po ověření API readiness publikuje frontend atomicky jako neprivilegovaný uživatel. Při selhání API zůstává poslední zveřejněný frontend, nikoliv však garantovaný automatický rollback backendu.
 - Nginx může přijmout X-Forwarded-For pouze od explicitně trusted NPM IP z lokálního configu; do instalace přesné trusted IP zůstává původní společný limit 5r/s. Neotvírat port 8080 přímo do internetu.
 - Instalace je dvoukroková: nejprve aktualizovat root-owned helper, teprve potom schválit nasazení. CI kontroluje základní kontrakt pořadí publikace a Bash/Nginx syntaxi.
 - Změna pouze na stagingu, žádné SQL zápisy nebo zásah do GW3000 či produkčního WeeWX. Ověření reálného nasazení zbývá.
+- Před sloučením povinná kontrola skutečného root-owned helperu na LXC; instalovat **před** automatickou synchronizací nové revize, timer musí být zastaven.
+- Při skutečné atomické publikaci se opravuje čas `deployment.json.deployedAt` (nikoli čas sestavení kandidáta).
+- Samostatné izolované testy selhání readiness a úspěšného přepnutí release; všechna testovací data zůstávají mimo skutečný systém.
+- PR zůstává draft až do root/NPM přejímky na stagingu, GitHub CI není důkaz LXC konfigurace.
+
+
+## 2026-11-10 – dokončení: elegantní větrná růžice 2.0
+- Nahrazení centrálního kříže a dlouhé jehly jemným SVG kompasem; ukazatel na obvodu se orientuje na směr, **odkud** vítr vane, a stupně + 16směrná zkratka zůstávají uprostřed.
+- Rychlost a nárazy jako přehledné metriky se samostatným označením zdroje, kompatibilní s archivním i živým GW3000 vykreslováním a návratem po expiraci; neplatný směr neukazuje falešnou šipku.
+- Čistě frontendové změny, izolovaný světle/tmavý CSS override a respektování reduced-motion. Testy normalizace, směrových sektorů, nejkratší rotace přes sever a Playwright pro obě stránky a oba motivy.
+- Žádné změny veřejného API, databáze, WeeWX, GW3000 ani odloženého serverového issue #69 / PR #58.
+
+## 2026-11-07 – Klimatologický atlas, etapa II (žebříčky, archivní dny, grafická ročenka)
+- Srovnání čtyř ročních období rozšířené o žebříček dokončených sezón ze společného endpointu teplot všech let, časově vážené hodnoty, minima 90 % denního i skutečného časového pokrytí a samostatně uvedené neúplné roky.
+- U každého ze čtyř předběžných extrémů je možné vybrat záznam a zobrazit skutečný intervalový denní průběh bez umělého vyplňování mezer, s respektováním Europe/Prague a původu měření.
+- Tisknutelná ročenka má dva SVG grafy měsíčních teplot a srážek ze stejného původního archivu; neúplný měsíc se nezaměňuje za nulu a PDF vzniká přes tiskový dialog.
+- Přidány čisté jednotkové testy i prohlížečové testy světla/tmy a mobilu/desktopu, přístupnost a screenshoty každé nové kapitoly.
+- Čistě frontendové rozšíření, bez zápisů do WeeWX, MariaDB, GW3000 a bez zásahu do odloženého #69 / PR #58 či samostatného PR #73.
+
+
+## 2026-11-07 – návrh: Klimatologický atlas Loučky, první funkční etapa
+- Editorial hlavní rozcestník 4 tematických kapitol s ponecháním původních grafů, heatmap a anchor URL.
+- Nové stránky Extrémy, Trendy, Srovnání sezón a Meteorologická ročenka s živými read-only endpointy bez vymyšlených dat.
+- Výpočty pokrytí, časově i kalendářně správná zima, chybějící/neplatné záznamy ≠ nula, popisný Theil–Sen jen z dostatečně pokrytých dokončených let.
+- Tisknutelná A4 ročenka přes prohlížeč, originální roční a denní podklady, automatické věty pouze při dostatečném pokrytí.
+- CI: browser fixture test nových obrazovek, 15 tras pro staging smoke a oba motivy v axe-core na 60 kombinacích.
+- Bez zásahů do original WeeWX, GW3000, MariaDB a odloženého issue #69 / draft PR #58.
+
+
+## 2026-11-07 – návrh: automatické barvy podle slunce
+- Tři režimy vzhledu: Automaticky (výchozí podle astronomického východu/západu v Loučce), trvale světlý, trvale tmavý. Původní volby z localStorage zachovány.
+- Jedna sdílená funkce pro pražské civilní datum v astronomickém modulu; přepínání i na otevřené kartě, při návratu do popředí a po obnově stránky.
+- Regresní testy letního/zimního dne, hranice slunce, CET/CEST, ručního přepínání i výchozího režimu. Vizuální smoke je pro srovnatelnost nastaven na světlý.
+- Žádné HTTP/SQL požadavky pro motiv, žádný zásah do produkčního WeeWX, GW3000 nebo LXC.
+
+
+## 2026-11-07 – návrh: WCAG audit ve tmavém motivu
+- Rozšíření testu 11 tras ze 22 na 44 kombinací (desktop/mobil × světlý/tmavý motiv), včetně stavu otevřeného menu klimatologie.
+- Explicitně se ověřuje přepnutí motivu před spuštěním axe-core; těmto testům nestačí vložit tmavou třídu až po renderu.
+- Test je lokální, read-only a nijak nemění živé meteorologické měření či nasazení.
+
+
+## 2026-11-07 – návrh: odstranění potvrzených bariér přístupnosti
+- První axe-core CI běh ověřil 22 kombinací stránky a viewportu a nalezl 39 závažných výskytů porušení pravidel, převážně kontrast a nesoulad mezi viditelným a přístupným názvem sdílené navigace.
+- Opraveny přístupné názvy značky, mobilních rozbalovacích menu a odkazu na kameru. Horizontálně posuvné oblasti klimatologické tabulky a mapových záložek jsou dosažitelné klávesnicí.
+- Samostatná poslední vrstva `accessibility.css` cíleně opravuje slabý kontrast popisků z meteorologických panelů, radaru, ovládání historie a map. Konkrétní výsledky potvrdí následné axe-core CI, nikoli jen statická kontrola barev.
+- Žádná změna meteo dat, API, GW3000 ani nasazovacích helperů.
+
+
+## 2026-11-07 – návrh: automatizovaný WCAG audit všech stránek
+- CI přidává axe-core 4.14.0 k Playwright a kontroluje 11 veřejných tras na 390/1440 px, včetně otevřené mobilní navigace klimatologie.
+- Výstup do `wcag-browser-audit` rozlišuje závažná blokující porušení a ostatní zjištění; automatizovaný audit není úplné ověření WCAG ani Safari/VoiceOver.
+- Kontrola je na izolovaném lokálním Astro preview, nemění meteorologická měření, SQL data, API ani GW3000.
+
 
 ## 2026-11-07 – návrh: přesná dokumentace a kontrola závislostí
 - `AGENTS.md`, `README.md` a vstupní `docs/PROJECT_CONTEXT.md` rozlišují staging a produkční veřejný web; historické PR #2 a #4 jsou již sloučené, issue #36 uzavřené a issue #55 stále otevřené.

@@ -20,7 +20,7 @@ const climateSections=[
 <div class="climate-page" data-climate-dashboard data-current-year={currentYear}>
  <div class="page-intro climate-intro">
   <span class="eyebrow">Klimatologie · archiv od roku 2009</span>
-  <div class="section-heading"><div><h1>Klimatologie Loučka</h1><p>Roční a měsíční přehled ze skutečných denních souhrnů WeeWX.</p></div>
+  <div class="section-heading"><div><h2>Datový přehled Loučky</h2><p>Roční a měsíční přehled ze skutečných denních souhrnů WeeWX.</p></div>
    <span class="status-chip" data-climate-status role="status">Ověřuji statistické API</span>
   </div>
  </div>
@@ -50,7 +50,7 @@ const climateSections=[
  <div class="climate-grid">
   <section class="section climate-card" aria-labelledby="climate-years-title">
    <div class="section-heading"><div><span class="eyebrow">Historické porovnání</span><h2 id="climate-years-title">Roční průměry</h2></div><span class="status-chip" data-years-status>Načítám</span></div>
-   <div class="table-scroll climate-table-wrap"><table class="history-table climate-table">
+   <div class="table-scroll climate-table-wrap" role="region" aria-label="Roční klimatologické souhrny" tabindex="0"><table class="history-table climate-table">
     <thead><tr><th scope="col">Rok</th><th scope="col">Teplota °C</th><th scope="col">Srážky mm</th><th scope="col">Pokrytí</th></tr></thead>
     <tbody data-year-table><tr><td colspan="4">Načítám roční souhrny…</td></tr></tbody>
    </table></div>
