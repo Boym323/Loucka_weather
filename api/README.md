@@ -102,7 +102,7 @@ GET /api/v1/climate/annual-matrix?metric=outTemp&units=metricwx&dataset=original
 
 Opakovatelný CLI report `npm run qc:report -- --from 2026-10-10T00:00:00Z --to 2026-10-11T00:00:00Z`
 pro původní měření a LuhaMet / ILOUKA4. Čte pouze přes zvláštní MariaDB účet s
-opravením SELECT, vyžaduje `WEATHER_QC_READ_ONLY=YES` a `WEATHER_STAGING_ENABLED=YES`,
+oprávněním SELECT, vyžaduje `WEATHER_QC_READ_ONLY=YES` a `WEATHER_STAGING_ENABLED=YES`,
 max. 7 dní na jeden běh. Není to HTTP endpoint a neprovádí korekce.
 
 Výstup je JSON: kontrola čidel, časových překryvů a konstantních hodnot,
