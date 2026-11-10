@@ -13,6 +13,7 @@ HELPER = (ROOT / "loucka-preview-api-activate.sh").read_text()
 SYNC = (ROOT / "auto-deploy-preview.sh").read_text()
 NGINX = (ROOT / "nginx-preview.conf").read_text()
 UNIT = (ROOT / "loucka-preview-sync.service").read_text()
+TIMER = (ROOT / "loucka-preview-sync.timer").read_text()
 OLD = "a" * 40
 NEW = "b" * 40
 
@@ -35,6 +36,14 @@ class DeploymentGateTest(unittest.TestCase):
         self.assertIn("real_ip_header X-Forwarded-For;", NGINX)
         self.assertIn("/etc/nginx/loucka-trusted-proxy/*.conf", NGINX)
         self.assertNotIn("set_real_ip_from 0.0.0.0/0", NGINX)
+
+    def test_timer_rearms_when_enabled_late_after_boot(self):
+        # OnBootSec expires only once; a late restart must still schedule a run.
+        self.assertIn("OnActiveSec=45s", TIMER)
+        self.assertIn("OnUnitInactiveSec=2min", TIMER)
+        self.assertIn("AccuracySec=10s", TIMER)
+        self.assertNotIn("OnBootSec=", TIMER)
+        self.assertNotIn("Persistent=true", TIMER)
 
     def run_fixture(self, ready):
         with tempfile.TemporaryDirectory() as temp:

@@ -21,6 +21,9 @@ jobs:
           bash -n deploy/lxc/auto-deploy-preview.sh
           bash -n deploy/lxc/site-readiness-audit.sh
           bash -n deploy/lxc/loucka-preview-api-activate.sh
+          grep -Fqx 'OnActiveSec=45s' deploy/lxc/loucka-preview-sync.timer
+          grep -Fqx 'OnUnitInactiveSec=2min' deploy/lxc/loucka-preview-sync.timer
+          systemd-analyze verify deploy/lxc/loucka-preview-sync.timer
           # A new static release may only be published by the post-build helper.
           grep -Fq 'publish_pending() {' deploy/lxc/loucka-preview-api-activate.sh
           grep -Fq 'pending_tmp=' deploy/lxc/auto-deploy-preview.sh

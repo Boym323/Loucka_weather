@@ -1,10 +1,12 @@
 [Unit]
 Description=Loucka Weather: check main every two minutes
 [Timer]
-OnBootSec=45s
+# Always arm a first run after the timer starts, even when re-enabled long after boot.
+OnActiveSec=45s
+# Continue about two minutes after each completed sync, even after a long build.
 OnUnitInactiveSec=2min
 RandomizedDelaySec=10s
+AccuracySec=10s
 Unit=loucka-preview-sync.service
-Persistent=true
 [Install]
 WantedBy=timers.target
