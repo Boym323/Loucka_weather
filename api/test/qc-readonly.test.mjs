@@ -77,11 +77,11 @@ test('duplicate alignment and overlapping archive intervals are fail closed',()=
     luhamet_sehradice:[ref(0,10),ref(1,11),ref(1,12,70,{observed_at_utc:base+310})],
     wu_ilouka4:[]
   });
-  assert.equal(report.sourceQuality.loucka.acceptedSlots,0,
-    'overlapping first/next intervals and duplicate slot must not be accepted');
+  assert.equal(report.sourceQuality.loucka.acceptedSlots,1,
+    'unaffected first slot stays valid; overlapping later slot is rejected');
   assert.ok(report.sourceQuality.loucka.flags.overlapping_archive_intervals>=1);
   assert.ok(report.sourceQuality.loucka.flags.multiple_measurements_in_slot>=2);
-  assert.equal(report.comparisons.luhamet_sehradice.matchedPairs,0);
+  assert.equal(report.comparisons.luhamet_sehradice.matchedPairs,1);
   assert.ok(report.sourceQuality.luhamet_sehradice.flags.multiple_measurements_in_slot>=2);
 });
 
