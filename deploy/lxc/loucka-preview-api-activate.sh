@@ -58,10 +58,22 @@ persist_active_commit() {
 # All writes to the user-owned web tree occur as the unprivileged user.
 publish_pending() {
   if [[ "$pending" != true ]]; then return 0; fi
+  # deployment.json must record the actual switch, not the earlier build time.
+  # The static release is user-owned; never write to it as root.
+  publish_time=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+  meta_tmp=$(runuser -u loucka -- mktemp "$release/.deployment.json.XXXXXXXX")
+  trap 'runuser -u loucka -- rm -f -- "$meta_tmp"' EXIT
+  printf '{"schemaVersion":"1","branch":"main","commit":"%s","deployedAt":"%s"}\\n' \
+    "$commit" "$publish_time" |
+    runuser -u loucka -- tee "$meta_tmp" >/dev/null
+  runuser -u loucka -- chmod 0644 "$meta_tmp"
+  runuser -u loucka -- mv -f -- "$meta_tmp" "$release/deployment.json"
+  trap - EXIT
+  # Atomic publication happens only after readiness has already passed.
   runuser -u loucka -- ln -sfn -- "$release" "$web/.current.next"
   runuser -u loucka -- mv -Tf -- "$web/.current.next" "$web/current"
   runuser -u loucka -- rm -f -- "$pending_marker"
-  echo "Published healthy release $commit"
+  echo "Published healthy release $commit at $publish_time"
 }
 
 # A frontend-only/docs-only commit must not restart a healthy backend.
