@@ -2,23 +2,6 @@
 
 **Aktuální vývoj: 1. 11. 2026.** Web vzniká podle uživatelem schváleného devítipanelového tmavého vizuálního návrhu. Testovací náhled: https://dev.pocasi-loucka.eu/. Není to veřejná produkce. Všechny změny do main se sestavují a nasazují přes LXC automaticky; přesná zveřejněná revize je vidět ve webové patičce a v /deployment.json.
 
-## Vzhled: automatický den/noc podle Loučky (7. 11. 2026)
-
-V horní liště je třípolohová volba `Automaticky / Světlý / Tmavý`. Nová
-instalace bez nastavení používá `Automaticky`, jehož den/noc se řídí
-východem a západem Slunce pro Loučku (49.170035° N, 17.876076° E) ze
-stejné funkce `solarDay()` jako karta „Slunce a Měsíc“. Intervaly jsou
-počítané v čase `Europe/Prague`; změny CET/CEST jsou pokryty testy.
-Otevřený web průběžně přehodnocuje stav, po probuzení karty ihned, bez
-HTTP dotazů, geolokace, přístupu ke GW3000 či databázi.
-
-Ruční volby zůstávají uloženy pod existujícím klíčem `loucka-theme`
-(`light`/`dark`), `auto` je nová hodnota; staré ruční volby se
-nepřepisují. Globální grafy dostávají událost `loucka:theme-change`
-jen pokud se reálně změní světlá/tmavá paleta. Kvůli konzistentním
-screenshotům prohlížečové regresní testy explicitně volí světlý motiv;
-samostatné regresní testy ověřují automatický přechod při východu/západu.
-
 ## Elegantní větrná růžice 2.0 (7. 11. 2026)
 
 V přehledu i v detailu aktuálních měření používá větrná růžice SVG ciferník
@@ -39,6 +22,97 @@ změny API, původní databáze nebo stanice. Prohlížečový CI test
 jen syntetické browser-only vzorky, testuje 390/1440 px, oba motivy,
 otáčení přes sever, nepřítomnost hodnoty a fallback na archiv.
 Artefakt `evergreen-layout-audit` obsahuje porovnatelné screenshoty.
+
+## Klimatologický atlas – etapa II (7. 11. 2026)
+
+Druhá etapa rozšiřuje stávající kapitoly bez změn na serveru nebo
+ve zdrojové MariaDB:
+
+- **Srovnání sezón**: pod dřívějším porovnáním je žebříček všech
+  *dokončených* jarních, letních, podzimních a zimních období. Čerpá
+  **jediný read-only** `/api/v1/climate/temperature-years`, používá
+  časově vážený průměr platně měřených dnů. Do pořadí vstupují pouze
+  sezóny s alespoň 90 % platných kalendářních dnů a 90 % skutečného
+  času. Jednotlivý den musí mít minimálně 80 % časové úplnosti;
+  `partial`, `missing`, `suspect` záznamy se nepočítají. Nekompletní
+  sezóny jsou samostatně vysvětlené, lze z tabulky přímo nastavit
+  porovnání dvou sezón. Správně zohledněno CET/CEST a zimy přes roky.
+- **Extrémy**: čtyři známé předběžné denní rekordy mají akci
+  `Průběh dne`. Detail načte jediný omezený read-only `/api/v1/history`
+  s `resolution=raw` a příslušnou veličinou a místním kalendářním dnem
+  (23/24/25 hodin, nepřesahuje 1000 bodů). Pro teploty/nárazy je
+  přerušovaný průběh, pro intervalové srážky sloupce. Denní souhrn
+  automaticky nepotvrzuje přesný čas extrému; nedostupná intervalová
+  data nevytvářejí umělou křivku.
+- **Ročenka**: dva responzivní, tisknutelné SVG měsíční sloupcové grafy
+  teploty a srážek z **již načtených** denních souhrnů. Graf vykresluje
+  jen měsíce s alespoň 80 % platných dnů; řádná nula 0 mm se zachová,
+  neúplný měsíc má samostatný přerušovaný symbol. Tisk A4 obsahuje
+  grafy, plný datový přehled a metodiku; export je nativní dialog
+  prohlížeče, nikoliv serverově generované PDF.
+
+**Ověřování**: `frontend/tests/climate-atlas-chapter-two.test.mjs`
+kontroluje zimní překryv, přestupný rok, CET/CEST, nulové a neplatné
+hodnoty, hranice pokrytí a čitelnost vstupů grafů;
+`frontend/scripts/climate-atlas-browser-check.mjs` má izolované
+prohlížečové fixture v obou motivech a šířkách, porovnání, detail
+extrému, tiskový režim a screenshoty všech pěti kapitol. Stále jde
+o historický archiv bez dokončené forenzní kontroly a nikoliv
+o standardní klimatologický normál.
+
+## Klimatologický atlas – etapa I (7. 11. 2026)
+
+Atlas rozšiřuje existující `/klimatologie/` o redakčně pojatý přehled a
+čtyři samostatné kapitoly, zatímco **původní anchors** a komponenty
+`ClimateDashboard`, `AllYearsTemperature`, `YearComparison` zůstávají
+funkční na původní stránce:
+
+- `/klimatologie/extremy/` – ověřený *původ* a **předběžné** hodnoty
+  `GET /api/v1/climate/records`, čtyři extrémy, časová osa a počty
+  charakteristických teplotních dní. Nikoli definitivně potvrzené rekordy.
+- `/klimatologie/trendy/` – `GET /api/v1/climate/annual-matrix`
+  (outTemp, rain, windSpeed); graf a tabulka všech let včetně pokrytí.
+  Popisný Theil–Senův sklon vzniká pouze z nejméně 8 dokončených roků
+  v rozmezí nejméně 10 let, s min. 90 % platných dnů a u průměrných
+  veličin i prokazatelným časovým pokrytím 90 %. Jde o popisné lokální
+  měření, **ne statistickou významnost ani WMO 30letý normál**.
+- `/klimatologie/sezony/` – čtyři meteorologické sezóny, dvě dokončené
+  sezóny z originálního `GET /api/v1/history` (daily, outTemp/rain);
+  zima prosinec–únor přes hranici roku, CET/CEST, 29. únor zvlášť;
+  průměry a součty společných platných dnů, nejméně 80 % společného
+  kalendáře pro porovnávací rozdíl. Každé období má samostatně uvedené
+  pokrytí; chybějící srážky nejsou nuly.
+- `/klimatologie/rocenka/` – výběr dokončeného roku, 3 konsolidované
+  roční souhrny a jen 2 denní API dotazy pro 12měsíční tabulku.
+  Automatické formulace jen při dostatečné úplnosti, náhled A4
+  a `window.print()` jako tisk / **Uložit do PDF** přes systémový dialog.
+  Nejde o serverově generovaný PDF soubor.
+
+Atlas nepřidává endpoint ani nezapisuje do originální/rekonstruované
+MariaDB, WeeWX či GW3000. Před nasazením se ověří CI, 15 tras v browser
+smoke, 60 variant v axe-core (15 tras × 2 šířky × 2 barevné motivy) a
+izolovaný browser fixture test `scripts/climate-atlas-browser-check.mjs`.
+Browser fixture není živá data meteostanice. V důsledku nehotové
+forenzní rekonstrukce i změn čidel jsou všechny historické závěry
+orientační. Další etapa může dodat serverový agregovaný sezónní kontrakt,
+schválené QC a strukturovanou tiskovou ročenku s archivními fotografiemi.
+
+## Vzhled: automatický den/noc podle Loučky (7. 11. 2026)
+
+V horní liště je třípolohová volba `Automaticky / Světlý / Tmavý`. Nová
+instalace bez nastavení používá `Automaticky`, jehož den/noc se řídí
+východem a západem Slunce pro Loučku (49.170035° N, 17.876076° E) ze
+stejné funkce `solarDay()` jako karta „Slunce a Měsíc“. Intervaly jsou
+počítané v čase `Europe/Prague`; změny CET/CEST jsou pokryty testy.
+Otevřený web průběžně přehodnocuje stav, po probuzení karty ihned, bez
+HTTP dotazů, geolokace, přístupu ke GW3000 či databázi.
+
+Ruční volby zůstávají uloženy pod existujícím klíčem `loucka-theme`
+(`light`/`dark`), `auto` je nová hodnota; staré ruční volby se
+nepřepisují. Globální grafy dostávají událost `loucka:theme-change`
+jen pokud se reálně změní světlá/tmavá paleta. Kvůli konzistentním
+screenshotům prohlížečové regresní testy explicitně volí světlý motiv;
+samostatné regresní testy ověřují automatický přechod při východu/západu.
 
 ## Automatická kontrola přístupnosti – 7. 11. 2026
 

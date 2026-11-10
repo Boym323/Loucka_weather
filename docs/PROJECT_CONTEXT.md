@@ -4,6 +4,31 @@
 
 **Provozní výkonnostní audit:** Issue [#36](https://github.com/Boym323/Loucka_weather/issues/36) byl uzavřen 5. 11. po sloučení změn observer shutdown/profilovací sondy a jejich staging ověření; metodika a omezení jsou v [auditu 5. 11. 2026](API_PERFORMANCE_AUDIT_2026-11-05.md). Následný [Issue #55](https://github.com/Boym323/Loucka_weather/issues/55) stále řeší dlouhodobý trend RSS/heap, cold refresh a živě ověřený SSE shutdown. Krátké profilování **neprokazuje** paměťový leak ani dlouhodobou stabilitu.
 
+## Další etapa Klimatologického atlasu (7. 11. 2026)
+
+Rozpracovaný PR pro druhou etapu doplňuje žebříčky dokončených sezón z
+existujícího `temperature-years` endpointu, detail rekordního dne
+z omezeného read-only `history?resolution=raw` a dva měsíční SVG
+grafy v tisknutelné ročence. Pořadí sezón vyžaduje 90 % denního
+i časového pokrytí a nevydává neúplné záznamy za klimatický normál.
+Neměnit metadata na „nasazeno“, dokud CI a staging smoke skutečně
+nepotvrdí příslušný squash merge commit.
+
+## Klimatologický atlas – vývojová etapa (7. 11. 2026)
+
+Na samostatné frontend větvi se připravuje nový přehled
+`/klimatologie/`, kapitoly `/klimatologie/extremy/`,
+`/klimatologie/trendy/`, `/klimatologie/sezony/` a
+`/klimatologie/rocenka/`. Základem jsou existující read-only
+`/api/v1/climate/records`, `/api/v1/climate/annual-matrix` a
+`/api/v1/history`. Původní klimatologické grafy, srovnání roků a
+heatmapy zůstávají na `/klimatologie/` se stejnými kotvami. Ročenka
+nabízí pouze tisk / uložení do PDF přes dialog prohlížeče.
+Vše je **předběžné**: období 2009–2026 není 30letý normál,
+forenzní rekonstrukce není dokončena a srážkové anomálie mohou
+ovlivnit souhrny. Neoznačovat práci za sloučenou nebo nasazenou,
+dokud neproběhne PR, jeho zelené CI a veřejný smoke.
+
 ## Cíl
 Navrhnout moderní portál **Počasí Loučka** pro veřejný web `https://pocasi-loucka.eu/`, s mobilním rozhraním, živými údaji, historickými grafy, statistikami a přehledem kvality dat. Původní **WeeWX + Belchertown** nadále provozovat, neměnit beze schválení produkční sběr dat. Meteorologická stanice Ecowitt GW3000, WeeWX a historický MariaDB archiv. Součástí většího projektu je historický audit a rekonstrukce chybějících/anomálních měření.
 

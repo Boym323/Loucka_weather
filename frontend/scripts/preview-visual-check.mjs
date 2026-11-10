@@ -10,7 +10,10 @@ const base=process.env.LOUCKA_PREVIEW_URL || 'https://dev.pocasi-loucka.eu';
 const out='test-results/preview-screenshots';
 const routes=[
  ['prehled','/'],['aktualne','/aktualne/'],['grafy','/grafy/'],
- ['klimatologie','/klimatologie/'],['kamera','/kamera/'],
+ ['klimatologie','/klimatologie/'],
+ ['atlas-extremy','/klimatologie/extremy/'],['atlas-trendy','/klimatologie/trendy/'],
+ ['atlas-sezony','/klimatologie/sezony/'],['atlas-rocenka','/klimatologie/rocenka/'],
+ ['kamera','/kamera/'],
  ['mapy','/mapy/'],['senzory','/senzory/'],['rekordy','/rekordy/'],['puda-ovzdusi','/puda-ovzdusi/'],['stav','/stav/'],['o-stanici','/o-stanici/']
 ];
 const sizes=[

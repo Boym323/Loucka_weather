@@ -1,0 +1,199 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AtlasNav from '../../features/climate/AtlasNav.astro';
+import YearbookCharts from '../../features/climate/YearbookCharts.astro';
+const currentYear=Number(new Intl.DateTimeFormat('en-GB',{
+ timeZone:'Europe/Prague',year:'numeric'
+}).format(new Date()));
+const years=Array.from({length:Math.max(1,currentYear-2009)},(_,i)=>currentYear-i-1);
+const months=['Leden','Únor','Březen','Duben','Květen','Červen','Červenec',
+ 'Srpen','Září','Říjen','Listopad','Prosinec'];
+---
+<BaseLayout title="Atlas · Meteorologická ročenka"
+ description="Osobní meteorologická ročenka Loučky: skutečné klimatologické roční souhrny, dvanáct měsíců a tisk do PDF.">
+ <div class="climate-atlas" data-atlas-yearbook>
+  <header class="atlas-edition-hero">
+   <p class="atlas-eyebrow">04 / Paměť jedné meteorologické stanice</p>
+   <h1 class="atlas-title">Osobní meteorologická ročenka</h1>
+   <p class="atlas-subtitle">Každý dokončený rok na jediné přehledné stránce. Doložené souhrny, měsíční průběh a transparentní informace o úplnosti měření.</p>
+  </header>
+  <AtlasNav active="rocenka"/>
+  <section class="atlas-panel atlas-screen-only" aria-label="Nastavení ročenky">
+   <form class="atlas-filters" data-yearbook-form>
+    <label>Dokončený kalendářní rok
+     <select name="year" data-yearbook-year>
+      {years.map(y=><option value={y} selected={y===currentYear-1}>{y}</option>)}
+     </select>
+    </label>
+    <button type="submit">Sestavit ročenku</button>
+    <button type="button" data-yearbook-print disabled>Tisk / Uložit jako PDF</button>
+   </form>
+   <p class="atlas-print-note">PDF vznikne v tiskovém dialogu prohlížeče volbou „Uložit do PDF“. Žádná data neposíláme třetí straně.</p>
+  </section>
+  <p class="atlas-status atlas-screen-only" role="status" data-yearbook-status>Ročenka se sestavuje z originálních ročních a denních souhrnů…</p>
+  <article class="atlas-yearbook" aria-labelledby="yearbook-heading">
+   <header class="atlas-yearbook-header">
+    <p class="atlas-eyebrow">POČASÍ LOUČKA / ROČENKA STANICE</p>
+    <h2 id="yearbook-heading">Rok <span data-yearbook-title>—</span></h2>
+    <p>Vlastní meteorologický archiv z původních měření WeeWX. Neúplná a podezřelá historická data se nevydávají za ověřené klimatologické hodnoty.</p>
+    <p class="source-note" data-yearbook-revision>Čeká na skutečné zdrojové údaje.</p>
+   </header>
+   <section aria-labelledby="yearbook-summary">
+    <div class="chapter"><h3 id="yearbook-summary">I. Rok v číslech</h3></div>
+    <div class="atlas-stat-grid">
+     {[
+      {id:'temperature',label:'Průměrná venkovní teplota',note:'Časově vážený roční průměr'},
+      {id:'rain',label:'Roční úhrn srážek',note:'Součet dostupných intervalů'},
+      {id:'wind',label:'Průměrná rychlost větru',note:'Časově vážený roční průměr'}
+     ].map(item=><div class="atlas-stat">
+      <span>{item.label}</span>
+      <strong data-yearbook-summary={item.id}>—</strong>
+      <small data-yearbook-coverage={item.id}>{item.note}</small>
+     </div>)}
+    </div>
+   </section>
+   <section aria-labelledby="yearbook-months">
+    <div class="chapter"><h3 id="yearbook-months">II. Dvanáct měsíců</h3></div>
+    <p>Průměr dostupných denních teplot a součet dostupných denních srážek. Pro měsíční přehled nejde o přepočet ročního časově váženého průměru.</p>
+    <div class="atlas-table-scroll" role="region" tabindex="0" aria-label="Měsíční údaje meteorologické ročenky">
+     <table>
+      <thead><tr><th scope="col">Měsíc</th><th scope="col">Teplota</th><th scope="col">Dny s teplotou</th><th scope="col">Srážky</th><th scope="col">Dny se srážkami</th></tr></thead>
+      <tbody data-yearbook-months>
+       {months.map(month=><tr><td>{month}</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>)}
+      </tbody>
+     </table>
+    </div>
+    <YearbookCharts />
+   </section>
+   <section aria-labelledby="yearbook-story">
+    <div class="chapter"><h3 id="yearbook-story">III. Charakter roku</h3></div>
+    <p data-yearbook-story>Slovní shrnutí se zobrazí jen tehdy, pokud máme podložené měsíční hodnoty s dostatečným pokrytím.</p>
+   </section>
+   <section aria-labelledby="yearbook-quality">
+    <div class="chapter"><h3 id="yearbook-quality">IV. Zdroj a kvalita měření</h3></div>
+    <p data-yearbook-quality>Úplnost a původ dat se ověřují.</p>
+    <p>Zdroj: osobní meteorologická stanice Loučka, originální denní souhrny WeeWX v časovém pásmu Europe/Prague; dataset <strong>original</strong>. Údaje neprošly kompletní historickou QC, mohou být ovlivněné změnami čidel, výpadky a problematickými srážkovými měřeními. Nejde o klimatologický normál ani oficiální certifikovanou ročenku ČHMÚ.</p>
+   </section>
+   <footer class="atlas-yearbook-footer">Počasí Loučka · osobní meteorologická kronika od roku 2009 · <span data-yearbook-date></span> · Předběžné originální podklady.</footer>
+  </article>
+ </div>
+</BaseLayout>
+<script>
+ import {getAnnualMatrix,getHistoryInterval} from '../../shared/api/client';
+ import type {ConsolidatedAnnualYear} from '../../shared/api/client';
+ import {pragueMidnightIso} from '../../shared/domain/statistics';
+ import {monthlyRollups} from '../../shared/domain/climate-atlas';
+ import {formatValue} from '../../shared/domain/metrics';
+ import {drawYearbookBars,yearbookPlotData} from '../../shared/ui/yearbook-charts';
+ const root=document.querySelector<HTMLElement>('[data-atlas-yearbook]');
+ if(root){
+  const form=root.querySelector<HTMLFormElement>('[data-yearbook-form]')!;
+  const yearSelect=root.querySelector<HTMLSelectElement>('[data-yearbook-year]')!;
+  const print=root.querySelector<HTMLButtonElement>('[data-yearbook-print]')!;
+  const status=root.querySelector<HTMLElement>('[data-yearbook-status]')!;
+  const tbody=root.querySelector<HTMLTableSectionElement>('[data-yearbook-months]')!;
+  const ctrl=new AbortController();
+  let generation=0;
+  const names=['Leden','Únor','Březen','Duben','Květen','Červen','Červenec',
+   'Srpen','Září','Říjen','Listopad','Prosinec'];
+  const set=(selector:string,value:string)=>{
+   const target=root.querySelector<HTMLElement>(selector);if(target)target.textContent=value;
+  };
+  const summary=(row:ConsolidatedAnnualYear|undefined,id:string,unit:string)=>{
+   const available=row?.value!==null&&typeof row?.value==='number'&&Number.isFinite(row.value);
+   set('[data-yearbook-summary="'+id+'"]',available?formatValue(row.value,1)+' '+unit:'—');
+   set('[data-yearbook-coverage="'+id+'"]',row?
+    row.validDays+' / '+row.elapsedDays+' dnů s daty · časové pokrytí '+
+    (row.timeCoverageFraction===null?'neznámé':Math.round(row.timeCoverageFraction*100)+' %'):
+    'Roční souhrn nedostupný');
+  };
+  const assemble=async()=>{
+   const year=Number(yearSelect.value),ticket=++generation;
+   const yearInLoucka=Number(new Intl.DateTimeFormat('en-GB',{
+    timeZone:'Europe/Prague',year:'numeric'
+   }).format(new Date()));
+   if(!Number.isInteger(year)||year<2009||year>=yearInLoucka)return;
+   print.disabled=true;status.dataset.state='';status.textContent='Načítám originální podklady roku '+year+'…';
+   for(const selector of ['[data-yearbook-temp-chart]','[data-yearbook-rain-chart]']){
+    const holder=root.querySelector<HTMLElement>(selector);
+    if(holder)holder.textContent='Načítám měsíční souhrny…';
+   }
+   try{
+    // Five bounded, sequential read-only API requests; no unbounded per-month fan-out.
+    const tempMatrix=await getAnnualMatrix('outTemp',ctrl.signal);
+    const rainMatrix=await getAnnualMatrix('rain',ctrl.signal);
+    const windMatrix=await getAnnualMatrix('windSpeed',ctrl.signal);
+    const from=pragueMidnightIso(year+'-01-01'),to=pragueMidnightIso((year+1)+'-01-01');
+    const dailyTemp=await getHistoryInterval('outTemp',from,to,'daily',ctrl.signal);
+    const dailyRain=await getHistoryInterval('rain',from,to,'daily',ctrl.signal);
+    if(ctrl.signal.aborted||ticket!==generation)return;
+    const t=tempMatrix.years.find(r=>r.year===year);
+    const r=rainMatrix.years.find(r=>r.year===year);
+    const w=windMatrix.years.find(r=>r.year===year);
+    set('[data-yearbook-title]',String(year));
+    summary(t,'temperature','°C');summary(r,'rain','mm');summary(w,'wind','m/s');
+    const tm=monthlyRollups(dailyTemp.points,year,'mean');
+    const rm=monthlyRollups(dailyRain.points,year,'sum');
+    const tempChart=root.querySelector<HTMLElement>('[data-yearbook-temp-chart]');
+    const rainChart=root.querySelector<HTMLElement>('[data-yearbook-rain-chart]');
+    if(tempChart)drawYearbookBars(tempChart,yearbookPlotData(tm),'temperature');
+    if(rainChart)drawYearbookBars(rainChart,yearbookPlotData(rm),'rain');
+    tbody.replaceChildren();
+    for(let i=0;i<12;i++){
+     const temp=tm[i]!,rain=rm[i]!;
+     const tr=tbody.insertRow();
+     for(const value of [
+      names[i]!,temp.value===null?'—':formatValue(temp.value,1)+' °C',
+      temp.validDays+' / '+temp.expectedDays,
+      rain.value===null?'—':formatValue(rain.value,1)+' mm',
+      rain.validDays+' / '+rain.expectedDays
+     ])tr.insertCell().textContent=value;
+    }
+    const qualifiedTemp=tm.filter(m=>m.coverage>=.9&&m.value!==null);
+    const qualifiedRain=rm.filter(m=>m.coverage>=.9&&m.value!==null);
+    const sentences:string[]=[];
+    if(qualifiedTemp.length>=8){
+     const warm=[...qualifiedTemp].sort((a,b)=>b.value!-a.value!)[0]!;
+     const cold=[...qualifiedTemp].sort((a,b)=>a.value!-b.value!)[0]!;
+     sentences.push('Z měsíců s alespoň 90% denním pokrytím vycházel nejtepleji '+
+      names[warm.month-1]!.toLowerCase()+' ('+formatValue(warm.value,1)+' °C) a nejchladněji '+
+      names[cold.month-1]!.toLowerCase()+' ('+formatValue(cold.value,1)+' °C).');
+    }
+    if(qualifiedRain.length>=8){
+     const wet=[...qualifiedRain].sort((a,b)=>b.value!-a.value!)[0]!;
+     sentences.push('Největší součet dostupných denních úhrnů z dostatečně pokrytých měsíců připadl na '+
+      names[wet.month-1]!.toLowerCase()+' ('+formatValue(wet.value,1)+' mm).');
+    }
+    set('[data-yearbook-story]',sentences.length?sentences.join(' '):
+     'Měsíční data nemají dostatečné pokrytí pro důvěryhodné automatické shrnutí roku.');
+    const coverage=[t,r,w].map((row,i)=>row?
+     ['Teplota','Srážky','Vítr'][i]+' '+row.validDays+'/'+row.elapsedDays+' dní':
+     ['Teplota','Srážky','Vítr'][i]+' bez ročního souhrnu');
+    const complete=[t,r,w].every(row=>row&&row.value!==null&&
+     row.validDays/row.elapsedDays>=.9);
+    set('[data-yearbook-quality]',coverage.join(' · ')+'. '+
+     (complete?'Roční denní pokrytí dosahuje alespoň 90 % u všech tří veličin, historická QC však stále chybí.':
+      'Některá veličina nemá 90% denní pokrytí; meziroční závěry proto vyžadují opatrnost.'));
+    set('[data-yearbook-revision]','Roční revize: teplota '+tempMatrix.dataRevision+
+     ', srážky '+rainMatrix.dataRevision+', vítr '+windMatrix.dataRevision+'.');
+    set('[data-yearbook-date]','Sestaveno '+new Intl.DateTimeFormat('cs-CZ',{
+     dateStyle:'medium',timeZone:'Europe/Prague'
+    }).format(new Date()));
+    status.textContent='Ročenka '+year+' sestavena z dostupných originálních dat · bez dokončené QC';
+    status.dataset.state='warning';print.disabled=false;
+   }catch{
+    if(ctrl.signal.aborted||ticket!==generation)return;
+    status.textContent='Ročenku nelze sestavit: chybějí zdrojová data. PDF z neúplného načtení nevytváříme.';
+    for(const selector of ['[data-yearbook-temp-chart]','[data-yearbook-rain-chart]']){
+     const holder=root.querySelector<HTMLElement>(selector);
+     if(holder)holder.textContent='Graf není bez zdrojových měření dostupný.';
+    }
+    status.dataset.state='error';print.disabled=true;
+   }
+  };
+  form.addEventListener('submit',e=>{e.preventDefault();void assemble();});
+  print.addEventListener('click',()=>{if(!print.disabled)window.print();});
+  void assemble();
+  document.addEventListener('astro:before-swap',()=>ctrl.abort(),{once:true});
+ }
+</script>
