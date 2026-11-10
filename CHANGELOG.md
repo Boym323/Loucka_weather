@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-10 – dokončení: elegantní větrná růžice 2.0
+- Nahrazení centrálního kříže a dlouhé jehly jemným SVG kompasem; ukazatel na obvodu se orientuje na směr, **odkud** vítr vane, a stupně + 16směrná zkratka zůstávají uprostřed.
+- Rychlost a nárazy jako přehledné metriky se samostatným označením zdroje, kompatibilní s archivním i živým GW3000 vykreslováním a návratem po expiraci; neplatný směr neukazuje falešnou šipku.
+- Čistě frontendové změny, izolovaný světle/tmavý CSS override a respektování reduced-motion. Testy normalizace, směrových sektorů, nejkratší rotace přes sever a Playwright pro obě stránky a oba motivy.
+- Žádné změny veřejného API, databáze, WeeWX, GW3000 ani odloženého serverového issue #69 / PR #58.
+
 ## 2026-11-07 – Klimatologický atlas, etapa II (žebříčky, archivní dny, grafická ročenka)
 - Srovnání čtyř ročních období rozšířené o žebříček dokončených sezón ze společného endpointu teplot všech let, časově vážené hodnoty, minima 90 % denního i skutečného časového pokrytí a samostatně uvedené neúplné roky.
 - U každého ze čtyř předběžných extrémů je možné vybrat záznam a zobrazit skutečný intervalový denní průběh bez umělého vyplňování mezer, s respektováním Europe/Prague a původu měření.

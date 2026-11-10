@@ -2,6 +2,27 @@
 
 **Aktuální vývoj: 1. 11. 2026.** Web vzniká podle uživatelem schváleného devítipanelového tmavého vizuálního návrhu. Testovací náhled: https://dev.pocasi-loucka.eu/. Není to veřejná produkce. Všechny změny do main se sestavují a nasazují přes LXC automaticky; přesná zveřejněná revize je vidět ve webové patičce a v /deployment.json.
 
+## Elegantní větrná růžice 2.0 (7. 11. 2026)
+
+V přehledu i v detailu aktuálních měření používá větrná růžice SVG ciferník
+s jemným prstencem, 8 směrovými ryskami a značkou, která **ukazuje, odkud vítr
+vane**. Uprostřed je směr ve stupních a jeho česká 16směrná zkratka;
+rychlost a nárazy jsou v samostatných malých kartách s uvedením původu
+každé veličiny (živá GW3000 nebo archiv WeeWX). Při chybějícím směru
+se značka skryje a zobrazí se „—“, nikoli náhradní sever. Při změně
+směru přes sever se značka otočí nejkratší cestou; při požadavku
+`prefers-reduced-motion` bez animace.
+
+Styly jsou izolovány v `src/styles/wind-compass-v2.css` až za ostatními
+vrstvami, aby zachovaly responzivitu a světlý/tmavý/automatický režim.
+Používají **stávající** read-only `/api/v1/current` a ověřené
+`loucka:live-observation` / `loucka:live-expired` události. Žádné
+změny API, původní databáze nebo stanice. Prohlížečový CI test
+`scripts/wind-compass-browser-check.mjs` pouští na obou stránkách
+jen syntetické browser-only vzorky, testuje 390/1440 px, oba motivy,
+otáčení přes sever, nepřítomnost hodnoty a fallback na archiv.
+Artefakt `evergreen-layout-audit` obsahuje porovnatelné screenshoty.
+
 ## Klimatologický atlas – etapa II (7. 11. 2026)
 
 Druhá etapa rozšiřuje stávající kapitoly bez změn na serveru nebo
