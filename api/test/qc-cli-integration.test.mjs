@@ -7,7 +7,7 @@ import mariadb from 'mariadb';
 const isolated=process.env.CI==='true'&&process.env.GITHUB_ACTIONS==='true'&&
   process.env.WEATHER_TEST_LOCAL_FIXTURE==='YES';
 const q=name=>String.fromCharCode(96)+name+String.fromCharCode(96);
-const ownDb=q('pocasi-loucka.eu'),refDb=q('loucka_reconstruction');
+const ownDb=q('weewx_qc_original_ci_fixture'),refDb=q('weewx_qc_reference_ci_fixture');
 const ownTable=ownDb+'.'+q('archive');
 const refTable=refDb+'.'+q('reference_observations');
 const base=Date.parse('2026-10-10T00:00:00Z')/1000;
@@ -51,7 +51,7 @@ test('QC CLI uses real SELECT-only cross-schema MariaDB and rejects admin creden
 
   const env={...process.env,WEATHER_STAGING_ENABLED:'YES',
     WEATHER_QC_READ_ONLY:'YES',WEATHER_QC_DB_HOST:'127.0.0.1',
-    WEATHER_QC_DB_PORT:'3306',WEATHER_QC_DB_USER:'qc_reader_ci',
+    WEATHER_QC_DB_PORT:'3306',WEATHER_QC_CI_FIXTURE:'YES',WEATHER_QC_DB_USER:'qc_reader_ci',
     WEATHER_QC_DB_PASSWORD:'qc_ci_select_fixture_only'};
   const args=['scripts/qc-report.mjs','--from','2026-10-10T00:00:00Z',
     '--to','2026-10-10T01:00:00Z','--station','luhamet_sehradice'];
