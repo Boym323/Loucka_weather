@@ -19,6 +19,9 @@ git fetch --quiet origin main
 git merge --ff-only origin/main
 sha="$(git rev-parse HEAD)"
 release="$WEB/releases/$sha"
+pending="$WEB/.pending-commit"
+# A failed previous activation must never be mistaken for the next candidate.
+rm -f -- "$pending"
 # Some releases predate deployment.json. They already passed tests and may already
 # be active; reconstruct ONLY their missing metadata, without rebuilding assets
 # or inventing the deployment timestamp. .source-commit is stamped at publication.
@@ -66,6 +69,13 @@ if [[ ! -d "$release" ]]; then
   mv -T -- "$tmp" "$release"
   trap - EXIT
 fi
-ln -sfn "$release" "$WEB/.current.next"
-mv -Tf "$WEB/.current.next" "$WEB/current"
-echo "Published $(printf %.12s "$sha") to $WEB/current"
+# Stage a validated candidate; the root-owned ExecStartPost helper first checks
+# /healthz and /readyz, then publishes the symlink as unprivileged loucka.
+# If API activation fails, current continues to serve the previous frontend.
+pending_tmp="$(mktemp "$WEB/.pending-commit.XXXXXXXX")"
+trap 'rm -f -- "$pending_tmp"' EXIT
+printf '%s\n' "$sha" > "$pending_tmp"
+chmod 0644 "$pending_tmp"
+mv -f -- "$pending_tmp" "$pending"
+trap - EXIT
+echo "Prepared $(printf %.12s "$sha"); waiting for API activation before publishing"

@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-11-10 – příprava bezpečného staging release gate (#58 a #69)
+- Sestavení Astro ukládá pouze kandidáta `.pending-commit`; root-owned aktivační helper po ověření API readiness publikuje frontend atomicky jako neprivilegovaný uživatel. Při selhání API zůstává poslední zveřejněný frontend, nikoliv však garantovaný automatický rollback backendu.
+- Nginx může přijmout X-Forwarded-For pouze od explicitně trusted NPM IP z lokálního configu; do instalace přesné trusted IP zůstává původní společný limit 5r/s. Neotvírat port 8080 přímo do internetu.
+- Instalace je dvoukroková: nejprve aktualizovat root-owned helper, teprve potom schválit nasazení. CI kontroluje základní kontrakt pořadí publikace a Bash/Nginx syntaxi.
+- Změna pouze na stagingu, žádné SQL zápisy nebo zásah do GW3000 či produkčního WeeWX. Ověření reálného nasazení zbývá.
+- Před sloučením povinná kontrola skutečného root-owned helperu na LXC; instalovat **před** automatickou synchronizací nové revize, timer musí být zastaven.
+- Při skutečné atomické publikaci se opravuje čas `deployment.json.deployedAt` (nikoli čas sestavení kandidáta).
+- Samostatné izolované testy selhání readiness a úspěšného přepnutí release; všechna testovací data zůstávají mimo skutečný systém.
+- PR zůstává draft až do root/NPM přejímky na stagingu, GitHub CI není důkaz LXC konfigurace.
+
+
 ## 2026-11-10 – dokončení: elegantní větrná růžice 2.0
 - Nahrazení centrálního kříže a dlouhé jehly jemným SVG kompasem; ukazatel na obvodu se orientuje na směr, **odkud** vítr vane, a stupně + 16směrná zkratka zůstávají uprostřed.
 - Rychlost a nárazy jako přehledné metriky se samostatným označením zdroje, kompatibilní s archivním i živým GW3000 vykreslováním a návratem po expiraci; neplatný směr neukazuje falešnou šipku.
