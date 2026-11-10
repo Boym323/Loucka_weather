@@ -115,3 +115,59 @@ LuhaMet/WU se zde **nesčítají** ani nepoužívají k rekonstrukci srážek.
 Další navazující práce: dlouhodobé sezónní srovnání, překryvy
 `archive_day_*` z 25.–26. 7. 2026, UI pro schvalování a až po
 auditovaném rozhodnutí zápis **jen do oddělené rekonstrukční vrstvy**.
+
+
+## Dávkové zpracování celé historie (navazující etapa)
+
+`npm run qc:batch` používá existující `qc:report`, nikoli nové neomezené SQL.
+Historie se rozdělí do sedmidenních **UTC** úseků; jeden běh má ve výchozím
+nastavení povolen pouze **jeden** nový úsek, `--max-windows 4` je tvrdý
+strop. Každý úsek je samostatný SELECT-only report. Spuštění lze opakovat:
+ověřené, již existující reporty se bezpečně přeskočí. Není zde žádný
+automatický plánovač, timer ani DB writer.
+
+**Nejdřív ověř oprávnění účtu a jeden krátký report podle návodu výše.**
+Účet `qc_reader` musí mít SELECT přesně na dvě tabulky, nikoli celé schéma
+ani server. Běh s wildcard SELECT granty selže (princip nejmenších práv).
+Pro skutečné zpracování používej privátní adresář, např.:
+```bash
+install -d -o loucka -g loucka -m 0700 /var/lib/loucka-qc
+
+# Bez DB přístupu ukáže, co bude další práce:
+runuser -u loucka -- node \
+  /home/loucka/Loucka_weather/api/scripts/qc-batch.mjs \
+  --from 2009-01-01T00:00:00Z --to 2026-11-10T00:00:00Z \
+  --output-dir /var/lib/loucka-qc --dry-run
+
+# Po schválení jednorázové QC diagnostiky:
+systemd-run --wait --pipe --collect \
+  -p User=loucka \
+  -p WorkingDirectory=/home/loucka/Loucka_weather/api \
+  -p EnvironmentFile=/etc/loucka-weather/qc.env \
+  -p NoNewPrivileges=yes -p ProtectSystem=strict \
+  -p ProtectHome=read-only -p ReadWritePaths=/var/lib/loucka-qc \
+  /usr/bin/node /home/loucka/Loucka_weather/api/scripts/qc-batch.mjs \
+  --from 2009-01-01T00:00:00Z --to 2026-11-10T00:00:00Z \
+  --output-dir /var/lib/loucka-qc --max-windows 1
+
+# Souhrn pouze z již vytvořených soukromých JSON reportů:
+runuser -u loucka -- node \
+  /home/loucka/Loucka_weather/api/scripts/qc-batch.mjs \
+  --from 2009-01-01T00:00:00Z --to 2026-11-10T00:00:00Z \
+  --output-dir /var/lib/loucka-qc --summary
+```
+
+**Výstupy:** soubory `qc_*.json` pouze pro uživatele `loucka` (0600),
+adresář (0700), `--summary` vrací počty zjištění, kategorizaci vad a
+spolehlivost podle jednotlivých stanic. Žádný výstup se neposílá na
+veřejný web ani nezakládá nové DB záznamy. Lockfile brání současným běhům;
+při přerušení násilím zkontroluj, že neběží QC proces, než odstraníš případný
+zbylý `.qc-batch.lock`. Po změně konfigurace zdrojů/QC verze reporty
+nejdřív samostatně přehodnotit, nelze je automaticky považovat za aktuální.
+
+**Známé meze:** okna jsou nezávislá a UTC; 6hodinová konstantní řada
+přes hranici dvou týdnů nemusí být v prvním reportu plně odhalena.
+Před finální certifikací nutno kontrolovat i sousední úseky, DST a
+historii změn stanice. `matchedPairs` není počet nezávislých dní.
+Sumy klimatologie a roční průměry se tímto nástrojem nemění; jde jen o
+vstupní kontrolu dat před samostatným schvalovacím procesem.
