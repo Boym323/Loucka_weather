@@ -117,3 +117,34 @@ test('batch refuses unsafe output folder and poisoned existing report',t=>{
   assert.notEqual(run.status,0);
   assert.equal(run.stdout,'');
 });
+
+
+test('fast catch-up is strictly opt-in, bounded and cannot be combined with offline modes',t=>{
+  const dir=mkdtempSync(join(tmpdir(),'loucka-qc-optin-'));
+  chmodSync(dir,0o700);
+  t.after(()=>rmSync(dir,{recursive:true,force:true}));
+  const args=['scripts/qc-batch.mjs','--from',from,'--to',to,'--output-dir',dir];
+  const invalid=[
+    ['--max-windows','5'],
+    ['--delay-ms','1000'],
+    ['--catch-up','--summary'],
+    ['--catch-up','--dry-run'],
+    ['--catch-up','--max-windows','1001'],
+    ['--catch-up','--max-windows','-1'],
+    ['--catch-up','--delay-ms','999'],
+    ['--catch-up','--delay-ms','60001'],
+    ['--catch-up','--delay-ms','oops']
+  ];
+  for(const flags of invalid){
+    const result=spawnSync(process.execPath,[...args,...flags],{
+      cwd:process.cwd(),encoding:'utf8',timeout:10000
+    });
+    assert.notEqual(result.status,0,flags.join(' '));
+    assert.equal(result.stdout,'');
+  }
+  const help=spawnSync(process.execPath,['scripts/qc-batch.mjs','--help'],{
+    cwd:process.cwd(),encoding:'utf8',timeout:10000
+  });
+  assert.equal(help.status,0,help.stderr);
+  assert.match(help.stdout,/--catch-up --max-windows 1000 --delay-ms 2000/);
+});
