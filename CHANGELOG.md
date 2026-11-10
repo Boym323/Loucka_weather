@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-10 – zrychlené jednorázové dokončení historie QC
+- Explicitní režim `qc-batch.mjs --catch-up` projde až 1000 zbývajících sedmidenních oken v jednom procesu s pauzou minimálně 1000 ms (standardně 2000 ms) mezi čtecími dávkami, sdíleným zámkem a opakovatelnými soukromými JSON reporty.
+- Režim pravidelného systemd timeru bez `--catch-up` zůstává omezený na 1 (volitelně 4) okna na spuštění; zrychlení není automaticky aktivované ani nasazené.
+- Integrace s izolovanou MariaDB kontroluje několik oken, přerušení limitu, pokračování, přeskočení hotových dat, práva 0600 a offline `--summary`. V databázi se stále pouze čte.
+
+
 ## 2026-11-10 – volitelný systemd timer pro historický QC screening
 - Po úspěšných staging datech (2017-05-13–20: 0 původních řádků, 2 016 platných LuhaMet; 2026-10-10: Loučka 288, LuhaMet 287, ILOUKA4 288, všechny páry strong) připraveny jednotky pro postupné prověřování období 2009-01-01 až 2026-11-10 UTC.
 - Timer se **neinstaluje ani neaktivuje sám**. Opt-in každých 15 minut zpracovává jen jeden sedmidenní úsek, používá pouze SELECT-only účet, privátní JSON reporty, omezené CPU/RAM a systemd sandbox.
