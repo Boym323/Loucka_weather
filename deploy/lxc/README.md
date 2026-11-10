@@ -52,6 +52,40 @@ Ukonči ručně spuštěné API na portu 3100 (Ctrl+C), pak root:
     nginx -t && systemctl enable --now nginx && systemctl reload nginx
     systemctl enable --now loucka-preview-sync.timer
 
+## Obnovení timeru po ručním zastavení / `active (elapsed)`
+
+Timer se nesmí spoléhat jen na `OnBootSec`: při opětovném zapnutí dlouho po
+startu systému může zůstat `active (elapsed)`, `Trigger: n/a`,
+`NextElapseUSecMonotonic=infinity`, i když `enabled` / `active` vypadá dobře.
+Proto `OnActiveSec=45s` naplánuje první běh relativně k aktivaci timeru;
+`OnUnitInactiveSec=2min` pak plánuje další kontrolu až po dokončení
+předchozího synchronizačního běhu (s `RandomizedDelaySec=10s` a
+`AccuracySec=10s`). Nejde o pevnou minutovou hranici.
+
+**Po sloučení opravy a s ověřeným root-owned helperem** se nový obsah unit
+musí ručně nainstalovat na staging LXC. Git pull nemění již nainstalovaný
+`/etc/systemd/system/loucka-preview-sync.timer`:
+
+```bash
+systemctl stop loucka-preview-sync.timer
+runuser -u loucka -- git -C /home/loucka/Loucka_weather pull --ff-only origin main
+install -o root -g root -m 0644 \
+  /home/loucka/Loucka_weather/deploy/lxc/loucka-preview-sync.timer \
+  /etc/systemd/system/loucka-preview-sync.timer
+systemctl daemon-reload
+systemctl start loucka-preview-sync.timer
+systemctl show loucka-preview-sync.timer \
+  -p ActiveState -p SubState -p NextElapseUSecMonotonic
+systemctl list-timers --all loucka-preview-sync.timer
+```
+
+Musí se objevit `active (waiting)` a budoucí `NEXT` (ne `-`). Po prvním
+aktivování služby ověřit v `journalctl -u loucka-preview-sync.service`
+záznam `No changes since …` nebo úspěšný staged publish a následný nový
+budoucí termín. Pokud se znovu objeví `active (elapsed)`, neoznačovat
+pravidelný provoz za dokončený. Tento postup nemění produkční MariaDB,
+GW3000 ani WeeWX.
+
 ## Test
 
     curl -I http://127.0.0.1:8080/
