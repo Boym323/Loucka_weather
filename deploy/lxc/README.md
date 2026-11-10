@@ -71,22 +71,140 @@ Pro sledování:
 
 Původní Astro HMR vývoj zůstává oddělený: v důvěryhodné LAN jako loucka můžeš spustit cd ~/Loucka_weather/frontend && npm run dev -- --host 0.0.0.0. Synchronizace stejné pracovní kopie přes Git automaticky projeví změny v běžícím Vite.
 
-## Povinná aktualizace aktivačního helperu při přechodu na staged publish
+## Povinný bezpečný přechod na staged publish (issue #69 / PR #58)
 
-**Nejprve zastav synchronizační timer, pak sluč schválený PR do `main`, aktualizuj pracovní kopii při zastaveném timeru, nainstaluj nový root-owned helper a teprve potom spusť synchronizaci.** Starý helper čte jen `current/.source-commit` a sám nový kandidát nepublikuje. Nespouštěj script přímo z uživatelsky zapisovatelného repozitáře s root právy. Při instalaci validuj obsah commitu/PR.
+**NEPROVÁDĚT jen na základě zeleného CI.** Kód v tomto PR je připravený
+pro review, ale GitHub Actions **nemůže ověřit**, jaký root-owned helper
+se skutečně nachází v běžícím LXC ani jakou IP má Nginx Proxy Manager.
+PR #58 ponech jako **draft** do dokončení bodů níže. Nejde o full
+blue/green deployment: při neúspěšném restartu API může být nutné ručně
+obnovit předchozí backend, i když `current` stále směřuje na starý
+frontend.
 
-    systemctl disable --now loucka-preview-sync.timer
-    runuser -u loucka -- git -C /home/loucka/Loucka_weather switch main
-    runuser -u loucka -- git -C /home/loucka/Loucka_weather pull --ff-only origin main
-    install -D -o root -g root -m 0755 /home/loucka/Loucka_weather/deploy/lxc/loucka-preview-api-activate.sh /usr/local/libexec/loucka-preview-api-activate.sh
-    bash -n /usr/local/libexec/loucka-preview-api-activate.sh
-    systemctl daemon-reload
-    systemctl start loucka-preview-sync.service
-    journalctl -u loucka-preview-sync.service -n 60 --no-pager
-    cat /srv/loucka-preview/current/.source-commit
-    systemctl enable --now loucka-preview-sync.timer
+### A. Zjistit výchozí stav – pouze čtení, stále běžící provoz
 
-Tyto příkazy prováděj **až po schválení PR**; mezi `git pull` a dokončením instalace zůstává timer vypnutý. Před vypnutím/zapnutím timeru ověř `systemctl cat loucka-preview-sync.service`, že načítá správný root-owned helper. Při selhání se kandidát ponechá v `/srv/loucka-preview/.pending-commit` a veřejný `current` se nepřepne. Backend má stále vlastní restartovací strategii a při chybě nové API revize může vyžadovat ruční rollback. Předchozí frontend release se nemaže.
+Na staging LXC (bez zobrazování `/etc/loucka-weather/api.env`):
+
+```bash
+systemctl cat loucka-preview-sync.service
+systemctl is-enabled loucka-preview-sync.timer || true
+systemctl is-active loucka-preview-sync.timer || true
+systemctl show loucka-preview-sync.service -p ActiveState -p SubState
+stat -Lc '%U:%G %a %n' /usr/local/libexec/loucka-preview-api-activate.sh
+sha256sum /usr/local/libexec/loucka-preview-api-activate.sh
+readlink -f /srv/loucka-preview/current
+cat /srv/loucka-preview/current/.source-commit
+curl -fsS --max-time 5 http://127.0.0.1:3100/api/v1/healthz
+curl -fsS --max-time 5 http://127.0.0.1:3100/api/v1/readyz
+curl -fsS --max-time 10 https://dev.pocasi-loucka.eu/deployment.json
+```
+
+Výstup `systemctl cat` ověř proti skutečné instalaci: `ExecStartPost`
+musí používat **`+/usr/local/libexec/loucka-preview-api-activate.sh`**;
+nesmí být namířen na repozitář zapisovatelný účtem `loucka`.
+Pokud má `current` jiné SHA než veřejný web, neprováděj změny a zjisti proč.
+
+### B. Instalace nového helperu PŘED sloučením PR #58
+
+**Jako root na staging LXC**, teprve po ověření A a schválení konkrétní
+revize PR. Nejdřív zastavit timer, nedovolit souběh synchronizační služby.
+Neslučovat PR a neprovádět `git pull main` s novým auto-deploy skriptem,
+dokud není nový helper instalován mimo repozitář.
+
+```bash
+systemctl disable --now loucka-preview-sync.timer
+systemctl show loucka-preview-sync.service -p ActiveState -p SubState
+systemctl list-jobs --no-pager | grep loucka-preview-sync || true
+# Pokračuj teprve, když neběží žádný synchronizační job.
+# Zkontroluj přesný SHA PR #58 na GitHubu a stáhni jen jeho obsah:
+runuser -u loucka -- git -C /home/loucka/Loucka_weather fetch origin refs/pull/58/head
+PR_HEAD="$(runuser -u loucka -- git -C /home/loucka/Loucka_weather rev-parse FETCH_HEAD)"
+printf 'Kontrolovaná revize PR #58: %s\n' "$PR_HEAD"
+runuser -u loucka -- git -C /home/loucka/Loucka_weather \
+  show "$PR_HEAD:deploy/lxc/loucka-preview-api-activate.sh" \
+  > /root/loucka-preview-api-activate.candidate.sh
+chmod 0600 /root/loucka-preview-api-activate.candidate.sh
+bash -n /root/loucka-preview-api-activate.candidate.sh
+sha256sum /root/loucka-preview-api-activate.candidate.sh
+# Ručně porovnej obsah a SHA s právě schváleným PR. Záloha mimo conf.d a repo:
+install -m 0700 -o root -g root \
+  /usr/local/libexec/loucka-preview-api-activate.sh \
+  /root/loucka-preview-api-activate.backup.sh
+install -D -o root -g root -m 0755 \
+  /root/loucka-preview-api-activate.candidate.sh \
+  /usr/local/libexec/loucka-preview-api-activate.sh
+stat -Lc '%U:%G %a %n' /usr/local/libexec/loucka-preview-api-activate.sh
+cmp -s /root/loucka-preview-api-activate.candidate.sh \
+  /usr/local/libexec/loucka-preview-api-activate.sh
+```
+
+**Zde zastav a potvrď instalaci; PR zůstává draft.**
+Neinstaluj helper z `main` před sloučením: tam je ještě stará verze.
+Zvlášť ověř, že nepoužíváš helper z libovolného checkoutu nebo neověřené
+větve. Root neprovádí žádný `bash` z účtem `loucka` zapisovatelné cesty.
+
+### C. Teprve po potvrzení helperu sloučit PR a ručně nasadit
+
+Až když je nový helper aktivně nainstalovaný, provést squash merge PR #58
+na GitHubu. Potom na LXC, **timer stále vypnutý**:
+
+```bash
+runuser -u loucka -- git -C /home/loucka/Loucka_weather switch main
+runuser -u loucka -- git -C /home/loucka/Loucka_weather pull --ff-only origin main
+systemctl daemon-reload
+systemctl start loucka-preview-sync.service
+systemctl status loucka-preview-sync.service --no-pager -l
+journalctl -u loucka-preview-sync.service -n 80 --no-pager
+readlink -f /srv/loucka-preview/current
+cat /srv/loucka-preview/current/.source-commit
+cat /srv/loucka-preview/current/deployment.json
+curl -fsS --max-time 5 http://127.0.0.1:3100/api/v1/healthz
+curl -fsS --max-time 5 http://127.0.0.1:3100/api/v1/readyz
+curl -fsS --max-time 10 https://dev.pocasi-loucka.eu/deployment.json
+```
+
+Ověř, že publikované SHA odpovídá schválenému merge commitu a že
+`deployedAt` vzniklo až při skutečném přepnutí `current`.
+Při selhání **timer nezapínej** a ponech poslední frontend.
+Je-li API po restartu nefunkční, obnov předchozí verzi API podle
+ověřeného release/backup postupu; samotný návrat symlinku `current`
+nevrací API. Nejdřív ověř `healthz`/`readyz` a případný neúspěch
+rozebírej přes `journalctl -u loucka-weather-api.service`.
+
+### D. Nginx Proxy Manager – pouze přesná ověřená proxy IP
+
+Po úspěchu C jako root:
+
+```bash
+install -d -o root -g root -m 0755 /etc/nginx/loucka-trusted-proxy
+# Nejdřív si mimo GitHub bezpečně ověř IP NPM, kterou vidí staging LXC.
+# Do souboru 10-npm.conf zapiš jediný 'set_real_ip_from X.X.X.X;'
+# s konkrétní ověřenou adresou. Nekopíruj ukázkovou IP 192.0.2.10.
+cp -a /etc/nginx/conf.d/loucka-preview.conf /root/loucka-preview-nginx.backup.conf
+install -o root -g root -m 0644 \
+  /home/loucka/Loucka_weather/deploy/lxc/nginx-preview.conf \
+  /etc/nginx/conf.d/loucka-preview.conf
+nginx -t && systemctl reload nginx
+```
+
+Bez ověřeného `set_real_ip_from` zůstává společný fail-closed limit;
+**neotvírej** rozsahy `0.0.0.0/0`, privátní LAN ani celý subnet. Zkontroluj
+síťový firewall, skutečné rozlišení IP klientů a HTTPS hlavičky přes NPM.
+Pokud `nginx -t` neprojde, obnov zálohu z `/root/`, oprav konfiguraci
+a nový reload neprováděj. CSP zatím maximálně v report-only režimu.
+
+### E. Teprve po ověření end-to-end vrátit timer
+
+```bash
+systemctl enable --now loucka-preview-sync.timer
+systemctl list-timers --all | grep loucka-preview-sync
+journalctl -u loucka-preview-sync.service -n 30 --no-pager
+```
+
+Zatěžovací, failover a rollback simulace prováděj až při plánovaném
+servisním okně. Neodpojovat reálnou DB, GW3000 nebo produkční WeeWX.
+`/etc/loucka-weather/api.env` ani soukromé tokeny neposílej do chatu
+nebo repozitáře.
 
 ## Bezpečnostní hlavičky testovacího webu
 
