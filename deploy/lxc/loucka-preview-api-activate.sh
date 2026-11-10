@@ -63,7 +63,7 @@ publish_pending() {
   publish_time=$(date -u +%Y-%m-%dT%H:%M:%SZ)
   meta_tmp=$(runuser -u loucka -- mktemp "$release/.deployment.json.XXXXXXXX")
   trap 'runuser -u loucka -- rm -f -- "$meta_tmp"' EXIT
-  printf '{"schemaVersion":"1","branch":"main","commit":"%s","deployedAt":"%s"}\\n' \
+  printf '{"schemaVersion":"1","branch":"main","commit":"%s","deployedAt":"%s"}\n' \
     "$commit" "$publish_time" |
     runuser -u loucka -- tee "$meta_tmp" >/dev/null
   runuser -u loucka -- chmod 0644 "$meta_tmp"
