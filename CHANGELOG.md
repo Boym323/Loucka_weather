@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-10 – návrh: postupné QC prověřování celé historie bez SQL zápisů
+- `qc-batch.mjs` rozděluje historii 2009–současnost na sedmidenní UTC okna a spouští existující výhradně čtecí QC; standardně jen jeden úsek, volitelně nejvýše čtyři v jednom běhu.
+- Výstupní JSON reporty 0600 se ukládají v privátním adresáři 0700 mimo web a Git; validované hotové úseky lze bezpečně přeskočit, `--summary` vypočítá přehled bez DB přístupu.
+- Přísnější kontrola DB účtu: SELECT jen na obě přesné tabulky, nikoli `SELECT ON *.*` nebo celé schéma. Testy izolovaného CI běhu a obnovy.
+- Zatím žádný timer ani automaticky plánované zpracování a žádný zápis do meteodat, referencí, schvalovacího stavu či denních souhrnů.
+
+
 ## 2026-11-10 – návrh: pouze čtecí QC screening vlastních a referenčních měření (issue #80)
 - Nový izolovaný nástroj `api/scripts/qc-engine.mjs` + jednorázový CLI `qc-report.mjs`, nikoliv veřejný endpoint ani automatický DB writer.
 - Kontrola senzorových sentinelů (0 °C + 0 % RH), fyzikálního rozmezí, jednotek, dlouhých konstant, překrývajících se intervalů a časových offsetů; párování Loučka / LuhaMet / ILOUKA4 po pětiminutových slotech s deduplikací.

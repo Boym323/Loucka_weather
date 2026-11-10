@@ -3,6 +3,9 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {spawnSync} from 'node:child_process';
 import mariadb from 'mariadb';
+import {mkdtempSync,chmodSync,readdirSync,statSync,rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
 
 const isolated=process.env.CI==='true'&&process.env.GITHUB_ACTIONS==='true'&&
   process.env.WEATHER_TEST_LOCAL_FIXTURE==='YES';
@@ -62,6 +65,29 @@ test('QC CLI uses real SELECT-only cross-schema MariaDB and rejects admin creden
   assert.equal(body.comparisons.luhamet_sehradice.meanBiasC,1);
   assert.equal(body.safety.databaseWrites,0);
   assert.equal(body.candidates.items.every(e=>e.automaticWriteAllowed===false),true);
+  // Full end-to-end batch: SELECT-only fixture -> owned 0600 report -> restart-safe summary.
+  const folder=mkdtempSync(join(tmpdir(),'loucka-qc-fixture-'));
+  chmodSync(folder,0o700);
+  t.after(()=>rmSync(folder,{recursive:true,force:true}));
+  const batchArgs=['scripts/qc-batch.mjs','--from','2026-10-10T00:00:00Z',
+    '--to','2026-10-10T01:00:00Z','--output-dir',folder,
+    '--station','luhamet_sehradice'];
+  const first=spawnSync(process.execPath,batchArgs,
+    {cwd:process.cwd(),env,encoding:'utf8',timeout:15000});
+  assert.equal(first.status,0,first.stderr);
+  assert.equal(JSON.parse(first.stdout).processedThisRun,1);
+  const filenames=readdirSync(folder).filter(name=>name.endsWith('.json'));
+  assert.equal(filenames.length,1);
+  assert.equal(statSync(join(folder,filenames[0])).mode&0o777,0o600);
+  const repeat=spawnSync(process.execPath,batchArgs,
+    {cwd:process.cwd(),env,encoding:'utf8',timeout:15000});
+  assert.equal(repeat.status,0,repeat.stderr);
+  assert.equal(JSON.parse(repeat.stdout).processedThisRun,0);
+  const summary=spawnSync(process.execPath,[...batchArgs,'--summary'],
+    {cwd:process.cwd(),env:{},encoding:'utf8',timeout:15000});
+  assert.equal(summary.status,0,summary.stderr);
+  assert.equal(JSON.parse(summary.stdout).processedWindows,1);
+  assert.equal(JSON.parse(summary.stdout).reliabilityByStation.luhamet_sehradice.matchedPairs,2);
 
   const privileged=spawnSync(process.execPath,args,{cwd:process.cwd(),
     env:{...env,WEATHER_QC_DB_USER:'root',WEATHER_QC_DB_PASSWORD:'root'},

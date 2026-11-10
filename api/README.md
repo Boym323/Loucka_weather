@@ -113,3 +113,13 @@ k ruční kontrole (`needs_manual_review`, nikdy `approved`).
 [docs/QC_READ_ONLY_2026-11-10.md](../docs/QC_READ_ONLY_2026-11-10.md).
 Zavedení účtu a případné periodické spouštění na stagingu vyžaduje
 samostatné schválení a ověřený první provozní výstup.
+
+### Postupné zpracování historie 2009–současnost
+
+`npm run qc:batch -- --from 2009-01-01T00:00:00Z --to 2026-11-10T00:00:00Z --output-dir /var/lib/loucka-qc`
+provádí nejvýše jeden sedmidenní QC úsek na jedno spuštění (povoleno
+max. čtyři pomocí `--max-windows 4`). Soukromý JSON report se uloží
+atomicky s právy 0600; existující validovaný úsek je možné bezpečně přeskočit.
+Volby `--dry-run` a `--summary` nepotřebují připojení k MariaDB.
+Dokončené QC úseky nejsou schválenými opravami a v databázi nic nemění.
+Návod a model hrozeb: `docs/QC_READ_ONLY_2026-11-10.md`.
