@@ -217,7 +217,7 @@ systemctl daemon-reload
 
 # Nejprve jediný ruční běh a kontrola výsledku.
 systemctl start loucka-qc-batch.service
-systemctl status loucka-qc-batch.service --no-pager
+systemctl show loucka-qc-batch.service -p Result -p ExecMainStatus -p ActiveState
 journalctl -u loucka-qc-batch.service -n 30 --no-pager
 
 # Teprve pokud je výsledek vyhovující, zapni plánovač:
