@@ -45,8 +45,9 @@ function config(){
 function assertSelectOnly(rows){
   const grants=rows.flatMap(row=>Object.values(row)).filter(v=>typeof v==='string');
   const forbidden=/\b(?:ALL PRIVILEGES|INSERT|UPDATE|DELETE|ALTER|CREATE|DROP|TRIGGER|EVENT|FILE|SUPER|RELOAD|GRANT OPTION|REFERENCES|LOCK TABLES|PROCESS|EXECUTE)\b/i;
-  if(!grants.length||grants.some(line=>forbidden.test(line))||
-     !grants.some(line=>/\bSELECT\b/i.test(line)))
+  if(!grants.length||grants.some(line=>forbidden.test(line)||
+       !/^GRANT (?:USAGE|SELECT) ON /i.test(line))||
+     !grants.some(line=>/^GRANT SELECT ON /i.test(line)))
     throw new Error('QC credentials must be SELECT-only');
 }
 const qt=name=>String.fromCharCode(96)+name+String.fromCharCode(96);
