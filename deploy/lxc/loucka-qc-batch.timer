@@ -3,7 +3,7 @@ Description=Gradual historical Loucka QC scan (one read-only UTC week every 15 m
 Documentation=https://github.com/Boym323/Loucka_weather/blob/main/docs/QC_READ_ONLY_2026-11-10.md
 
 [Timer]
-OnCalendar=*:0/15
+OnCalendar=*-*-* *:00/15:00
 RandomizedDelaySec=120s
 AccuracySec=1min
 Persistent=true
