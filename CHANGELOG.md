@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-10 – QC: podpora stávajícího čtecího databázového účtu
+- QC nyní akceptuje SELECT na celé původní WeeWX schéma spolu se SELECT přesně na referenční tabulku.
+- Nadále odmítá neznámé granty, práva zápisu, globální SELECT a SELECT na celé referenční schéma. Syntetický MariaDB CI test reprodukuje obě podporované varianty i odmítnutá rozšíření.
+- Neprovádí žádné SQL zápisy ani nasazení na LXC; provoz vyžaduje lokální `qc.env` načtené pouze systémovou službou.
+
+
 ## 2026-11-10 – návrh: postupné QC prověřování celé historie bez SQL zápisů
 - `qc-batch.mjs` rozděluje historii 2009–současnost na sedmidenní UTC okna a spouští existující výhradně čtecí QC; standardně jen jeden úsek, volitelně nejvýše čtyři v jednom běhu.
 - Výstupní JSON reporty 0600 se ukládají v privátním adresáři 0700 mimo web a Git; validované hotové úseky lze bezpečně přeskočit, `--summary` vypočítá přehled bez DB přístupu.
