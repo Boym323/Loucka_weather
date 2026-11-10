@@ -51,8 +51,12 @@ function assertSelectOnly(rows){
     throw new Error('QC credentials must be SELECT-only');
 }
 const qt=name=>String.fromCharCode(96)+name+String.fromCharCode(96);
-const source=qt('pocasi-loucka.eu')+'.'+qt('archive');
-const reference=qt('loucka_reconstruction')+'.'+qt('reference_observations');
+const isolatedFixture=process.env.CI==='true'&&process.env.GITHUB_ACTIONS==='true'&&
+  process.env.WEATHER_TEST_LOCAL_FIXTURE==='YES'&&process.env.WEATHER_QC_CI_FIXTURE==='YES';
+// Non-production schema names exist only in the ephemeral MariaDB CI service.
+const source=qt(isolatedFixture?'weewx_qc_original_ci_fixture':'pocasi-loucka.eu')+'.'+qt('archive');
+const reference=qt(isolatedFixture?'weewx_qc_reference_ci_fixture':'loucka_reconstruction')+
+  '.'+qt('reference_observations');
 async function run(){
   const args=argumentsFromCli(process.argv.slice(2));
   if(args.help){process.stdout.write(usage+'\n');return;}
