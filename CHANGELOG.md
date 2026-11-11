@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-11 – porovnání RH referencí ve stejných časových slotech
+- SELECT-only dávkové (3 krátké dotazy/UTC den) zjištění skutečného tripletového překryvu Loučka–LuhaMet–WU ILOUKA4; MAE, bias, RMSE a počty bližších referenčních hodnot na identických vzorcích.
+- Kontrola historické neměnnosti: každý původní denní RH JSON je ověřen a nové SQL zdroje se přes `buildRhDay` přepočítají; při nesouladu fail-closed.
+- Samostatné privátní 0600 denní důkazy, 12 měsíčních agregátů a CSV, bezpečný bounded SQL grant-check, resume/lock, syntetické a izolované MariaDB testy.
+- Bez doplňování RH, bez publikace, bez schválení rekonstrukce.
+
+
 ## 2026-11-11 – soukromé třídění RH QC 2022
 - Samostatná offline kontrola všech 365 RH denních důkazů, roční a měsíční rozpad, přesné počty shodných/neshodných referenčních slotů a vážené průměrné absolutní odchylky po měsících.
 - Denní pracovní kategorie rozlišují dobrou shodu referencí, jejich vzájemný rozpor, nedostupnost a krátké výpadky bez tvrzení, že jde o schválená rekonstruovaná data. Bez napojení na MariaDB a bez změn původních RH důkazů.
