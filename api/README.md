@@ -185,3 +185,18 @@ všech kandidátů a zpřesní jejich kalendářní zařazení podle UTC počát
 Odmítnuté QC řádky a reference jsou stále agregované po původních týdnech
 (připsané měsíci jejich začátku). Úplný bezpečný postup:
 `docs/QC_CANDIDATE_RECOVERY_2026-11-11.md`.
+
+### RH 2022: soukromý čtecí audit po jednotlivých dnech
+
+`npm run qc:rh-2022 -- --reports-dir /var/lib/loucka-qc --dry-run`
+pouze zobrazí zbývající dny. Opt-in `--run --max-days 365 --delay-ms 200`
+čte původní RH 2022 a reference LuhaMet + WU ILOUKA4 po jednotlivých UTC
+dnech, kontroluje RH NULL, zcela chybějící sloty, nulu a duplicity,
+časový drift ±30 s, dvojitou referenční shodu (pouze heuristická,
+ne schválená data) a vzájemný bias/MAE zdrojů.
+
+Denní JSON (0600) se **nikdy nepřepisují**. Nové odvozené
+`qc-rh-2022-summary.json` a `qc-rh-2022-overview.html` zůstávají
+v soukromé složce 0700. Výsledky nelze zaměňovat s již dokončeným
+teplotním QC, žádná změna původního `archive`, žádný HTTP endpoint.
+Návod: `docs/QC_RH_2022_READONLY.md`.

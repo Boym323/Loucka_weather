@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-11 – read-only QC relativní vlhkosti 2022
+
+- Zavedena nezávislá denní analýza RH 2022 (365 × 288 pětiminutových slotů), přesně rozlišuje chybějící řádek, RH NULL, neplatnou RH a duplicitní čas. LuhaMet a WU ILOUKA4 se párují při UTC driftu ±30 sekund, pouze `quality_status=reference_only`, RH 1–100 %, dvojitá shoda nejvýše 10 p. b. je pouze podklad pro manuální kontrolu.
+- Bounded SELECT-only MariaDB CLI s přísnou kontrolou grantů, dávkováním, resume po přerušení, ochranným lockem a 0600 denními soubory; žádné původní QC JSON ani databázové záznamy se nemění.
+- Soukromý offline `qc-rh-2022-overview.html` a 2022 JSON souhrn s pravdivým indikátorem neúplných dnů, výběrem měsíce/dne, porovnáním bias/MAE a CSV exportem.
+- Jednotkové testy a test skutečného SELECT-only běhu na izolované MariaDB.
+
+
 ## 2026-11-11 – úplné doplnění zkrácených QC návrhů
 - Čtecí `--full-candidates` možnost QC a opt-in `qc:recover` pro 58 zkrácených týdnů: 2 519 dosud skrytých návrhů znovu vyhodnoceno beze změny starých reportů, kontrola původních prvních 100 položek, souhrnů, porovnání a SHA256.
 - Nový privátní sidecar `qc-candidate-overflow.json` v 0700 adresáři, atomické vytvoření bez přepsání, žádné SQL write, původní QC formát a standardní limit 100 beze změn.
