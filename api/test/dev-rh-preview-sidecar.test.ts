@@ -27,8 +27,8 @@ const mock:DevRhPreview={
  merge:(rows:ArchiveRow[])=>rows.map(r=>({
   at:new Date(r.dateTime*1000).toISOString(),epoch:r.dateTime,
   intervalMinutes:r.interval,
-  original:{value:r.outHumidity??null,status:'original_missing'},
-  preview:{value:75,status:'experimental_unapproved',
+  original:{value:r.outHumidity??null,status:'original_missing' as const},
+  preview:{value:75,status:'experimental_unapproved' as const,
    legacyBatchKey:'unit-test',legacySource:'test'}
  }))
 };
