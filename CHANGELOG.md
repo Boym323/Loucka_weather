@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-11 – oprava exportu RH dev preview podle skutečné QC konfigurace
+- Po úspěšném `--dry-run` na LXC selhal `--export` s potlačenou chybou: exportér chybně očekával `WEATHER_DB_*` (produkční API), ale `qc.env` dodává `WEATHER_QC_DB_*` (QC role).
+- Opraveno použití správné QC credential sady; možné explicitně vybrat izolovanou `WEATHER_RH_EXPORT_DB_*` SELECT-only identitu, pokud běžný QC uživatel nemá nové tabulky. Nikdy neslučovat přístupové údaje z různých identit.
+- Nový `--check` testuje pouze `SHOW GRANTS` a omezené `SELECT 1 LIMIT 1` nad třemi tabulkami, bez čtení RH či zápisů. Všechna chybová hlášení jsou bezpečně kódovaná bez zobrazení tajemství.
+- Neproveden žádný DB GRANT/UPDATE/INSERT, export ani produkční/dev deployment. Před publikováním experimentální RH nadále platí izolace dev, SHA256, auth a rollback.
+
+
 ## 2026-11-11 – volitelný chráněný dev RH náhled nad neměnným exportem
 - Připraven explicitně opt-in privátní HTTP endpoint pro RH 2022: originál a starší experimentální odhad odděleně, raw pouze max. 7 dní / 2000 bodů, kontrola pinovaného SHA256 a historických změn.
 - Bez `WEATHER_DEV_PREVIEW_ENABLED=YES` route neexistuje. Se zapnutým náhledem vyžaduje izolovaný režim, soukromý soubor, bearer token a fail-closed konzistenci původního archivu; `Cache-Control: no-store`.
