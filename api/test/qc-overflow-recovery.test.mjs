@@ -1,5 +1,8 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
+import {spawnSync} from 'node:child_process';
+import {readFileSync} from 'node:fs';
+import {Script} from 'node:vm';
 import {buildQcReport,QC_VERSION} from '../scripts/qc-engine.mjs';
 import {verifyExpandedWindow,validateOverflowSidecar,fingerprint} from '../scripts/qc-overflow-lib.mjs';
 
@@ -64,4 +67,18 @@ test('recovery sidecars are tied to SHA256 of immutable baseline',()=>{
  assert.throws(()=>validateOverflowSidecar({
    ...sidecar,entries:[entry,entry],truncatedWindows:2,recoveredCandidates:60
  },()=>baseline),/Duplicate/);
+});
+
+test('recovery/quality CLI scripts and offline viewer JavaScript parse safely',()=>{
+ for(const file of ['scripts/qc-recover-candidates.mjs',
+   'scripts/qc-quality-overview.mjs','scripts/qc-report.mjs']){
+   const run=spawnSync(process.execPath,['--check',file],{
+     cwd:process.cwd(),encoding:'utf8',timeout:10000});
+   assert.equal(run.status,0,file+': '+run.stderr);
+ }
+ const html=readFileSync(new URL('../scripts/qc-quality-viewer.html',import.meta.url),'utf8');
+ const m=/<script>([\\s\\S]*?)<\\/script>/.exec(html);
+ assert.ok(m,'Expected inline viewer script');
+ const source=m[1].replace('__QUALITY_DATA__','{}');
+ assert.doesNotThrow(()=>new Script(source));
 });
