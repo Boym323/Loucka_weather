@@ -2,6 +2,8 @@
 
 **Stav 11. 11. 2026:** Operátor na dev LXC potvrdil běh sidecaru (port 3101): healthz, readyz a UI HTTP 200, bez tokenu HTTP 401, původní API 3100 stále HTTP 200. Autorizovaný test původního záznamu proti pinovanému balíčku rovněž prošel. Dodané PDF grafu pro 26.–30. 4. 2022 zobrazuje 1 438 existujících archivních řádků, 1 272 experimentálních odhadů, 0 platných původních RH a 1 438 původních NULL. Tyto počty samy neprokazují, proč 166 řádků zůstává bez RH ani zda přesně dva časové sloty skutečně chybějí.
 
+**Navazující fáze:** Opakované pětidení audity již nejsou hlavní plán. Po ověření výřezu přejít na jeden kompletní roční report podle [RH_2022_FULL_YEAR_QC_RUNBOOK.md](RH_2022_FULL_YEAR_QC_RUNBOOK.md), teprve poté zkoumat kořenové příčiny a reference. Pětidení nástroj zůstává k cílenému ladění konkrétního úseku.
+
 ## Spuštění na dev LXC
 
 Po sloučení do main jako root:
