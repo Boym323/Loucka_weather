@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-11 – nezávislé vyhodnocení referenčních RH korekcí bez zásahu do archivu
+- Read-only 365denní experiment s přesnými trojicemi Loučka–LuhaMet–WU; validace SHA256 původních RH a tripletových denních souborů, při změně zdrojů fail-closed.
+- Retrospektivní test na vynechaných dnech; tréninkové dny vždy ve stejném měsíci mimo ±3denní ochranné okno, alespoň 7 trénovacích dnů / 500 trojic, alespoň 24 trojic v testovacím dni.
+- Soukromá 0600 měsíční tabulka výsledků MAE bez korekce a po experimentální mediánové korekci, bez generování či schvalování rekonstruované RH. Testy syntetických situací a izolovaného SELECT-only MariaDB běhu.
+
+
 ## 2026-11-11 – porovnání RH referencí ve stejných časových slotech
 - SELECT-only dávkové (3 krátké dotazy/UTC den) zjištění skutečného tripletového překryvu Loučka–LuhaMet–WU ILOUKA4; MAE, bias, RMSE a počty bližších referenčních hodnot na identických vzorcích.
 - Kontrola historické neměnnosti: každý původní denní RH JSON je ověřen a nové SQL zdroje se přes `buildRhDay` přepočítají; při nesouladu fail-closed.
