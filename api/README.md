@@ -330,3 +330,18 @@ Provenience starých změn je dohledatelná přes `batch_key`, ale
 meteorologická správnost starých odhadů není nezávisle prokázaná.
 Reprodukovatelné SELECT dotazy: `scripts/qc-rh-2022-lineage.sql`;
 interpretace: `docs/QC_RH_2022_RECONSTRUCTION_LINEAGE.md`.
+
+### RH 2022 — verzovaný privátní export rekonstrukce pro budoucí dev preview
+
+Nový `npm run qc:rh-dev-preview -- --reports-dir /var/lib/loucka-qc --dry-run`
+bez DB připojení prověří soukromou složku a plán exportu.
+`--export` pak pod QC SELECT-only MariaDB rolí ověří všech
+**5 153** již historicky aplikovaných rozdílů RH z tabulky
+`loucka_reconstruction.reconstruction_changes` proti původnímu
+archivu i pracovní rekonstrukční kopii. Vytvoří soukromý neměnný
+0600 JSON s SHA256 a statusy `approved:false`; **nepublikuje
+nic na dev** a **nezapisuje žádnou databázi**.
+
+Samotná aktivace oddělené vývojové databáze, migrace, overlay
+API a rollback patří do následující explicitně ověřované etapy.
+Návod: `docs/RH_2022_DEV_PREVIEW_PUBLICATION.md`.
