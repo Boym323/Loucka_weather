@@ -57,7 +57,7 @@ while IFS= read -r storage; do
       continue
     fi
   fi
-  printf '%s\n' "$result" | head -n "$LIMIT"
+  printf '%s\n' "$result" | awk -v max="$LIMIT" 'NR <= max'
   total="$(printf '%s\n' "$result" | awk 'END { print NR }')"
   if (( total > LIMIT )); then
     printf '[TRUNCATED] Showing first %d of %d output lines; use --vmid N to narrow.\n' "$LIMIT" "$total"
