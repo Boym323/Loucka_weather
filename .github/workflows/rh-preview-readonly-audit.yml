@@ -1,0 +1,28 @@
+name: RH preview read-only audit tests
+
+on:
+  pull_request:
+    paths:
+      - 'deploy/lxc/audit-rh-preview.py'
+      - 'deploy/lxc/tests/test_rh_preview_readonly_audit.py'
+      - '.github/workflows/rh-preview-readonly-audit.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'deploy/lxc/audit-rh-preview.py'
+      - 'deploy/lxc/tests/test_rh_preview_readonly_audit.py'
+      - '.github/workflows/rh-preview-readonly-audit.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  offline-audit-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Python syntax
+        run: python3 -m py_compile deploy/lxc/audit-rh-preview.py deploy/lxc/tests/test_rh_preview_readonly_audit.py
+      - name: Test offline time grid and safety contracts
+        run: python3 -m unittest discover -s deploy/lxc/tests -p 'test_rh_preview_readonly_audit.py' -v
