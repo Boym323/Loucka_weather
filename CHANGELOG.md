@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-11 – versionovaný archivní balíček RH 2022 pro budoucí dev náhled
+- Ověřeno přímo z read-only DB: 5153 unikátních starých `applied` změn RH na 35 dávkách; 2874 původně NULL → starší experimentální odhad, 2194 podezřelých původních RH → experimentální náhrada, 85 původních RH → NULL v rekonstrukční kopii; 0 nesouladů mezi auditními old/new a oběma archive tabulkami.
+- Implementován zcela read-only export a čistá validace původu, se soukromým obsahem a dvojitým SHA256, přísným omezením 5153 záznamů a zákazem přepisu již exportovaného balíčku.
+- Žádná databázová migrace, žádný import do dev, žádná aktivace preview, žádný zásah do původního archive. Navazující dev overlay/rollback vyžaduje nejprve nezávislé ověření skutečné konfigurace a izolace dev od produkce.
+
+
 ## 2026-11-11 – provenance existujících RH změn 2022 podle rekonstrukčního auditu
 - Přímé read-only dohledání 1 575 již aplikovaných březnových a červencových RH odhadů v `reconstruction_changes`; všech 1 575 mělo původní RH NULL, rekonstrukční hodnota odpovídá auditnímu `new_value`, žádné chybějící časové řádky.
 - Úplná účetní rekonciliace 2022: 2 874 původně NULL → odhad, 2 194 podezřelých původních RH → jiná hodnota, 85 zneplatněno; rekonstrukční kopie má 41 727 RH NULL, originál 44 516. Dřívější modelové holdout výroky v textu auditu nejsou automaticky reprodukovanou nezávislou validací.
