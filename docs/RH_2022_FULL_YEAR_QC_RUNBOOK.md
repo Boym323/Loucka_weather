@@ -1,5 +1,7 @@
 # RH 2022 – jeden ucelený celoroční technický audit (read-only)
 
+**Provozní výsledek:** Operátor 11. 11. 2026 dokončil 73/73 oken a 12/12 offline testů; čistě čtecí roční report obsahuje 104 142 originálních řádků, 977 mezer v dotazovatelných UTC slotech, 5 153/5 153 historických zásahů, 41 727 RH NULL po experimentálních změnách a 7 orientačních rychlých skoků. **Znovu nespouštět bez nového zdroje dat nebo konkrétního rozporu.** Interpretace a další krok jsou v [RH_2022_ANNUAL_FINDINGS_2026-11-11.md](RH_2022_ANNUAL_FINDINGS_2026-11-11.md). Následuje čistě offline spojení se starou RH readiness evidencí, nikoli další sken 73 oken.
+
 **Výchozí stav, 11. 11. 2026:** izolovaný operátorský sidecar RH 2022 na 127.0.0.1:3101 byl provozně ověřen operátorem (health/ready/UI 200, bez tokenu 401, původní API 3100 HTTP 200). Dosavadní pět dní 26.–30. 4. 2022: 1 438 originálních archivních řádků, přesně 2 chybějící celé pětiminutové UTC sloty, 166 existujících RH NULL bez odhadu, 1 272 experimentálních NULL→odhadů, žádné 20 p. b. skoky. Tento výsledek je **technická integrita a pokrytí**, nikoli meteorologická validace.
 
 ## Jediný navazující běh pro celý rok
