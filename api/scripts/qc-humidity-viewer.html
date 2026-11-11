@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>QC vlhkosti 2022 | Počasí Loučka</title>
+<style>
+:root{color-scheme:dark;font:14px/1.55 system-ui,Arial,sans-serif;--bg:#071925;--panel:#102938;--edge:#2a4a5e;--text:#eef8fc;--dim:#a7bccb;--good:#47dba7;--bad:#f5a16b}
+*{box-sizing:border-box}body{background:var(--bg);color:var(--text);margin:0}main{max-width:1300px;padding:30px 20px 65px;margin:auto}
+h1{font-size:clamp(29px,4vw,44px);letter-spacing:-.035em;margin:4px 0}h2{font-size:19px;margin:4px 0 12px}h3{font-size:15px;margin:14px 0}
+p{color:var(--dim)}.eyebrow{font-size:11px;letter-spacing:.11em;font-weight:800;color:var(--good);text-transform:uppercase}
+.note{font-size:12px;color:var(--dim)}.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:20px 0}.card,.panel{border:1px solid var(--edge);border-radius:11px;padding:18px;background:var(--panel);min-width:0}.card strong{font-size:29px;display:block;font-variant-numeric:tabular-nums}.card span{font-size:11px;color:var(--dim)}
+.banner{padding:13px 15px;border-radius:9px;background:#3b2c23;color:#ffe9bf;margin-bottom:15px}
+.controls{display:flex;gap:9px;flex-wrap:wrap;align-items:center}select,button{font:inherit;background:#19394b;color:var(--text);padding:8px 11px;border:1px solid #53758a;border-radius:7px}button{cursor:pointer}
+button:focus-visible,select:focus-visible{outline:2px solid var(--good);outline-offset:2px}
+.layout{display:grid;grid-template-columns:2fr 1fr;gap:15px;align-items:start}.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:740px;font-variant-numeric:tabular-nums}th,td{border-bottom:1px solid var(--edge);padding:9px 8px;text-align:right;font-size:12px}th{text-align:right;color:var(--dim)}th:first-child,td:first-child{text-align:left}.selectday{background:transparent;border:0;padding:0;color:var(--good)}
+.stat{display:flex;justify-content:space-between;gap:14px;padding:9px 0;border-bottom:1px solid var(--edge)}.stat strong{font-variant-numeric:tabular-nums}.stat span{color:var(--dim)}
+.bar{height:8px;background:#183d52;border-radius:9px;overflow:hidden;margin:8px 0 15px}.bar span{display:block;height:100%;background:var(--good)}
+.gap{color:#ffd49b}.footer{margin-top:17px}
+@media(max-width:1000px){.layout{grid-template-columns:1fr}}@media(max-width:700px){main{padding:20px 10px}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.panel,.card{padding:12px}}
+</style>
+</head>
+<body>
+<main>
+<div class="eyebrow">Počasí Loučka · interní analytický podklad · UTC</div>
+<h1>Vlhkost vzduchu — rok 2022</h1>
+<p>Čtení z původního archivu a dvou referenčních stanic. Zobrazené kandidátní intervaly nejsou schválené opravy. Žádné hodnoty vlhkosti se neodhadují ani nezapisují do databáze.</p>
+<div class="cards">
+<div class="card"><span>Vyhodnocené dny</span><strong id="days">—</strong><span>z požadovaného období</span></div>
+<div class="card"><span>NULL vlhkost</span><strong id="null">—</strong><span>v původních pětiminutových slotech</span></div>
+<div class="card"><span>Chybějící celé sloty</span><strong id="absent">—</strong><span>bez původního řádku</span></div>
+<div class="card"><span>Dvě shodné reference</span><strong id="agreement">—</strong><span>NULL sloty, rozdíl nejvýše 10 p. b.</span></div>
+</div>
+<div class="banner" id="state"></div>
+<div class="layout">
+<section class="panel">
+<div class="controls"><h2>Měsíční a denní detail</h2><label for="month">Měsíc</label><select id="month"></select><button id="csv" type="button">Export dnů CSV</button></div>
+<p class="note">Pokrytí RH = vlastní nenulová hodnota 1–100 % v jednoznačném UTC slotu. Nejde o ověření kalibrace. Nezpracované dny se nezapočítávají jako měřené.</p>
+<div class="scroll"><table><thead><tr><th>Den</th><th>Vlastní RH</th><th>NULL RH</th><th>Bez měření</th><th>Shoda obou referencí</th><th>LuhaMet MAE</th><th>ILOUKA4 MAE</th></tr></thead><tbody id="rows"></tbody></table></div>
+</section>
+<aside class="panel">
+<h2 id="dayTitle">Detail dne</h2>
+<div id="detail"></div>
+<p class="note footer">MAE znamená průměrnou absolutní odchylku v procentních bodech RH. Vypočtena pouze tam, kde byla vlastní RH a spárovaná referenční RH. Není-li dost párů, není to spolehlivý důkaz přesnosti reference.</p>
+</aside>
+</div>
+<section class="panel footer">
+<h2>Metodika</h2>
+<p class="note">Čas: UTC, 288 pětiminutových slotů na den. Reference mají stav <code>reference_only</code>, relativní vlhkost v intervalu 1–100 % a čas blízký slotu nejvýše ±30 sekund; duplicity se vylučují. Hodnoty RH = 0 %, záporné a nad 100 % se nepovažují za použitelné. Kandidát ke kontrole vznikne jen při existujícím původním řádku s NULL RH a při rozdílu obou referencí nejvýše 10 procentních bodů. To není automatické nahrazení hodnot. Soukromé denní JSON obsahují jednotlivé časy referenčních podkladů, tento přehled jen statistiky.</p>
+</section>
+</main>
+<script>
+'use strict';
+const D=__RH_DATA__,$=id=>document.getElementById(id),n=x=>new Intl.NumberFormat('cs-CZ').format(x);
+const p=x=>x==null?'—':x.toLocaleString('cs-CZ',{maximumFractionDigits:2});
+const keys=Object.keys(D.months).sort(),days=new Map(D.daily.map(d=>[d.day,d]));
+const monthNames=['leden','únor','březen','duben','květen','červen','červenec','srpen','září','říjen','listopad','prosinec'];
+const names={luhamet_sehradice:'LuhaMet Sehradice',wu_ilouka4:'WU ILOUKA4'};
+const E=(tag,value,cl)=>{const v=document.createElement(tag);if(value!=null)v.textContent=value;if(cl)v.className=cl;return v;};
+function appendStat(parent,k,v){const row=E('div',null,'stat');row.append(E('span',k),E('strong',v));parent.append(row);}
+$('days').textContent=n(D.analyzedDays)+' / '+n(D.expectedDays);
+$('null').textContent=n(D.totals.originalRhNullSlots);
+$('absent').textContent=n(D.totals.originalAbsentSlots);
+$('agreement').textContent=n(D.totals.missingRhTwoRefsAgreeSlots);
+$('state').textContent=D.complete?
+ 'Byly vyhodnoceny všechny požadované dny. Shoda dvou referencí neznamená schválení rekonstrukce.':
+ 'Dílčí audit: '+n(D.pendingDays)+' dnů ještě nebylo vyhodnoceno. Souhrny jsou pouze za zpracované dny.';
+const sel=$('month');
+for(const key of keys){const choice=E('option',monthNames[Number(key.slice(-2))-1]+' '+key.slice(0,4));choice.value=key;sel.append(choice);}
+sel.value=keys.includes('2022-02')?'2022-02':keys[0];
+let selectedDay='';
+function showDay(day){
+ selectedDay=day;const x=days.get(day);
+ $('dayTitle').textContent='Detail '+day;
+ const detail=$('detail');detail.replaceChildren();
+ if(!x){detail.append(E('p','Den nebyl zpracován'));return;}
+ const c=x.counts;
+ appendStat(detail,'Očekávané sloty',n(c.expectedSlots));
+ appendStat(detail,'Původní RH 1–100 %',n(c.originalRhMeasuredSlots));
+ appendStat(detail,'Původní RH NULL',n(c.originalRhNullSlots));
+ appendStat(detail,'Neplatná nebo duplicitní RH',n(c.originalRhInvalidSlots));
+ appendStat(detail,'Chybějící celé sloty',n(c.originalAbsentSlots));
+ appendStat(detail,'RH NULL a dvě reference',n(c.missingRhBothReferenceSlots));
+ appendStat(detail,'Vzájemně shodné reference',n(c.missingRhTwoRefsAgreeSlots));
+ appendStat(detail,'Jedna reference k RH NULL',n(c.missingRhSingleReferenceSlots));
+ const b=x.betweenReferences;
+ detail.append(E('h3','Vzájemná shoda referencí'));
+ appendStat(detail,'Spárované sloty',n(b.matchedSlots));
+ appendStat(detail,'Průměrná absolutní odchylka',p(b.maePctPoints)+' p. b.');
+ for(const [id,name] of Object.entries(names)){
+  const r=x.references[id];
+  detail.append(E('h3',name));
+  appendStat(detail,'Dostupné referenční sloty',n(r.validSlots));
+  appendStat(detail,'Páry s vlastní RH',n(r.againstOriginal.matchedSlots));
+  appendStat(detail,'MAE vůči Loučce',p(r.againstOriginal.maePctPoints)+' p. b.');
+  appendStat(detail,'Průměrný bias Loučka – reference',p(r.againstOriginal.meanBiasPctPoints*-1)+' p. b.');
+ }
+}
+function table(){
+ const all=D.daily.filter(d=>d.day.startsWith(sel.value)),body=$('rows');
+ const arr=[];
+ for(const d of all){
+  const r=E('tr'),button=E('button',d.day,'selectday');button.type='button';
+  button.addEventListener('click',()=>showDay(d.day));
+  r.append(E('td'));r.firstChild.append(button);
+  const c=d.counts;
+  for(const v of [c.originalRhMeasuredSlots,c.originalRhNullSlots,c.originalAbsentSlots,
+    c.missingRhTwoRefsAgreeSlots,
+    p(d.references.luhamet_sehradice.againstOriginal.maePctPoints),
+    p(d.references.wu_ilouka4.againstOriginal.maePctPoints)])
+    r.append(E('td',typeof v==='number'?n(v):v));
+  arr.push(r);
+ }
+ body.replaceChildren(...arr);
+ if(all.length)showDay(all[0].day);
+ else{$('dayTitle').textContent='Zatím bez zpracovaných dnů';$('detail').replaceChildren();}
+}
+function csv(){
+ const head=['utcDay','expectedSlots','originalRhMeasuredSlots','originalRhNullSlots',
+  'originalAbsentSlots','originalRhInvalidSlots','missingRhTwoRefsAgreeSlots',
+  'missingRhBothReferenceSlots','luhaMatchedOwn','luhaMaePctPoints',
+  'wuMatchedOwn','wuMaePctPoints','referencesMatched','referencesMaePctPoints'];
+ const lines=[head.join(',')];
+ for(const d of D.daily){
+  const c=d.counts,a=d.references.luhamet_sehradice.againstOriginal,
+    b=d.references.wu_ilouka4.againstOriginal,x=d.betweenReferences;
+  lines.push([d.day,c.expectedSlots,c.originalRhMeasuredSlots,c.originalRhNullSlots,
+    c.originalAbsentSlots,c.originalRhInvalidSlots,c.missingRhTwoRefsAgreeSlots,
+    c.missingRhBothReferenceSlots,a.matchedSlots,a.maePctPoints??'',
+    b.matchedSlots,b.maePctPoints??'',x.matchedSlots,x.maePctPoints??''].join(','));
+ }
+ const blob=new Blob(['\uFEFF'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
+ const a=document.createElement('a'),url=URL.createObjectURL(blob);
+ a.href=url;a.download='qc-vlhkost-2022-denni.csv';a.click();
+ setTimeout(()=>URL.revokeObjectURL(url),500);
+}
+sel.addEventListener('change',table);$('csv').addEventListener('click',csv);table();
+</script>
+</body>
+</html>
