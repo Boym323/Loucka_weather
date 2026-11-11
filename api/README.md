@@ -248,3 +248,19 @@ korekční pokus, malé jednotlivé výpadky nebo žádné chybějící RH.
 Ani dobrá validace známé RH není schválením rekonstrukce; žádné
 odhadované hodnoty RH se nevytvářejí.
 Podrobný návod: `docs/QC_RH_READINESS_2022.md`.
+
+### RH 2022: čtecí inventura skutečných lokálních záloh
+
+Základní QC a historické databázové kopie byly porovnány SELECT-only.
+`pocasi-loucka.eu_old.archive` přidává jen 7 potenciálních RH v
+září/říjnu a 123 celých časových záznamů v srpnu–říjnu; **neobsahuje
+novou RH pro hlavní výpadky leden–červen**. Již existující změněné
+RH v `loucka_reconstruction.archive` nejsou nezávislá originální data.
+
+`npm run qc:rh-backup-inventory -- --reports-dir /var/lib/loucka-qc --dry-run
+--root /var/backups --root /home/loucka` prověří jen zadané kořeny.
+`--scan` následně vytvoří soukromý 0600 JSON obsahující pouze
+názvy a metadata souborů připomínajících WeeWX nebo jiné historické
+zálohy. Žádný obsah souborů, SQL ani síťový přístup se nepoužívá,
+žádný výstup není zveřejněn. Návod a ověřené SQL součty:
+`docs/QC_RH_2022_ALTERNATIVE_SOURCE_AUDIT.md`.
