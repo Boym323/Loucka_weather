@@ -155,16 +155,18 @@ export function loadDevRhPreviewFromEnv(env:NodeJS.ProcessEnv=process.env):DevRh
  const filename=env.WEATHER_DEV_PREVIEW_PACKAGE;
  const expected=env.WEATHER_DEV_PREVIEW_PACKAGE_SHA256??'';
  const token=env.WEATHER_DEV_PREVIEW_TOKEN??'';
- if(!filename||!path.isAbsolute(filename)||!filename.startsWith('/var/lib/loucka-qc/')||
+ if(!filename||!path.isAbsolute(filename)||(path.resolve(filename)!==filename||path.dirname(filename)!=='/var/lib/loucka-qc')||
     !/^qc-rh-2022-dev-preview-[a-f0-9]{16}\.json$/.test(path.basename(filename)))
   throw Error('Private versioned RH preview package path required');
+ const uid=process.getuid?.();
+ if(uid===undefined)throw Error('Cannot verify preview owner UID');
  const folder=lstatSync(path.dirname(filename));
  if(!folder.isDirectory()||folder.isSymbolicLink()||
-    folder.uid!==process.getuid()||(folder.mode&0o077)!==0)
+    folder.uid!==uid||(folder.mode&0o077)!==0)
   throw Error('Private preview folder must be owned 0700');
  const file=lstatSync(filename);
  if(!file.isFile()||file.isSymbolicLink()||
-    file.uid!==process.getuid()||(file.mode&0o077)!==0||
+    file.uid!==uid||(file.mode&0o077)!==0||
     file.size>5*1024*1024)
   throw Error('Private preview file must be owned 0600 and bounded');
  const fd=openSync(filename,constants.O_RDONLY|constants.O_NOFOLLOW);
