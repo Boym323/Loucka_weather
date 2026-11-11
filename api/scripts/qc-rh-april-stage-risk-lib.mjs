@@ -87,7 +87,6 @@ export function reviewAprilStageRow(raw,original){
     replacementRhPct:null
   };
 }
-const byKey=(o,key)=>o[key]??(o[key]=0);
 export function buildAprilStageAudit(records,{expectedRecords=null}={}){
   if(!Array.isArray(records)||records.length===0||
      (expectedRecords!==null&&
