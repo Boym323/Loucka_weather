@@ -64,12 +64,12 @@ test('tampered content, source, digest, and signed transition categories fail cl
  const f=makeRealisticPackage();
  assert.throws(()=>previewFromPackage(f.raw,'f'.repeat(64),TOKEN),/Invalid or unpinned/);
  const copy=structuredClone(f.raw);
- copy.records[0].experimentalValue=0;
+ copy.records[0]!.experimentalValue=0;
  assert.throws(()=>previewFromPackage(copy,hash(JSON.stringify(copy)),TOKEN),/Invalid or unpinned/);
- const c2=structuredClone(f.raw);c2.records[0].category='historical_invalidation';
+ const c2=structuredClone(f.raw);c2.records[0]!.category='historical_invalidation';
  c2.recordsSha256=hash(JSON.stringify(c2.records));
  assert.throws(()=>previewFromPackage(c2,hash(JSON.stringify(c2)),TOKEN),/Impossible RH/);
- const c3=structuredClone(f.raw);c3.records[0].approved=true;
+ const c3=structuredClone(f.raw);c3.records[0]!.approved=true;
  c3.recordsSha256=hash(JSON.stringify(c3.records));
  assert.throws(()=>previewFromPackage(c3,hash(JSON.stringify(c3)),TOKEN),/Invalid unapproved/);
 });
