@@ -291,3 +291,25 @@ backup úložiště/PBS/Synology. Soukromý read-only host skript:
 `pvesm status --content backup` a `pvesm list` s limitem 80 řádků
 na storage. **Neprovádí obnovu ani mount nebo zápis**.
 Podrobnosti: `docs/QC_RH_2022_BACKUP_HOST_DISCOVERY.md`.
+
+### Duben 2022: oddělení starých RH odhadů od skutečně naměřených hodnot
+
+Přímý SELECT-only audit `loucka_reconstruction.reconstruction_humidity_202204`
+prokázal **3 734** staging záznamů metody `dual_vapor_pressure_v1`.
+Všech 3 734 má původní řádek v produkčním `archive`; žádný nesouhlas
+původní RH/teploty nebyl nalezen. Naproti tomu 2 279 případů
+`frozen` má jen 9 různých původních RH a nejdelší zamrzlé běhy
+39,50 / 39,08 / 37,50 hodiny. Podezřelou zamrzlou RH nelze použít
+jako nezávislou ground truth.
+
+Nový čistý analyzátor `qc-rh-april-stage-risk-lib.mjs` používá
+pouze původní archivní RH a teplotu pro kontrolu provenance,
+přidává bezschvalovací kategorii rizika a nic neodhaduje ani
+nezapisuje. Ze 1 299 starších odhadů pro RH NULL je
+852 jen předběžně referenčně souhlasných, 384 s rozdílem
+10–20 p. b., 54 s rozdílem nad 20 p. b. a 9 mimo
+referenční rozpětí o více než 10 p. b. Reprodukovatelné
+čistě SELECT dotazy v `scripts/qc-rh-april-2022-stage-audit.sql`
+upravují dřívější potenciálně chybnou lokalizaci dne:
+**UTC den se počítá z `FLOOR(target_time / 86400)`**.
+Dokumentace: `docs/QC_RH_APRIL_2022_STAGE_RISK.md`.
