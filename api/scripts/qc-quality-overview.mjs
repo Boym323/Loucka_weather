@@ -114,8 +114,8 @@ async function main(){
     const fields=['id','kind','source','fromUtc','toExclusiveUtc','reason',
       'reviewState','automaticWriteAllowed','detailsJson'];
     const escapeCsv=value=>{
-      const safe=String(value??'').replace(/^[=+@\-\t\r]/,"'  const output=path.join(dir,'qc-quality-overview.html');
-  writeAtomic(output,html);");
+      const text=String(value??'');
+      const safe=/^[=+@\-\t\r]/.test(text)?"'"+text:text;
       return '"'+safe.replaceAll('"','""')+'"';
     };
     const rows=[fields.join(',')];
