@@ -53,8 +53,8 @@ if(args[0]==='--dry-run'){
   connectTimeout:3000
  });
  try{
-  const grants=Object.values((await conn.query('SHOW GRANTS')).at(0)??{});
-  const textGrants=grants.filter?grants.map(String).join(' '):String(grants.join?.(' ')??grants);
+  const grants=(await conn.query('SHOW GRANTS'));
+  const textGrants=grants.flatMap(row=>Object.values(row)).map(String).join(' ');
   if(!/\bSELECT\b/i.test(textGrants)||
      /\b(?:ALL PRIVILEGES|INSERT|UPDATE|DELETE|CREATE|ALTER|DROP|TRIGGER|EVENT|FILE|SUPER|GRANT OPTION|LOCK TABLES|RELOAD|EXECUTE|PROCESS|REFERENCES)\b/i.test(textGrants))
     reject('Source RH credentials must be SELECT-only');
