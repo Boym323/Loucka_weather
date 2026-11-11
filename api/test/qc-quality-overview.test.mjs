@@ -4,6 +4,7 @@ import {readFileSync} from 'node:fs';
 import {WINDOWS,FROM,TO,monthWindows,summarizePrivateQc,combineOverview}
   from '../scripts/qc-quality-lib.mjs';
 import {QC_VERSION,STATIONS} from '../scripts/qc-engine.mjs';
+import {fingerprint} from '../scripts/qc-overflow-lib.mjs';
 
 const report=w=>({
   schemaVersion:'1',qcVersion:QC_VERSION,dataset:'original',status:'screening_only',
@@ -18,7 +19,8 @@ const report=w=>({
     wu_ilouka4:{matchedPairs:4,reliability:{level:'moderate',score:80}}
   },
   candidates:{total:2,shown:1,truncated:false,items:[{
-    kind:'suspect_source_run',reviewState:'needs_manual_review',automaticWriteAllowed:false
+    id:'candidate-fixture',kind:'suspect_source_run',source:'loucka',fromUtc:w.from,
+    toExclusiveUtc:w.to,reviewState:'needs_manual_review',automaticWriteAllowed:false
   }]},
   safety:{databaseWrites:0,automaticCorrections:false,automaticApprovals:false,
     referenceStationsAreNotOriginalMeasurements:true}
@@ -109,4 +111,40 @@ test('viewer is self-contained with one safe injection slot and no external depe
   assert.match(source,/Dostupnost teploty/);
   assert.match(source,/Dostupnost vlhkosti/);
   assert.match(source,/Referenční stanice/);
+});
+
+test('complete recovery assigns candidate events to true UTC start month, not old week-start month',()=>{
+  const specialWindow=WINDOWS.find(w=>w.from==='2009-01-29T00:00:00Z');
+  assert.ok(specialWindow);
+  const special=validReport(specialWindow);
+  special.candidates={
+    total:120,shown:100,truncated:true,
+    items:Array.from({length:100},(_,i)=>({...special.candidates.items[0],
+      id:'jan-visible-'+i,fromUtc:'2009-01-29T00:00:00Z'}))
+  };
+  const overflowItems=Array.from({length:20},(_,i)=>({
+    ...special.candidates.items[0],id:'feb-extra-'+i,
+    kind:'temperature_disagreement',fromUtc:'2009-02-02T00:00:00Z'
+  }));
+  const sidecar={schemaVersion:'1',qcVersion:QC_VERSION,status:'screening_only',
+    truncatedWindows:1,recoveredCandidates:20,entries:[{
+      fromUtc:specialWindow.from,toExclusiveUtc:specialWindow.to,
+      baseTotal:120,baseShown:100,baseSha256:fingerprint(special),
+      items:overflowItems
+    }],safety:{databaseWrites:0,automaticCorrections:false,automaticApprovals:false}};
+  const qc=summarizePrivateQc((_,w)=>w.from===specialWindow.from?special:validReport(w),sidecar);
+  const totalExact=[...qc.months.values()].reduce((n,m)=>n+m.qc.candidatesStartingHere,0);
+  const totalWeekly=[...qc.months.values()].reduce((n,m)=>n+m.qc.candidatesTotal,0);
+  assert.equal(totalExact,totalWeekly);
+  assert.equal(qc.recoveredCandidates,20);
+  assert.equal(qc.completeCandidates.length,totalWeekly);
+  const jan=qc.months.get('2009-01').qc,feb=qc.months.get('2009-02').qc;
+  assert.equal(jan.candidateKindsStartingHere.temperature_disagreement,0);
+  assert.equal(feb.candidateKindsStartingHere.temperature_disagreement,20);
+  assert.equal(jan.candidatesStartingHere<jan.candidatesTotal,true);
+  const sql=monthWindows().map(m=>({month:m.month,totalRows:1,onGridSlots:1,
+    temperatureSlots:1,humiditySlots:1,temperatureNull:0,humidityNull:0}));
+  const overview=combineOverview(qc,sql);
+  assert.equal(overview.candidateDetailsComplete,true);
+  assert.equal(overview.recoveredCandidates,20);
 });
