@@ -87,6 +87,17 @@ else
  echo "Created root-only sidecar env (token not shown)."
 fi
 
+# Fail closed on ANY error after starting installation, including failures of
+# systemctl enable --now, interrupted readiness polling and failed HTTP smoke.
+# Merely stopping a failed unit would leave it enabled for the next reboot.
+cleanup_failed_install() {
+  local result=$?
+  if (( result != 0 )); then
+    systemctl disable --now "$UNIT" >/dev/null 2>&1 || true
+    echo "Private RH sidecar disabled after installation failure; original dev API unchanged." >&2
+  fi
+}
+trap cleanup_failed_install EXIT
 install -o root -g root -m 0644 \
  "$REPO/deploy/lxc/$UNIT" "/etc/systemd/system/$UNIT"
 systemctl daemon-reload
@@ -112,8 +123,8 @@ echo "Sidecar private data without token: HTTP $auth (expected 401)"
 echo "Original dev API healthz: HTTP $original (expected 200)"
 if [[ "$status" != 200 || "$readiness" != 200 || "$page" != 200 || "$auth" != 401 || "$original" != 200 ]]; then
  echo "ERROR: smoke checks failed. Stop only the sidecar and inspect its journal; original dev API was not altered." >&2
- systemctl stop "$UNIT" || true
  exit 1
 fi
+trap - EXIT
 echo "READY: local-only RH preview on 127.0.0.1:3101/dev/rh-preview"
 echo "Connect from your workstation via an SSH local port forward. Token is in root-owned $CONFIG; never send it to chat."
