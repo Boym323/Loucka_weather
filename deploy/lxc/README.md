@@ -414,3 +414,11 @@ ASSET="$(curl -fsS https://dev.pocasi-loucka.eu/ | grep -oE '/_astro/[^"]+\\.(cs
 [ -n "$ASSET" ] && curl -sSI "https://dev.pocasi-loucka.eu$ASSET" | grep -i cache-control
 ```
 Uživatelé nesmí dostat dlouhou cache na HTML, API nebo obsah generovaný v `/deployment.json`. Nginx stále blokuje přístup k tečkovým souborům. Cache sama neprokazuje p95 ani dlouhodobou stabilitu.
+
+## Soukromý náhled rekonstruované RH 2022 – volitelná izolovaná služba
+
+Volitelný operátorský graf není součástí veřejného Astro ani Nginx. K dispozici je samostatná služba `deploy/lxc/loucka-rh-preview.service` pro `127.0.0.1:3101`, která čte pouze originální MariaDB a předem ověřený soukromý SHA256 JSON. Služba se **nevytváří a neaktivuje merge commitem**. Nenahrazuje Fastify na 3100 a nespouští další observer.
+
+Po synchronizaci `main`, kompilaci API a ověření lokálního balíčku správce explicitně spustí `bash deploy/lxc/install-loucka-rh-preview.sh`. Instalátor generuje nové root-only `/etc/loucka-weather/rh-preview.env` s přístupovým tokenem (pokud dosud neexistuje), instalačně se nedotýká `api.env`, Nginx ani databází; provede stavové/401 smoke testy a při chybě vypne jen sidecar.
+
+**Zabezpečení:** nginx/NPManager nesmí směrovat 3101. Port nikdy nevystavovat do LAN/WAN; přístup pouze přes SSH localhost forwarding, bez tokenu se privátní data vrací 401. Token nikdy neposílat do chatu či logu. Celý postup, konkrétní SHA-256, kontrola dat a rollback jsou v `docs/RH_2022_PRIVATE_COMPARE_SIDECAR.md`.

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-11 – izolovaný operátorský náhled RH 2022 na localhost 3101
+- Připraven vlastní Fastify sidecar bez archivního polling observeru a GW3000 collectorů, s explicitním allowlistem `WEATHER_DB_SCHEMA=pocasi-loucka.eu`, `HOST=127.0.0.1`, `PORT=3101` a opt-in zámky. Nemění API procesu `main.ts` na 3100 ani Nginx.
+- Soukromý operátorský HTML/JS/Canvas graf umožňuje srovnávat původní a experimentálně rekonstruované RH 2022, třídí odhady vs. zneplatnění, ukazuje provenance a žádná chybějící data nenahrazuje nulou. Bearer token pouze v paměti prohlížeče, CSP, no-store, žádné externí assety.
+- Přidána samostatná systemd unit a explicitní root instalátor se SHA-256 integritou již ověřeného JSON, náhodným tokenem, automatickou kontrolou 401/200 a vypnutím při neúspěšném smoke testu. Nic se neinstaluje ani nezapíná samotným merge commitem; originální archiv zůstává SELECT-only.
+- Přidány TS integrační testy na izolaci, protokol, CSP, token, 404 v původní API a syntaxi JS. Skutečný dev runtime ani nasazení nejsou samotným PR prokázány.
+
+
 ## 2026-11-11 – oprava exportu RH dev preview podle skutečné QC konfigurace
 - Po úspěšném `--dry-run` na LXC selhal `--export` s potlačenou chybou: exportér chybně očekával `WEATHER_DB_*` (produkční API), ale `qc.env` dodává `WEATHER_QC_DB_*` (QC role).
 - Opraveno použití správné QC credential sady; možné explicitně vybrat izolovanou `WEATHER_RH_EXPORT_DB_*` SELECT-only identitu, pokud běžný QC uživatel nemá nové tabulky. Nikdy neslučovat přístupové údaje z různých identit.

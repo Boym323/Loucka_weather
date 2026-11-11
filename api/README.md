@@ -376,3 +376,11 @@ přihlašovací údaje nebo raw SQL chyby**. Volitelná samostatná
 sada `WEATHER_RH_EXPORT_DB_*` může pokrývat tyto tři tabulky
 minimálním SELECT bez změny práv stávajících QC skriptů.
 Dokumentace: `docs/RH_2022_DEV_PREVIEW_PUBLICATION.md`.
+
+### Izolovaný soukromý operátorský náhled RH 2022
+
+Samostatný sidecar `api/src/dev-rh-preview-entry.ts` (build `dist/src/dev-rh-preview-entry.js`) používá stávající READ-ONLY MariaDB reader a obsahově adresovaný JSON z PR #99/100. Nepouští `ArchiveObserver` ani `GatewayObserver`. Odmítne jiný host než `127.0.0.1`, port než `3101`, jiné původní DB schéma a chybějící preview flags.
+
+Registruje pouze `/dev/rh-preview` (operátorský HTML/Canvas graf, same-origin JS/CSS), `/api/v1/dev/preview/rh-history` (privátní Bearer token), lokální health a readiness. HTML nezobrazuje tajné údaje, token drží jen v RAM stránky, bez externích assetů, CSP a no-store. Graf odlišuje originální `NULL`, historické odhady a zneplatnění.
+
+**Výchozí dev API 3100 se nemění.** Ani samotný merge nezapíná sidecar. Root správce na LXC jej musí explicitně zapnout skriptem `deploy/lxc/install-loucka-rh-preview.sh` po ověření prostředí. Ten instaluje jen `loucka-rh-preview.service` s odděleným `rh-preview.env` a lokálním portem 3101. Přístup výhradně přes SSH tunel. Návod: `docs/RH_2022_PRIVATE_COMPARE_SIDECAR.md`.
