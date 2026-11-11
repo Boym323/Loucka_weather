@@ -105,7 +105,8 @@ test('RH CLI dry-run runs without database, limits processing, rejects unsafe ou
    cwd:process.cwd(),env:{},encoding:'utf8',timeout:10000});
  const r=run(['--dry-run']);
  assert.equal(r.status,0,r.stderr);
- assert.equal(JSON.parse(r.stdout).pendingDays,3);
+ assert.equal(JSON.parse(r.stdout).pendingDays,365);
+ assert.equal(JSON.parse(r.stdout).selectedPendingDays,3);
  assert.equal(JSON.parse(r.stdout).databaseWrites,0);
  assert.equal(run(['--dry-run','--run']).status!==0,true);
  assert.equal(run(['--run','--max-days','367']).status!==0,true);
