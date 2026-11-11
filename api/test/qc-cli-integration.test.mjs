@@ -3,7 +3,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {spawnSync} from 'node:child_process';
 import mariadb from 'mariadb';
-import {mkdtempSync,chmodSync,readdirSync,statSync,rmSync} from 'node:fs';
+import {mkdtempSync,chmodSync,readdirSync,statSync,rmSync,readFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 
@@ -48,6 +48,20 @@ test('QC CLI uses real SELECT-only cross-schema MariaDB and rejects admin creden
   await admin.query('INSERT INTO '+refTable+
     ' (station_id,observed_at_utc,temperature_c,relative_humidity_pct,quality_status) VALUES (?,?,?,?,?)',
     ['luhamet_sehradice',base+292,11,80,'reference_only']);
+  // Isolated 2022 RH fixture: original null, original measured and offset reference.
+  const rhDay=Date.parse('2022-02-15T00:00:00Z')/1000;
+  for(const [offset,rh] of [[0,null],[300,60]]){
+    await admin.query('INSERT INTO '+ownTable+
+      ' (dateTime,usUnits,'+q('interval')+',outTemp,outHumidity) VALUES (?,?,?,?,?)',
+      [rhDay+offset,16,5,12,rh]);
+  }
+  for(const [station,offset,values] of [
+    ['luhamet_sehradice',0,[51,62]],
+    ['wu_ilouka4',-8,[53,59]]]){
+    for(let i=0;i<2;i++)await admin.query('INSERT INTO '+refTable+
+      ' (station_id,observed_at_utc,temperature_c,relative_humidity_pct,quality_status) VALUES (?,?,?,?,?)',
+      [station,rhDay+i*300+offset,10,values[i],'reference_only']);
+  }
   await admin.query("CREATE USER 'qc_reader_ci'@'%' IDENTIFIED BY 'qc_ci_select_fixture_only'");
   await admin.query('GRANT SELECT ON '+ownTable+" TO 'qc_reader_ci'@'%'");
   await admin.query('GRANT SELECT ON '+refTable+" TO 'qc_reader_ci'@'%'");
@@ -110,6 +124,31 @@ test('QC CLI uses real SELECT-only cross-schema MariaDB and rejects admin creden
   assert.equal(existingReader.status,0,existingReader.stderr);
   assert.equal(JSON.parse(existingReader.stdout).comparisons.luhamet_sehradice.matchedPairs,2);
 
+  // Daily RH CLI uses exactly three bounded SELECT queries on the ephemeral fixture.
+  const rhFolder=mkdtempSync(join(tmpdir(),'loucka-rh-ci-'));
+  chmodSync(rhFolder,0o700);
+  t.after(()=>rmSync(rhFolder,{recursive:true,force:true}));
+  const rhArgs=['scripts/qc-humidity-2022.mjs','--reports-dir',rhFolder,
+    '--from','2022-02-15','--to','2022-02-16','--run','--max-days','1','--delay-ms','0'];
+  const rhRun=spawnSync(process.execPath,rhArgs,{
+    cwd:process.cwd(),env,encoding:'utf8',timeout:15000});
+  assert.equal(rhRun.status,0,rhRun.stderr);
+  const rhResult=JSON.parse(rhRun.stdout);
+  assert.equal(rhResult.complete,true);
+  assert.equal(rhResult.analyzedDays,1);
+  assert.equal(rhResult.totals.originalRhNullSlots,1);
+  assert.equal(rhResult.totals.originalRhMeasuredSlots,1);
+  assert.equal(rhResult.totals.missingRhTwoRefsAgreeSlots,1);
+  assert.equal(rhResult.safety.databaseWrites,0);
+  const rhReport=JSON.parse(readFileSync(join(rhFolder,'qc-rh-2022-2022-02-15.json'),'utf8'));
+  assert.equal(rhReport.referenceEvidence.length,1);
+  assert.equal(rhReport.referenceEvidence[0].proposedOriginalRhPct,null);
+  for(const name of readdirSync(rhFolder).filter(n=>n.endsWith('.json')))
+    assert.equal(statSync(join(rhFolder,name)).mode&0o777,0o600);
+  const rhRepeat=spawnSync(process.execPath,rhArgs,{
+    cwd:process.cwd(),env,encoding:'utf8',timeout:15000});
+  assert.equal(rhRepeat.status,0,rhRepeat.stderr);
+  assert.equal(JSON.parse(rhRepeat.stdout).processedThisRun,0);
   // Reference database-wide access is still forbidden.
   await admin.query('GRANT SELECT ON '+refDb+".* TO 'qc_reader_ci'@'%'");
   const widenedReference=spawnSync(process.execPath,args,
