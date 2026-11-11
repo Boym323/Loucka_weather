@@ -237,3 +237,14 @@ náhradní hodnoty chybějící RH; bez dostatečné původní RH je výsledek
 `insufficient_holdout_evidence`.
 
 Kompletní metodika a bezpečný LXC postup: `docs/QC_RH_HOLDOUT_2022.md`.
+
+### RH 2022 – konzervativní rozhodovací matice podkladů
+
+`npm run qc:rh-readiness -- --reports-dir /var/lib/loucka-qc` bez
+síťového a databázového přístupu prověří úplné soukromé RH triage,
+triplet a holdout souhrny. Vytvoří jen 0600 JSON a CSV přehled,
+které měsíce mají neověřené reference, významný rozpor, neúspěšný
+korekční pokus, malé jednotlivé výpadky nebo žádné chybějící RH.
+Ani dobrá validace známé RH není schválením rekonstrukce; žádné
+odhadované hodnoty RH se nevytvářejí.
+Podrobný návod: `docs/QC_RH_READINESS_2022.md`.

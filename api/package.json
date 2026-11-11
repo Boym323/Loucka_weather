@@ -17,7 +17,8 @@
     "qc:rh-2022": "node scripts/qc-humidity-2022.mjs",
     "qc:rh-triage": "node scripts/qc-rh-triage.mjs",
     "qc:rh-triplets": "node scripts/qc-rh-triplets.mjs",
-    "qc:rh-holdout": "node scripts/qc-rh-holdout.mjs"
+    "qc:rh-holdout": "node scripts/qc-rh-holdout.mjs",
+    "qc:rh-readiness": "node scripts/qc-rh-readiness.mjs"
   },
   "dependencies": {
     "fastify": "5.12.8",

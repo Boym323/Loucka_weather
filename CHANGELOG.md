@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-11 – evidence gating před případnou rekonstrukcí RH 2022
+- Offline soukromá měsíční rozhodovací matice na základě úplných RH triage, společných tripletů a blokovaného holdoutu (365 dnů); detekce nedostatečné místní validace, rozporu referencí a zhoršení po experimentální korekci.
+- Kontroly konzistence počtů, nezápisových oprávnění, metodiky a verzí před vydáním privátního 0600 JSON/CSV. Žádný import ani přepočet chybějících RH, žádný SQL dotaz, nasazení nebo HTTP endpoint.
+- Podklad pro další krok: ověření nezávislých historických záloh RH a provenience, nikoli automatické nahrazení původního měření.
+
+
 ## 2026-11-11 – nezávislé vyhodnocení referenčních RH korekcí bez zásahu do archivu
 - Read-only 365denní experiment s přesnými trojicemi Loučka–LuhaMet–WU; validace SHA256 původních RH a tripletových denních souborů, při změně zdrojů fail-closed.
 - Retrospektivní test na vynechaných dnech; tréninkové dny vždy ve stejném měsíci mimo ±3denní ochranné okno, alespoň 7 trénovacích dnů / 500 trojic, alespoň 24 trojic v testovacím dni.
