@@ -18,7 +18,7 @@ const report=w=>({
     wu_ilouka4:{matchedPairs:4,reliability:{level:'moderate',score:80}}
   },
   candidates:{total:2,shown:1,truncated:false,items:[{
-    reviewState:'needs_manual_review',automaticWriteAllowed:false
+    kind:'suspect_source_run',reviewState:'needs_manual_review',automaticWriteAllowed:false
   }]},
   safety:{databaseWrites:0,automaticCorrections:false,automaticApprovals:false,
     referenceStationsAreNotOriginalMeasurements:true}
@@ -55,6 +55,7 @@ test('private QC model is conservative: week beginning used for attribution, no 
   assert.equal(first.weeks,5);
   assert.equal(first.candidatesTotal,5);
   assert.equal(first.candidatesVisible,5);
+  assert.equal(first.candidateKindsVisible.suspect_source_run,5);
   assert.equal(first.rejectedOriginal,5);
   assert.equal(first.references.luhamet_sehradice.strong,5);
   assert.equal(first.references.wu_ilouka4.moderate,5);
