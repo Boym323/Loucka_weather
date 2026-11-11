@@ -20,13 +20,13 @@ function evidence(){
   ...m,rhNullSlots:i===11?0:100,rhMeasuredSlots:500,
   originalAbsentSlots:i===11?3:4,
   bothReferenceSlots:i===11?0:90,
-  agreeWithin10Slots:i===2?40:i===11?0:85
+  agreeWithin10Slots:(i===2||i===4)?40:i===11?0:85
  }));
  const triage={schemaVersion:'1',qcVersion:RH_VERSION,
   status:'screening_only',processedDays:365,
   months:triageMonths,totals:{
    nullRhSlots:1100,originalAbsentSlots:47,
-   bothReferenceSlots:990,agreeWithin10Slots:890
+   bothReferenceSlots:990,agreeWithin10Slots:845
   },safety:safe};
  const tripletMonths=months.map(m=>({...m,processedDays:m.days,pairs:2000}));
  const triplets={schemaVersion:'1',tripletVersion:TRIPLET_VERSION,
