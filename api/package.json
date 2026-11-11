@@ -18,7 +18,8 @@
     "qc:rh-triage": "node scripts/qc-rh-triage.mjs",
     "qc:rh-triplets": "node scripts/qc-rh-triplets.mjs",
     "qc:rh-holdout": "node scripts/qc-rh-holdout.mjs",
-    "qc:rh-readiness": "node scripts/qc-rh-readiness.mjs"
+    "qc:rh-readiness": "node scripts/qc-rh-readiness.mjs",
+    "qc:rh-backup-inventory": "node scripts/qc-rh-backup-inventory.mjs"
   },
   "dependencies": {
     "fastify": "5.12.8",
