@@ -77,8 +77,9 @@ test('recovery/quality CLI scripts and offline viewer JavaScript parse safely',(
    assert.equal(run.status,0,file+': '+run.stderr);
  }
  const html=readFileSync(new URL('../scripts/qc-quality-viewer.html',import.meta.url),'utf8');
- const m=/<script>([\\s\\S]*?)<\\/script>/.exec(html);
- assert.ok(m,'Expected inline viewer script');
- const source=m[1].replace('__QUALITY_DATA__','{}');
+ const begin=html.indexOf('<script>');
+ const finish=html.indexOf('</script>',begin+8);
+ assert.ok(begin>=0&&finish>begin,'Expected inline viewer script');
+ const source=html.slice(begin+8,finish).replace('__QUALITY_DATA__','{}');
  assert.doesNotThrow(()=>new Script(source));
 });
