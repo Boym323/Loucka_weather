@@ -73,8 +73,22 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     throw Error('Unexpected API response');
    const points=payload.points;
    if(points.some(p=>p.approved!==false))throw Error('Unapproved data mismatch');
-   const original=points.map(p=>[p.endTime,p.originalRh]);
-   const preview=points.map(p=>[p.endTime,p.previewRh]);
+   // A whole missing WeeWX interval is not a continuous measurement.
+   // Insert an explicit null break when the archive jumps over a 5-minute slot.
+   const series=(field:'originalRh'|'previewRh')=>{
+    const values:(string|number|null)[][]=[];
+    let previous:number|null=null;
+    for(const point of points){
+     const time=Date.parse(point.endTime);
+     if(previous!==null&&time-previous>300000)
+      values.push([new Date(previous+300000).toISOString(),null]);
+     values.push([point.endTime,point[field]]);
+     previous=time;
+    }
+    return values;
+   };
+   const original=series('originalRh');
+   const preview=series('previewRh');
    const changed=points.filter(p=>['estimated','frozen_adjusted','invalidated'].includes(p.quality));
    chart.setOption({animation:false,tooltip:{trigger:'axis'},
     grid:{left:55,right:18,top:35,bottom:56},
