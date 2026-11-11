@@ -85,8 +85,9 @@ function describeRoot(r,dir){
 }
 function scan(args,roots){
  const found=[],stats={visitedEntries:0,visitedDirectories:0,
-  skippedSymlinks:0,skippedMounts:0,readErrors:0,partial:false};
- const visited=new Set();
+  skippedSymlinks:0,skippedMounts:0,readErrors:0,
+  partial:roots.some(r=>r.status!=='accessible')};
+ const visited=new Set(),seenFiles=new Set();
  for(const root of roots){
   if(root.status!=='accessible')continue;
   const stack=[{dir:root.realPath,depth:0}];
@@ -113,7 +114,8 @@ function scan(args,roots){
     }
     if(!st.isFile())continue;
     const match=inventoryName(ent.name);
-    if(!match)continue;
+    if(!match||seenFiles.has(full))continue;
+    seenFiles.add(full);
     found.push({path:full,sizeBytes:st.size,modifiedUtc:iso(st.mtimeMs),
       permissionsOctal:(st.mode&0o777).toString(8).padStart(3,'0'),
       confidenceScore:match.score,nameCategory:match.kind,
