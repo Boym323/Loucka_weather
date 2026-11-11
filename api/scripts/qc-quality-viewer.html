@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Kvalita dat | Počasí Loučka</title>
+<style>
+:root{color-scheme:dark;--bg:#081725;--panel:#102637;--panel2:#152d40;--line:#30485a;--text:#edf5fb;--muted:#9fb5c7;--accent:#5ce0b5;--warn:#f6c86d;--danger:#fa8288;font:14px/1.5 system-ui,-apple-system,Segoe UI,Arial,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 100% 0%,#123347,var(--bg) 40%);color:var(--text);min-height:100vh}
+main{max-width:1440px;padding:34px 25px 70px;margin:auto}h1{font-size:clamp(29px,4vw,44px);letter-spacing:-.035em;margin:7px 0 10px}h2{font-size:19px;margin:0 0 14px}h3{font-size:16px;margin:0 0 10px}p{margin:0 0 15px}.muted{color:var(--muted)}.eyebrow{text-transform:uppercase;color:var(--accent);font-weight:750;letter-spacing:.12em;font-size:11px}
+.hero{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;padding:8px 0 27px}.hero p{max-width:68ch}.chip{border:1px solid #237b64;color:var(--accent);border-radius:40px;padding:7px 12px;height:fit-content;font-weight:700}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:18px}.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:20px;min-width:0}.card small{color:var(--muted);font-size:12px}.card strong{display:block;font-size:clamp(22px,2.8vw,32px);letter-spacing:-.035em;margin:8px 0 4px;font-variant-numeric:tabular-nums}.card span{color:var(--muted);font-size:11px}.warning{border-left:3px solid var(--warn);background:#332d23;padding:14px 17px;border-radius:8px;margin:0 0 18px;color:#ffe8ba}
+.row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.tools label{font-size:12px;color:var(--muted)}select,button{font:inherit}select,.action{padding:9px 12px;background:var(--panel2);border:1px solid #486277;border-radius:8px;color:var(--text)}button{cursor:pointer}.action:hover{border-color:var(--accent)}button:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:3px}.panels{display:grid;grid-template-columns:minmax(0,2.15fr) minmax(260px,.85fr);gap:15px;align-items:start}.heatwrap{overflow-x:auto;margin-top:15px}.heatmap{border-collapse:separate;border-spacing:4px;width:100%;min-width:665px;text-align:center}.heatmap th{font-size:11px;font-weight:600;color:var(--muted);padding:4px}.heatmap td{padding:0}.heatmap .year{font-weight:740;white-space:nowrap}.heat{display:block;width:100%;min-height:33px;border:1px solid #ffffff23;border-radius:5px;font-weight:720;font-size:10px;color:#fff;font-variant-numeric:tabular-nums;transition:box-shadow .15s}.heat:hover,.heat.selected{box-shadow:0 0 0 2px var(--accent)}.heat.na{background:#203647;color:#829bad}.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:12px}.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px}
+.yearpanel{position:sticky;top:12px}.year-stat{display:grid;grid-template-columns:1fr auto;gap:4px 12px;padding:10px 0;border-bottom:1px solid var(--line)}.year-stat strong{font-variant-numeric:tabular-nums}.flaglist{padding:0;margin:0;list-style:none}.flaglist li{display:flex;justify-content:space-between;gap:12px;font-size:12px;padding:7px 0;border-bottom:1px solid var(--line)}.flaglist span{overflow-wrap:anywhere}.bar-chart{display:grid;grid-template-columns:repeat(18,minmax(0,1fr));gap:5px;align-items:end;height:155px;margin:30px 0 16px;border-bottom:1px solid var(--line)}.barwrap{height:100%;display:flex;align-items:end;position:relative;min-width:0}.bar{width:100%;min-height:2px;border-radius:4px 4px 0 0;background:#35b38d}.barwrap span{position:absolute;bottom:-17px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--muted)}.data-table{border-collapse:collapse;width:100%;min-width:630px;font-variant-numeric:tabular-nums}.data-table th,.data-table td{border-bottom:1px solid var(--line);padding:10px;text-align:right}.data-table th:first-child,.data-table td:first-child{text-align:left}.data-table th{color:var(--muted);font-size:12px}.scroll{overflow:auto}.sources{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.source-card{background:var(--panel2);border:1px solid var(--line);padding:15px;border-radius:10px}.source-card strong{display:block;font-size:20px}.source-card small{color:var(--muted)}.note{font-size:12px;color:var(--muted);margin-top:12px}.bottom{display:grid;gap:15px;margin-top:17px}.visuallyhidden{position:absolute;width:1px;height:1px;clip:rect(0,0,0,0);overflow:hidden}
+@media(max-width:1050px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.panels{grid-template-columns:1fr}.yearpanel{position:static}}
+@media(max-width:600px){main{padding:18px 12px 50px}.cards{gap:8px}.card,.panel{padding:14px}.sources{grid-template-columns:1fr}.heat{min-height:29px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+@media print{body{background:white;color:#111}main{max-width:none}.card,.panel{background:white;color:#111;border-color:#aaa}.muted,.note{color:#555}.tools,.action{display:none}.panels{display:block}.heat{print-color-adjust:exact;-webkit-print-color-adjust:exact}.yearpanel{margin-top:24px}}
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+<div><div class="eyebrow">Počasí Loučka / soukromý audit</div><h1>Kvalita historických měření</h1>
+<p class="muted">Read-only přehled původního archivu WeeWX a dokončeného QC screeningu. Měření a reference se nikdy automaticky nepřebírají jako opravy.</p></div>
+<div class="chip">SCREENING · BEZ ZÁPISŮ DO DB</div>
+</header>
+<section class="cards" aria-label="Celkové statistiky">
+<div class="card"><small>Očekávané 5min sloty</small><strong id="expected">—</strong><span>UTC rozsah od 1. 1. 2009</span></div>
+<div class="card"><small>Pokrytí původními záznamy</small><strong id="coverage">—</strong><span>Přesná 5min časová síť</span></div>
+<div class="card"><small>QC odmítnuté řádky</small><strong id="rejected">—</strong><span>Teplotně orientované QC</span></div>
+<div class="card"><small>Kandidáti k prověření</small><strong id="candidates">—</strong><span>Nejsou to schválené opravy</span></div>
+</section>
+<div class="warning" id="warning"></div>
+<section class="panels">
+<div class="panel"><div class="row"><div><div class="eyebrow">2009–2026</div><h2>Měsíční mapa dostupnosti</h2></div>
+<div class="tools"><label for="metric">Zobrazit</label><select id="metric">
+<option value="coverage">Pokrytí původními záznamy</option>
+<option value="temperature">Dostupnost teploty</option>
+<option value="humidity" selected>Dostupnost vlhkosti</option>
+<option value="rejection">Podíl odmítnutých QC řádků *</option>
+</select><button class="action" id="csv" type="button">Export CSV</button></div></div>
+<p class="note">Procenta se vztahují k očekávaným 5min slotům v daném UTC měsíci. Barevná pole lze otevřít pro podrobnosti konkrétního období. * QC hodnoty jsou přiřazené podle začátku týdenního okna.</p>
+<div class="heatwrap"><table class="heatmap" aria-label="Měsíční heatmapa kvality" id="heatmap"></table></div>
+<div class="legend"><span><i class="dot" style="background:#177f66"></i>Dobré pokrytí</span><span><i class="dot" style="background:#a77d2b"></i>Částečné</span><span><i class="dot" style="background:#a84046"></i>Slabé</span><span><i class="dot" style="background:#203647"></i>Bez měření / mimo rozsah</span></div>
+</div>
+<aside class="panel yearpanel">
+<div class="row"><h2>Detail období</h2><div class="tools"><label for="year">Rok</label><select id="year"></select></div></div>
+<p class="muted" id="selection">Vyber měsíc v heatmapě.</p>
+<div id="details" aria-live="polite"></div>
+</aside>
+</section>
+<section class="bottom">
+<div class="panel"><h2>Roční pokrytí záznamů</h2><p class="note">Přesné sloty původního archivu / očekávané sloty. Částečný rok 2026 končí 10. 11. 00:00 UTC.</p><div id="bars" class="bar-chart" role="img" aria-label="Roční graf pokrytí"></div></div>
+<div class="panel"><h2>Měsíční přehled vybraného roku</h2><div class="scroll"><table class="data-table"><thead><tr><th>Měsíc</th><th>Archiv</th><th>Pokrytí slotů</th><th>Teplota</th><th>Vlhkost</th><th>QC odmítnuté *</th><th>QC návrhy *</th></tr></thead><tbody id="yearTable"></tbody></table></div></div>
+<div class="panel"><h2>Metodika a omezení</h2><ul id="methodology" class="note"></ul><p class="note">Časová pásma: všechny agregace jsou UTC. Historické koncové časy měření WeeWX nemusí vždy přesně odpovídat pravidelné 5min síti; mimo síť se nezapočítávají do pokrytí. Soukromý soubor, bez externích skriptů a síťových požadavků.</p></div>
+</section>
+</main>
+<script>
+'use strict';
+const DATA=__QUALITY_DATA__;
+const $=id=>document.getElementById(id);
+const formatter=new Intl.NumberFormat('cs-CZ');
+const pct=x=>x===null?'—':x.toLocaleString('cs-CZ',{maximumFractionDigits:1})+' %';
+const months=['leden','únor','březen','duben','květen','červen','červenec','srpen','září','říjen','listopad','prosinec'];
+const years=[...new Set(DATA.months.map(x=>x.month.slice(0,4)))];
+const byMonth=new Map(DATA.months.map(x=>[x.month,x]));
+let selectedYear=years.includes('2022')?'2022':years[years.length-1], selectedMonth=selectedYear+'-02';
+const number=(v)=>formatter.format(v);
+function metricValue(m,metric){
+ if(!m)return null;
+ if(metric==='rejection'){
+  const base=m.quality.acceptedOriginal+m.quality.rejectedOriginal;
+  return base>0?100*m.quality.rejectedOriginal/base:null;
+ }
+ const field=metric==='coverage'?'onGridSlots':metric==='temperature'?'temperatureSlots':'humiditySlots';
+ return m.expectedSlots>0?100*m[field]/m.expectedSlots:null;
+}
+function color(v,metric){
+ if(v===null)return '#203647';
+ const score=metric==='rejection'?100-v:v;
+ if(score>=95)return '#177f66';
+ if(score>=75)return '#498571';
+ if(score>=50)return '#a77d2b';
+ if(score>=20)return '#a75a3a';
+ return '#a84046';
+}
+function el(tag,cls,text){
+ const node=document.createElement(tag);
+ if(cls)node.className=cls;
+ if(text!==undefined)node.textContent=text;
+ return node;
+}
+function replace(node,content){node.replaceChildren(...content);}
+function sum(items,key){return items.reduce((acc,x)=>acc+x[key],0);}
+function forYear(year){return DATA.months.filter(x=>x.month.startsWith(year+'-'));}
+function renderHeat(){
+ const head=el('tr');
+ head.append(el('th','','Rok'));
+ months.forEach(m=>head.append(el('th','',m.slice(0,3))));
+ const table=$('heatmap');
+ const rows=[head];
+ const metric=$('metric').value;
+ for(const year of years){
+  const row=el('tr'),yearHead=el('th','year',year);
+  row.append(yearHead);
+  for(let n=1;n<=12;n++){
+   const key=year+'-'+String(n).padStart(2,'0');
+   const m=byMonth.get(key),value=metricValue(m,metric);
+   const cell=el('td'),button=el('button','heat'+(!m?' na':''),value===null?'—':pct(value));
+   button.type='button';
+   button.disabled=!m;
+   button.style.backgroundColor=color(value,metric);
+   button.title=key+': '+pct(value);
+   button.setAttribute('aria-label',months[n-1]+' '+year+', '+$('metric').selectedOptions[0].text+', '+pct(value));
+   if(key===selectedMonth)button.classList.add('selected');
+   if(m)button.addEventListener('click',()=>{selectedYear=year;selectedMonth=key;$('year').value=year;render();});
+   cell.append(button);row.append(cell);
+  }
+  rows.push(row);
+ }
+ replace(table,rows);
+}
+function appendStat(parent,label,value){
+ const div=el('div','year-stat');div.append(el('span','muted',label),el('strong','',value));parent.append(div);
+}
+function renderDetails(){
+ const m=byMonth.get(selectedMonth),box=$('details');
+ if(!m){box.replaceChildren(el('p','muted','Toto období není součástí screeningu.'));return;}
+ $('selection').textContent=months[Number(m.month.slice(-2))-1]+' '+m.month.slice(0,4);
+ const nodes=[],stats=el('div');
+ appendStat(stats,'Očekávané sloty',number(m.expectedSlots));
+ appendStat(stats,'Archivní záznamy',number(m.totalRows));
+ appendStat(stats,'Přesně na síti',number(m.onGridSlots)+' / '+pct(metricValue(m,'coverage')));
+ appendStat(stats,'Dostupná teplota',number(m.temperatureSlots)+' / '+pct(metricValue(m,'temperature')));
+ appendStat(stats,'Dostupná vlhkost',number(m.humiditySlots)+' / '+pct(metricValue(m,'humidity')));
+ appendStat(stats,'NULL teplota v záznamech',number(m.temperatureNull));
+ appendStat(stats,'NULL vlhkost v záznamech',number(m.humidityNull));
+ nodes.push(stats,el('h3','', 'QC – přiřazené týdny *'));
+ const qs=el('div');
+ appendStat(qs,'Zkontrolovaných týdnů',number(m.quality.weeks));
+ appendStat(qs,'Odmítnuté řádky Loučky',number(m.quality.rejectedOriginal));
+ appendStat(qs,'Návrhy k prověření',number(m.quality.candidatesTotal));
+ appendStat(qs,'Zkrácené seznamy návrhů',number(m.quality.truncatedWeeks));
+ nodes.push(qs);
+ nodes.push(el('h3','','Typy zobrazených QC návrhů *'));
+ nodes.push(flagList({
+  'Podezřelé průběhy':m.quality.candidateKindsVisible.suspect_source_run,
+  'Teplotní neshody':m.quality.candidateKindsVisible.temperature_disagreement,
+  'Podklady k výpadkům':m.quality.candidateKindsVisible.reference_evidence_for_gap
+ }));
+ nodes.push(el('h3','','Příznaky QC'),flagList(m.quality.flags));
+ nodes.push(el('h3','','Referenční stanice *'));
+ const refs=el('div','sources');
+ for(const station of ['luhamet_sehradice','wu_ilouka4']){
+  const r=m.quality.references[station],card=el('div','source-card');
+  card.append(el('small','',r.name),el('strong','',number(r.matchedPairs)+' párů'),
+    el('small','',number(r.acceptedSlots)+' přijatých pozorování · '+number(r.strong)+' silných QC oken'));
+  refs.append(card);
+ }
+ nodes.push(refs);
+ replace(box,nodes);
+}
+function flagList(flags){
+ const ul=el('ul','flaglist'),entries=Object.entries(flags).sort((a,b)=>b[1]-a[1]);
+ if(!entries.length)ul.append(el('li','','Bez označených příznaků v přiřazených QC týdnech.'));
+ for(const [key,val] of entries){const li=el('li');li.append(el('span','',key),el('strong','',number(val)));ul.append(li);}
+ return ul;
+}
+function renderYear(){
+ const data=forYear(selectedYear),table=$('yearTable'),rows=[];
+ for(const m of data){
+  const row=el('tr');
+  const fields=[months[Number(m.month.slice(-2))-1],number(m.totalRows),
+    pct(metricValue(m,'coverage')),pct(metricValue(m,'temperature')),
+    pct(metricValue(m,'humidity')),number(m.quality.rejectedOriginal),
+    number(m.quality.candidatesTotal)];
+  fields.forEach((f,i)=>row.append(el('td','',f)));
+  rows.push(row);
+ }
+ replace(table,rows);
+}
+function renderBars(){
+ const graph=$('bars'),items=[];
+ for(const y of years){
+  const data=forYear(y),expected=sum(data,'expectedSlots'),received=sum(data,'onGridSlots');
+  const percentage=expected?100*received/expected:0;
+  const wrap=el('div','barwrap'),bar=el('div','bar');
+  bar.style.height=percentage+'%';bar.style.backgroundColor=color(percentage,'coverage');
+  wrap.title=y+': '+pct(percentage);
+  wrap.append(bar,el('span','',y.slice(2)));items.push(wrap);
+ }
+ replace(graph,items);
+}
+function render(){renderHeat();renderDetails();renderYear();renderBars();}
+function csv(){
+ const head=['month','expectedSlots','onGridSlots','temperatureSlots','humiditySlots','temperatureNull','humidityNull','qcRejectedWeeksAttributed','qcCandidatesWeeksAttributed','qcTruncatedWeeks'];
+ const lines=[head.join(',')];
+ for(const m of DATA.months){
+  const fields=[m.month,m.expectedSlots,m.onGridSlots,m.temperatureSlots,m.humiditySlots,
+    m.temperatureNull,m.humidityNull,m.quality.rejectedOriginal,
+    m.quality.candidatesTotal,m.quality.truncatedWeeks];
+  lines.push(fields.join(','));
+ }
+ const blob=new Blob(['\uFEFF'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
+ const link=document.createElement('a'),url=URL.createObjectURL(blob);
+ link.href=url;link.download='loucka-kvalita-dat-2009-2026.csv';link.click();
+ setTimeout(()=>URL.revokeObjectURL(url),500);
+}
+$('expected').textContent=number(DATA.totals.expectedSlots);
+$('coverage').textContent=pct(100*DATA.totals.onGridSlots/DATA.totals.expectedSlots);
+$('rejected').textContent=number(DATA.totals.rejectedOriginal);
+$('candidates').textContent=number(DATA.totals.candidatesTotal);
+$('warning').textContent='Pozor: '+number(DATA.totals.truncatedWeeks)+' týdenních reportů omezuje počet jednotlivě zobrazených návrhů; '+
+  number(DATA.totals.candidatesTotal-DATA.totals.candidatesVisible)+' návrhů proto není v seznamech detailů. Nula kandidátů nevylučuje výpadek. Žádné automatické schválení ani přepsání dat.';
+replace($('methodology'),DATA.methodology.map(s=>el('li','',s)));
+replace($('year'),years.map(y=>{const opt=el('option','',y);opt.value=y;return opt;}));
+$('year').value=selectedYear;
+$('year').addEventListener('change',e=>{selectedYear=e.target.value;selectedMonth=selectedYear+'-01';render();});
+$('metric').addEventListener('change',render);
+$('csv').addEventListener('click',csv);
+render();
+</script>
+</body></html>

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-11 – soukromý přehled kvality meteorologického archivu
+- Interaktivní HTML heatmapa roků/měsíců 2009–2026, filtrování metriky a roku, CSV, původní slotové pokrytí, teplota a vlhkost odděleně, QC příznaky a reference.
+- Generátor vyžaduje dokončené soukromé QC reporty (932 oken), používá pouze vymezené SELECT na původní MariaDB a privátní výstup HTML 0600. Nevzniká nový veřejný web endpoint, nejsou měněna původní data ani rekonstrukce.
+- Výslovně popsané limity: QC týdny připsané začátku týdne, 58 zkrácených týdnů se skrytými detaily kandidátů, `NULL` vlhkost není automaticky odmítnutý teplotní QC řádek.
+
+
 ## 2026-11-10 – zrychlené jednorázové dokončení historie QC
 - Explicitní režim `qc-batch.mjs --catch-up` projde až 1000 zbývajících sedmidenních oken v jednom procesu s pauzou minimálně 1000 ms (standardně 2000 ms) mezi čtecími dávkami, sdíleným zámkem a opakovatelnými soukromými JSON reporty.
 - Režim pravidelného systemd timeru bez `--catch-up` zůstává omezený na 1 (volitelně 4) okna na spuštění; zrychlení není automaticky aktivované ani nasazené.
