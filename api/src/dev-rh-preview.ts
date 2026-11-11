@@ -138,9 +138,10 @@ export function previewFromPackage(raw:unknown,expectedDigest:string,token:strin
       legacySource:overlay?.legacySource??null}
     });
    }
-   // Ensure every overlay within the requested original interval has a matching base row.
+   // No synthetic timestamps: every overlay change must match a real original row.
+   const present=new Set(out.map(p=>p.epoch));
    for(const t of records.keys())
-    if(t>fromExclusive&&t<=toInclusive&&!out.some(p=>p.epoch===t))
+    if(t>fromExclusive&&t<=toInclusive&&!present.has(t))
      throw Error('Missing original slot required by RH preview');
    return out;
   }
