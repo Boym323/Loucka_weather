@@ -86,7 +86,7 @@ def grouped_runs(iso_stamps: list[str], min_points: int = 1) -> list[dict]:
 
 def audit_all(fetch_chunk, progress=lambda _index, _day, _count: None) -> dict:
     """Pure orchestrator. fetch_chunk returns the private sidecar's (JSON, body_sha)."""
-    totals: Counter = Counter()
+    totals: Counter = Counter({key: 0 for key in CATEGORIES})
     monthly: dict[str, Counter] = defaultdict(Counter)
     daily: dict[str, Counter] = defaultdict(Counter)
     batches: Counter = Counter()
