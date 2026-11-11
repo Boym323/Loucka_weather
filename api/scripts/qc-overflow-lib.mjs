@@ -67,11 +67,15 @@ export function validateOverflowSidecar(sidecar,lookup){
        !Array.isArray(entry.items)||
        entry.items.length!==entry.baseTotal-entry.baseShown)
       throw new Error('QC overflow evidence no longer matches original report');
+    const start=Date.parse(entry.fromUtc),end=Date.parse(entry.toExclusiveUtc);
+    if(!Number.isFinite(start)||!Number.isFinite(end)||end<=start)
+      throw new Error('Invalid overflow window time');
     for(const item of entry.items){
+      const candidateFrom=Date.parse(item.fromUtc),candidateTo=Date.parse(item.toExclusiveUtc);
       if(item.reviewState!=='needs_manual_review'||item.automaticWriteAllowed!==false||
          !['suspect_source_run','temperature_disagreement','reference_evidence_for_gap'].includes(item.kind)||
-         typeof item.fromUtc!=='string'||item.fromUtc<entry.fromUtc||
-         item.fromUtc>=entry.toExclusiveUtc)
+         !Number.isFinite(candidateFrom)||!Number.isFinite(candidateTo)||
+         candidateFrom<start||candidateFrom>=end||candidateTo<=candidateFrom||candidateTo>end)
         throw new Error('Invalid hidden candidate evidence');
     }
     count+=entry.items.length;
