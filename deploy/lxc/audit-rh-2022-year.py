@@ -96,10 +96,24 @@ def audit_all(fetch_chunk, progress=lambda _index, _day, _count: None) -> dict:
     response_digests: list[dict] = []
     pinned_package: str | None = None
     completed_windows = 0
+    previous_window_last = None
     for index, (day, left, right) in enumerate(windows(), 1):
         data, digest = fetch_chunk(left, right)
         sub = qc.inspect(data, left, right, digest)
         current_digest = sub["integrity"]["package_sha256"]
+        # Inspect true adjacent five-minute transitions across five-day cutoffs.
+        first_point = data["points"][0] if data["points"] else None
+        if previous_window_last is not None and first_point is not None:
+            prev = previous_window_last
+            if first_point["epoch"] - prev["epoch"] == qc.STEP:
+                before, after = prev["preview"]["value"], first_point["preview"]["value"]
+                if before is not None and after is not None and abs(after - before) >= 20:
+                    totals["suspicious_5m_jumps_ge_20pp"] += 1
+                    jumps.append({
+                        "utc": first_point["at"], "delta_percentage_points": round(after - before, 2),
+                        "flag": "review_only_cross_window_transition",
+                    })
+        previous_window_last = data["points"][-1] if data["points"] else None
         if pinned_package is None:
             pinned_package = current_digest
         elif current_digest != pinned_package:
@@ -128,8 +142,6 @@ def audit_all(fetch_chunk, progress=lambda _index, _day, _count: None) -> dict:
             "records": sub["totals"]["original_archive_rows"],
             "response_sha256": digest,
         })
-        # Adjacent scan boundaries can contain a jump that single-window QC misses.
-        # The yearly check below derives all such boundary jumps explicitly.
         completed_windows = index
         progress(index, day, sub["totals"]["original_archive_rows"])
 
@@ -161,9 +173,6 @@ def audit_all(fetch_chunk, progress=lambda _index, _day, _count: None) -> dict:
     totals["longest_consecutive_unfilled_existing_slots"] = max(
         (run["slots"] for run in null_runs), default=0
     )
-    # Cross-window jumps are recorded as a separate QC count; the single-window
-    # count above refers to genuinely consecutive observations within windows.
-    # We never imply a continuous time-series where a row is absent.
     by_month = {}
     for month, counts in sorted(monthly.items()):
         archive_rows = sum(counts[c] for c in CATEGORIES)
@@ -204,6 +213,7 @@ def audit_all(fetch_chunk, progress=lambda _index, _day, _count: None) -> dict:
             "five_day_window_requests": WINDOWS,
             "first_inclusive_observable_utc": qc.iso(qc.LOWER + qc.STEP),
             "last_inclusive_observable_utc": qc.iso(qc.UPPER - qc.STEP),
+            "to_inclusive_utc": qc.iso(qc.UPPER - qc.STEP),
             "inaccessible_first_boundary_utc": qc.iso(qc.LOWER),
             "production_archive_only_select": True,
             "reference_station_validation_performed": False,
@@ -221,7 +231,7 @@ def audit_all(fetch_chunk, progress=lambda _index, _day, _count: None) -> dict:
         "historical_invalidations": times["historically_invalidated_row_utc"],
         "nonfive_minute_archive_intervals": times["nonfive_minute_archive_interval_end_utc"],
         "offgrid_archive_rows": times["offgrid_original_row_utc"],
-        "possible_abrupt_preview_jumps_in_chunk_only": jumps,
+        "possible_abrupt_preview_jumps": jumps,
         "response_hashes": response_digests,
         "methodology": [
             "One bounded GET per five-day window to private loopback sidecar, with pacing.",
@@ -230,7 +240,7 @@ def audit_all(fetch_chunk, progress=lambda _index, _day, _count: None) -> dict:
             "The 5153 historical experimental transitions must match pinned package counts.",
             "Missing whole timestamp rows and existing timestamp rows with NULL RH are separate.",
             "A technical presence check is NOT a reference-station validation or approval.",
-            "20 percentage points/5-minute flags are heuristic; chunk boundary jumps require further review.",
+            "20 percentage points/5-minute flags are heuristic, including adjacent 5-minute cross-window edges.",
         ],
     }
 
@@ -272,7 +282,7 @@ def main() -> int:
         print(f"Unapproved historical transitions: {t['modified_records']}")
         print(f"Off-grid rows: {t['offgrid_archive_rows']}")
         print(f"Non-five-minute archive intervals: {t['nonfive_minute_archive_intervals']}")
-        print(f"Potential RH jumps >= 20pp / 5min (within windows): {t['suspicious_5m_jumps_ge_20pp']}")
+        print(f"Potential RH jumps >= 20pp / 5min: {t['suspicious_5m_jumps_ge_20pp']}")
         print(f"Longest unfilled contiguous RH run (5min slots): {t['longest_consecutive_unfilled_existing_slots']}")
         print("Monthly breakdown (UTC; original archive rows / still NULL / changed / whole-slot gaps):")
         for month, m in report["per_month_utc"].items():
