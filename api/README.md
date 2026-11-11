@@ -156,3 +156,15 @@ by pravidelná služba soutěžila o stejný zámek a zatěžovala DB.
 Spuštění přes izolovaný transient `systemd-run` s 256 MiB RAM,
 50 % CPU a nejvýše 4 hodinami, logy a postup zastavení:
 `docs/QC_READ_ONLY_2026-11-10.md`.
+
+### Soukromý analytický přehled kvality (2009–2026)
+
+`npm run qc:quality -- --reports-dir /var/lib/loucka-qc` vytvoří bezpečný
+standalone HTML report `/var/lib/loucka-qc/qc-quality-overview.html` (0600),
+včetně 215 měsíců dostupnosti dat ze SELECT-only původní MariaDB, QC příznaků,
+překryvu referencí a 58 týdnů se zkrácenými seznamy návrhů.
+Měsíční SQL počítá pokrytí teploty a vlhkosti **zvlášť** oproti očekávaným
+5min slotům, QC výsledky původního sedmidenního screeningu přiřazuje
+podle začátku QC týdne (jasně popsané omezení). Nezakládá endpoint ani
+nezveřejňuje interní reporty na webu. Návod a stažení lokálního HTML:
+`docs/QC_PRIVATE_QUALITY_OVERVIEW_2026-11-11.md`.
