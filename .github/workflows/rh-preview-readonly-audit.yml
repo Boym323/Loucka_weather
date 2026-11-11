@@ -5,16 +5,20 @@ on:
     paths:
       - 'deploy/lxc/audit-rh-preview.py'
       - 'deploy/lxc/audit-rh-2022-year.py'
+      - 'deploy/lxc/rh-2022-evidence-brief.py'
       - 'deploy/lxc/tests/test_rh_preview_readonly_audit.py'
       - 'deploy/lxc/tests/test_rh_2022_full_year_audit.py'
+      - 'deploy/lxc/tests/test_rh_2022_evidence_brief.py'
       - '.github/workflows/rh-preview-readonly-audit.yml'
   push:
     branches: [main]
     paths:
       - 'deploy/lxc/audit-rh-preview.py'
       - 'deploy/lxc/audit-rh-2022-year.py'
+      - 'deploy/lxc/rh-2022-evidence-brief.py'
       - 'deploy/lxc/tests/test_rh_preview_readonly_audit.py'
       - 'deploy/lxc/tests/test_rh_2022_full_year_audit.py'
+      - 'deploy/lxc/tests/test_rh_2022_evidence_brief.py'
       - '.github/workflows/rh-preview-readonly-audit.yml'
 
 permissions:
@@ -27,6 +31,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Check Python syntax
-        run: python3 -m py_compile deploy/lxc/audit-rh-preview.py deploy/lxc/audit-rh-2022-year.py deploy/lxc/tests/test_rh_preview_readonly_audit.py deploy/lxc/tests/test_rh_2022_full_year_audit.py
+        run: python3 -m py_compile deploy/lxc/audit-rh-preview.py deploy/lxc/audit-rh-2022-year.py deploy/lxc/rh-2022-evidence-brief.py deploy/lxc/tests/test_rh_preview_readonly_audit.py deploy/lxc/tests/test_rh_2022_full_year_audit.py deploy/lxc/tests/test_rh_2022_evidence_brief.py
       - name: Test offline time grid and safety contracts
         run: python3 -m unittest discover -s deploy/lxc/tests -p 'test_rh_*audit.py' -v
+      - name: Test offline annual evidence-to-decision reconciliation
+        run: python3 -m unittest discover -s deploy/lxc/tests -p 'test_rh_2022_evidence_brief.py' -v
