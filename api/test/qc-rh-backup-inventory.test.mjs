@@ -42,6 +42,27 @@ test('only inventory metadata is read, symlinks ignored and private report is 06
  assert.equal(readFileSync(join(root,'weewx_2022.sdb'),'utf8'),'TEST-SOURCE-UNTOUCHED');
  assert.equal(run([...args,'--scan']).status,0);
 });
+test('source-code fixtures, schemas and Debian alternatives TAR are not weather backups',t=>{
+ const base=mkdtempSync(join(tmpdir(),'qc-rh-source-precision-'));
+ t.after(()=>rmSync(base,{recursive:true,force:true}));
+ const root=join(base,'source'),out=join(base,'private');
+ mkdirSync(root);mkdirSync(out);chmodSync(out,0o700);
+ for(const part of ['schemas','tests','fixtures'])mkdirSync(join(root,part));
+ writeFileSync(join(root,'schemas','weather.schema.json'),'{}');
+ writeFileSync(join(root,'tests','archive-updated.json'),'{}');
+ writeFileSync(join(root,'fixtures','history.json'),'{}');
+ writeFileSync(join(root,'alternatives.tar.0'),'UNRELATED-DEBIAN-TAR');
+ writeFileSync(join(root,'weewx-2022-original.sql.gz'),'Genuine named candidate');
+ const r=run(['--reports-dir',out,'--root',root,'--scan']);
+ assert.equal(r.status,0,r.stderr);
+ const result=JSON.parse(readFileSync(join(out,'qc-rh-2022-local-backup-inventory.json'),'utf8'));
+ assert.equal(result.counts.candidateFiles,1);
+ assert.equal(result.candidates[0].path,join(root,'weewx-2022-original.sql.gz'));
+ assert.ok(result.counts.skippedApplicationDirectories>=3);
+ assert.equal(result.counts.skippedSystemBackupNames,1);
+ assert.equal(result.status,'complete_metadata_inventory');
+});
+
 test('root, destination permission and bounded-depth gates fail closed',t=>{
  const dir=mkdtempSync(join(tmpdir(),'qc-rh-bounds-test-'));
  t.after(()=>rmSync(dir,{recursive:true,force:true}));

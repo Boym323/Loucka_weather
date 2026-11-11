@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-11 – omezení falešně pozitivních záloh a Proxmox host metadata audit
+- Po LXC kontrole 6/6 souborových kandidátů potvrzeno pět vývojových schémat/testovacích JSON a jeden pravděpodobně systémový Debian alternatives TAR, bez nové nezávislé RH série pro leden–červen 2022.
+- Zpřesněn metadata-only LXC backup scanner: vynechává aplikací generované schemas/test/fixtures a známé systémové Debian zálohy; testy hlídají zachování skutečných názvů WeeWX dumpů.
+- Přidán nezávislý, neinvazivní Proxmox VE host skript vypisující pouze `pct list` a `pvesm` backup metadata pro identifikaci původního loggeru, VMID a zálohovací storage; žádná obnova kontejneru, žádná extrakce/SQL ani změny produkce.
+
+
 ## 2026-11-11 – omezené čtecí rozpoznání šesti možných záloh RH 2022
 - LXC metadata inventura: 39 prošlých adresářů, 176 položek, 6 kandidátů bez roku 2022 v názvu, stav partial kvůli chybějícím kořenům /var/lib/weewx a /etc/weewx. Žádné SQL ani zápisy.
 - Nová opt-in signatura kandidátů z privátní inventury: maximálně 512 bajtů z každého souboru, O_RDONLY a O_NOFOLLOW, kontrola neměnného inode/size/mtime, bezpečnost před symlink/mountpoint, jen indikace formátu SQLite/SQL/komprese; žádná extrakce, propojení k DB nebo kopie obsahu.
