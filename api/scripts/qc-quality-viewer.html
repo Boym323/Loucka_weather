@@ -144,6 +144,12 @@ function renderDetails(){
  appendStat(qs,'Návrhy k prověření',number(m.quality.candidatesTotal));
  appendStat(qs,'Zkrácené seznamy návrhů',number(m.quality.truncatedWeeks));
  nodes.push(qs);
+ nodes.push(el('h3','','Typy zobrazených QC návrhů *'));
+ nodes.push(flagList({
+  'Podezřelé průběhy':m.quality.candidateKindsVisible.suspect_source_run,
+  'Teplotní neshody':m.quality.candidateKindsVisible.temperature_disagreement,
+  'Podklady k výpadkům':m.quality.candidateKindsVisible.reference_evidence_for_gap
+ }));
  nodes.push(el('h3','','Příznaky QC'),flagList(m.quality.flags));
  nodes.push(el('h3','','Referenční stanice *'));
  const refs=el('div','sources');
