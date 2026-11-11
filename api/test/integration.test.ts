@@ -4,7 +4,7 @@ import {mkdtempSync,writeFileSync,chmodSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {spawnSync} from 'node:child_process';
-import {buildPreviewManifest} from '../scripts/rh-preview-transfer-lib.mjs';
+import {createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
 import mariadb from 'mariadb';
 import {metricNames} from '../src/metrics.js';
@@ -173,18 +173,25 @@ test('CI-only 5153-row importer is transactional, idempotent and forbidden on pr
  const root=mkdtempSync(join(tmpdir(),'loucka-rh-import-fixture-'));
  chmodSync(root,0o700);
  t.after(()=>rmSync(root,{recursive:true,force:true}));
- const samples=[];
+ const rows:Array<Record<string,string|number|null>>=[];
  for(let i=0;i<5153;i++){
   const category=i<2874?'estimated':i<5068?'frozen_adjusted':'invalidated';
   const original=category==='estimated'?null:category==='frozen_adjusted'?78:89;
   const reconstructed=category==='estimated'?64:category==='frozen_adjusted'?61:null;
-  samples.push({target_time:1640995200+(i+1)*300,
-   variable:'outHumidity',state:'applied',old_value:original,
-   new_value:reconstructed,originalRh:original,reconstructionRh:reconstructed,
-   originalTemp:13,reconstructionTemp:13,originalUnits:16,reconstructionUnits:16,
-   batch_key:'ci-transaction-fixture',reason:'ESTIMATED_EXTERNAL v1'});
+  rows.push({epoch:1640995200+(i+1)*300,originalRh:original,
+   previewRh:reconstructed,category,method:'legacy_method_requires_review',
+   sourceBatch:'ci-transaction-fixture',
+   reviewState:'experimental_unapproved',
+   quality:'unvalidated_historical_estimate'});
  }
- const manifest=buildPreviewManifest(samples);
+ const model='rh-2022-transfer-v1';
+ const sha256=createHash('sha256').update(JSON.stringify({model,rows})).digest('hex');
+ const manifest={schemaVersion:'1',model,
+  versionId:'rh2022-'+sha256.slice(0,24),sha256,
+  status:'experimental_unapproved',rows,
+  totals:{total:5153,estimated:2874,frozen_adjusted:2194,invalidated:85},
+  safety:{productionWrites:0,sourceReconstructionWrites:0,
+   automaticApprovals:false,automaticCorrections:false}};
  const file=join(root,'qc-rh-preview-'+manifest.versionId+'.json');
  writeFileSync(file,JSON.stringify(manifest),{mode:0o600});
  const env={...process.env,
