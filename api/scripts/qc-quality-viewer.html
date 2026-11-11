@@ -43,7 +43,8 @@ main{max-width:1440px;padding:34px 25px 70px;margin:auto}h1{font-size:clamp(29px
 </select><button class="action" id="csv" type="button">Export CSV</button></div></div>
 <p class="note">Procenta se vztahují k očekávaným 5min slotům v daném UTC měsíci. Barevná pole lze otevřít pro podrobnosti konkrétního období. * QC hodnoty jsou přiřazené podle začátku týdenního okna.</p>
 <div class="heatwrap"><table class="heatmap" aria-label="Měsíční heatmapa kvality" id="heatmap"></table></div>
-<div class="legend"><span><i class="dot" style="background:#177f66"></i>Dobré pokrytí</span><span><i class="dot" style="background:#a77d2b"></i>Částečné</span><span><i class="dot" style="background:#a84046"></i>Slabé</span><span><i class="dot" style="background:#203647"></i>Bez měření / mimo rozsah</span></div>
+<div class="legend" id="legend"><span><i class="dot" style="background:#177f66"></i>Dobré pokrytí</span><span><i class="dot" style="background:#a77d2b"></i>Částečné</span><span><i class="dot" style="background:#a84046"></i>Slabé</span><span><i class="dot" style="background:#203647"></i>Bez měření / mimo rozsah</span></div>
+<p class="note" id="legendNote"></p>
 </div>
 <aside class="panel yearpanel">
 <div class="row"><h2>Detail období</h2><div class="tools"><label for="year">Rok</label><select id="year"></select></div></div>
@@ -53,7 +54,7 @@ main{max-width:1440px;padding:34px 25px 70px;margin:auto}h1{font-size:clamp(29px
 </section>
 <section class="bottom">
 <div class="panel"><h2>Roční pokrytí záznamů</h2><p class="note">Přesné sloty původního archivu / očekávané sloty. Částečný rok 2026 končí 10. 11. 00:00 UTC.</p><div id="bars" class="bar-chart" role="img" aria-label="Roční graf pokrytí"></div></div>
-<div class="panel"><h2>Měsíční přehled vybraného roku</h2><div class="scroll"><table class="data-table"><thead><tr><th>Měsíc</th><th>Archiv</th><th>Pokrytí slotů</th><th>Teplota</th><th>Vlhkost</th><th>QC odmítnuté *</th><th>QC návrhy *</th></tr></thead><tbody id="yearTable"></tbody></table></div></div>
+<div class="panel"><h2>Měsíční přehled vybraného roku</h2><div class="scroll"><table class="data-table"><thead><tr><th>Měsíc</th><th>Archiv</th><th>Pokrytí slotů</th><th>Teplota</th><th>Vlhkost</th><th>QC odmítnuté *</th><th id="candidateHeading">QC návrhy *</th></tr></thead><tbody id="yearTable"></tbody></table></div></div>
 <div class="panel"><h2>Metodika a omezení</h2><ul id="methodology" class="note"></ul><p class="note">Časová pásma: všechny agregace jsou UTC. Historické koncové časy měření WeeWX nemusí vždy přesně odpovídat pravidelné 5min síti; mimo síť se nezapočítávají do pokrytí. Soukromý soubor, bez externích skriptů a síťových požadavků.</p></div>
 </section>
 </main>
@@ -121,6 +122,9 @@ function renderHeat(){
   rows.push(row);
  }
  replace(table,rows);
+ $('legendNote').textContent=metric==='rejection'?
+  'Podíl QC odmítnutí: zelená označuje nižší podíl, červená vyšší. QC týdny jsou připsané svým počátečním měsícům.':
+  'Dostupnost měření: zelená označuje vyšší pokrytí, červená nižší. Nulové pokrytí neznamená nulový počet problémů.';
 }
 function appendStat(parent,label,value){
  const div=el('div','year-stat');div.append(el('span','muted',label),el('strong','',value));parent.append(div);
@@ -137,14 +141,25 @@ function renderDetails(){
  appendStat(stats,'Dostupná vlhkost',number(m.humiditySlots)+' / '+pct(metricValue(m,'humidity')));
  appendStat(stats,'NULL teplota v záznamech',number(m.temperatureNull));
  appendStat(stats,'NULL vlhkost v záznamech',number(m.humidityNull));
- nodes.push(stats,el('h3','', 'QC – přiřazené týdny *'));
+ nodes.push(stats);
+ if(DATA.candidateDetailsComplete){
+  nodes.push(el('h3','','Úplné QC návrhy začínající v měsíci (UTC)'));
+  const exact=el('div');
+  appendStat(exact,'Návrhy celkem',number(m.quality.candidatesStartingHere));
+  nodes.push(exact,flagList({
+   'Podezřelé průběhy':m.quality.candidateKindsStartingHere.suspect_source_run,
+   'Teplotní neshody':m.quality.candidateKindsStartingHere.temperature_disagreement,
+   'Podklady k výpadkům':m.quality.candidateKindsStartingHere.reference_evidence_for_gap
+  }));
+ }
+ nodes.push(el('h3','', 'QC – přiřazené týdny *'));
  const qs=el('div');
  appendStat(qs,'Zkontrolovaných týdnů',number(m.quality.weeks));
  appendStat(qs,'Odmítnuté řádky Loučky',number(m.quality.rejectedOriginal));
  appendStat(qs,'Návrhy k prověření',number(m.quality.candidatesTotal));
  appendStat(qs,'Zkrácené seznamy návrhů',number(m.quality.truncatedWeeks));
  nodes.push(qs);
- nodes.push(el('h3','','Typy zobrazených QC návrhů *'));
+ nodes.push(el('h3','','Typy návrhů v původních týdenních reportech *'));
  nodes.push(flagList({
   'Podezřelé průběhy':m.quality.candidateKindsVisible.suspect_source_run,
   'Teplotní neshody':m.quality.candidateKindsVisible.temperature_disagreement,
@@ -175,7 +190,8 @@ function renderYear(){
   const fields=[months[Number(m.month.slice(-2))-1],number(m.totalRows),
     pct(metricValue(m,'coverage')),pct(metricValue(m,'temperature')),
     pct(metricValue(m,'humidity')),number(m.quality.rejectedOriginal),
-    number(m.quality.candidatesTotal)];
+    number(DATA.candidateDetailsComplete?m.quality.candidatesStartingHere:
+      m.quality.candidatesTotal)];
   fields.forEach((f,i)=>row.append(el('td','',f)));
   rows.push(row);
  }
@@ -195,12 +211,13 @@ function renderBars(){
 }
 function render(){renderHeat();renderDetails();renderYear();renderBars();}
 function csv(){
- const head=['month','expectedSlots','onGridSlots','temperatureSlots','humiditySlots','temperatureNull','humidityNull','qcRejectedWeeksAttributed','qcCandidatesWeeksAttributed','qcTruncatedWeeks'];
+ const head=['month','expectedSlots','onGridSlots','temperatureSlots','humiditySlots','temperatureNull','humidityNull','qcRejectedWeeksAttributed','qcCandidatesWeeksAttributed','qcTruncatedWeeks','qcCandidatesStartingThisMonthUTC'];
  const lines=[head.join(',')];
  for(const m of DATA.months){
   const fields=[m.month,m.expectedSlots,m.onGridSlots,m.temperatureSlots,m.humiditySlots,
     m.temperatureNull,m.humidityNull,m.quality.rejectedOriginal,
-    m.quality.candidatesTotal,m.quality.truncatedWeeks];
+    m.quality.candidatesTotal,m.quality.truncatedWeeks,
+    m.quality.candidatesStartingHere??''];
   lines.push(fields.join(','));
  }
  const blob=new Blob(['\uFEFF'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
@@ -212,8 +229,14 @@ $('expected').textContent=number(DATA.totals.expectedSlots);
 $('coverage').textContent=pct(100*DATA.totals.onGridSlots/DATA.totals.expectedSlots);
 $('rejected').textContent=number(DATA.totals.rejectedOriginal);
 $('candidates').textContent=number(DATA.totals.candidatesTotal);
-$('warning').textContent='Pozor: '+number(DATA.totals.truncatedWeeks)+' týdenních reportů omezuje počet jednotlivě zobrazených návrhů; '+
-  number(DATA.totals.candidatesTotal-DATA.totals.candidatesVisible)+' návrhů proto není v seznamech detailů. Nula kandidátů nevylučuje výpadek. Žádné automatické schválení ani přepsání dat.';
+$('warning').textContent=DATA.candidateDetailsComplete?
+  'Všech '+number(DATA.totals.candidatesTotal)+' QC návrhů je nyní doloženo, včetně '+number(DATA.recoveredCandidates)+
+  ' obnovených podkladů ze '+number(DATA.totals.truncatedWeeks)+' původně zkrácených týdnů. Úplný soukromý export: qc-candidates-complete.csv. '+
+  'QC odmítnuté řádky a reference jsou stále přiřazené podle začátku týdne. Nejde o schválené opravy.':
+  'Pozor: '+number(DATA.totals.truncatedWeeks)+' týdenních reportů omezuje počet jednotlivě zobrazených návrhů; '+
+  number(DATA.totals.candidatesTotal-DATA.totals.candidatesVisible)+' návrhů dosud nemá individuální detail. Nula kandidátů nevylučuje výpadek.';
+$('candidateHeading').textContent=DATA.candidateDetailsComplete?
+  'QC návrhy podle začátku UTC':'QC návrhy *';
 replace($('methodology'),DATA.methodology.map(s=>el('li','',s)));
 replace($('year'),years.map(y=>{const opt=el('option','',y);opt.value=y;return opt;}));
 $('year').value=selectedYear;
