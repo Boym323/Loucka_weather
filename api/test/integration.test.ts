@@ -1,5 +1,10 @@
 /** Synthetic MariaDB 11.8 integration test, ONLY in ephemeral GitHub Actions. */
 import {test} from 'node:test';
+import {mkdtempSync,writeFileSync,chmodSync,rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {spawnSync} from 'node:child_process';
+import {buildPreviewManifest} from '../scripts/rh-preview-transfer-lib.mjs';
 import assert from 'node:assert/strict';
 import mariadb from 'mariadb';
 import {metricNames} from '../src/metrics.js';
@@ -141,4 +146,78 @@ test('CI-only MariaDB sidecar is read-only, separately versioned and never edits
   SET outHumidity=NULL WHERE dateTime=?`,[time]);
  const after=await app.inject(endpoint);
  assert.equal(after.statusCode,200,after.body);
+});
+
+test('CI-only 5153-row importer is transactional, idempotent and forbidden on privileged accounts',
+ {skip:!allowed},async t=>{
+ const schema='loucka_dev_transfer_ci';
+ const admin=await mariadb.createConnection({host:'127.0.0.1',port:3306,
+  user:'root',password:'root'});
+ t.after(()=>admin.end());
+ await admin.query('CREATE DATABASE IF NOT EXISTS `loucka_dev_transfer_ci`');
+ await admin.query(`CREATE TABLE IF NOT EXISTS \`loucka_dev_transfer_ci\`.\`rh_preview_versions\` (
+  version_id VARCHAR(40) PRIMARY KEY,checksum_sha256 CHAR(64) NOT NULL,
+  model VARCHAR(64) NOT NULL,status VARCHAR(40) NOT NULL,
+  point_total INT NOT NULL,estimated_total INT NOT NULL,
+  frozen_adjusted_total INT NOT NULL,invalidated_total INT NOT NULL)`);
+ await admin.query(`CREATE TABLE IF NOT EXISTS \`loucka_dev_transfer_ci\`.\`rh_preview_points\` (
+  version_id VARCHAR(40) NOT NULL,dateTime INT NOT NULL,
+  original_rh DOUBLE NULL,preview_rh DOUBLE NULL,
+  quality VARCHAR(40) NOT NULL,category VARCHAR(32) NOT NULL,
+  method VARCHAR(80) NOT NULL,source_batch VARCHAR(80) NOT NULL,
+  review_state VARCHAR(40) NOT NULL,
+  PRIMARY KEY (version_id,dateTime),
+  FOREIGN KEY (version_id) REFERENCES \`loucka_dev_transfer_ci\`.\`rh_preview_versions\` (version_id))`);
+ await admin.query("CREATE USER IF NOT EXISTS 'ci_preview_importer'@'%' IDENTIFIED BY 'ci_importer_pwd_fixture'");
+ await admin.query("GRANT SELECT, INSERT ON `loucka_dev_transfer_ci`.* TO 'ci_preview_importer'@'%'");
+ const root=mkdtempSync(join(tmpdir(),'loucka-rh-import-fixture-'));
+ chmodSync(root,0o700);
+ t.after(()=>rmSync(root,{recursive:true,force:true}));
+ const samples=[];
+ for(let i=0;i<5153;i++){
+  const category=i<2874?'estimated':i<5068?'frozen_adjusted':'invalidated';
+  const original=category==='estimated'?null:category==='frozen_adjusted'?78:89;
+  const reconstructed=category==='estimated'?64:category==='frozen_adjusted'?61:null;
+  samples.push({target_time:1640995200+(i+1)*300,
+   variable:'outHumidity',state:'applied',old_value:original,
+   new_value:reconstructed,originalRh:original,reconstructionRh:reconstructed,
+   originalTemp:13,reconstructionTemp:13,originalUnits:16,reconstructionUnits:16,
+   batch_key:'ci-transaction-fixture',reason:'ESTIMATED_EXTERNAL v1'});
+ }
+ const manifest=buildPreviewManifest(samples);
+ const file=join(root,'qc-rh-preview-'+manifest.versionId+'.json');
+ writeFileSync(file,JSON.stringify(manifest),{mode:0o600});
+ const env={...process.env,
+  WEATHER_PREVIEW_IMPORT_ENABLED:'YES',WEATHER_PREVIEW_TARGET_SCHEMA:schema,
+  WEATHER_PREVIEW_DB_HOST:'127.0.0.1',WEATHER_PREVIEW_DB_PORT:'3306',
+  WEATHER_PREVIEW_WRITER_USER:'ci_preview_importer',
+  WEATHER_PREVIEW_WRITER_PASSWORD:'ci_importer_pwd_fixture'};
+ const run=(mode:'--dry-run'|'--verify-target'|'--import',environment=env)=>
+  spawnSync(process.execPath,['scripts/rh-preview-import.mjs',mode,
+   '--manifest',file,...(mode==='--import'?['--ack-unapproved-dev-only']:[])],
+   {cwd:process.cwd(),env:environment,encoding:'utf8',timeout:30000});
+ assert.equal(run('--dry-run').status,0);
+ const verified=run('--verify-target');
+ assert.equal(verified.status,0,verified.stderr);
+ assert.equal(JSON.parse(verified.stdout).existing,false);
+ const imported=run('--import');
+ assert.equal(imported.status,0,imported.stderr);
+ assert.equal(JSON.parse(imported.stdout).rows,5153);
+ const counts=await admin.query(`SELECT category,COUNT(*) AS n
+   FROM \`loucka_dev_transfer_ci\`.\`rh_preview_points\`
+   WHERE version_id=? GROUP BY category`,[manifest.versionId]);
+ const found=Object.fromEntries(counts.map((r:any)=>[r.category,Number(r.n)]));
+ assert.deepEqual(found,{estimated:2874,frozen_adjusted:2194,invalidated:85});
+ const again=run('--import');
+ assert.equal(again.status,0,again.stderr);
+ assert.equal(JSON.parse(again.stdout).mode,'already_imported');
+ const forbidden=run('--import',{
+  ...env,WEATHER_PREVIEW_WRITER_USER:'root',
+  WEATHER_PREVIEW_WRITER_PASSWORD:'root'});
+ assert.notEqual(forbidden.status,0);
+ const prodTarget=run('--import',{...env,WEATHER_PREVIEW_TARGET_SCHEMA:'pocasi-loucka.eu'});
+ assert.notEqual(prodTarget.status,0);
+ const final=await admin.query(`SELECT COUNT(*) AS n
+   FROM \`loucka_dev_transfer_ci\`.\`rh_preview_points\` WHERE version_id=?`,[manifest.versionId]);
+ assert.equal(Number(final[0].n),5153);
 });
