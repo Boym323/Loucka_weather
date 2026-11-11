@@ -6,6 +6,7 @@ import {buildQcReport,parseWindow,validateStations,STATIONS} from './qc-engine.m
 const usage=[
   'Usage: npm run qc:report -- --from YYYY-MM-DDTHH:mm:ssZ --to YYYY-MM-DDTHH:mm:ssZ [--station luhamet_sehradice,wu_ilouka4]',
   'All timestamps must be aligned to UTC 5-minute boundaries; max window: 7 days.',
+  'Optional --full-candidates is for private review only: returns up to 20000 proposals; no original report overwrites.',
   'Required: WEATHER_STAGING_ENABLED=YES, WEATHER_QC_READ_ONLY=YES,',
   'WEATHER_QC_DB_HOST, WEATHER_QC_DB_USER, WEATHER_QC_DB_PASSWORD.',
   'Read-only grants: SELECT on original archive table OR its database, plus SELECT on reference_observations.',
@@ -16,6 +17,11 @@ function argumentsFromCli(args){
   const options=new Map();
   for(let i=0;i<args.length;i++){
     const key=args[i];
+    if(key==='--full-candidates'){
+      if(options.has(key))throw new Error('Invalid or duplicate CLI argument');
+      options.set(key,true);
+      continue;
+    }
     if(!['--from','--to','--station'].includes(key)||options.has(key)||!args[i+1]||
        args[i+1].startsWith('--'))throw new Error('Invalid or duplicate CLI argument');
     options.set(key,args[++i]);
@@ -25,7 +31,7 @@ function argumentsFromCli(args){
   const stations=options.has('--station')?
     options.get('--station').split(','):STATIONS;
   validateStations(stations);
-  return {from,to,stations};
+  return {from,to,stations,fullCandidates:!!options.get('--full-candidates')};
 }
 function config(){
   if(process.env.WEATHER_STAGING_ENABLED!=='YES'||process.env.WEATHER_QC_READ_ONLY!=='YES')
@@ -103,7 +109,8 @@ async function run(){
         }));
       }
       process.stdout.write(JSON.stringify(buildQcReport({
-        from:args.from,to:args.to,original,references,stations:args.stations
+        from:args.from,to:args.to,original,references,stations:args.stations,
+        candidateLimit:args.fullCandidates?20000:100
       }),null,2)+'\n');
     }finally{connection.release();}
   }finally{await pool.end();}

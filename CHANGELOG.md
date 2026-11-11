@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-11 – úplné doplnění zkrácených QC návrhů
+- Čtecí `--full-candidates` možnost QC a opt-in `qc:recover` pro 58 zkrácených týdnů: 2 519 dosud skrytých návrhů znovu vyhodnoceno beze změny starých reportů, kontrola původních prvních 100 položek, souhrnů, porovnání a SHA256.
+- Nový privátní sidecar `qc-candidate-overflow.json` v 0700 adresáři, atomické vytvoření bez přepsání, žádné SQL write, původní QC formát a standardní limit 100 beze změn.
+- Soukromý HTML přehled po ověření doplňku počítá přesné počty návrhů v UTC měsíci dle začátku události, exportuje kompletní `qc-candidates-complete.csv` (0600) a jasně ponechává odmítnuté řádky/reference jako přiřazené podle začátku QC týdne. Opravena vysvětlivka heatmapy odmítnutí.
+
+
 ## 2026-11-11 – soukromý přehled kvality meteorologického archivu
 - Interaktivní HTML heatmapa roků/měsíců 2009–2026, filtrování metriky a roku, CSV, původní slotové pokrytí, teplota a vlhkost odděleně, QC příznaky a reference.
 - Generátor vyžaduje dokončené soukromé QC reporty (932 oken), používá pouze vymezené SELECT na původní MariaDB a privátní výstup HTML 0600. Nevzniká nový veřejný web endpoint, nejsou měněna původní data ani rekonstrukce.

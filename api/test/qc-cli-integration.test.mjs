@@ -65,6 +65,18 @@ test('QC CLI uses real SELECT-only cross-schema MariaDB and rejects admin creden
   assert.equal(body.comparisons.luhamet_sehradice.meanBiasC,1);
   assert.equal(body.safety.databaseWrites,0);
   assert.equal(body.candidates.items.every(e=>e.automaticWriteAllowed===false),true);
+  const fullRead=spawnSync(process.execPath,[...args,'--full-candidates'],
+    {cwd:process.cwd(),env,encoding:'utf8',timeout:15000});
+  assert.equal(fullRead.status,0,fullRead.stderr);
+  const expanded=JSON.parse(fullRead.stdout);
+  assert.equal(expanded.candidates.total,body.candidates.total);
+  assert.deepEqual(expanded.candidates.items,body.candidates.items);
+  assert.equal(expanded.candidates.truncated,false);
+  assert.equal(expanded.safety.databaseWrites,0);
+  const invalidFlag=spawnSync(process.execPath,[...args,'--full-candidates','--full-candidates'],
+    {cwd:process.cwd(),env,encoding:'utf8',timeout:15000});
+  assert.notEqual(invalidFlag.status,0);
+  assert.equal(invalidFlag.stdout,'');
   // Full end-to-end batch: SELECT-only fixture -> owned 0600 report -> restart-safe summary.
   const folder=mkdtempSync(join(tmpdir(),'loucka-qc-fixture-'));
   chmodSync(folder,0o700);

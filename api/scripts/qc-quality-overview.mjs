@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 /** Generate a PRIVATE offline HTML quality dashboard. SELECT-only SQL; no HTTP route or DB writes. */
 import mariadb from 'mariadb';
-import {readFileSync,lstatSync,openSync,writeFileSync,closeSync,renameSync,unlinkSync} from 'node:fs';
+import {readFileSync,lstatSync,openSync,writeFileSync,closeSync,renameSync,unlinkSync,existsSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {setTimeout as sleep} from 'node:timers/promises';
 import {summarizePrivateQc,monthWindows,combineOverview,WINDOWS} from './qc-quality-lib.mjs';
+import {SIDECAR_FILE} from './qc-overflow-lib.mjs';
 
 const SOURCE='\x60pocasi-loucka.eu\x60.\x60archive\x60';
 const REF='\x60loucka_reconstruction\x60.\x60reference_observations\x60';
@@ -87,7 +88,9 @@ async function main(){
     throw new Error('Expected --reports-dir absolute path');
   const dir=path.resolve(args[1]);
   privateDir(dir);
-  const qc=summarizePrivateQc(name=>checkedReport(dir,name));
+  const sidecarPath=path.join(dir,SIDECAR_FILE);
+  const sidecar=existsSync(sidecarPath)?checkedReport(dir,SIDECAR_FILE):null;
+  const qc=summarizePrivateQc(name=>checkedReport(dir,name),sidecar);
   if(qc.processed!==WINDOWS.length)throw new Error('Incomplete QC history');
   const config=connectionConfig();
   const pool=mariadb.createPool(config);
@@ -107,9 +110,26 @@ async function main(){
     .replace(/>/g,'\\u003e').replace(/&/g,'\\u0026');
   const html=viewer.replace(placeholder,safeJson);
   const output=path.join(dir,'qc-quality-overview.html');
+  if(qc.completeCandidates!==null){
+    const fields=['id','kind','source','fromUtc','toExclusiveUtc','reason',
+      'reviewState','automaticWriteAllowed','detailsJson'];
+    const escapeCsv=value=>{
+      const text=String(value??'');
+      const safe=/^[=+@\-\t\r]/.test(text)?"'"+text:text;
+      return '"'+safe.replaceAll('"','""')+'"';
+    };
+    const rows=[fields.join(',')];
+    for(const item of qc.completeCandidates)
+      rows.push(fields.map(field=>escapeCsv(field==='detailsJson'?
+        JSON.stringify(item.details??{}):item[field])).join(','));
+    writeAtomic(path.join(dir,'qc-candidates-complete.csv'),'\uFEFF'+rows.join('\r\n')+'\r\n');
+  }
   writeAtomic(output,html);
   process.stdout.write(JSON.stringify({status:'screening_only',output,months:overview.months.length,
-    processedWindows:overview.windows,totals:overview.totals,safety:overview.safety},null,2)+'\n');
+    processedWindows:overview.windows,totals:overview.totals,
+    candidateDetailsComplete:overview.candidateDetailsComplete,
+    recoveredCandidates:overview.recoveredCandidates,
+    safety:overview.safety},null,2)+'\n');
 }
 main().catch(()=>{
   // Deliberately avoid printing SQL, account names, connection strings or paths.
