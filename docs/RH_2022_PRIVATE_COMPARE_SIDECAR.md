@@ -1,6 +1,6 @@
 # RH 2022: izolovaný operátorský náhled přes SSH tunel
 
-**Stav:** Kód a instalační soubory jsou připravené pro lokální dev LXC. Bez samostatného spuštění instalátoru **není** tato UI ani endpoint aktivován. Údaje `dev.pocasi-loucka.eu` zůstanou výchozí `original`; produkční databáze WeeWX/Belchertown zůstává beze změny.
+**Stav 11. 11. 2026:** Operátor na dev LXC ověřil skutečnou instalaci soukromého sidecaru na 127.0.0.1:3101: health/ready/UI HTTP 200, neautorizovaná data HTTP 401 a původní API 3100 HTTP 200. Autorizovaný test jednoho historického měření proti ověřenému balíčku prošel. Nejde o nezávislé schválení RH odhadů. Oddělený read-only audit časové mřížky, nevyplněných NULL a orientačních skoků je v [RH_2022_READONLY_QC_RUNBOOK.md](RH_2022_READONLY_QC_RUNBOOK.md); výsledky z LXC dosud nejsou ověřeny. Veřejný dev web zůstává v režimu `original`; WeeWX/Belchertown a produkční databáze se nemění.
 
 ## Princip
 
