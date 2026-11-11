@@ -168,3 +168,20 @@ Měsíční SQL počítá pokrytí teploty a vlhkosti **zvlášť** oproti oček
 podle začátku QC týdne (jasně popsané omezení). Nezakládá endpoint ani
 nezveřejňuje interní reporty na webu. Návod a stažení lokálního HTML:
 `docs/QC_PRIVATE_QUALITY_OVERVIEW_2026-11-11.md`.
+
+
+### Úplné obnovení QC návrhů z omezených historických reportů
+
+58 týdenních QC reportů obsahuje pouze prvních 100 návrhů; 2 519 položek
+zatím nebylo individuálně uloženo. `npm run qc:recover -- --reports-dir
+/var/lib/loucka-qc --dry-run` bez SQL změn zobrazí očekávaný počet.
+Po výslovném bezpečném spuštění `--recover` pod staging read-only
+účtem se znovu přečtou **pouze** zkrácená okna a doplní se nový
+nepřepisovaný privátní sidecar, ověřený proti SHA256 historických JSON
+reportů a jejich prvním 100 kandidátům.
+
+Aktualizovaný `qc:quality` poté vytváří i soukromý kompletní CSV export
+všech kandidátů a zpřesní jejich kalendářní zařazení podle UTC počátku.
+Odmítnuté QC řádky a reference jsou stále agregované po původních týdnech
+(připsané měsíci jejich začátku). Úplný bezpečný postup:
+`docs/QC_CANDIDATE_RECOVERY_2026-11-11.md`.
