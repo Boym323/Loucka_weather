@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-11 – read-only QC kontrola RH 2022 z privátního sidecaru
+- Nový lokální Python 3 audit v deploy/lxc/audit-rh-preview.py: jeden omezený autentizovaný HTTP GET proti 127.0.0.1:3101, bezpečné zpracování časové mřížky (from,to], oddělené počty celých chybějících slotů a existujících RH NULL, 3 typy historických zásahů, auditní dávky a pouze orientační skoky RH ≥20 p. b./5 min.
+- Soukromý JSON report (root-only 0700/0600), přístupový token zůstává v paměti a nikdy se neloguje. Žádná změna API, databází, systemd, Nginx či veřejného webu; automatické spouštění není aktivováno.
+- Přidány offline syntetické unit testy a operátorský návod; skutečný LXC QC výsledek tímto commitem ještě nebyl ověřen. Experimentální odhady zůstávají neschválené.
+
 ## 2026-11-11 – izolovaný operátorský náhled RH 2022 na localhost 3101
 - Připraven vlastní Fastify sidecar bez archivního polling observeru a GW3000 collectorů, s explicitním allowlistem `WEATHER_DB_SCHEMA=pocasi-loucka.eu`, `HOST=127.0.0.1`, `PORT=3101` a opt-in zámky. Nemění API procesu `main.ts` na 3100 ani Nginx.
 - Soukromý operátorský HTML/JS/Canvas graf umožňuje srovnávat původní a experimentálně rekonstruované RH 2022, třídí odhady vs. zneplatnění, ukazuje provenance a žádná chybějící data nenahrazuje nulou. Bearer token pouze v paměti prohlížeče, CSP, no-store, žádné externí assety.
