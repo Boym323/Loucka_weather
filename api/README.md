@@ -330,3 +330,27 @@ Provenience starých změn je dohledatelná přes `batch_key`, ale
 meteorologická správnost starých odhadů není nezávisle prokázaná.
 Reprodukovatelné SELECT dotazy: `scripts/qc-rh-2022-lineage.sql`;
 interpretace: `docs/QC_RH_2022_RECONSTRUCTION_LINEAGE.md`.
+
+### Experimentální RH 2022 v samostatné vývojové vrstvě (výchozí stav VYPNUTO)
+
+Verzovaný přenos **5153** již dříve aplikovaných RH změn
+z `loucka_reconstruction.reconstruction_changes` (2874 odhadů pro
+původně NULL, 2194 úprav podezřele zamrzlých a 85 invalidací).
+Výstup je jednoznačný SHA256 manifest v soukromé složce 0700, bez
+schválení jakýchkoliv odhadů. Připravené skripty:
+`npm run qc:rh-preview-export -- --dry-run --reports-dir /var/lib/loucka-qc`,
+`npm run qc:rh-preview-import -- --dry-run --manifest /var/lib/loucka-qc/qc-rh-preview-<version>.json`.
+Import `--import` do samostatného dev-only SQL schématu vyžaduje
+explicitní provozní povolení a účet jen s `SELECT,INSERT` na
+`loucka_dev_preview`. **Žádný import ani DDL se automaticky neprovádí**.
+
+`GET /api/v1/dev/rh-preview` zobrazí pouze 2022, max. 7 dnů,
+originální RH a experimentální návrh odděleně. Je vypnutý, dokud
+není výslovně nastaveno `WEATHER_RH_PREVIEW_ENABLED=YES`,
+`WEATHER_RH_PREVIEW_INSTANCE=DEV_ONLY`, schema a přesná verze.
+Jiné endpointy zůstávají `dataset=original`; `approved` zůstává 503.
+Frontend porovnání je na `/rekonstrukce-rh/`, ale bez aktivace API
+výslovně ohlásí nepřístupnost.
+
+Celý provozní preflight, DB migrace a rollback:
+`docs/QC_RH_2022_DEV_PREVIEW_TRANSFER.md`.
