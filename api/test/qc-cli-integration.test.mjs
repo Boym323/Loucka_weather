@@ -134,7 +134,8 @@ test('QC CLI uses real SELECT-only cross-schema MariaDB and rejects admin creden
     cwd:process.cwd(),env,encoding:'utf8',timeout:15000});
   assert.equal(rhRun.status,0,rhRun.stderr);
   const rhResult=JSON.parse(rhRun.stdout);
-  assert.equal(rhResult.complete,true);
+  assert.equal(rhResult.complete,false);
+  assert.equal(rhResult.pendingDays,364);
   assert.equal(rhResult.analyzedDays,1);
   assert.equal(rhResult.totals.originalRhNullSlots,1);
   assert.equal(rhResult.totals.originalRhMeasuredSlots,1);
