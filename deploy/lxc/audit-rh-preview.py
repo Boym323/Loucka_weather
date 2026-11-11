@@ -142,6 +142,7 @@ def inspect(data: dict, from_epoch: int, to_epoch: int, response_hash: str) -> d
     invalidated: list[str] = []
     jumps: list[dict] = []
     seen: set[int] = set()
+    nonfive_intervals: list[str] = []
     previous_epoch = from_epoch
     previous_preview: float | None = None
     previous_stamp: int | None = None
@@ -158,6 +159,11 @@ def inspect(data: dict, from_epoch: int, to_epoch: int, response_hash: str) -> d
             raise AuditError("Duplicate or unsorted historical timestamps.")
         if not isinstance(p.get("at"), str) or not p["at"].startswith(iso(epoch)[:-1]):
             raise AuditError("Inconsistent UTC timestamp in sidecar response.")
+        interval = p.get("intervalMinutes")
+        if not isinstance(interval, int) or isinstance(interval, bool) or not 1 <= interval <= 120:
+            raise AuditError("Invalid archived interval length.")
+        if interval != 5:
+            nonfive_intervals.append(iso(epoch))
         if not isinstance(p.get("original"), dict) or not isinstance(p.get("preview"), dict):
             raise AuditError("Missing original/preview separation.")
         original = p["original"]["value"]
@@ -243,6 +249,7 @@ def inspect(data: dict, from_epoch: int, to_epoch: int, response_hash: str) -> d
             "original_archive_rows": len(points),
             "missing_entire_grid_slots": len(missing_slots),
             "offgrid_archive_rows": len(offgrid_rows),
+            "nonfive_minute_archive_intervals": len(nonfive_intervals),
             **counts,
             "modified_records": sum(counts.get(x, 0) for x in (
                 "missing_to_estimate", "suspect_to_estimate", "historically_invalidated")),
@@ -255,6 +262,7 @@ def inspect(data: dict, from_epoch: int, to_epoch: int, response_hash: str) -> d
         "legacy_source_counts": dict(sorted(sources.items())),
         "missing_entire_grid_slot_utc": [iso(t) for t in missing_slots],
         "offgrid_original_row_utc": [iso(t) for t in offgrid_rows],
+        "nonfive_minute_archive_interval_end_utc": nonfive_intervals,
         "unchanged_null_original_row_utc": unfilled,
         "historically_invalidated_row_utc": invalidated,
         "suspicious_preview_jumps": jumps[:200],
@@ -263,6 +271,7 @@ def inspect(data: dict, from_epoch: int, to_epoch: int, response_hash: str) -> d
             "Historic experimental estimates were NOT independently validated against reference stations.",
             "20 percentage points per five minutes is a review flag, not a quality threshold.",
             "Missing whole archive slots are not equivalent to existing archive rows with NULL RH.",
+            "Non-five-minute archive intervals must be reviewed before inferring actual coverage gaps.",
             "No SQL writes, no source data mutation and no approval were performed.",
         ],
     }
@@ -308,6 +317,7 @@ def main() -> int:
         print(f"Archive rows: {totals['original_archive_rows']} / grid slots: {totals['expected_grid_slots']}")
         print(f"Missing entire grid slots: {totals['missing_entire_grid_slots']}")
         print(f"Off-grid rows: {totals['offgrid_archive_rows']}")
+        print(f"Non-5-minute original intervals: {totals['nonfive_minute_archive_intervals']}")
         print(f"Existing rows still NULL: {totals.get('unfilled_original_missing', 0)}")
         print(f"Missing -> estimate: {totals.get('missing_to_estimate', 0)}")
         print(f"Suspect -> estimate: {totals.get('suspect_to_estimate', 0)}")
