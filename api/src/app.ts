@@ -1,4 +1,6 @@
 import Fastify from 'fastify';
+import {registerDevRhPreview} from './dev-rh-preview-route.js';
+import type {DevRhPreview} from './dev-rh-preview.js';
 import {registerExtras,archiveCameraStatus} from './extras.js';
 import type {ExtraSourceFiles} from './extras.js';
 import {createHash} from 'node:crypto';
@@ -307,7 +309,7 @@ function aggregateSummaryRows(metric:Metric,aggregation:string,rows:DailySummary
  return {value,unit,valid,extremaObservedAt};
 }
 export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHub?:LiveHub,
- sourceFiles:ExtraSourceFiles={}){
+ sourceFiles:ExtraSourceFiles={},devRhPreview?:DevRhPreview){
  const app=Fastify({logger:false,ajv:{customOptions:{removeAdditional:false,coerceTypes:false}}});
  // SSE sockets stay open indefinitely: drain them before server.close(), not
  // in onClose, which is only invoked after in-flight connections have drained.
@@ -842,5 +844,6 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
   }catch{return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Daily summaries unavailable or invalid',503);}
  });
  registerExtras(app,reader,sourceFiles);
+ registerDevRhPreview(app,reader,devRhPreview);
  return app;
 }
