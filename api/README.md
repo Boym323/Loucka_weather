@@ -313,3 +313,20 @@ referenční rozpětí o více než 10 p. b. Reprodukovatelné
 upravují dřívější potenciálně chybnou lokalizaci dne:
 **UTC den se počítá z `FLOOR(target_time / 86400)`**.
 Dokumentace: `docs/QC_RH_APRIL_2022_STAGE_RISK.md`.
+
+### Historie RH 2022: již aplikované změny, původ a audit
+
+Přímý čtecí audit `loucka_reconstruction.reconstruction_changes`
+prokázal **1 023** externě odhadnutých RH v březnu, **1 299**
+v dubnu a **552** v červenci; dalších **2 194** dubnových
+nenulových, ale podezřele zamrzlých RH bylo změněno a **85**
+bylo v pracovní rekonstrukční kopii zneplatněno na NULL.
+V rekonstrukčním archive 2022 tedy stále zůstává **41 727 RH NULL**.
+Původní archive má nadále **44 516 RH NULL** a zůstává nedotčený.
+
+Dřívější auditní texty pro březen/červenec uvádějí modelové odhady
+`ESTIMATED_EXTERNAL`, nikoliv originální měření místního čidla.
+Provenience starých změn je dohledatelná přes `batch_key`, ale
+meteorologická správnost starých odhadů není nezávisle prokázaná.
+Reprodukovatelné SELECT dotazy: `scripts/qc-rh-2022-lineage.sql`;
+interpretace: `docs/QC_RH_2022_RECONSTRUCTION_LINEAGE.md`.
