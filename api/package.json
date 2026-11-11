@@ -14,7 +14,8 @@
     "test": "npm run build && node --check scripts/read-only-query-plan.mjs && node --test dist/test/*.test.js test/qc-*.test.mjs",
     "qc:quality": "node scripts/qc-quality-overview.mjs",
     "qc:recover": "node scripts/qc-recover-candidates.mjs",
-    "qc:rh-2022": "node scripts/qc-humidity-2022.mjs"
+    "qc:rh-2022": "node scripts/qc-humidity-2022.mjs",
+    "qc:rh-triage": "node scripts/qc-rh-triage.mjs"
   },
   "dependencies": {
     "fastify": "5.12.8",

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-11 – soukromé třídění RH QC 2022
+- Samostatná offline kontrola všech 365 RH denních důkazů, roční a měsíční rozpad, přesné počty shodných/neshodných referenčních slotů a vážené průměrné absolutní odchylky po měsících.
+- Denní pracovní kategorie rozlišují dobrou shodu referencí, jejich vzájemný rozpor, nedostupnost a krátké výpadky bez tvrzení, že jde o schválená rekonstruovaná data. Bez napojení na MariaDB a bez změn původních RH důkazů.
+- Nové soukromé 0600 JSON/CSV pro ruční posouzení, syntetické a CLI testy v CI.
+
+
 ## 2026-11-11 – read-only QC relativní vlhkosti 2022
 
 - Zavedena nezávislá denní analýza RH 2022 (365 × 288 pětiminutových slotů), přesně rozlišuje chybějící řádek, RH NULL, neplatnou RH a duplicitní čas. LuhaMet a WU ILOUKA4 se párují při UTC driftu ±30 sekund, pouze `quality_status=reference_only`, RH 1–100 %, dvojitá shoda nejvýše 10 p. b. je pouze podklad pro manuální kontrolu.
