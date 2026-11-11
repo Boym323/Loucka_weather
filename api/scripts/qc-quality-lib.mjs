@@ -23,6 +23,7 @@ export function summarizePrivateQc(readReport){
   const months=new Map(monthWindows().map(m=>[m.month,{
     ...m,qc:{weeks:0,acceptedOriginal:0,rejectedOriginal:0,candidatesTotal:0,
       candidatesVisible:0,truncatedWeeks:0,
+      candidateKindsVisible:{suspect_source_run:0,temperature_disagreement:0,reference_evidence_for_gap:0},
       flags:{},references:Object.fromEntries(STATIONS.map(s=>[s,{
         name:LABELS[s],acceptedSlots:0,matchedPairs:0,
         strong:0,moderate:0,limited:0,insufficient:0}]))}
@@ -40,6 +41,11 @@ export function summarizePrivateQc(readReport){
     q.candidatesTotal+=report.candidates.total;
     q.candidatesVisible+=report.candidates.shown;
     if(report.candidates.truncated)q.truncatedWeeks++;
+    for(const candidate of report.candidates.items){
+      if(!Object.hasOwn(q.candidateKindsVisible,candidate.kind))
+        throw new Error('Unknown QC candidate kind');
+      q.candidateKindsVisible[candidate.kind]++;
+    }
     for(const [key,value] of Object.entries(report.sourceQuality.loucka.flags||{}))
       q.flags[key]=(q.flags[key]||0)+value;
     for(const station of STATIONS){
