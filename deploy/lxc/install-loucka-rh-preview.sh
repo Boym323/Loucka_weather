@@ -102,13 +102,15 @@ echo "=== Isolated RH preview verification ==="
 status=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 3 http://127.0.0.1:3101/dev/rh-preview/healthz || true)
 auth=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 3 \
  'http://127.0.0.1:3101/api/v1/dev/preview/rh-history?from=2022-04-25T23:55:00Z&to=2022-04-26T00:00:00Z' || true)
+readiness=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 3 http://127.0.0.1:3101/dev/rh-preview/readyz || true)
 original=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 3 http://127.0.0.1:3100/api/v1/healthz || true)
 page=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 3 http://127.0.0.1:3101/dev/rh-preview || true)
 echo "Sidecar healthz: HTTP $status"
+echo "Sidecar readyz: HTTP $readiness"
 echo "Sidecar UI: HTTP $page"
 echo "Sidecar private data without token: HTTP $auth (expected 401)"
 echo "Original dev API healthz: HTTP $original (expected 200)"
-if [[ "$status" != 200 || "$page" != 200 || "$auth" != 401 || "$original" != 200 ]]; then
+if [[ "$status" != 200 || "$readiness" != 200 || "$page" != 200 || "$auth" != 401 || "$original" != 200 ]]; then
  echo "ERROR: smoke checks failed. Stop only the sidecar and inspect its journal; original dev API was not altered." >&2
  systemctl stop "$UNIT" || true
  exit 1
