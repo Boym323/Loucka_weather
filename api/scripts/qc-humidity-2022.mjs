@@ -80,6 +80,25 @@ function updateDerivedSummary(dir,summary){
     renameSync(tmp,target);
   }catch(error){unlinkSync(tmp);throw error;}
 }
+function writeDerivedHtml(dir,summary){
+  const template=readFileSync(new URL('./qc-humidity-viewer.html',import.meta.url),'utf8');
+  if(template.split('__RH_DATA__').length!==2)throw new Error('Invalid RH viewer template');
+  const payload=JSON.stringify(summary).replace(/</g,'\\u003c')
+    .replace(/>/g,'\\u003e').replace(/&/g,'\\u0026');
+  const target=path.join(dir,'qc-rh-2022-overview.html');
+  const tmp=target+'.tmp-'+process.pid;
+  const fd=openSync(tmp,'wx',0o600);
+  try{writeFileSync(fd,template.replace('__RH_DATA__',payload),'utf8');}
+  finally{closeSync(fd);}
+  try{
+    if(existsSync(target)){
+      const st=lstatSync(target);
+      if(!st.isFile()||st.isSymbolicLink()||st.uid!==process.getuid()||
+         (st.mode&0o077)!==0)throw new Error('Unsafe existing RH viewer');
+    }
+    renameSync(tmp,target);
+  }catch(error){unlinkSync(tmp);throw error;}
+}
 function grantsReadOnly(rows){
   const grants=rows.flatMap(x=>Object.values(x)).filter(x=>typeof x==='string');
   if(!grants.length)throw new Error('Missing SELECT-only grants');
@@ -174,6 +193,7 @@ async function main(){
     }
     const summary=summarizeFromFiles(args.dir,args.range);
     updateDerivedSummary(args.dir,summary);
+    writeDerivedHtml(args.dir,summary);
     process.stdout.write(JSON.stringify({status:'screening_only',
       mode:'run',processedThisRun:pending.length,analyzedDays:summary.analyzedDays,
       pendingDays:summary.pendingDays,complete:summary.complete,
