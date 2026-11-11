@@ -12,10 +12,12 @@ const VERSION='loucka-private-weather-file-inventory-v1';
 const OUT='qc-rh-2022-local-backup-inventory.json';
 const OMIT=new Set(['.git','node_modules','dist','build','.cache','.npm',
   'vendor','.next','.astro','.venv','__pycache__','Loucka_weather',
+  'tests','test','fixtures','schemas',
   '.Trash','tmp','temp']);
 const rxDb=/\.(?:sdb|sqlite|sqlite3|db|sql|dump|bak)(?:$|[._-]\d|\.gz$|\.zst$|\.bz2$|\.xz$)/i;
 const rxBundle=/\.(?:tar|tar\.gz|tgz|tar\.zst|tar\.xz|tar\.bz2|zip|7z|rar|zst)(?:$|[._-]\d)/i;
 const rxWeather=/(?:weewx|wh1080|gw1000|gw3000|ecowitt|pocasi|loucka|weather|meteo|station|archive|histor|sensor)/i;
+const rxNonWeatherSystem=/^(?:alternatives\.tar\.\d+|dpkg\.status\.\d+|apt\.extended_states(?:\.\d+)?)$/i;
 const rxOther=/\.(?:csv|jsonl|json|dat|log|txt|gz|xz|bz2)(?:$|[._-]\d)/i;
 const iso=n=>new Date(n).toISOString();
 function positiveInt(raw,defaultVal,limit,label){
@@ -58,6 +60,7 @@ function privateDir(dir){
   if(dir===bad||dir.startsWith(bad+'/'))throw Error('Never write into web or Git checkout');
 }
 function inventoryName(file){
+ if(rxNonWeatherSystem.test(file))return null;
  const database=rxDb.test(file),bundle=rxBundle.test(file),weather=rxWeather.test(file);
  if(!database&&!bundle&&!(weather&&rxOther.test(file)))return null;
  const lower=file.toLowerCase();
@@ -86,6 +89,7 @@ function describeRoot(r,dir){
 function scan(args,roots){
  const found=[],stats={visitedEntries:0,visitedDirectories:0,
   skippedSymlinks:0,skippedMounts:0,readErrors:0,
+  skippedApplicationDirectories:0,skippedSystemBackupNames:0,
   partial:roots.some(r=>r.status!=='accessible')};
  const visited=new Set(),seenFiles=new Set();
  for(const root of roots){
@@ -107,12 +111,16 @@ function scan(args,roots){
     try{st=lstatSync(full);}catch{stats.readErrors++;stats.partial=true;continue;}
     if(st.dev!==root.dev){stats.skippedMounts++;continue;}
     if(st.isDirectory()){
-     if(depth<args.maxDepth&&!OMIT.has(ent.name)){
+     if(OMIT.has(ent.name)){stats.skippedApplicationDirectories++;continue;}
+     if(depth<args.maxDepth){
       if(!visited.has(full)){visited.add(full);stack.push({dir:full,depth:depth+1});}
      }else if(depth>=args.maxDepth)stats.partial=true;
      continue;
     }
     if(!st.isFile())continue;
+    if(rxNonWeatherSystem.test(ent.name)){
+      stats.skippedSystemBackupNames++;continue;
+    }
     const match=inventoryName(ent.name);
     if(!match||seenFiles.has(full))continue;
     seenFiles.add(full);
@@ -136,7 +144,7 @@ function scan(args,roots){
   notes:[
    'Only filenames and stat metadata have been read; no file content has been opened, copied, uploaded or parsed.',
    'A candidate filename does NOT establish provenance, source sensor identity, time coverage, or original observation quality.',
-   'Permission errors, omitted Git/build folders, depth limits and mount boundaries can hide additional backups; no candidates does not prove no backups exist.',
+   'Permission errors, deliberately excluded application tests/fixtures/schemas and Git/build folders, depth limits and mount boundaries can hide additional backups; no candidates does not prove no backups exist.',
    'MariaDB archive copies and pre-existing reconstruction staging are NOT independent original source measurements by default.',
    'All future review must be manual, private and read-only; no replacement RH is proposed or approved.'
   ],safety:{databaseWrites:0,originalFileWrites:0,automaticApprovals:false,
