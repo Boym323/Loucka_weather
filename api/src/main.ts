@@ -1,4 +1,5 @@
 import { createMariaDbReader } from './db.js';
+import {loadDevRhPreviewFromEnv} from './dev-rh-preview.js';
 import { buildApp } from './app.js';
 import { ArchiveObserver,LiveHub } from './live.js';
 import {GatewayObserver} from './gateway.js';
@@ -6,7 +7,8 @@ const reader=createMariaDbReader();
 const liveHub=new LiveHub();
 const observer=new ArchiveObserver(reader,liveHub);
 const gateway=new GatewayObserver(liveHub);
-const app=buildApp(reader,()=>new Date(),liveHub);
+const devRhPreview=loadDevRhPreviewFromEnv();
+const app=buildApp(reader,()=>new Date(),liveHub,{},devRhPreview);
 app.addHook('onClose',async()=>{gateway.stop();await observer.stop();await reader.close?.();});
 const port=Number(process.env.PORT||3100);
 const host=process.env.HOST||'127.0.0.1';

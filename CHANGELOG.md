@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-11 – volitelný chráněný dev RH náhled nad neměnným exportem
+- Připraven explicitně opt-in privátní HTTP endpoint pro RH 2022: originál a starší experimentální odhad odděleně, raw pouze max. 7 dní / 2000 bodů, kontrola pinovaného SHA256 a historických změn.
+- Bez `WEATHER_DEV_PREVIEW_ENABLED=YES` route neexistuje. Se zapnutým náhledem vyžaduje izolovaný režim, soukromý soubor, bearer token a fail-closed konzistenci původního archivu; `Cache-Control: no-store`.
+- Žádný aktivovaný deploy, změna `api.env`, SQL mutace nebo zveřejnění neschválených historických hodnot. `dataset=approved` a původní /history se nemění.
+
+
 ## 2026-11-11 – versionovaný archivní balíček RH 2022 pro budoucí dev náhled
 - Ověřeno přímo z read-only DB: 5153 unikátních starých `applied` změn RH na 35 dávkách; 2874 původně NULL → starší experimentální odhad, 2194 podezřelých původních RH → experimentální náhrada, 85 původních RH → NULL v rekonstrukční kopii; 0 nesouladů mezi auditními old/new a oběma archive tabulkami.
 - Implementován zcela read-only export a čistá validace původu, se soukromým obsahem a dvojitým SHA256, přísným omezením 5153 záznamů a zákazem přepisu již exportovaného balíčku.
