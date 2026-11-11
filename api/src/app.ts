@@ -847,10 +847,7 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
   schema:{querystring:{type:'object',additionalProperties:false,
    required:['from','to'],properties:{
     from:{type:'string'},to:{type:'string'},
-    limit:{type:'string',pattern:'^[0-9]{1,4}
- return app;
-}
-}
+    limit:{type:'string',pattern:'^[0-9]{1,4}$'}
    }}}
  },async(req,reply)=>{
   if(!reader.previewHumidity)
