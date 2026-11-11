@@ -66,6 +66,17 @@ test('dry-run reads only inventory metadata, probe reads at most 512 magic bytes
  assert.equal(readFileSync(f.files[1],'utf8').includes('PRIVATE_PASSWORD'),true);
  assert.equal(run([...args,'--probe']).status,0);
 });
+test('7z magic is decoded from raw binary bytes, never lossy ASCII',t=>{
+ const f=fixture(t),z=join(f.root,'weewx_2022.7z');
+ writeFileSync(z,Buffer.from([0x37,0x7a,0xbc,0xaf,0x27,0x1c,0,0,0]));
+ f.refreshInventory([...f.files,z]);
+ const out=run(['--reports-dir',f.dest,'--probe']);
+ assert.equal(out.status,0,out.stderr);
+ const item=JSON.parse(out.stdout).candidates.find(x=>x.path===z);
+ assert.equal(item.signature,'7zip_header');
+ assert.equal(item.headerBytesRead,9);
+});
+
 test('source changes and symlinks fail closed without following either path',t=>{
  const f=fixture(t),alias=join(f.root,'station_2022_symlink.db');
  symlinkSync(f.files[0],alias);
