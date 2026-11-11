@@ -214,7 +214,11 @@ function missingSourceCandidates(own,reference,window,station){
   return found;
 }
 /** Pure function: does not issue SQL, write a file, or approve any candidate. */
-export function buildQcReport({from,to,original,references,stations=STATIONS}){
+export function buildQcReport({from,to,original,references,stations=STATIONS,candidateLimit=MAX_CANDIDATES}){
+  // Only opt-in private recovery may request an expanded in-memory candidate list.
+  // This changes neither IDs nor the default 100-item historical report format.
+  if(!Number.isSafeInteger(candidateLimit)||candidateLimit<1||candidateLimit>20000)
+    throw new Error('Invalid QC candidate limit');
   const window=parseWindow(from,to);
   validateStations(stations);
   if(!references||typeof references!=='object'||Array.isArray(references))
@@ -236,13 +240,13 @@ export function buildQcReport({from,to,original,references,stations=STATIONS}){
   proposed.sort((a,b)=>order[a.kind]-order[b.kind]||a.fromUtc.localeCompare(b.fromUtc)||
     a.source.localeCompare(b.source));
   const candidateCount=proposed.length;
-  proposed=proposed.slice(0,MAX_CANDIDATES);
+  proposed=proposed.slice(0,candidateLimit);
   return {schemaVersion:'1',qcVersion:QC_VERSION,dataset:'original',
     status:'screening_only',window:{fromUtc:from,toExclusiveUtc:to,
       expectedFiveMinuteSlots:window.expectedSlots},
     sourceQuality,comparisons,
     candidates:{total: candidateCount,shown:proposed.length,
-      truncated:candidateCount>MAX_CANDIDATES,items:proposed},
+      truncated:candidateCount>candidateLimit,items:proposed},
     safety:{databaseWrites:0,automaticCorrections:false,automaticApprovals:false,
       referenceStationsAreNotOriginalMeasurements:true},
     notes:['No candidate is a replacement value or an approved observation.',
