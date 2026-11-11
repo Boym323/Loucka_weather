@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-11 – celoroční RH 2022 technický read-only audit
+- Nový operátorský `deploy/lxc/audit-rh-2022-year.py`: 73 navazujících 5denních oken, jeden omezený GET na okno přes izolovaný sidecar 127.0.0.1:3101, záměrná prodleva >=1,5 s, žádná DB/HTTP mutace ani restart. Kontrola všech 105 119 dostupných UTC 5min slotů 2022 (první časová hranice není dostupná přes existující API).
+- Souhrny po měsících a dnech, skutečně chybějící celé řádky vs. existující NULL RH, auditní dávky, 5min skoky včetně hranic oken, a striktní celoroční kontrola všech 5 153 historických změn proti pinovanému JSON. Soukromý root-only report vznikne pouze při kompletním průchodu; výsledky z LXC teprve ověřit.
+- Syntetické offline testy, CI a návazný plán nezávislé meteorologické kontroly. Všechna RH zůstávají neschválená a originální archiv nedotčený.
+
 ## 2026-11-11 – read-only QC kontrola RH 2022 z privátního sidecaru
 - Nový lokální Python 3 audit v deploy/lxc/audit-rh-preview.py: jeden omezený autentizovaný HTTP GET proti 127.0.0.1:3101, bezpečné zpracování časové mřížky (from,to], oddělené počty celých chybějících slotů a existujících RH NULL, 3 typy historických zásahů, auditní dávky a pouze orientační skoky RH ≥20 p. b./5 min.
 - Soukromý JSON report (root-only 0700/0600), přístupový token zůstává v paměti a nikdy se neloguje. Žádná změna API, databází, systemd, Nginx či veřejného webu; automatické spouštění není aktivováno.
