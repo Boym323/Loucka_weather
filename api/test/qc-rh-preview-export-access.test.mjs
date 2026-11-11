@@ -74,7 +74,7 @@ test('reject global grants, mutations and grant option; allow narrow database SE
   e=>e.code==='WRITE_CAPABLE_GRANTS');
  const wideReconstruction='GRANT SELECT ON `loucka_reconstruction`.* TO `reader`@`%`'
   .replaceAll('`',String.fromCharCode(96));
- assert.equal(validateExportGrants(rows([required[0],wideReconstruction])).readOnly,true);
+ assert.equal(validateExportGrants(rows([required[0],required[1],wideReconstruction])).readOnly,true);
 });
 
 test('failures only show allowlisted stages and table scopes, never raw secrets',()=>{
