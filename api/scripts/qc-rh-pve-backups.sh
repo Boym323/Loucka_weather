@@ -15,7 +15,7 @@ elif [[ $# -ne 0 ]]; then
   printf '%s\n' 'Usage: qc-rh-pve-backups.sh [--vmid NUMBER]' >&2
   exit 2
 fi
-for program in pvesm pct timeout awk head; do
+for program in pvesm pct timeout awk; do
   command -v "$program" >/dev/null || {
     printf 'Missing program: %s (run on Proxmox VE host)\n' "$program" >&2
     exit 2
