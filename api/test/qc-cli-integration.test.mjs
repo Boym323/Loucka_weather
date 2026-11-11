@@ -193,7 +193,8 @@ test('QC CLI uses real SELECT-only cross-schema MariaDB and rejects admin creden
       JSON.stringify(t),{flag:'wx',mode:0o600});
   }
   const holdoutArgs=['scripts/qc-rh-holdout.mjs','--reports-dir',rhFolder,
-    '--run','--max-days','1','--delay-ms','0'];
+    '--run','--from','2022-02-15','--to','2022-02-16',
+    '--max-days','1','--delay-ms','0'];
   const holdout=spawnSync(process.execPath,holdoutArgs,
     {cwd:process.cwd(),env,encoding:'utf8',timeout:20000});
   assert.equal(holdout.status,0,holdout.stderr);
