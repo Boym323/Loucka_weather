@@ -94,7 +94,7 @@ function showDay(day){
   appendStat(detail,'Dostupné referenční sloty',n(r.validSlots));
   appendStat(detail,'Páry s vlastní RH',n(r.againstOriginal.matchedSlots));
   appendStat(detail,'MAE vůči Loučce',p(r.againstOriginal.maePctPoints)+' p. b.');
-  appendStat(detail,'Průměrný bias Loučka – reference',p(r.againstOriginal.meanBiasPctPoints*-1)+' p. b.');
+  appendStat(detail,'Průměrný bias Loučka – reference',p(r.againstOriginal.meanBiasPctPoints)+' p. b.');
  }
 }
 function table(){
