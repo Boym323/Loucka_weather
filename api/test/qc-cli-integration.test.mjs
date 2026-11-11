@@ -7,6 +7,7 @@ import {mkdtempSync,chmodSync,readdirSync,statSync,rmSync,readFileSync,writeFile
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {buildRhDay,dateRange} from '../scripts/qc-humidity-lib.mjs';
+import {buildCommonDay} from '../scripts/qc-rh-triplets-lib.mjs';
 
 const isolated=process.env.CI==='true'&&process.env.GITHUB_ACTIONS==='true'&&
   process.env.WEATHER_TEST_LOCAL_FIXTURE==='YES';
@@ -180,6 +181,40 @@ test('QC CLI uses real SELECT-only cross-schema MariaDB and rejects admin creden
   assert.equal(JSON.parse(rerun.stdout).processedThisRun,0);
   for(const name of readdirSync(rhFolder).filter(n=>n.includes('triplet')))
     assert.equal(statSync(join(rhFolder,name)).mode&0o777,0o600);
+
+  // Purged RH validation consumes the same 365 immutable daily baselines
+  // and triplets. The production RH and references are never edited.
+  for(const day of dateRange()){
+    if(day==='2022-02-15')continue;
+    const rh=JSON.parse(readFileSync(join(rhFolder,'qc-rh-2022-'+day+'.json'),'utf8'));
+    const t=buildCommonDay({day,original:[],references:{
+      luhamet_sehradice:[],wu_ilouka4:[]},baseline:rh});
+    writeFileSync(join(rhFolder,'qc-rh-triplet-2022-'+day+'.json'),
+      JSON.stringify(t),{flag:'wx',mode:0o600});
+  }
+  const holdoutArgs=['scripts/qc-rh-holdout.mjs','--reports-dir',rhFolder,
+    '--run','--max-days','1','--delay-ms','0'];
+  const holdout=spawnSync(process.execPath,holdoutArgs,
+    {cwd:process.cwd(),env,encoding:'utf8',timeout:20000});
+  assert.equal(holdout.status,0,holdout.stderr);
+  const evaluated=JSON.parse(holdout.stdout);
+  assert.equal(evaluated.analyzedDays,1);
+  assert.equal(evaluated.pendingDays,364);
+  assert.equal(evaluated.complete,false);
+  assert.equal(evaluated.safety.databaseWrites,0);
+  const holdoutFile=JSON.parse(readFileSync(
+    join(rhFolder,'qc-rh-holdout-2022-2022-02-15.json'),'utf8'));
+  assert.equal(holdoutFile.samples.length,1);
+  assert.equal(holdoutFile.samples[0].o,60);
+  assert.equal(holdoutFile.samples[0].l,62);
+  assert.equal(holdoutFile.samples[0].w,59);
+  assert.equal(holdoutFile.safety.replacementRhPct,null);
+  const holdoutAgain=spawnSync(process.execPath,holdoutArgs,
+    {cwd:process.cwd(),env,encoding:'utf8',timeout:20000});
+  assert.equal(holdoutAgain.status,0,holdoutAgain.stderr);
+  assert.equal(JSON.parse(holdoutAgain.stdout).processedThisRun,0);
+  assert.equal(statSync(join(rhFolder,'qc-rh-holdout-2022-2022-02-15.json'))
+    .mode&0o777,0o600);
 
   // Reference database-wide access is still forbidden.
   await admin.query('GRANT SELECT ON '+refDb+".* TO 'qc_reader_ci'@'%'");
