@@ -74,3 +74,71 @@ test('synthetic WeeWX archive on ephemeral MariaDB, SELECT-only adapter and time
  t.after(()=>ro.end());
  await assert.rejects(ro.query("INSERT INTO `weewx_api_ci_fixture`.`archive` (dateTime, usUnits, `interval`) VALUES (1,1,5)"));
 });
+
+test('CI-only MariaDB sidecar is read-only, separately versioned and never edits original RH',
+ {skip:!allowed},async t=>{
+ const admin=await mariadb.createConnection({host:'127.0.0.1',port:3306,
+  user:'root',password:'root'});
+ t.after(()=>admin.end());
+ const scope='loucka_dev_preview_ci',versionId='rh2022-'+'a'.repeat(24);
+ await admin.query('CREATE DATABASE IF NOT EXISTS `loucka_dev_preview_ci`');
+ await admin.query(`CREATE TABLE IF NOT EXISTS \`loucka_dev_preview_ci\`.\`rh_preview_versions\` (
+  version_id VARCHAR(40) PRIMARY KEY,checksum_sha256 CHAR(64) NOT NULL,
+  status VARCHAR(40) NOT NULL,point_total INT NOT NULL)`);
+ await admin.query(`CREATE TABLE IF NOT EXISTS \`loucka_dev_preview_ci\`.\`rh_preview_points\` (
+  version_id VARCHAR(40) NOT NULL,dateTime INT NOT NULL,
+  original_rh DOUBLE NULL,preview_rh DOUBLE NULL,category VARCHAR(32) NOT NULL,
+  method VARCHAR(80) NOT NULL,source_batch VARCHAR(80) NOT NULL,
+  review_state VARCHAR(40) NOT NULL,PRIMARY KEY (version_id,dateTime))`);
+ const time=Date.parse('2022-04-26T00:05:00Z')/1000;
+ await admin.query(`INSERT INTO \`weewx_api_ci_fixture\`.\`archive\`
+  (dateTime,usUnits,\`interval\`,outHumidity)
+  VALUES (?,16,5,NULL) ON DUPLICATE KEY UPDATE outHumidity=NULL`,[time]);
+ await admin.query('DELETE FROM `loucka_dev_preview_ci`.`rh_preview_points`');
+ await admin.query('DELETE FROM `loucka_dev_preview_ci`.`rh_preview_versions`');
+ await admin.query(`INSERT INTO \`loucka_dev_preview_ci\`.\`rh_preview_versions\`
+  (version_id,checksum_sha256,status,point_total) VALUES (?,?,?,?)`,
+  [versionId,'f'.repeat(64),'experimental_unapproved',5153]);
+ await admin.query(`INSERT INTO \`loucka_dev_preview_ci\`.\`rh_preview_points\`
+  (version_id,dateTime,original_rh,preview_rh,category,method,source_batch,review_state)
+  VALUES (?,?,?,?,?,?,?,?)`,
+  [versionId,time,null,76,'estimated','dual_vapor_pressure_v1','ci-synthetic','experimental_unapproved']);
+ await admin.query("GRANT SELECT ON `loucka_dev_preview_ci`.* TO 'ci_reader'@'%'");
+ process.env.WEATHER_STAGING_ENABLED='YES';
+ process.env.WEATHER_DB_HOST='127.0.0.1';
+ process.env.WEATHER_DB_PORT='3306';
+ process.env.WEATHER_DB_SCHEMA=SCHEMA;
+ process.env.WEATHER_DB_USER='ci_reader';
+ process.env.WEATHER_DB_PASSWORD='ci_pwd_fixture';
+ process.env.WEATHER_RH_PREVIEW_ENABLED='YES';
+ process.env.WEATHER_RH_PREVIEW_INSTANCE='DEV_ONLY';
+ process.env.WEATHER_RH_PREVIEW_SCHEMA=scope;
+ process.env.WEATHER_RH_PREVIEW_VERSION=versionId;
+ t.after(()=>{
+  delete process.env.WEATHER_RH_PREVIEW_ENABLED;
+  delete process.env.WEATHER_RH_PREVIEW_INSTANCE;
+  delete process.env.WEATHER_RH_PREVIEW_SCHEMA;
+  delete process.env.WEATHER_RH_PREVIEW_VERSION;
+ });
+ const reader=createMariaDbReader(),app=buildApp(reader,()=>new Date('2026-11-01T08:10:00Z'));
+ t.after(async()=>{await app.close();await reader.close?.();});
+ assert.ok(reader.previewHumidity);
+ const from='2022-04-26T00:00:00Z',to='2022-04-26T00:10:00Z';
+ const endpoint='/api/v1/dev/rh-preview?from='+from+'&to='+to;
+ const result=await app.inject(endpoint);
+ assert.equal(result.statusCode,200,result.body);
+ assert.equal(result.json().dataset,'experimental_preview');
+ assert.equal(result.json().points[0].originalRh,null);
+ assert.equal(result.json().points[0].previewRh,76);
+ assert.equal(result.json().points[0].sourceBatch,'ci-synthetic');
+ const original=await admin.query(`SELECT outHumidity FROM \`weewx_api_ci_fixture\`.\`archive\` WHERE dateTime=?`,[time]);
+ assert.equal(original[0].outHumidity,null);
+ await admin.query(`UPDATE \`weewx_api_ci_fixture\`.\`archive\`
+  SET outHumidity=50 WHERE dateTime=?`,[time]);
+ const guarded=await app.inject(endpoint);
+ assert.equal(guarded.statusCode,503,'An original archive modification must invalidate the preview');
+ await admin.query(`UPDATE \`weewx_api_ci_fixture\`.\`archive\`
+  SET outHumidity=NULL WHERE dateTime=?`,[time]);
+ const after=await app.inject(endpoint);
+ assert.equal(after.statusCode,200,after.body);
+});
