@@ -7,9 +7,9 @@ const window={from:'2026-10-10T00:00:00Z',to:'2026-10-11T00:00:00Z'};
 const start=Date.parse(window.from)/1000;
 function sample(){
  const original=Array.from({length:130},(_,i)=>({dateTime:start+i*300,
-   usUnits:16,interval:5,outTemp:20,outHumidity:60}));
+   usUnits:16,interval:5,outTemp:20+i*0.01,outHumidity:60}));
  const reference=Array.from({length:130},(_,i)=>({observed_at_utc:start+i*300,
-   temperature_c:10,relative_humidity_pct:60,quality_status:'reference_only'}));
+   temperature_c:10+i*0.01,relative_humidity_pct:60,quality_status:'reference_only'}));
  const input={from:window.from,to:window.to,original,
    stations:['luhamet_sehradice'],references:{luhamet_sehradice:reference}};
  return {baseline:buildQcReport(input),full:buildQcReport({...input,candidateLimit:20000})};
