@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-11 – provenance existujících RH změn 2022 podle rekonstrukčního auditu
+- Přímé read-only dohledání 1 575 již aplikovaných březnových a červencových RH odhadů v `reconstruction_changes`; všech 1 575 mělo původní RH NULL, rekonstrukční hodnota odpovídá auditnímu `new_value`, žádné chybějící časové řádky.
+- Úplná účetní rekonciliace 2022: 2 874 původně NULL → odhad, 2 194 podezřelých původních RH → jiná hodnota, 85 zneplatněno; rekonstrukční kopie má 41 727 RH NULL, originál 44 516. Dřívější modelové holdout výroky v textu auditu nejsou automaticky reprodukovanou nezávislou validací.
+- Nový read-only SQL podklad a dokumentace provenance pro meteorologický atlas; žádné nové odhady, zápisy do DB, schválení oprav nebo produkční nasazení.
+
+
 ## 2026-11-11 – audit původu a rizika existujících dubnových RH návrhů
 - Autonomní přímý SELECT-only audit všech 3 734 `reconstruction_humidity_202204` návrhů vůči původnímu archivu: 0 nesouladů originálních RH/teplot nebo chybějících originálních řádků.
 - Zamrzlé RH čidlo: 2 279 původních RH v devíti odlišných hodnotách, sekvence přes 39 hodin. Tyto hodnoty nejsou nezávislou pravdou pro trénování modelu.
