@@ -1,0 +1,32 @@
+[Unit]
+Description=Loucka Weather: PRIVATE reconstructed RH operator preview (loopback:3101)
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=/var/lib/loucka-qc/qc-rh-2022-dev-preview-c296d7dd830f733f.json
+[Service]
+Type=simple
+User=loucka
+Group=loucka
+WorkingDirectory=/home/loucka/Loucka_weather/api
+EnvironmentFile=/etc/loucka-weather/api.env
+EnvironmentFile=/etc/loucka-weather/rh-preview.env
+ExecStart=/usr/bin/node dist/src/dev-rh-preview-entry.js
+TimeoutStopSec=15s
+Restart=on-failure
+RestartSec=10s
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=read-only
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+CapabilityBoundingSet=
+AmbientCapabilities=
+ReadOnlyPaths=/var/lib/loucka-qc
+UMask=0077
+[Install]
+WantedBy=multi-user.target
