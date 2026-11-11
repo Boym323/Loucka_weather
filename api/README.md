@@ -210,3 +210,16 @@ stopu a vytvoří pouze odvozené interní `qc-rh-2022-triage.json` a
 vážené MAE mezi referencemi a porovnání s původními RH jen tam, kde
 existují. Bez SQL, internetu, schválení či zápisu oprav.
 Metodika a bezpečný postup: `docs/QC_RH_TRIAGE_2022.md`.
+
+### RH 2022: přesné společné trojice časových slotů
+
+`npm run qc:rh-triplets -- --reports-dir /var/lib/loucka-qc --dry-run`
+zkontroluje soukromé RH důkazy bez databáze. Explicitní `--run` pak
+použije 3 krátké indexované SELECTy za den a vypočítá bias, MAE a RMSE
+obou referencí pouze v identických UTC 5min slotech s vlastní
+nenulovou RH Loučky. **Únor 2022 má pravděpodobně nulový průnik;
+nenulový chybový odhad se v takovém měsíci nesmí vymýšlet.**
+
+Pro další zkoumání vznikne samostatný 0600 měsíční CSV a soukromý JSON,
+bez nasazení na veřejné API a bez změn původního archivu či uložených
+365 původních denních RH JSON. Návod: `docs/QC_RH_TRIPLETS_2022.md`.
