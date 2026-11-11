@@ -8,6 +8,7 @@ import {constants,existsSync,lstatSync,mkdirSync,openSync,writeFileSync,
   closeSync,unlinkSync} from 'node:fs';
 import path from 'node:path';
 import {buildRhPreviewPackage,previewPackageDigest} from './qc-rh-dev-preview-lib.mjs';
+import {readExportDbConfig,validateExportGrants,safeGateMessage} from './qc-rh-preview-export-access.mjs';
 
 function verifyPrivateFolder(dir){
  if(!path.isAbsolute(dir))throw Error('Expected absolute private reports dir');
@@ -27,27 +28,17 @@ function parse(argv){
  const map=new Map();
  for(let i=0;i<argv.length;i++){
   const k=argv[i];
-  if(k==='--dry-run'||k==='--export'){
+  if(k==='--dry-run'||k==='--check'||k==='--export'){
    if(map.has(k))throw Error('Duplicate action');map.set(k,true);
   }else if(k==='--reports-dir'){
    if(map.has(k)||!argv[i+1]||argv[i+1].startsWith('--'))throw Error('Reports dir missing');
    map.set(k,argv[++i]);
   }else throw Error('Unsupported argument');
  }
- if(map.has('--export')===map.has('--dry-run')||!map.has('--reports-dir'))
-  throw Error('Usage requires one action and --reports-dir');
- return {action:map.has('--export')?'export':'dry-run',dir:map.get('--reports-dir')};
-}
-function required(name){
- const value=process.env[name];
- if(!value)throw Error('Missing private QC environment '+name);
- return value;
-}
-function guardGrants(rows){
- const grants=rows.flatMap(row=>Object.values(row)).filter(v=>typeof v==='string');
- const forbidden=/\b(?:ALL PRIVILEGES|INSERT|UPDATE|DELETE|ALTER|CREATE|DROP|TRIGGER|EVENT|FILE|SUPER|RELOAD|GRANT OPTION|REFERENCES|LOCK TABLES|PROCESS|EXECUTE)\b/i;
- if(!grants.length||grants.some(s=>forbidden.test(s))||
-   !grants.some(s=>/\bSELECT\b/i.test(s)))throw Error('QC database account must be SELECT-only');
+ const actions=['--dry-run','--check','--export'].filter(k=>map.has(k));
+ if(actions.length!==1||!map.has('--reports-dir'))
+  throw Error('Usage requires exactly one action and --reports-dir');
+ return {action:actions[0].slice(2),dir:map.get('--reports-dir')};
 }
 const sql=`SELECT c.id,c.target_time,c.variable,c.old_value,c.new_value,
  c.source_database,c.batch_key,c.state,
@@ -59,28 +50,35 @@ const sql=`SELECT c.id,c.target_time,c.variable,c.old_value,c.new_value,
  WHERE c.variable='outHumidity' AND c.state='applied'
  AND c.target_time>=1640995200 AND c.target_time<1672531200
  ORDER BY c.target_time,c.id LIMIT 5154`;
-async function fetchChanges(){
- if(process.env.WEATHER_QC_READ_ONLY!=='YES'||
-    process.env.WEATHER_STAGING_ENABLED!=='YES')
-  throw Error('Explicit QC read-only flags required');
- const port=Number(process.env.WEATHER_DB_PORT||3306);
- if(!Number.isSafeInteger(port)||port<1||port>65535)throw Error('Invalid port');
- const conn=await mariadb.createConnection({
-  host:required('WEATHER_DB_HOST'),port,
-  user:required('WEATHER_DB_USER'),password:required('WEATHER_DB_PASSWORD'),
-  database:'loucka_reconstruction',connectTimeout:3000,
-  multipleStatements:false
- });
+async function fetchChanges(checkOnly=false){
+ let stage='config',conn;
  try{
-  guardGrants(await conn.query('SHOW GRANTS'));
-  // Freeze one repeatable-read snapshot: no locks, no mutations, no user data changes.
+  const config=readExportDbConfig();
+  stage='connect';
+  conn=await mariadb.createConnection(config.connection);
+  stage='grants';
+  const permissions=validateExportGrants(await conn.query('SHOW GRANTS'));
+  stage='check';
+  // Distinguish a SELECT GRANT from real table access, without reading RH.
+  for(const table of [
+   '`pocasi-loucka.eu`.`archive`',
+   '`loucka_reconstruction`.`reconstruction_changes`',
+   '`loucka_reconstruction`.`archive`'
+  ])await conn.query('SELECT 1 FROM '+table+' LIMIT 1');
+  if(checkOnly)return {credentialSet:config.credentialSet,permissions};
+  stage='snapshot';
   await conn.query('SET TRANSACTION READ ONLY');
   await conn.query('START TRANSACTION WITH CONSISTENT SNAPSHOT');
   try{
-   const result=await conn.query(sql);
-   return result;
+   stage='query';
+   return {rows:await conn.query(sql),credentialSet:config.credentialSet};
   }finally{await conn.query('ROLLBACK');}
- }finally{await conn.end();}
+ }catch(error){
+  const safe=safeGateMessage(error,stage);
+  const wrapped=new Error(safe.code);
+  wrapped.safeDetails=safe;
+  throw wrapped;
+ }finally{if(conn)await conn.end().catch(()=>{});}
 }
 function persist(dir,pkg){
  const digest=previewPackageDigest(pkg);
@@ -98,7 +96,7 @@ function persist(dir,pkg){
 async function main(){
  const opts=parse(process.argv.slice(2));
  if(opts.help){
-  process.stdout.write('Usage: node qc-rh-dev-preview-export.mjs --reports-dir /var/lib/loucka-qc --dry-run|--export\n');
+  process.stdout.write('Usage: node qc-rh-dev-preview-export.mjs --reports-dir /var/lib/loucka-qc --dry-run|--check|--export\n');
   return;
  }
  const dir=verifyPrivateFolder(opts.dir);
@@ -109,9 +107,25 @@ async function main(){
    outputDirectory:dir,databaseWrites:0,automaticApprovals:false,
    devPublishing:false})+'\n');return;
  }
- const rows=await fetchChanges();
- const packageData=buildRhPreviewPackage(rows);
- const saved=persist(dir,packageData);
+ const result=await fetchChanges(opts.action==='check');
+ if(opts.action==='check'){
+  process.stdout.write(JSON.stringify({status:'ready_for_read_only_export',
+   action:'check',credentialSet:result.credentialSet,
+   ...result.permissions,rowsRead:0,packageCreated:false,
+   databaseWrites:0,devPublishing:false})+'\n');
+  return;
+ }
+ let packageData,saved;
+ try{packageData=buildRhPreviewPackage(result.rows);}
+ catch(error){
+  const wrapped=new Error('SOURCE_DATA_VALIDATION_FAILED');
+  wrapped.safeDetails=safeGateMessage(error,'validate');throw wrapped;
+ }
+ try{saved=persist(dir,packageData);}
+ catch(error){
+  const wrapped=new Error('PRIVATE_EXPORT_WRITE_FAILED');
+  wrapped.safeDetails=safeGateMessage(error,'output');throw wrapped;
+ }
  process.stdout.write(JSON.stringify({
   status:'experimental_unapproved',complete:true,
   counts:packageData.counts,packageVersion:packageData.packageVersion,
@@ -120,6 +134,7 @@ async function main(){
   safety:packageData.safety},null,2)+'\n');
 }
 try{await main();}catch(error){
- process.stderr.write('RH dev preview export blocked. Confirm SELECT-only QC credentials, access to both original and reconstruction schemas, 0700 destination, and unchanged historical audit counts. NO DB changes were made.\n');
+ const safe=error?.safeDetails??safeGateMessage(error,'cli');
+ process.stderr.write(JSON.stringify(safe)+'\n');
  process.exitCode=1;
 }
