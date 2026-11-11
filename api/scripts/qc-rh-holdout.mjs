@@ -29,7 +29,7 @@ function args(argv){
   if(['--run','--dry-run','--summary'].includes(k)){
     if(options.has(k))throw Error('Duplicate action');options.set(k,true);continue;
   }
-  if(!['--reports-dir','--max-days','--delay-ms'].includes(k)||
+  if(!['--reports-dir','--max-days','--delay-ms','--from','--to'].includes(k)||
      options.has(k)||!argv[i+1]||argv[i+1].startsWith('--'))
     throw Error('Unsupported or duplicate option');
   options.set(k,argv[++i]);
@@ -37,6 +37,7 @@ function args(argv){
  const action=['--run','--dry-run','--summary'].filter(k=>options.has(k));
  if(action.length!==1||!options.has('--reports-dir')||
     !path.isAbsolute(options.get('--reports-dir')))throw Error('Invalid command');
+ const range=dateRange(options.get('--from')||'2022-01-01',options.get('--to')||'2023-01-01');
  const maxDays=Number(options.get('--max-days')??7);
  const delayMs=Number(options.get('--delay-ms')??200);
  if(!Number.isSafeInteger(maxDays)||maxDays<1||maxDays>365||
@@ -45,7 +46,7 @@ function args(argv){
  if(action[0]!=='--run'&&(options.has('--max-days')||options.has('--delay-ms')))
    throw Error('Limits require --run');
  return {action:action[0],dir:path.resolve(options.get('--reports-dir')),
-   maxDays,delayMs};
+   maxDays,delayMs,range};
 }
 function privateDir(dir){
  const s=lstatSync(dir);
@@ -141,7 +142,7 @@ function csv(report){
 }
 async function main(){
  const a=args(process.argv.slice(2));
- if(a.help){process.stdout.write('Usage: qc-rh-holdout.mjs --reports-dir /var/lib/loucka-qc --dry-run|--run|--summary [--max-days 365 --delay-ms 200]\n');return;}
+ if(a.help){process.stdout.write('Usage: qc-rh-holdout.mjs --reports-dir /var/lib/loucka-qc --dry-run|--run|--summary [--max-days 365 --delay-ms 200] [--from 2022-02-15 --to 2022-02-16]\n');return;}
  privateDir(a.dir);
  // Validate all original and triplet evidence before any MariaDB operation.
  const sources=new Map(days.map(day=>[day,source(a.dir,day)]));
@@ -151,10 +152,11 @@ async function main(){
   if(r)already.set(day,r);
  }
  const pending=days.filter(day=>!already.has(day));
+ const selectedPending=a.range.filter(day=>!already.has(day));
  if(a.action!=='--run'){
   const result={status:'screening_only',action:a.action,
    analyzedDays:already.size,pendingDays:pending.length,complete:pending.length===0,
-   databaseWrites:0};
+   selectedPendingDays:selectedPending.length,databaseWrites:0};
   if(!pending.length&&a.action==='--summary')
     result.evaluation=evaluateHoldoutYear([...already.values()]);
   process.stdout.write(JSON.stringify(result)+'\n');return;
@@ -165,7 +167,7 @@ async function main(){
  let pool;
  try{
   writeFileSync(lockFd,String(process.pid)+'\n');
-  const batch=pending.slice(0,a.maxDays);
+  const batch=selectedPending.slice(0,a.maxDays);
   if(batch.length){
    pool=mariadb.createPool(dbConfig());
    const conn=await pool.getConnection();
