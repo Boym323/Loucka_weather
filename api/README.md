@@ -345,3 +345,19 @@ nic na dev** a **nezapisuje žádnou databázi**.
 Samotná aktivace oddělené vývojové databáze, migrace, overlay
 API a rollback patří do následující explicitně ověřované etapy.
 Návod: `docs/RH_2022_DEV_PREVIEW_PUBLICATION.md`.
+
+### Oddělený experimentální RH preview endpoint – default vypnuto
+
+`GET /api/v1/dev/preview/rh-history` se zaregistruje **pouze**
+s `WEATHER_DEV_PREVIEW_ENABLED=YES` a
+`WEATHER_DEV_PREVIEW_MODE=isolated_dev_only`.
+Vyžaduje privátní neměnný export `qc-rh-dev-preview-export.mjs`
+vlastní 0600/0700 a SHA256 pin, plus tajný bearer token
+v `api.env` (nikdy v prohlížečovém veřejném JS). Vrací
+původní RH a historicky experimentální RH odděleně, nejvýše
+7 dní/2 000 bodů raw. Při změně originálu odpoví 503.
+Běžné `/api/v1/history`, `dataset=approved` a statistiky
+**zůstávají původní**, žádné SQL zápisy.
+
+Bez ověření izolace dev a autentizace endpoint **nezapínat**.
+Návod v `docs/RH_2022_DEV_PREVIEW_PUBLICATION.md`.
