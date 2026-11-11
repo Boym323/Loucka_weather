@@ -5,6 +5,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {Script} from 'node:vm';
+import {Script} from 'node:vm';
 import {buildRhDay,dateRange,dateWindow,validateRhDay,summarizeRhDays}
   from '../scripts/qc-humidity-lib.mjs';
 const date='2022-02-15',start=Date.parse(date+'T00:00:00Z')/1000;
@@ -122,4 +123,15 @@ test('RH CLI static module syntax passes without touching production',()=>{
     cwd:process.cwd(),encoding:'utf8',timeout:10000});
   assert.equal(r.status,0,r.stderr);
  }
+});
+
+test('offline RH 2022 viewer is static, safe and parses in Node',()=>{
+ const html=readFileSync(new URL('../scripts/qc-humidity-viewer.html',import.meta.url),'utf8');
+ assert.equal(html.split('__RH_DATA__').length,2);
+ assert.doesNotMatch(html,/<script[^>]+src=|<link[^>]+href=|https?:\/\//i);
+ assert.match(html,/reviewState|reference_only|NULL|p\. b\./);
+ const begin=html.indexOf('<script>'),end=html.indexOf('</script>',begin+8);
+ assert.ok(begin>=0&&end>begin);
+ const js=html.slice(begin+8,end).replace('__RH_DATA__','{}');
+ assert.doesNotThrow(()=>new Script(js));
 });
