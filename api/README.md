@@ -223,3 +223,17 @@ nenulový chybový odhad se v takovém měsíci nesmí vymýšlet.**
 Pro další zkoumání vznikne samostatný 0600 měsíční CSV a soukromý JSON,
 bez nasazení na veřejné API a bez změn původního archivu či uložených
 365 původních denních RH JSON. Návod: `docs/QC_RH_TRIPLETS_2022.md`.
+
+### RH 2022: blokovaná retrospektivní validace biasu
+
+`npm run qc:rh-holdout -- --reports-dir /var/lib/loucka-qc --dry-run`
+validuje dokončených 365 denních RH a tripletových souborů bez SQL.
+Explicitní `--run --max-days 365 --delay-ms 200` revaliduje pouze
+SELECTem shodné časové sloty a vytvoří privátní 0600 experimentální
+podklady. Leave-one-day-out s vynecháním okolních ±3 dnů a alespoň
+7 trénovacími dny / 500 trojicemi testuje, zda měsíční mediánový
+bias reference na známých měřeních opravdu snižuje MAE. Nevytváří
+náhradní hodnoty chybějící RH; bez dostatečné původní RH je výsledek
+`insufficient_holdout_evidence`.
+
+Kompletní metodika a bezpečný LXC postup: `docs/QC_RH_HOLDOUT_2022.md`.
