@@ -160,11 +160,14 @@ async function main(){
     return;
   }
   privateDir(args.dir);
-  const before=summarizeFromFiles(args.dir,args.range);
+  const wholeYear=dateRange();
+  const before=summarizeFromFiles(args.dir,wholeYear);
   if(args.action==='--dry-run'||args.action==='--summary'){
     process.stdout.write(JSON.stringify({mode:args.action.slice(2),status:'screening_only',
       analyzedDays:before.analyzedDays,pendingDays:before.pendingDays,
-      complete:before.complete,totals:before.totals,
+      complete:before.complete,selectedDays:args.range.length,
+      selectedPendingDays:args.range.filter(day=>!existingReport(args.dir,day)).length,
+      totals:before.totals,
       databaseWrites:0})+'\n');
     return;
   }
@@ -191,7 +194,7 @@ async function main(){
         }
       }finally{connection.release();}
     }
-    const summary=summarizeFromFiles(args.dir,args.range);
+    const summary=summarizeFromFiles(args.dir,wholeYear);
     updateDerivedSummary(args.dir,summary);
     writeDerivedHtml(args.dir,summary);
     process.stdout.write(JSON.stringify({status:'screening_only',
