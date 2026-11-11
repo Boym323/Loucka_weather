@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-11 – uzavření celoročního technického auditu RH a offline decision bridge
+- Operátorem na LXC potvrzeno dokončení 73/73 čtecích oken za rok 2022, 12/12 offline testů; 104 142 existujících původních řádků z 105 119 API-dostupných slotů, 977 celých chybějících slotů (+1 hraniční mimo API), původních 44 516 RH NULL a 5 153/5 153 historických změn. Po neschváleném náhledu zůstává 41 727 RH NULL; 7 prudkých změn pouze k prověření.
+- Nový čistě offline skript propojuje soukromý roční report s již existující QC readiness (triplets/holdout), důsledně kontroluje původní NULL a celkové chybějící sloty včetně UTC hranice a vydá měsíční rozhodovací tabulku. Přidal se podrobný report, syntetické testy a CI.
+- Nepřidává nové SQL čtení, nemění Fastify API, Nginx, systemd ani žádnou MariaDB. Meteorologická validita 5 153 zásahů zůstává otevřená, publikace zakázána.
+
 ## 2026-11-11 – celoroční RH 2022 technický read-only audit
 - Nový operátorský `deploy/lxc/audit-rh-2022-year.py`: 73 navazujících 5denních oken, jeden omezený GET na okno přes izolovaný sidecar 127.0.0.1:3101, záměrná prodleva >=1,5 s, žádná DB/HTTP mutace ani restart. Kontrola všech 105 119 dostupných UTC 5min slotů 2022 (první časová hranice není dostupná přes existující API).
 - Souhrny po měsících a dnech, skutečně chybějící celé řádky vs. existující NULL RH, auditní dávky, 5min skoky včetně hranic oken, a striktní celoroční kontrola všech 5 153 historických změn proti pinovanému JSON. Soukromý root-only report vznikne pouze při kompletním průchodu; výsledky z LXC teprve ověřit.
