@@ -93,7 +93,7 @@ function typeFromHeader(buf,n,name){
     return 'zip_header';
   if(n>=7&&buf.toString('ascii',257,262)==='ustar')
     return 'tar_header';
-  if(n>=6&&buf.toString('ascii',0,6)==='7z\xbc\xaf\x27\x1c')
+  if(n>=6&&buf.subarray(0,6).equals(Buffer.from([0x37,0x7a,0xbc,0xaf,0x27,0x1c])))
     return '7zip_header';
   const first=buf.toString('utf8',0,Math.min(n,512)).trimStart();
   if(/^(?:--\s*(?:MySQL|MariaDB)|\/\*![0-9]{5}|CREATE\s+TABLE\b|INSERT\s+INTO\b)/i.test(first))
