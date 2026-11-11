@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-11 – verzovaný experimentální RH 2022 náhled pro dev portál
+- Implementován bezpečný offline manifest 5153 již existujících RH změn s SHA256, auditním původem, striktní původní RH/teplotou, kategoriemi estimated/frozen_adjusted/invalidated a označením `experimental_unapproved`.
+- Připraveno samostatné dev-only SQL schéma `loucka_dev_preview` (migrace se samočinně **nespouští**) a explicitní INSERT-only transakční import, který nikdy neaktivuje verzi bez samostatné konfigurace API.
+- Přidán opt-in read-only Fastify endpoint pro původní-vs-experimentální RH v 7denních oknech roku 2022 s fail-closed ověřením originálu; ostatní endpointy a `approved` zůstávají beze změny.
+- Astro stránka `/rekonstrukce-rh/` ukáže přehled a jasně označené experimentální grafy jen po aktivaci. Bez reálného dev importu žádná nová data nejsou dostupná.
+- Oddělené vývojové oprávnění, read-only API účet, explicitní preflight, původní data i návrat k předchozí verzi; žádný databázový zápis ani automatické přepnutí dev/prod nebyly vykonány.
+
+
 ## 2026-11-11 – provenance existujících RH změn 2022 podle rekonstrukčního auditu
 - Přímé read-only dohledání 1 575 již aplikovaných březnových a červencových RH odhadů v `reconstruction_changes`; všech 1 575 mělo původní RH NULL, rekonstrukční hodnota odpovídá auditnímu `new_value`, žádné chybějící časové řádky.
 - Úplná účetní rekonciliace 2022: 2 874 původně NULL → odhad, 2 194 podezřelých původních RH → jiná hodnota, 85 zneplatněno; rekonstrukční kopie má 41 727 RH NULL, originál 44 516. Dřívější modelové holdout výroky v textu auditu nejsou automaticky reprodukovanou nezávislou validací.
