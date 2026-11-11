@@ -4,7 +4,7 @@
  * SELECT-only from MariaDB; absolutely no write to any database or API.
  */
 import mariadb from 'mariadb';
-import {constants,existsSync,lstatSync,mkdirSync,openSync,writeFileSync,
+import {constants,existsSync,lstatSync,openSync,writeFileSync,
   closeSync,unlinkSync} from 'node:fs';
 import path from 'node:path';
 import {buildRhPreviewPackage,previewPackageDigest} from './qc-rh-dev-preview-lib.mjs';
@@ -103,7 +103,7 @@ async function main(){
  if(opts.action==='dry-run'){
   process.stdout.write(JSON.stringify({status:'screening_only',action:'dry-run',
    planned:'verify 5153 PREEXISTING applied RH changes with original and private reconstruction',
-   source:'SELECT-only two read accounts/tables on the same MariaDB instance',
+   source:'one explicitly read-only QC account with SELECT on three tables',
    outputDirectory:dir,databaseWrites:0,automaticApprovals:false,
    devPublishing:false})+'\n');return;
  }
