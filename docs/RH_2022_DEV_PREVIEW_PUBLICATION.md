@@ -147,3 +147,82 @@ publikovat experimentální hodnoty.
 Výchozí bezpečnostní stav je explicitní:
 `databaseWrites=0`, `automaticApprovals=false`,
 `liveDevPublishing=false`.
+
+## Fáze B1 – připravený, ale standardně VYPNUTÝ privátní API náhled
+
+Nová součást `api/src/dev-rh-preview.ts` ověřuje před otevřením
+experimentálních hodnot:
+- spouštěcí flag `WEATHER_DEV_PREVIEW_ENABLED=YES` a zvlášť
+  `WEATHER_DEV_PREVIEW_MODE=isolated_dev_only`;
+- absolutní kanonický soubor uložený **přímo** pod
+  `/var/lib/loucka-qc`, vlastní 0600, rodič 0700;
+- očekávaný **SHA256 celého exportu** a SHA256 všech řádků;
+- přesně 5 153 změn se správnými kategoriemi, UTC epoch,
+  auditními identitami, dávkami a `approved:false`;
+- nenávratné přístupové heslo v samostatném `api.env`, délka
+  alespoň 32 znaků, předává se výhradně HTTP
+  `Authorization: Bearer …` hlavičkou, ne v query stringu;
+- experimentální hodnoty se nesmějí zaměňovat za původní RH.
+
+Je-li `WEATHER_DEV_PREVIEW_ENABLED` nenastaveno či jinak než
+`YES`, endpoint se **vůbec neregistruje (404)**.
+Při nesplnění kterékoli podmínky explicitně zapnutého náhledu
+start API **selže bezpečně**, namísto nechtěného používání
+neověřeného balíčku.
+
+Nový endpoint výhradně pro chráněný dev:
+```text
+GET /api/v1/dev/preview/rh-history
+?from=2022-04-25T23:55:00Z&to=2022-04-26T00:00:00Z
+Authorization: Bearer <SOUKROMY_TOKEN>
+```
+
+Vrací zvlášť `original.value/status` a
+`preview.value/status`, včetně původního auditního batch
+pro každý změněný bod. U nezměněného bodu je v obou vrstvách
+původní RH; u historicky zneplatněné RH je `preview.value=null`.
+**Žádný nový RH odhad se nepočítá.** Endpoint ověří, že
+původní archivní RH se od exportu nezměnila, a že každý
+publikovaný experimentální bod má stále skutečný archivní
+původní řádek. Při nesouladu vrátí 503.
+
+Omezení: jen RH, jen UTC čas roku 2022, nejvýše sedm dní
+na jeden dotaz, nejvýše 2 000 bodů, raw rozlišení bez
+závislosti na potenciálně zastaralých `archive_day_*`.
+HTTP odpovědi vždy `Cache-Control: no-store`, neindexovat,
+oddělené od původního `/api/v1/history`. Běžné API, roční
+statistiky, LIVE a `dataset=approved` se nezměnily.
+
+### Provozní nastavení – nepoužívat, dokud není potvrzena izolace dev
+
+Následující **jen příklad názvů** prostředí; žádné tajemství
+nepatří do GitHubu ani veřejné dokumentace:
+
+```dotenv
+WEATHER_DEV_PREVIEW_ENABLED=YES
+WEATHER_DEV_PREVIEW_MODE=isolated_dev_only
+WEATHER_DEV_PREVIEW_PACKAGE=/var/lib/loucka-qc/qc-rh-2022-dev-preview-<SHA16>.json
+WEATHER_DEV_PREVIEW_PACKAGE_SHA256=<SHA256_CELEHO_BALICKU>
+WEATHER_DEV_PREVIEW_TOKEN=<TAJNY_NAHODNY_TOKEN_32_PLUS_ZNAKU>
+```
+
+**Před případným zapnutím nutno ověřit:** skutečnou konfiguraci
+`/etc/loucka-weather/api.env`, dostupnost souboru pro
+službu `loucka`, oddělenou autentizaci přístupů, nginx
+necacheování a bezpečné omezení endpointu výhradně pro vývoj.
+Součástí tohoto PR **není aktualizace `api.env` ani
+restart/deployment**. Nenastavujte zobrazení bez přístupové
+kontroly na veřejném Astro frontendu (token nesmí být vložen
+přímo do veřejného JavaScriptu).
+
+Při rollbacku stačí vypnout příznak
+`WEATHER_DEV_PREVIEW_ENABLED` a kontrolovaně restartovat
+**výhradně dev API**. Tím endpoint přestane existovat; v
+původním archivu ani pracovním `loucka_reconstruction`
+nejsou žádné nové DB změny.
+
+Fáze B2 (zatím nerealizováno): uživatelské porovnání ve
+vývojovém UI za autentizovaným proxy/administrátorským
+rozhraním, případně izolovaný dev-only overlay SQL publish
+s verzovaným přepínáním. Experimentální data nesmějí získat
+nepravdivé označení `approved`.
