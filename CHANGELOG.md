@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-11 – audit původu a rizika existujících dubnových RH návrhů
+- Autonomní přímý SELECT-only audit všech 3 734 `reconstruction_humidity_202204` návrhů vůči původnímu archivu: 0 nesouladů originálních RH/teplot nebo chybějících originálních řádků.
+- Zamrzlé RH čidlo: 2 279 původních RH v devíti odlišných hodnotách, sekvence přes 39 hodin. Tyto hodnoty nejsou nezávislou pravdou pro trénování modelu.
+- U 1 299 starších odhadů pro chybějící RH: 852 pouze předběžná shoda referencí, 384 rozpor 10–20 p. b., 54 rozpor nad 20 p. b., 9 odhadů mimo referenční rozpětí o více než 10 p. b.; žádné odhady nejsou schválené.
+- Přidán čistý rizikový klasifikátor s fail-closed původním časem, RH, teplotou a jednotkami, čtyři reprodukovatelné SELECT-only dotazy a testy správného UTC denního řazení.
+- Žádné změny produkční ani rekonstrukční databáze, staging stavů nebo veřejného webu.
+
+
 ## 2026-11-11 – omezení falešně pozitivních záloh a Proxmox host metadata audit
 - Po LXC kontrole 6/6 souborových kandidátů potvrzeno pět vývojových schémat/testovacích JSON a jeden pravděpodobně systémový Debian alternatives TAR, bez nové nezávislé RH série pro leden–červen 2022.
 - Zpřesněn metadata-only LXC backup scanner: vynechává aplikací generované schemas/test/fixtures a známé systémové Debian zálohy; testy hlídají zachování skutečných názvů WeeWX dumpů.
