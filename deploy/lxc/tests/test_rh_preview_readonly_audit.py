@@ -14,6 +14,7 @@ def point(epoch, original, preview, status, batch=None):
     return {
         "at": datetime.fromtimestamp(epoch, timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
         "epoch": epoch,
+        "intervalMinutes": 5,
         "original": {"value": original},
         "preview": {
             "value": preview,
