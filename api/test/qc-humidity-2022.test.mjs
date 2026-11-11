@@ -5,7 +5,6 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {Script} from 'node:vm';
-import {Script} from 'node:vm';
 import {buildRhDay,dateRange,dateWindow,validateRhDay,summarizeRhDays}
   from '../scripts/qc-humidity-lib.mjs';
 const date='2022-02-15',start=Date.parse(date+'T00:00:00Z')/1000;
