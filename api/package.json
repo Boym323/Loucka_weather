@@ -20,7 +20,9 @@
     "qc:rh-holdout": "node scripts/qc-rh-holdout.mjs",
     "qc:rh-readiness": "node scripts/qc-rh-readiness.mjs",
     "qc:rh-backup-inventory": "node scripts/qc-rh-backup-inventory.mjs",
-    "qc:rh-backup-probe": "node scripts/qc-rh-backup-probe.mjs"
+    "qc:rh-backup-probe": "node scripts/qc-rh-backup-probe.mjs",
+    "qc:rh-preview-export": "node scripts/rh-preview-export.mjs",
+    "qc:rh-preview-import": "node scripts/rh-preview-import.mjs"
   },
   "dependencies": {
     "fastify": "5.12.8",

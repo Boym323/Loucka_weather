@@ -1,7 +1,7 @@
 import mariadb from 'mariadb';
 import {metricNames} from './metrics.js';
 import type {Metric} from './metrics.js';
-import type {ArchiveReader,ArchiveRow,DailySummaryRow} from './store.js';
+import type {ArchiveReader,ArchiveRow,DailySummaryRow,RhPreviewWindow,RhPreviewPoint} from './store.js';
 import {sensorMetricNames} from './sensor-evidence.js';
 
 const required=(key:string):string=>{
@@ -21,6 +21,22 @@ export function createMariaDbReader():ArchiveReader{
   connectionLimit:2,connectTimeout:3000,acquireTimeout:5000
  });
  const table='`'+schema+'`.`archive`';
+ // The public archive reader remains original-only; preview is explicitly opt-in
+ // on the dev installation and reads a SEPARATE immutable sidecar table.
+ const previewEnabled=process.env.WEATHER_RH_PREVIEW_ENABLED==='YES';
+ const previewConfig=(()=>{
+  if(!previewEnabled)return null;
+  if(process.env.WEATHER_RH_PREVIEW_INSTANCE!=='DEV_ONLY')
+   throw new Error('RH preview can run on explicit DEV_ONLY instance only');
+  const previewSchema=required('WEATHER_RH_PREVIEW_SCHEMA');
+  const versionId=required('WEATHER_RH_PREVIEW_VERSION');
+  if(!/^loucka_dev_[a-z0-9_]{1,40}$/.test(previewSchema)||
+     previewSchema===schema||!/^rh2022-[a-f0-9]{24}$/.test(versionId))
+   throw new Error('Invalid independent dev preview schema or version');
+  return {versionId,versions:'`'+previewSchema+'`.`rh_preview_versions`',
+    points:'`'+previewSchema+'`.`rh_preview_points`'};
+ })();
+
  const summaryTable=(metric:Metric):string=>{
   // Wind vector aggregates live in archive_day_wind; scalar direction counts have their own tables.
   const name=metric==='windSpeed'?'wind':metric;
@@ -170,6 +186,70 @@ export function createMariaDbReader():ArchiveReader{
        validMinutes:Number(first.validMinutes||0),energyKwhM2:Number(first.validRecords||0)>0?
        Number(first.energyKwhM2):null};
    },
+   ...(previewConfig?{
+    async previewHumidity(fromExclusive:number,toInclusive:number,limit:number):Promise<RhPreviewWindow>{
+      if(!Number.isSafeInteger(fromExclusive)||!Number.isSafeInteger(toInclusive)||
+         fromExclusive<1640995200||toInclusive>1672531200||
+         toInclusive<=fromExclusive||toInclusive-fromExclusive>7*86400||
+         !Number.isSafeInteger(limit)||limit<1||limit>3000)
+        throw new Error('Invalid bounded RH 2022 preview range');
+      await ensureReadOnly();
+      const versions=await pool.query(`SELECT version_id,checksum_sha256,status,point_total
+         FROM ${previewConfig.versions} WHERE version_id=? LIMIT 1`,
+         [previewConfig.versionId]) as {version_id:string;checksum_sha256:string;status:string;point_total:number}[];
+      const v=versions[0];
+      if(!v||v.status!=='experimental_unapproved'||Number(v.point_total)!==5153||
+         !/^[a-f0-9]{64}$/.test(v.checksum_sha256))
+        throw new Error('Experimental RH preview version unavailable or incomplete');
+      type DbPoint={dateTime:number;usUnits:number;originalRh:number|null;
+        pointVersion:string|null;stageOriginalRh:number|null;
+        previewRh:number|null;category:string|null;method:string|null;
+        sourceBatch:string|null;reviewState:string|null};
+      const rows=await pool.query(`SELECT a.dateTime,a.usUnits,
+         a.outHumidity AS originalRh,p.version_id AS pointVersion,
+         p.original_rh AS stageOriginalRh,p.preview_rh AS previewRh,
+         p.category,p.method,p.source_batch AS sourceBatch,
+         p.review_state AS reviewState
+         FROM ${table} a LEFT JOIN ${previewConfig.points} p
+         ON p.dateTime=a.dateTime AND p.version_id=?
+         WHERE a.dateTime>? AND a.dateTime<=?
+         ORDER BY a.dateTime ASC LIMIT ?`,
+         [previewConfig.versionId,fromExclusive,toInclusive,limit+1]) as DbPoint[];
+      if(rows.length>limit)throw new Error('RH preview rows exceed requested limit');
+      const results:RhPreviewPoint[]=[];
+      let previousTime=fromExclusive;
+      for(const r of rows){
+        const t=Number(r.dateTime),own=r.originalRh===null?null:Number(r.originalRh);
+        if(!Number.isSafeInteger(t)||t<=previousTime||t>toInclusive||
+           r.usUnits!==16||own!==null&&(!Number.isFinite(own)||own<1||own>100))
+          throw new Error('Invalid source RH preview row');
+        previousTime=t;
+        if(r.pointVersion===null){
+          results.push({dateTime:t,originalRh:own,previewRh:own,
+            category:own===null?'missing':'measured',
+            method:null,sourceBatch:null,reviewState:'original_unverified'});
+          continue;
+        }
+        const old=r.stageOriginalRh===null?null:Number(r.stageOriginalRh),
+          next=r.previewRh===null?null:Number(r.previewRh);
+        const valid=(x:number|null)=>x===null||Number.isFinite(x)&&x>=1&&x<=100;
+        if(r.pointVersion!==previewConfig.versionId||!valid(old)||!valid(next)||
+           (old===null)!==(own===null)||old!==null&&own!==null&&Math.abs(old-own)>0.00001||
+           !['estimated','frozen_adjusted','invalidated'].includes(r.category??'')||
+           r.reviewState!=='experimental_unapproved'||!r.method||!r.sourceBatch||
+           (r.category==='estimated'&&(old!==null||next===null))||
+           (r.category==='invalidated'&&(old===null||next!==null))||
+           (r.category==='frozen_adjusted'&&(old===null||next===null)))
+          throw new Error('RH preview provenance mismatch; no mixed data published');
+        results.push({dateTime:t,originalRh:own,previewRh:next,
+          category:r.category as RhPreviewPoint['category'],
+          method:r.method,sourceBatch:r.sourceBatch,
+          reviewState:'experimental_unapproved'});
+      }
+      return {versionId:previewConfig.versionId,checksumSha256:v.checksum_sha256,
+        points:results};
+    }
+   }:{}),
    async ping():Promise<void>{
      await ensureReadOnly();
      await pool.query(`SELECT dateTime FROM ${table} ORDER BY dateTime DESC LIMIT 1`);

@@ -76,3 +76,14 @@ Read-only archivní observer a SSE `archive-updated` jsou již implementované n
 ## Průběžná dokumentace
 
 Aktuální změny zapisovat do [CHANGELOG.md](../CHANGELOG.md), stav rozhraní a otevřené problémy udržovat ve [frontend/README.md](../frontend/README.md). Nové nasazení ověřovat samostatně, GitHub `main` ani úspěšné CI nejsou důkazem nasazeného commitu.
+
+## RH 2022: připravená verzovaná dev preview vrstva (11. 11. 2026)
+
+V repozitáři se připravuje volitelný transfer již existujících
+5153 auditních RH změn do samostatného `loucka_dev_preview`
+schématu. Nepřepíná se původní databáze, pracovní
+`loucka_reconstruction.archive` ani denní souhrny.
+Snapshot je označen `experimental_unapproved`; žádná
+rekonstrukce nově nevzniká. Přenos, DDL a provozní
+povolení API nejsou automaticky vykonávány ani po merge.
+Postup a rollback: `docs/QC_RH_2022_DEV_PREVIEW_TRANSFER.md`.

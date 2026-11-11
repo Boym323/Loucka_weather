@@ -11,7 +11,19 @@ export type DailySummaryRow={dateTime:number;usUnits:number;min:number|null;mint
 export type TelemetryReading={column:string;dateTime:number;value:number};
 export type SensorPresence={metric:string;count:number;lastObservedAt:number|null};
 export type SolarYear={records:number;validRecords:number;validMinutes:number;energyKwhM2:number|null};
+export type RhPreviewPoint={
+ dateTime:number;
+ originalRh:number|null;
+ previewRh:number|null;
+ category:'measured'|'missing'|'estimated'|'frozen_adjusted'|'invalidated';
+ method:string|null;
+ sourceBatch:string|null;
+ reviewState:'original_unverified'|'experimental_unapproved';
+};
+export type RhPreviewWindow={versionId:string;checksumSha256:string;points:RhPreviewPoint[]};
 export interface ArchiveReader {
+  /** Optional DEV-only read of immutable, experimental sidecar overlay. */
+  previewHumidity?(fromExclusive:number,toInclusive:number,limit:number):Promise<RhPreviewWindow>;
   latest(asOfEpoch:number):Promise<ArchiveRow|null>;
   history(metric:Metric,fromExclusive:number,toInclusive:number,limit:number):Promise<ArchiveRow[]>;
   historyPage?(selectedMetrics:Metric[],fromExclusive:number,toInclusive:number,afterExclusive:number,limit:number):Promise<ArchiveRow[]>;

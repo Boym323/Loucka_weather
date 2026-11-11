@@ -841,6 +841,47 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
    return makeResponse('daily',policy.aggregation,result.points,result.valid,digest);
   }catch{return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Daily summaries unavailable or invalid',503);}
  });
+ // Experimental RH preview is opt-in, read-only and NEVER the approved dataset.
+ // The current /history endpoint remains strictly original.
+ app.get<{Querystring:{from?:string;to?:string;limit?:string}}>('/api/v1/dev/rh-preview',{
+  schema:{querystring:{type:'object',additionalProperties:false,
+   required:['from','to'],properties:{
+    from:{type:'string'},to:{type:'string'},
+    limit:{type:'string',pattern:'^[0-9]{1,4}$'}
+   }}}
+ },async(req,reply)=>{
+  if(!reader.previewHumidity)
+   return bad(reply,req.id,'DATASET_UNAVAILABLE','Experimental preview is disabled',503);
+  const start=req.query.from?epoch(req.query.from):null,
+    end=req.query.to?epoch(req.query.to):null,
+    limit=req.query.limit===undefined?2400:Number(req.query.limit);
+  if(start===null||end===null||start<1640995200||end>1672531200||
+     end<=start||end-start>7*86400||
+     !Number.isSafeInteger(limit)||limit<1||limit>3000)
+   return bad(reply,req.id,'INVALID_RANGE','Preview only supports bounded RH 2022 windows of at most 7 days',422);
+  try{
+   const window=await reader.previewHumidity(start,end,limit);
+   const points=window.points.map(p=>({
+    endTime:utcIso(p.dateTime),originalRh:p.originalRh,previewRh:p.previewRh,
+    quality:p.category,sourceMethod:p.method,sourceBatch:p.sourceBatch,
+    reviewState:p.reviewState,approved:false
+   }));
+   const revision=createHash('sha256').update(JSON.stringify({
+    versionId:window.versionId,checksum:window.checksumSha256,points
+   })).digest('hex').slice(0,20);
+   return conditional(req,reply,{schemaVersion:'1',
+    dataset:'experimental_preview',metric:'outHumidity',unit:'percent',
+    versionId:window.versionId,sourceChecksumSha256:window.checksumSha256,
+    range:{from:utcIso(start),to:utcIso(end),boundary:'(start,end]',calendarTimezone:'Europe/Prague'},
+    points,count:points.length,approved:false,
+    note:'Experimental data from historical reconstruction audit. NOT independently verified or approved. Original data remain unchanged.',
+    gapPolicy:'Only original existing archive timestamps are returned; absent complete timestamps stay absent.',
+    dataRevision:'rh-preview-'+revision});
+  }catch{
+   return bad(reply,req.id,'UPSTREAM_UNAVAILABLE',
+     'Experimental preview unavailable or origin/manifest provenance changed',503);
+  }
+ });
  registerExtras(app,reader,sourceFiles);
  return app;
 }

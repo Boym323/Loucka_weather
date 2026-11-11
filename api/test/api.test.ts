@@ -284,3 +284,57 @@ test('camera and CHMI report real validated collector files from explicit isolat
  assert.equal(monitor.components.camera.status,'ok');
  assert.equal(monitor.components.chmi.status,'ok');
 });
+
+test('experimental RH preview is separate, opt-in and never confused with approved data',async t=>{
+ const unavailable=buildApp(reader(),now);
+ t.after(()=>unavailable.close());
+ const from='2022-04-26T00:00:00Z',to='2022-04-27T00:00:00Z';
+ const route='/api/v1/dev/rh-preview?from='+encodeURIComponent(from)+'&to='+encodeURIComponent(to);
+ const blocked=await unavailable.inject(route);
+ assert.equal(blocked.statusCode,503,blocked.body);
+ assert.equal((await unavailable.inject('/api/v1/history?metric=outHumidity&from='+from+
+  '&to='+to+'&dataset=approved')).statusCode,503);
+ let read=0;
+ const fake=reader();
+ fake.previewHumidity=async(start,end,limit)=>{
+  read++;
+  assert.equal(start,Date.parse(from)/1000);
+  assert.equal(end,Date.parse(to)/1000);
+  assert.equal(limit,2400);
+  return {versionId:'rh2022-'+'a'.repeat(24),checksumSha256:'f'.repeat(64),
+   points:[
+    {dateTime:start+300,originalRh:null,previewRh:77,
+     category:'estimated',method:'dual_vapor_pressure_v1',
+     sourceBatch:'test-batch',reviewState:'experimental_unapproved'},
+    {dateTime:start+600,originalRh:61,previewRh:61,
+     category:'measured',method:null,sourceBatch:null,
+     reviewState:'original_unverified'},
+    {dateTime:start+900,originalRh:89,previewRh:null,
+     category:'invalidated',method:'dual_vapor_pressure_v1',
+     sourceBatch:'test-batch',reviewState:'experimental_unapproved'}
+   ]};
+ };
+ const app=buildApp(fake,now);t.after(()=>app.close());
+ const ok=await app.inject(route);
+ assert.equal(ok.statusCode,200,ok.body);
+ const data=ok.json();
+ assert.equal(data.approved,false);
+ assert.equal(data.dataset,'experimental_preview');
+ assert.equal(data.versionId,'rh2022-'+'a'.repeat(24));
+ assert.equal(data.points.length,3);
+ assert.equal(data.points[0].originalRh,null);
+ assert.equal(data.points[0].previewRh,77);
+ assert.equal(data.points[0].approved,false);
+ assert.equal(data.points[2].previewRh,null);
+ assert.equal(data.points[2].quality,'invalidated');
+ assert.match(data.note,/NOT independently verified/);
+ assert.equal(read,1);
+ const cached=await app.inject({url:route,headers:{'if-none-match':String(ok.headers.etag)}});
+ assert.equal(cached.statusCode,304);
+ const overRange=await app.inject('/api/v1/dev/rh-preview?from=2022-04-01T00:00:00Z&to=2022-05-01T00:00:00Z');
+ assert.equal(overRange.statusCode,422);
+ const badParams=await app.inject('/api/v1/dev/rh-preview?from='+from+'&to='+to+'&extra=1');
+ assert.equal(badParams.statusCode,400);
+ const notApproved=await app.inject('/api/v1/history?metric=outHumidity&from='+from+'&to='+to+'&dataset=approved');
+ assert.equal(notApproved.statusCode,503);
+});
