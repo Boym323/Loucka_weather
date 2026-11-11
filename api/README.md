@@ -200,3 +200,13 @@ Denní JSON (0600) se **nikdy nepřepisují**. Nové odvozené
 v soukromé složce 0700. Výsledky nelze zaměňovat s již dokončeným
 teplotním QC, žádná změna původního `archive`, žádný HTTP endpoint.
 Návod: `docs/QC_RH_2022_READONLY.md`.
+
+### Sekundární RH triage 2022 (bez databáze)
+
+Po kompletním zpracování 365 RH denních soukromých reportů:
+`npm run qc:rh-triage -- --reports-dir /var/lib/loucka-qc` validuje každou denní
+stopu a vytvoří pouze odvozené interní `qc-rh-2022-triage.json` a
+`qc-rh-2022-triage.csv` (0600): denní kategorie podkladů, měsíční
+vážené MAE mezi referencemi a porovnání s původními RH jen tam, kde
+existují. Bez SQL, internetu, schválení či zápisu oprav.
+Metodika a bezpečný postup: `docs/QC_RH_TRIAGE_2022.md`.
