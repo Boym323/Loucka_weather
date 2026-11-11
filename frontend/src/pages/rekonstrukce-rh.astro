@@ -1,0 +1,108 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="Vývojový náhled rekonstrukce RH 2022"
+ description="Experimentální porovnání originální vlhkosti a rekonstrukčních návrhů roku 2022 v oddělené vývojové vrstvě.">
+ <div class="page-intro">
+  <span class="eyebrow">Vývojový režim · Experimentální data</span>
+  <h1>Rekonstrukce vlhkosti 2022</h1>
+  <p>Porovnej původní hodnoty meteostanice s již existujícími historickými odhady. Žádné zobrazené odhady nejsou automaticky schváleným měřením.</p>
+ </div>
+ <section class="section rh-reconstruction" aria-label="Porovnání historických RH">
+  <form id="rh-preview-form" class="rh-controls">
+   <label for="rh-preview-day"><strong>Den (UTC)</strong></label>
+   <input id="rh-preview-day" name="day" type="date" min="2022-01-01" max="2022-12-31" value="2022-04-26" required />
+   <button type="submit">Zobrazit porovnání</button>
+  </form>
+  <p id="rh-preview-status" role="status" aria-live="polite">Kontroluji dostupnost vývojové rekonstrukce…</p>
+  <div class="rh-legend" aria-label="Legenda">
+   <span><i class="rh-key rh-original"></i> Původní naměřená RH</span>
+   <span><i class="rh-key rh-preview"></i> Historický experimentální odhad</span>
+  </div>
+  <div id="rh-preview-chart" class="rh-chart" role="img" aria-label="Porovnání původních a rekonstruovaných hodnot relativní vlhkosti vzduchu"></div>
+  <p id="rh-preview-meta" class="source-note">Provenience a počty záznamů budou uvedeny po načtení.</p>
+  <p class="source-note"><strong>Upozornění:</strong> Čerchované části grafu jsou pouze pracovní rekonstrukce z databázového auditu. Nejde o validovaná originální měření. Úplně chybějící archivní řádky nelze tímto náhledem doplnit a zůstávají jako mezery.</p>
+ </section>
+</BaseLayout>
+
+<style>
+ .rh-reconstruction{max-width:1050px;margin:0 auto}
+ .rh-controls{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
+ .rh-controls input,.rh-controls button{font:inherit;border:1px solid var(--border, #9faab1);border-radius:0.6rem;padding:0.65rem 0.85rem}
+ .rh-controls button{cursor:pointer;background:#17689c;color:#fff;border-color:transparent}
+ .rh-controls button:focus-visible,.rh-controls input:focus-visible{outline:3px solid #e6a842;outline-offset:3px}
+ .rh-legend{display:flex;flex-wrap:wrap;gap:1.2rem;margin:0.75rem 0;font-size:0.9rem}
+ .rh-legend span{display:flex;align-items:center;gap:0.4rem}
+ .rh-key{display:inline-block;width:23px;border-top:3px solid}
+ .rh-original{border-color:#3381c4}
+ .rh-preview{border-color:#d58b18;border-top-style:dashed}
+ .rh-chart{min-height:340px;width:100%;background:var(--surface,transparent);border:1px solid var(--border,#ddd);border-radius:0.75rem}
+ @media(max-width:580px){.rh-chart{min-height:300px}.rh-controls button{width:100%}}
+</style>
+
+<script>
+ import * as echarts from 'echarts';
+ const form=document.getElementById('rh-preview-form') as HTMLFormElement|null;
+ const date=form?.querySelector<HTMLInputElement>('#rh-preview-day')??null;
+ const status=document.getElementById('rh-preview-status');
+ const meta=document.getElementById('rh-preview-meta');
+ const node=document.getElementById('rh-preview-chart');
+ const chart=node?echarts.init(node):null;
+ type Point={endTime:string;originalRh:number|null;previewRh:number|null;
+   quality:string;reviewState:string;approved:boolean};
+ type Payload={dataset:string;approved:boolean;versionId:string;points:Point[];count:number};
+ const categoryText:Record<string,string>={
+  estimated:'doplněná chybějící RH',frozen_adjusted:'upravená podezřelá RH',
+  invalidated:'zneplatněná podezřelá RH',measured:'původní',
+  missing:'chybějící'};
+ async function load(){
+  if(!date||!status||!meta||!chart)return;
+  if(!/^2022-\d\d-\d\d$/.test(date.value))return;
+  const epoch=Date.parse(date.value+'T00:00:00Z');
+  if(!Number.isFinite(epoch))return;
+  const from=new Date(epoch).toISOString(),to=new Date(epoch+86400000).toISOString();
+  status.textContent='Načítám skutečný archiv a experimentální rekonstrukci…';
+  const params=new URLSearchParams({from,to,limit:'3000'});
+  try{
+   const response=await fetch('/api/v1/dev/rh-preview?'+params,{credentials:'same-origin',
+    headers:{Accept:'application/json'}});
+   if(!response.ok)throw Error('Preview unavailable');
+   const payload=await response.json() as Payload;
+   if(payload.dataset!=='experimental_preview'||payload.approved!==false||
+      !Array.isArray(payload.points)||payload.points.length>3000)
+    throw Error('Unexpected API response');
+   const points=payload.points;
+   if(points.some(p=>p.approved!==false))throw Error('Unapproved data mismatch');
+   const original=points.map(p=>[p.endTime,p.originalRh]);
+   const preview=points.map(p=>[p.endTime,p.previewRh]);
+   const changed=points.filter(p=>['estimated','frozen_adjusted','invalidated'].includes(p.quality));
+   chart.setOption({animation:false,tooltip:{trigger:'axis'},
+    grid:{left:55,right:18,top:35,bottom:56},
+    xAxis:{type:'time',name:'Čas UTC',nameLocation:'middle',nameGap:36},
+    yAxis:{type:'value',name:'RH (%)',min:0,max:100},
+    legend:{top:4},
+    series:[
+     {name:'Původní RH',type:'line',showSymbol:false,connectNulls:false,
+      data:original,lineStyle:{width:2,color:'#3381c4'},itemStyle:{color:'#3381c4'}},
+     {name:'Experimentální rekonstrukce',type:'line',showSymbol:false,
+      connectNulls:false,data:preview,lineStyle:{width:2,type:'dashed',color:'#d58b18'},
+      itemStyle:{color:'#d58b18'}}
+    ]},true);
+   const kinds=Object.entries(categoryText).map(([kind,label])=>{
+    const n=points.filter(p=>p.quality===kind).length;
+    return n?label+': '+n:null;
+   }).filter(Boolean).join(' · ');
+   status.textContent='Zobrazeno '+points.length+' archivních intervalů; z toho '+
+     changed.length+' s historickým experimentálním zásahem.';
+   meta.textContent='Verze: '+payload.versionId+' · '+kinds+
+    '. Původní archiv se nemění, nejde o schválenou rekonstrukci.';
+  }catch{
+   chart.clear();
+   status.textContent='Rekonstrukční náhled není aktivován nebo nelze ověřit data. Původní měření na ostatních stránkách zůstávají dostupná.';
+   meta.textContent='Před zpřístupněním je nutná izolovaná vývojová tabulka, ověřená verze a zapnuté čtecí API.';
+  }
+ }
+ form?.addEventListener('submit',event=>{event.preventDefault();void load();});
+ window.addEventListener('resize',()=>chart?.resize(),{passive:true});
+ void load();
+</script>
