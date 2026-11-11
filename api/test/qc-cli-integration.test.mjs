@@ -6,6 +6,7 @@ import mariadb from 'mariadb';
 import {mkdtempSync,chmodSync,readdirSync,statSync,rmSync,readFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
+import {buildRhDay,dateRange} from '../scripts/qc-humidity-lib.mjs';
 
 const isolated=process.env.CI==='true'&&process.env.GITHUB_ACTIONS==='true'&&
   process.env.WEATHER_TEST_LOCAL_FIXTURE==='YES';
@@ -150,6 +151,36 @@ test('QC CLI uses real SELECT-only cross-schema MariaDB and rejects admin creden
     cwd:process.cwd(),env,encoding:'utf8',timeout:15000});
   assert.equal(rhRepeat.status,0,rhRepeat.stderr);
   assert.equal(JSON.parse(rhRepeat.stdout).processedThisRun,0);
+  // Fair-comparison regression: identical source/LuhaMet/WU slots on the
+  // ephemeral MariaDB. Older 365 daily QC reports are immutable inputs.
+  for(const day of dateRange()){
+    if(day==='2022-02-15')continue;
+    writeFileSync(join(rhFolder,'qc-rh-2022-'+day+'.json'),JSON.stringify(
+      buildRhDay({day,original:[],references:{
+        luhamet_sehradice:[],wu_ilouka4:[]}})),{flag:'wx',mode:0o600});
+  }
+  const tripletArgs=['scripts/qc-rh-triplets.mjs','--reports-dir',rhFolder,
+    '--from','2022-02-15','--to','2022-02-16','--run','--max-days','1',
+    '--delay-ms','0'];
+  const triplet=spawnSync(process.execPath,tripletArgs,{
+    cwd:process.cwd(),env,encoding:'utf8',timeout:20000});
+  assert.equal(triplet.status,0,triplet.stderr);
+  const scored=JSON.parse(triplet.stdout);
+  assert.equal(scored.analyzedDays,1);
+  assert.equal(scored.pendingDays,364);
+  assert.equal(scored.overall.pairs,1);
+  assert.equal(scored.overall.maeLuhaPctPoints,2);
+  assert.equal(scored.overall.maeWuPctPoints,1);
+  assert.equal(scored.overall.advantageWuMaePctPoints,1);
+  assert.equal(scored.safety.databaseWrites,0);
+  assert.equal(scored.complete,false);
+  const rerun=spawnSync(process.execPath,tripletArgs,{
+    cwd:process.cwd(),env,encoding:'utf8',timeout:20000});
+  assert.equal(rerun.status,0,rerun.stderr);
+  assert.equal(JSON.parse(rerun.stdout).processedThisRun,0);
+  for(const name of readdirSync(rhFolder).filter(n=>n.includes('triplet')))
+    assert.equal(statSync(join(rhFolder,name)).mode&0o777,0o600);
+
   // Reference database-wide access is still forbidden.
   await admin.query('GRANT SELECT ON '+refDb+".* TO 'qc_reader_ci'@'%'");
   const widenedReference=spawnSync(process.execPath,args,
