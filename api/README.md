@@ -275,3 +275,19 @@ rozpozná obecný formát (SQLite, SQL, gzip, TAR, ZIP aj.) a zapíše
 soukromé 0600 výsledky. Neotevírá obsah DB, nespouští SQL, nerozbalí
 archivy ani nevytváří RH hodnoty. Návod a hranice důvěry v
 `docs/QC_RH_2022_BACKUP_HEADER_PROBE.md`.
+
+### RH 2022 – původní logger zálohy mimo vývojový LXC
+
+Z cílené LXC inventury 6/6 souborů jsou 5 schémata/testovací JSON a
+jeden pravděpodobně Debian `alternatives.tar.0`; žádný z nich není
+věrohodná původní RH série. Přesnější `qc-rh-backup-inventory.mjs`
+vyřazuje test/fixtures/schemas a tyto systémové zálohy z dalších
+názvových kandidátů, ale **nepovažuje nenalezení souboru za důkaz
+neexistence originálu**.
+
+Pro další postup zkontroluj Proxmox VE hostitele a související
+backup úložiště/PBS/Synology. Soukromý read-only host skript:
+`api/scripts/qc-rh-pve-backups.sh` vypíše `pct list`,
+`pvesm status --content backup` a `pvesm list` s limitem 80 řádků
+na storage. **Neprovádí obnovu ani mount nebo zápis**.
+Podrobnosti: `docs/QC_RH_2022_BACKUP_HOST_DISCOVERY.md`.
