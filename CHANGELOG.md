@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-11 – omezené čtecí rozpoznání šesti možných záloh RH 2022
+- LXC metadata inventura: 39 prošlých adresářů, 176 položek, 6 kandidátů bez roku 2022 v názvu, stav partial kvůli chybějícím kořenům /var/lib/weewx a /etc/weewx. Žádné SQL ani zápisy.
+- Nová opt-in signatura kandidátů z privátní inventury: maximálně 512 bajtů z každého souboru, O_RDONLY a O_NOFOLLOW, kontrola neměnného inode/size/mtime, bezpečnost před symlink/mountpoint, jen indikace formátu SQLite/SQL/komprese; žádná extrakce, propojení k DB nebo kopie obsahu.
+- Soukromý 0600 JSON, testy bezpečnostních hranic, neznámé a změněné soubory odmítány. Bez rekonstrukce RH.
+
+
 ## 2026-11-11 – čtecí inventura RH archivních alternativ a hledání lokálních záloh
 - Přímé SELECT-only porovnání historických databází 2022: GW1000 RH identické s původním archivem; stará databáze má 7 navíc RH na existujících původních NULL řádcích a 123 dalších časů pouze v srpnu–říjnu; rekonstrukční schema obsahuje dříve změněnou RH a nesmí se vydávat za nezávislý originál.
 - Soukromý metadata-only CLI pro LXC s omezením na výslovně zadané kořenové adresáře, maximální hloubku a počet záznamů; žádné čtení obsahu záloh, procházení symlinků, MariaDB připojení, zápis původních dat ani schvalování RH.

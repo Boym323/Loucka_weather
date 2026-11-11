@@ -264,3 +264,14 @@ názvy a metadata souborů připomínajících WeeWX nebo jiné historické
 zálohy. Žádný obsah souborů, SQL ani síťový přístup se nepoužívá,
 žádný výstup není zveřejněn. Návod a ověřené SQL součty:
 `docs/QC_RH_2022_ALTERNATIVE_SOURCE_AUDIT.md`.
+
+### RH 2022 – soukromá signatura souborových záloh
+
+Po metadata-only inventuře šesti možných lokálních záloh (`partial_metadata_inventory`)
+může `npm run qc:rh-backup-probe -- --reports-dir /var/lib/loucka-qc --dry-run`
+ověřit jen počet kandidátů, bez otevření souborů. Explicitní `--probe`
+provede pouze kontrolu prvních 512 bajtů u už inventarizovaných cest,
+rozpozná obecný formát (SQLite, SQL, gzip, TAR, ZIP aj.) a zapíše
+soukromé 0600 výsledky. Neotevírá obsah DB, nespouští SQL, nerozbalí
+archivy ani nevytváří RH hodnoty. Návod a hranice důvěry v
+`docs/QC_RH_2022_BACKUP_HEADER_PROBE.md`.
