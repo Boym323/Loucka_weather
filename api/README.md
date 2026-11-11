@@ -361,3 +361,18 @@ Běžné `/api/v1/history`, `dataset=approved` a statistiky
 
 Bez ověření izolace dev a autentizace endpoint **nezapínat**.
 Návod v `docs/RH_2022_DEV_PREVIEW_PUBLICATION.md`.
+
+### QC RH 2022: čtecí přístup a předexportní diagnostika
+
+Oprava exportéru respektuje stejné privátní proměnné
+`WEATHER_QC_DB_HOST/USER/PASSWORD/PORT` jako ostatní QC skripty,
+nikoli proměnné produkčního Fastify API. Má novou funkci
+`--check`: otestuje `SHOW GRANTS` a `SELECT 1 LIMIT 1`
+na `pocasi-loucka.eu.archive`,
+`loucka_reconstruction.reconstruction_changes` a
+`loucka_reconstruction.archive`. Vypisuje pouze bezpečné
+kódy selhání (např. `SELECT_SCOPE_MISSING`) a **žádné
+přihlašovací údaje nebo raw SQL chyby**. Volitelná samostatná
+sada `WEATHER_RH_EXPORT_DB_*` může pokrývat tyto tři tabulky
+minimálním SELECT bez změny práv stávajících QC skriptů.
+Dokumentace: `docs/RH_2022_DEV_PREVIEW_PUBLICATION.md`.

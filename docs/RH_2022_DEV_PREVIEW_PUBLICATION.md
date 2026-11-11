@@ -26,6 +26,106 @@ snapshotu 11. 11. 2026:
 **Přímé přepnutí** API na `loucka_reconstruction` by vedlo ke
 ztrátě nejnovějších měření a k problémům s denní statistikou.
 
+## Oprava prvního LXC exportu — 11. 11. 2026
+
+První skutečný export skončil exit=1 po úspěšném fs-only
+`--dry-run`. Původní exportér omylem očekával údaje
+`WEATHER_DB_HOST/USER/PASSWORD` z provozního API, přestože
+QC systemd jednotka předává `/etc/loucka-weather/qc.env`
+s oddělenými `WEATHER_QC_DB_HOST/USER/PASSWORD`.
+Chybová hláška navíc potlačovala, v jaké fázi export skončil.
+
+Opravený exportér používá stávající QC sadu (včetně
+`WEATHER_QC_DB_PORT`), a volitelně **oddělenou exportní
+čtecí sadu** `WEATHER_RH_EXPORT_DB_HOST/USER/PASSWORD/PORT`,
+je-li explicitně zadána. Nikdy nemíchá identitu uživatelů
+z obou sad a nikdy nepoužívá produkční `WEATHER_DB_*`
+tajemství.
+
+### Bezpečný preflight: `--check`
+
+`--dry-run` dál ověřuje pouze přístup k soukromému adresáři,
+nikoli připojení k DB. `--check` následně provede:
+1. Ověření opt-in `WEATHER_QC_READ_ONLY=YES` a
+   `WEATHER_STAGING_ENABLED=YES`.
+2. Připojení právě jedné čtecí identitou.
+3. Kontrolu `SHOW GRANTS`: **zakázat jakékoli zápisové,
+   globální nebo neznámé grants**.
+4. Vyžadovat `SELECT` na všech třech tabulkách:
+   `pocasi-loucka.eu.archive`,
+   `loucka_reconstruction.reconstruction_changes`,
+   `loucka_reconstruction.archive`.
+5. Tři omezené `SELECT 1 ... LIMIT 1`, bez čtení
+   obsahu RH a bez zápisu do souboru.
+
+Příkaz pro **diagnostiku bez exportu** na LXC:
+
+```bash
+systemd-run --wait --pipe --collect \
+  -p User=loucka -p Group=loucka \
+  -p WorkingDirectory=/home/loucka/Loucka_weather/api \
+  -p EnvironmentFile=/etc/loucka-weather/qc.env \
+  -p NoNewPrivileges=yes -p ProtectSystem=strict \
+  -p ProtectHome=read-only \
+  -p ReadWritePaths=/var/lib/loucka-qc \
+  -p PrivateTmp=yes -p PrivateDevices=yes \
+  -p MemoryMax=256M -p CPUQuota=50% \
+  -p TimeoutStartSec=60s \
+  /usr/bin/node scripts/qc-rh-dev-preview-export.mjs \
+  --reports-dir /var/lib/loucka-qc --check
+```
+
+Úspěch je `status=ready_for_read_only_export`. Při selhání
+vypíše pouze JSON s bezpečným kódem, např.
+`DB_CONFIG_MISSING`, `DB_CONNECTION_UNAVAILABLE`,
+`SELECT_SCOPE_MISSING`, `WRITE_CAPABLE_OR_UNSUPPORTED_GRANTS`,
+`READ_PERMISSION_OR_QUERY_FAILED`. **Nikdy nevypíše
+heslo, hostitele, databázového uživatele, SHOW GRANTS ani
+původní SQL výjimku.**
+
+Dřívější QC čtecí účet může mít jen oprávnění pro původní
+archiv a referenční pozorování. V tom případě
+`SELECT_SCOPE_MISSING` není důvod k rozšíření účtu
+pro všechny jiné QC nástroje: ty mají vlastní
+striktní kontrolu grantů a rozšířená role by ji mohla
+porušit.
+
+### Volitelný vyhrazený exportní účet — pouze pokud chybí SELECT
+
+Správce MariaDB může **vědomě** vytvořit samostatnou
+identitu s minimálními SELECT oprávněními na třech
+konkrétních tabulkách. Je nutné upravit host adresu
+na konkrétní síťový zdroj LXC, nepoužívat wildcard
+`%` bez síťového omezení a bezpečně vygenerovat nové heslo.
+Následuje pouze vzor pro ruční posouzení — **nikde
+se automaticky nespouští**:
+
+```sql
+CREATE USER 'loucka_rh_export'@'LXC_CLIENT_HOST'
+  IDENTIFIED BY 'NAHODNE_SILNE_UNIKATNI_HESLO';
+GRANT SELECT ON `pocasi-loucka.eu`.`archive`
+  TO 'loucka_rh_export'@'LXC_CLIENT_HOST';
+GRANT SELECT ON `loucka_reconstruction`.`archive`
+  TO 'loucka_rh_export'@'LXC_CLIENT_HOST';
+GRANT SELECT ON `loucka_reconstruction`.`reconstruction_changes`
+  TO 'loucka_rh_export'@'LXC_CLIENT_HOST';
+```
+
+Konfigurace `WEATHER_RH_EXPORT_DB_*` se vkládá
+výhradně do soukromého souboru s právy správce,
+nikdy do GitHubu nebo chatu. **Neuděluj
+INSERT/UPDATE/DELETE ani globální SELECT**.
+Toto je oddělená identity pro export, nikoli pro
+produkční API. Žádné existující tabulky ani měřená
+data se těmito SELECT právy neupravují.
+
+Po `--check` se používá původní `--export` příkaz,
+který navíc provede READ ONLY snapshot a kontrolu
+5 153 historických řádků. Stále nic nezapisuje
+do DB a nepublikuje na dev.
+
+---
+
 ## Fáze A — privatizovaný balíček existujících RH změn
 
 `api/scripts/qc-rh-dev-preview-export.mjs` vytváří obsahově
@@ -78,7 +178,7 @@ runuser -u loucka -- node \
 ```
 
 Skutečný read-only export po kontrole nasazené verze a
-**samostatné QC přístupové role SELECT-only s přístupem
+**QC nebo samostatné exportní SELECT-only role s přístupem
 ke třem výše uvedeným tabulkám**:
 
 ```bash
