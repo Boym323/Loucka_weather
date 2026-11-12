@@ -1,5 +1,9 @@
 # Počasí Loučka – testovací Astro frontend
 
+## Atlas – dostupnost historické vlhkosti (12. 11. 2026)
+
+V kapitole Trendy (`/klimatologie/trendy/#vlhkost-archiv`) lze vybrat dokončený rok od 2009 a načíst dvanáct měsíčních přehledů původní RH. Rozlišují dostupný denní souhrn, chybějící den a podezřelý/neplatný souhrn; nevyjadřují počet surových 5min měření. Samostatné časové pokrytí z `annual-matrix` může být nezjištěné. Rok 2022 připomíná známé výpadky a dubnové zamrzlé čidlo. Všechny dotazy používají pouze `dataset=original`, začínají až po stisku tlačítka a nepřidávají API. Žádné privátní odhady nejsou zveřejněny. Nové unit a browser testy; metodika v `docs/ATLAS_HUMIDITY_COVERAGE_2026-11-12.md`. Stav skutečného dev nasazení ověřit samostatně.
+
 **Aktuální vývoj: 1. 11. 2026.** Web vzniká podle uživatelem schváleného devítipanelového tmavého vizuálního návrhu. Testovací náhled: https://dev.pocasi-loucka.eu/. Není to veřejná produkce. Všechny změny do main se sestavují a nasazují přes LXC automaticky; přesná zveřejněná revize je vidět ve webové patičce a v /deployment.json.
 
 ## Elegantní větrná růžice 2.0 (7. 11. 2026)
