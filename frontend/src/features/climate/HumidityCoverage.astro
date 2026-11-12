@@ -1,0 +1,125 @@
+---
+const currentYear=Number(new Intl.DateTimeFormat('en-GB',{year:'numeric',timeZone:'Europe/Prague'}).format(new Date()));
+const years=Array.from({length:Math.max(0,currentYear-2009)},(_,i)=>currentYear-1-i);
+const selected=years.includes(2022)?2022:years[0];
+---
+<section class="atlas-panel rh-coverage" id="vlhkost-archiv" data-rh-coverage aria-labelledby="rh-coverage-title">
+ <span class="atlas-eyebrow">Kvalita historických dat · venkovní vlhkost</span>
+ <h2 id="rh-coverage-title">Vlhkost: co se skutečně dochovalo?</h2>
+ <p>Prozkoumej dostupnost původních denních souhrnů relativní vlhkosti. Výpadek čidla není suchý den a dostupná hodnota ještě neznamená odborně ověřené měření.</p>
+ <form class="atlas-filters" data-rh-form>
+  <label>Dokončený kalendářní rok
+   <select name="year" data-rh-year>
+    {years.map(year=><option value={year} selected={year===selected}>{year}</option>)}
+   </select>
+  </label>
+  <button type="submit">Zobrazit pokrytí</button>
+ </form>
+ <p class="atlas-status" data-rh-status role="status">Vyber rok a zobraz pokrytí.</p>
+ <div class="atlas-results" aria-label="Dostupnost původní vlhkosti">
+  <div class="atlas-result"><span>Dny s dostupnou RH</span><strong data-rh-available>—</strong><small>Počet dní, ne počet všech měření</small></div>
+  <div class="atlas-result"><span>Dny bez použitelného souhrnu</span><strong data-rh-missing>—</strong><small>Chybějící nebo podezřelé</small></div>
+  <div class="atlas-result"><span>Časové pokrytí RH</span><strong data-rh-time>—</strong><small>Z původních denních souhrnů WeeWX</small></div>
+ </div>
+ <p class="source-note rh-year-note" data-rh-2022 hidden><strong>Poznámka k roku 2022:</strong> Historický audit odhalil rozsáhlé výpadky vlhkosti v první polovině roku a podezřelé dlouhé konstantní hodnoty v dubnu. I dostupné denní souhrny mohou být ovlivněny chybou čidla. Neschválené odhady nejsou součástí tohoto přehledu.</p>
+ <div class="rh-legend" aria-label="Legenda dostupnosti">
+  <span><i class="rh-available" aria-hidden="true"></i> Dostupná hodnota</span>
+  <span><i class="rh-suspect" aria-hidden="true"></i> Podezřelá hodnota dle odpovědi API</span>
+  <span><i class="rh-missing" aria-hidden="true"></i> Bez hodnoty</span>
+ </div>
+ <div class="atlas-table-scroll" role="region" aria-label="Měsíční pokrytí relativní vlhkosti" tabindex="0">
+  <table class="atlas-table rh-table">
+   <thead><tr><th scope="col">Měsíc</th><th scope="col">Dostupné dny</th><th scope="col">Podezřelé</th><th scope="col">Bez hodnoty</th><th scope="col">Dostupnost</th></tr></thead>
+   <tbody data-rh-months><tr><td colspan="5">Zatím nebyl vybrán rok.</td></tr></tbody>
+  </table>
+ </div>
+ <p class="source-note">Zdroj: originální denní souhrny WeeWX (<code>dataset=original</code>), kalendář Europe/Prague. Dostupný den znamená, že API poskytlo použitelnou denní hodnotu v rozsahu 1–100 %. Neznamená to úplných 24 hodin měření ani nezávislou kontrolu čidla. Časové pokrytí vychází ze samostatné roční konsolidace a může zůstat nezjištěné. Chybějící dny nejsou nahrazeny nulou. Historické odhady a referenční stanice se nepřimíchávají.</p>
+</section>
+<style is:global>
+#vlhkost-archiv .rh-legend{display:flex;flex-wrap:wrap;gap:9px 18px;font-size:12px;color:var(--muted);margin:18px 0 12px}
+#vlhkost-archiv .rh-legend span{display:inline-flex;align-items:center;gap:7px}
+#vlhkost-archiv .rh-legend i{display:inline-block;width:13px;height:13px;border:1px solid var(--line);border-radius:3px}
+#vlhkost-archiv .rh-available{background:var(--teal)}
+#vlhkost-archiv .rh-suspect{background:repeating-linear-gradient(135deg,#b58a42 0 4px,#d8ba7b 4px 7px)}
+#vlhkost-archiv .rh-missing{background:var(--panel-2)}
+#vlhkost-archiv .rh-bar{display:flex;width:100%;min-width:85px;height:11px;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+#vlhkost-archiv .rh-bar>span{display:block;height:100%;flex-shrink:0}
+#vlhkost-archiv .rh-table{min-width:470px}
+#vlhkost-archiv .rh-table th[scope=row]{text-align:left}
+#vlhkost-archiv .rh-year-note[hidden]{display:none}
+#vlhkost-archiv .rh-year-note{border-left:3px solid var(--teal);padding-left:12px}
+</style>
+<script>
+ import {getAnnualMatrix,getHistoryInterval} from '../../shared/api/client';
+ import type {AnnualMatrix} from '../../shared/api/client';
+ import {humidityCoverage} from '../../shared/domain/humidity-coverage';
+ import {pragueMidnightIso} from '../../shared/domain/statistics';
+
+ const root=document.querySelector<HTMLElement>('[data-rh-coverage]');
+ if(root){
+  const form=root.querySelector<HTMLFormElement>('[data-rh-form]')!;
+  const select=root.querySelector<HTMLSelectElement>('[data-rh-year]')!;
+  const status=root.querySelector<HTMLElement>('[data-rh-status]')!;
+  const body=root.querySelector<HTMLTableSectionElement>('[data-rh-months]')!;
+  const note=root.querySelector<HTMLElement>('[data-rh-2022]')!;
+  const months=['Leden','Únor','Březen','Duben','Květen','Červen','Červenec','Srpen','Září','Říjen','Listopad','Prosinec'];
+  const set=(name:string,value:string)=>{root.querySelector<HTMLElement>('[data-rh-'+name+']')!.textContent=value;};
+  const empty=(message:string)=>{body.replaceChildren();const td=body.insertRow().insertCell();td.colSpan=5;td.textContent=message;};
+  const percentage=(x:number)=>new Intl.NumberFormat('cs-CZ',{maximumFractionDigits:1}).format(x*100)+' %';
+  let active:AbortController|undefined;
+  let annual:AnnualMatrix|undefined;
+  const refresh=async()=>{
+   const year=Number(select.value);
+   if(!Number.isInteger(year)||!Array.from(select.options).some(o=>Number(o.value)===year))return;
+   active?.abort();const controller=new AbortController();active=controller;
+   const signal=controller.signal;
+   note.hidden=true;set('available','—');set('missing','—');set('time','—');
+   status.textContent='Načítám původní denní souhrny za rok '+year+'…';status.dataset.state='';
+   empty('Načítám…');
+   try{
+    const data=await getHistoryInterval('outHumidity',pragueMidnightIso(year+'-01-01'),
+     pragueMidnightIso((year+1)+'-01-01'),'daily',signal);
+    if(signal.aborted)return;
+    const result=humidityCoverage(year,data);
+    body.replaceChildren();
+    for(const m of result.months){
+     const row=body.insertRow();
+     const label=document.createElement('th');label.scope='row';label.textContent=months[m.month-1]!;row.append(label);
+     row.insertCell().textContent=m.availableDays+' / '+m.expectedDays;
+     row.insertCell().textContent=String(m.suspectDays);
+     row.insertCell().textContent=String(m.missingDays);
+     const cell=row.insertCell();
+     const bar=document.createElement('div');bar.className='rh-bar';bar.setAttribute('aria-hidden','true');
+     for(const [kind,count] of [['available',m.availableDays],['suspect',m.suspectDays],['missing',m.missingDays]] as const){
+      const part=document.createElement('span');part.className='rh-'+kind;
+      part.style.width=(100*count/m.expectedDays)+'%';bar.append(part);
+     }
+     cell.append(bar);
+     const text=document.createElement('span');text.textContent=percentage(m.availableDays/m.expectedDays);cell.append(text);
+    }
+    set('available',result.availableDays+' / '+result.expectedDays);
+    set('missing',String(result.missingDays+result.suspectDays));
+    note.hidden=year!==2022;
+    status.textContent='Rok '+year+' · původní souhrny · bez úplné historické kontroly';
+    status.dataset.state='warning';
+   }catch{
+    if(signal.aborted)return;
+    empty('Denní souhrny nejsou dostupné.');status.textContent='Vlhkost za rok '+year+' nelze načíst.';
+    status.dataset.state='error';return;
+   }
+   // Reuse the existing cached annual matrix, only on explicit interaction.
+   // A separate request may fail without discarding the valid daily view.
+   try{
+    if(!annual)annual=await getAnnualMatrix('outHumidity',signal);
+    if(signal.aborted)return;
+    const row=annual.years.find(r=>r.year===year);
+    const fraction=row?.timeCoverageFraction;
+    set('time',row?.periodStatus==='finished'&&row.unit==='%'&&
+     typeof fraction==='number'&&Number.isFinite(fraction)&&fraction>=0&&fraction<=1?
+     percentage(fraction):'Nezjištěno');
+   }catch{if(!signal.aborted)set('time','Nezjištěno');}
+  };
+  form.addEventListener('submit',event=>{event.preventDefault();void refresh();});
+  document.addEventListener('astro:before-swap',()=>active?.abort(),{once:true});
+ }
+</script>
