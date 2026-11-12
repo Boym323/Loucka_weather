@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import AtlasNav from '../../features/climate/AtlasNav.astro';
 import HumidityCoverage from '../../features/climate/HumidityCoverage.astro';
+import RainfallArchive from '../../features/climate/RainfallArchive.astro';
 ---
 <BaseLayout title="Atlas · Trendy"
  description="Dlouhodobý vývoj ročních teplot, srážek a větru na meteostanici Loučka od roku 2009. Včetně pokrytí a metodiky.">
@@ -42,8 +43,9 @@ import HumidityCoverage from '../../features/climate/HumidityCoverage.astro';
      <tbody data-trend-rows><tr><td colspan="5">Načítám…</td></tr></tbody>
     </table>
    </div>
-   <p class="source-note">Dostatečné pokrytí pro orientační trend vyžaduje alespoň 90 % dní s platnou hodnotou a u teploty/větru též známé časové pokrytí alespoň 90 %. Rok 2026, pokud právě probíhá, se do trendu nezařazuje. Nejde o 30letý klimatologický normál.</p>
+   <p class="source-note">Dostatečné pokrytí pro orientační trend vyžaduje alespoň 90 % dní s platnou hodnotou a známé časové pokrytí alespoň 90 %. U srážek se navíc do sklonu nezahrnují roky s doloženými významnými historickými omezeními. Probíhající rok se nezařazuje. Nejde o 30letý klimatologický normál.</p>
   </section>
+  <RainfallArchive />
   <HumidityCoverage />
  </div>
 </BaseLayout>
@@ -52,6 +54,7 @@ import HumidityCoverage from '../../features/climate/HumidityCoverage.astro';
  import type {ConsolidatedAnnualYear} from '../../shared/api/client';
  import {formatValue} from '../../shared/domain/metrics';
  import {theilSen} from '../../shared/domain/climate-atlas';
+ import {rainTrendEligible,rainYearRisk} from '../../shared/domain/rainfall-atlas';
  const root=document.querySelector<HTMLElement>('[data-atlas-trends]');
  if(root){
   const form=root.querySelector<HTMLFormElement>('[data-trend-form]')!;
@@ -70,10 +73,10 @@ import HumidityCoverage from '../../features/climate/HumidityCoverage.astro';
   const set=(selector:string,value:string)=>{
    const el=root.querySelector<HTMLElement>(selector);if(el)el.textContent=value;
   };
-  const eligible=(r:ConsolidatedAnnualYear,metric:Metric)=>r.value!==null&&
-   Number.isFinite(r.value)&&r.periodStatus==='finished'&&
+  const eligible=(r:ConsolidatedAnnualYear,metric:Metric)=>metric==='rain'?rainTrendEligible(r):
+   r.value!==null&&Number.isFinite(r.value)&&r.periodStatus==='finished'&&
    r.validDays/r.elapsedDays>=.9&&
-   (metric==='rain'||(r.timeCoverageFraction!==null&&r.timeCoverageFraction>=.9));
+   r.timeCoverageFraction!==null&&r.timeCoverageFraction>=.9;
   const draw=(rows:ConsolidatedAnnualYear[],metric:Metric)=>{
    graph.replaceChildren();
    const valid=rows.filter(r=>r.value!==null&&Number.isFinite(r.value));
@@ -113,12 +116,16 @@ import HumidityCoverage from '../../features/climate/HumidityCoverage.astro';
    };
    for(const r of rows){
     if(r.value===null||!Number.isFinite(r.value)){flush();continue;}
-    segment.push((segment.length?'L':'M')+x(r.year).toFixed(1)+' '+y(r.value).toFixed(1));
+    // Known-risk or poorly covered precipitation remains visible as a point,
+    // but is neither connected into the supported series nor used in the slope.
+    if(metric==='rain'&&!eligible(r,metric))flush();
+    else segment.push((segment.length?'L':'M')+x(r.year).toFixed(1)+' '+y(r.value).toFixed(1));
     const dot=el('circle');dot.setAttribute('class','chart-points');
     dot.setAttribute('cx',String(x(r.year)));dot.setAttribute('cy',String(y(r.value)));
     dot.setAttribute('r',eligible(r,metric)?'4':'3');dot.setAttribute('opacity',eligible(r,metric)?'1':'.35');
     const tip=el('title');tip.textContent=r.year+' · '+formatValue(r.value,1)+' '+descriptions[metric].unit+
-     ' · '+r.validDays+'/'+r.elapsedDays+' dnů';dot.append(tip);svg.append(dot);
+     ' · '+r.validDays+'/'+r.elapsedDays+' dnů'+
+     (metric==='rain'&&rainYearRisk(r.year)?' · '+rainYearRisk(r.year):'');dot.append(tip);svg.append(dot);
    }
    flush();
    graph.append(svg);
@@ -139,19 +146,22 @@ import HumidityCoverage from '../../features/climate/HumidityCoverage.astro';
     set('[data-trend-samples]',String(rows.filter(r=>r.value!==null).length));
     set('[data-trend-slope]',slope===null?'Nelze určit':
      (slope>0?'+':'')+formatValue(slope*10,2)+' '+unit);
-    set('[data-trend-method]',slope===null?
+    set('[data-trend-method]',(slope===null?
      'K popisnému sklonu chybí alespoň osm dostatečně pokrytých dokončených let v rozpětí 10 let. Chybějící souhrny nedoplňujeme.':
-     'Theil–Senův sklon z '+trendRows.length+' dokončených let; popisný odhad, nikoliv průkazný klimatický trend. Stanice a její senzory mohly během historie projít změnami.');
+     'Theil–Senův sklon z '+trendRows.length+' dokončených let; popisný odhad, nikoliv průkazný klimatický trend. Stanice a její senzory mohly během historie projít změnami.')+
+     (metric==='rain'?' U srážek jsou známá problematická období viditelná, ale mimo výpočet sklonu; požadujeme i známé časové pokrytí nejméně 90 %.':''));
     body.replaceChildren();
     for(const row of [...rows].reverse()){
      const tr=body.insertRow();const good=eligible(row,metric);
+     const risk=metric==='rain'?rainYearRisk(row.year):null;
      for(const value of [
       String(row.year),
       row.value===null?'—':formatValue(row.value,1)+' '+unit,
       row.validDays+' / '+row.elapsedDays,
       row.timeCoverageFraction===null?'nezjištěno':
        Math.round(row.timeCoverageFraction*100)+' %',
-      row.periodStatus==='in_progress'?'Probíhá':good?'Zařazeno do výpočtu':'Neúplné / orientační'
+      row.periodStatus==='in_progress'?'Probíhá':risk?'Známé omezení · mimo trend: '+risk:
+       good?'Zařazeno do výpočtu':'Neúplné / orientační'
      ])tr.insertCell().textContent=value;
     }
     draw(rows,metric);
