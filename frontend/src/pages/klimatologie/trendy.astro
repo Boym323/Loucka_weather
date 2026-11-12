@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import AtlasNav from '../../features/climate/AtlasNav.astro';
+import HumidityCoverage from '../../features/climate/HumidityCoverage.astro';
 ---
 <BaseLayout title="Atlas · Trendy"
  description="Dlouhodobý vývoj ročních teplot, srážek a větru na meteostanici Loučka od roku 2009. Včetně pokrytí a metodiky.">
@@ -43,6 +44,7 @@ import AtlasNav from '../../features/climate/AtlasNav.astro';
    </div>
    <p class="source-note">Dostatečné pokrytí pro orientační trend vyžaduje alespoň 90 % dní s platnou hodnotou a u teploty/větru též známé časové pokrytí alespoň 90 %. Rok 2026, pokud právě probíhá, se do trendu nezařazuje. Nejde o 30letý klimatologický normál.</p>
   </section>
+  <HumidityCoverage />
  </div>
 </BaseLayout>
 <script>
