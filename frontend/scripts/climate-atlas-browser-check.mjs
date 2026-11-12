@@ -13,7 +13,7 @@ const origin=process.env.LOCAL_PREVIEW_URL||'http://127.0.0.1:4321/';
 const target='test-results/layout-audit';
 await mkdir(target,{recursive:true});
 const yearly=(metric)=>{
- const unit=metric==='rain'?'mm':metric==='windSpeed'?'m/s':'°C';
+ const unit=metric==='rain'?'mm':metric==='windSpeed'?'m/s':metric==='outHumidity'?'%':'°C';
  return {
   schemaVersion:'1',metric,aggregation:metric==='rain'?'sum':'mean',
   units:'metricwx',dataset:'original',source:'weewx_daily',
@@ -27,7 +27,7 @@ const yearly=(metric)=>{
    const elapsedDays=ongoing?310:calendarDays;
    const validDays=year===2014?10:Math.floor(elapsedDays*.96);
    const value=metric==='rain'?500+i*8:
-    metric==='windSpeed'?2+i*.07:10+i*.2;
+    metric==='windSpeed'?2+i*.07:metric==='outHumidity'?70+i*.2:10+i*.2;
    return {year,calendarDays,elapsedDays,sourceRows:validDays,
     validDays,invalidDays:0,missingDays:elapsedDays-validDays,
     completenessFraction:validDays/elapsedDays,timeCoverageFraction:validDays/elapsedDays,
@@ -55,13 +55,13 @@ const daily=(url)=>{
  if(!metric||!first||!last)throw Error('Invalid requested dates');
  const dates=calendarDates(first,last);
  return {
-  schemaVersion:'1',metric,unit:metric==='rain'?'mm':'°C',
+  schemaVersion:'1',metric,unit:metric==='rain'?'mm':metric==='outHumidity'?'%':'°C',
   resolution:'daily',dataRevision:'browser-daily-only',
   points:dates.map((date,i)=>({
    startTime:pragueMidnightIso(date),
    endTime:pragueMidnightIso(new Date(Date.parse(date+'T00:00:00Z')+86400000).toISOString().slice(0,10)),
-   value:metric==='rain'?(i%7===0?2.5:0):15+Math.sin(i/17)*7,
-   quality:'derived',source:'weewx_daily',provenance:'browser-only'
+   value:metric==='rain'?(i%7===0?2.5:0):metric==='outHumidity'?(i===0?null:i===1?0:70+Math.sin(i/17)*7):15+Math.sin(i/17)*7,
+   quality:metric==='outHumidity'&&i===0?'missing':'derived',source:'weewx_daily',provenance:'browser-only'
   }))
  };
 };
@@ -184,6 +184,18 @@ try{
       document.querySelector('[data-trend-status]')?.textContent?.includes('Originální')
       &&document.querySelector('[data-trend-rows]')?.textContent?.includes('mm')
       ,null,{timeout:12000});
+     await page.locator('[data-rh-year]').selectOption('2022');
+     await page.locator('[data-rh-form] button').click();
+     await page.waitForFunction(()=>document.querySelector('[data-rh-available]')?.textContent==='363 / 365'
+      &&document.querySelector('[data-rh-time]')?.textContent?.includes('%'),null,{timeout:12000});
+     assert.equal(await page.locator('[data-rh-months] tr').count(),12);
+     assert.equal(await page.locator('[data-rh-months] tr').first().locator('td').nth(1).textContent(),'1');
+     assert.equal(await page.locator('[data-rh-months] tr').first().locator('td').nth(2).textContent(),'1');
+     assert.equal(await page.locator('[data-rh-2022]').isVisible(),true);
+     await page.locator('[data-rh-year]').selectOption('2024');
+     await page.locator('[data-rh-form] button').click();
+     await page.waitForFunction(()=>document.querySelector('[data-rh-available]')?.textContent==='364 / 366',null,{timeout:12000});
+     assert.equal(await page.locator('[data-rh-2022]').isVisible(),false);
     }
     if(path.endsWith('/sezony/')){
      await page.waitForFunction(()=>
