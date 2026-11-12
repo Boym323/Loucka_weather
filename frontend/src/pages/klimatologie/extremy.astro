@@ -30,6 +30,7 @@ const records=[
      </div>)}
     </div>
     <p class="source-note">Hodnoty jsou vybrány ze starších denních souhrnů WeeWX, nikoliv z forenzně schváleného archivu. Ani fyzikální filtr nevylučuje všechny anomálie.</p>
+    <p class="source-note">U srážek je nutné zvlášť posuzovat historické artefakty čítače, červenec 2021 a únor 2025. <a href="/klimatologie/trendy/#srazky-archiv">Zobrazit srážkový atlas a známá omezení.</a></p>
    </section>
    <section class="atlas-panel" aria-labelledby="extreme-timeline">
     <h2 id="extreme-timeline">Časová osa rekordních dnů</h2>
@@ -66,6 +67,7 @@ const records=[
 </BaseLayout>
 <script>
  import {formatValue} from '../../shared/domain/metrics';
+ import {rainDayRisk} from '../../shared/domain/rainfall-atlas';
  const root=document.querySelector<HTMLElement>('[data-atlas-extremes]');
  if(root){
   const ctrl=new AbortController();
@@ -88,7 +90,7 @@ const records=[
     if(ctrl.signal.aborted)return;
     if(data.schemaVersion!=='1'||data.status!=='preliminary'||!data.records||
      !data.dayTypes||!data.coverage)throw Error('Nesprávná evidence');
-    const events:{date:string;label:string;value:string;metric:string}[]=[];
+    const events:{date:string;label:string;value:string;metric:string;risk:string|null}[]=[];
     for(const [id,label] of Object.entries(names)){
      const record=data.records[id];
      const valid=record&&Number.isFinite(record.value)&&
@@ -98,8 +100,9 @@ const records=[
      const field=root.querySelector<HTMLElement>('[data-extreme-value="'+id+'"]');
      const date=root.querySelector<HTMLElement>('[data-extreme-date="'+id+'"]');
      if(field)field.textContent=display;
-     if(date)date.textContent=valid?'Den '+record.localDate+' · bez QC':'Záznam nedostupný';
-     if(valid)events.push({date:record.localDate,label,value:display,metric:id});
+     const risk=valid&&id==='maxDailyRain'?rainDayRisk(record.localDate):null;
+     if(date)date.textContent=valid?'Den '+record.localDate+(risk?' · známé omezení, k revizi':' · bez QC'):'Záznam nedostupný';
+     if(valid)events.push({date:record.localDate,label,value:display,metric:id,risk});
     }
     const timeline=root.querySelector<HTMLTableSectionElement>('[data-extreme-timeline]');
     if(timeline){
@@ -112,7 +115,7 @@ const records=[
       const row=timeline.insertRow();
       for(const value of [event.date,event.label,event.value])row.insertCell().textContent=value;
       const last=row.insertCell();
-      last.append(document.createTextNode('Předběžné · '));
+      last.append(document.createTextNode(event.risk?'Známé omezení: '+event.risk+' · ':'Předběžné · '));
       const button=document.createElement('button');
       button.type='button';button.className='atlas-rank-action';
       button.dataset.extremeDay=event.date;
@@ -137,7 +140,7 @@ const records=[
       const label=document.createElement('strong');label.textContent=event.label;
       const value=document.createElement('span');value.textContent=event.value;
       const note=document.createElement('small');
-      note.textContent='Původní denní souhrn · bez dokončené QC';
+      note.textContent=event.risk?'Známé omezení: '+event.risk:'Původní denní souhrn · bez dokončené QC';
       const action=document.createElement('button');
       action.type='button';action.className='atlas-rank-action';
       action.dataset.extremeDay=event.date;
