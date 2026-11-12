@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-12 – Srážkový atlas a ochrana historických trendů
+- Aktuální read-only porovnání originálu a rekonstrukce v 18 ročních oknech 2009–2026 do stejného cutoff. Úhrny se liší v pěti letech, zejména červenec 2021 (701,015 → 42,567 mm), pracovní nejvyšší roční a denní úhrny nejsou certifikované rekordy. 221 pending srážkových položek rozděleno podle skutečného aktuálního stavu; žádné nové opravy.
+- Nová sekce `/klimatologie/trendy/#srazky-archiv`: měsíční původní úhrny, dny s deštěm/nulou, missing/suspect a známá rizika. Roční srážkový sklon vyžaduje i časové pokrytí ≥90 % a vynechá známé problematické roky; původní hodnoty zůstávají viditelné. Extrémy označí známé problematické srážkové dny.
+- Syntetické unit/browser testy, pouze existující veřejné original endpointy. Žádná DB změna nebo publikace neschválených odhadů. Podrobnosti docs/RAIN_ARCHIVE_IMPACT_2026-11-12.md.
+
 ## 2026-11-12 – RH duben 2022: experimentální rozhodovací filtr Magnus
 - Přímá SELECT-only kontrola na 4 752 původních RH trojicích (22 dní) včetně přísné skupiny 2 043 (MAE Magnus 1,82 vs WU 2,16 p. b.). Ze starých numerických odhadů 285 missing a 1 140 frozen splňují konzervativní pracovní filtr; při stejnodenních kontrolách nemá žádný missing odhad prioritu, 264 frozen jen k ruční revizi.
 - Samostatný offline modul, reprodukovatelné omezené SELECT dotazy, testy a dokumentace. Bez automatického schválení, nové RH, DB zápisu, runtime změny nebo dalšího ročního skenu. Podrobnosti docs/QC_RH_APRIL_2022_MAGNUS_DECISION_2026-11-12.md.
