@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-12 – RH duben 2022: experimentální rozhodovací filtr Magnus
+- Přímá SELECT-only kontrola na 4 752 původních RH trojicích (22 dní) včetně přísné skupiny 2 043 (MAE Magnus 1,82 vs WU 2,16 p. b.). Ze starých numerických odhadů 285 missing a 1 140 frozen splňují konzervativní pracovní filtr; při stejnodenních kontrolách nemá žádný missing odhad prioritu, 264 frozen jen k ruční revizi.
+- Samostatný offline modul, reprodukovatelné omezené SELECT dotazy, testy a dokumentace. Bez automatického schválení, nové RH, DB zápisu, runtime změny nebo dalšího ročního skenu. Podrobnosti docs/QC_RH_APRIL_2022_MAGNUS_DECISION_2026-11-12.md.
+
 ## 2026-11-12 – Atlas: dostupnost historické vlhkosti
 - Sekce `/klimatologie/trendy/#vlhkost-archiv` s volbou dokončeného roku, měsíčními počty dnů s původním RH souhrnem, chybějícími a podezřelými souhrny a samostatným časovým pokrytím z roční konsolidace. Výchozí 2022 s upozorněním na známé výpadky a dubnové zamrzlé čidlo.
 - Pouze existující veřejné `dataset=original` denní a roční endpointy, načtení až na vyžádání. Neschválené rekonstrukce, privátní sidecar a databáze beze změny. Přestupné roky, DST, NULL, odmítnutí cizího původu a syntetické browser regresní testy. Podrobnosti docs/ATLAS_HUMIDITY_COVERAGE_2026-11-12.md.
