@@ -15,3 +15,7 @@ Pro definitivní rekordy je nutné dokončit kontrolu historických mezer, půvo
 ## Nový audit 2. 11. 2026
 
 Aktuální evidence rekonstrukce a seznam povinných podmínek jsou v repozitáři Meteo_audit: `reports/2026-11-02-publication-readiness.md`, `reports/data/2026-11-02-reconstruction-evidence.json`. Přístup Weather MCP v tomto běhu umožnil read-only pracovní rekonstrukci, ale odmítl názvy dalších produkčních DB s tečkami/pomlčkami. Nejde tedy o novou kompletní certifikaci. Veřejné historické rekordy nadále musí být označeny za **předběžné** a nepřepínáme dataset na approved bez skutečné revize a QC.
+
+## Nový read-only audit 12. 11. 2026
+
+V [RAIN_ARCHIVE_IMPACT_2026-11-12.md](RAIN_ARCHIVE_IMPACT_2026-11-12.md) je přímé porovnání 18 ročních oken originálu a pracovní rekonstrukce do stejného cutoff. Známé původní srážkové anomálie mění pořadí ročních a denních rekordů. V atlasu zůstávají původní souhrny a předběžný stav; známý problém dne se označuje, nikoli nahrazuje pracovním maximem. Srážkový sklon vyžaduje časové pokrytí ≥90 % a vylučuje známá zásadní rizika. Žádná certifikace ani automatické přepnutí datasetu.
