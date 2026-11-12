@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-12 – Atlas: dostupnost historické vlhkosti
+- Sekce `/klimatologie/trendy/#vlhkost-archiv` s volbou dokončeného roku, měsíčními počty dnů s původním RH souhrnem, chybějícími a podezřelými souhrny a samostatným časovým pokrytím z roční konsolidace. Výchozí 2022 s upozorněním na známé výpadky a dubnové zamrzlé čidlo.
+- Pouze existující veřejné `dataset=original` denní a roční endpointy, načtení až na vyžádání. Neschválené rekonstrukce, privátní sidecar a databáze beze změny. Přestupné roky, DST, NULL, odmítnutí cizího původu a syntetické browser regresní testy. Podrobnosti docs/ATLAS_HUMIDITY_COVERAGE_2026-11-12.md.
+
 ## 2026-11-11 – celoroční RH 2022 technický read-only audit
 - Nový operátorský `deploy/lxc/audit-rh-2022-year.py`: 73 navazujících 5denních oken, jeden omezený GET na okno přes izolovaný sidecar 127.0.0.1:3101, záměrná prodleva >=1,5 s, žádná DB/HTTP mutace ani restart. Kontrola všech 105 119 dostupných UTC 5min slotů 2022 (první časová hranice není dostupná přes existující API).
 - Souhrny po měsících a dnech, skutečně chybějící celé řádky vs. existující NULL RH, auditní dávky, 5min skoky včetně hranic oken, a striktní celoroční kontrola všech 5 153 historických změn proti pinovanému JSON. Soukromý root-only report vznikne pouze při kompletním průchodu; výsledky z LXC teprve ověřit.
