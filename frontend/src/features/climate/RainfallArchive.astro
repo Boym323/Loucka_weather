@@ -1,0 +1,101 @@
+---
+const currentYear=Number(new Intl.DateTimeFormat('en-GB',{year:'numeric',timeZone:'Europe/Prague'}).format(new Date()));
+const years=Array.from({length:Math.max(0,currentYear-2009)},(_,i)=>currentYear-1-i);
+const selected=years.includes(2021)?2021:years[0];
+---
+<section class="atlas-panel" id="srazky-archiv" data-rain-archive aria-labelledby="rain-archive-title">
+ <span class="atlas-eyebrow">Kvalita historických dat · srážky</span>
+ <h2 id="rain-archive-title">Srážkový atlas: úhrny a dostupnost</h2>
+ <p>Prozkoumej jednotlivé měsíce. Rozlišujeme dny s deštěm, dny s uloženou nulou a chybějící nebo podezřelé denní souhrny. Ani dostupný den nemusí mít všechna měření.</p>
+ <form class="atlas-filters" data-rain-form>
+  <label>Dokončený kalendářní rok
+   <select data-rain-year name="year">
+    {years.map(year=><option value={year} selected={year===selected}>{year}</option>)}
+   </select>
+  </label>
+  <button type="submit">Zobrazit srážky</button>
+ </form>
+ <p class="atlas-status" data-rain-status role="status">Vyber rok a zobraz měsíční přehled.</p>
+ <div class="atlas-results" aria-label="Původní srážkové souhrny">
+  <div class="atlas-result"><span>Součet dostupných dnů</span><strong data-rain-total>—</strong><small>Původní archiv, bez doplňování mezer</small></div>
+  <div class="atlas-result"><span>Dny s hodnotou</span><strong data-rain-available>—</strong><small>Neznamená úplné pokrytí dne</small></div>
+  <div class="atlas-result"><span>Dny s deštěm / nulou</span><strong data-rain-wet-dry>—</strong><small>Podle uložených denních souhrnů</small></div>
+ </div>
+ <p class="source-note rain-year-note" data-rain-risk hidden></p>
+ <div class="atlas-table-scroll" role="region" aria-label="Měsíční srážkové úhrny a dostupnost" tabindex="0">
+  <table class="atlas-table rain-archive-table">
+   <thead><tr><th scope="col">Měsíc</th><th scope="col">Úhrn dostupných dnů</th><th scope="col">Déšť</th><th scope="col">Nula</th><th scope="col">Bez hodnoty</th><th scope="col">Podezřelé</th><th scope="col">Poznámka</th></tr></thead>
+   <tbody data-rain-months><tr><td colspan="7">Zatím nebyl vybrán rok.</td></tr></tbody>
+  </table>
+ </div>
+ <p class="source-note"><strong>Jak přehled číst:</strong> Každý úhrn je součtem dostupných původních denních souhrnů WeeWX v milimetrech; denní nula se zachová, chybějící souhrn se nenahrazuje. Kalendář Europe/Prague včetně změny času. Stav „bez konečné QC“ není potvrzení správnosti. Známá historická omezení jsou samostatnou poznámkou, nikoli automatickým přepsáním hodnot.</p>
+ <p class="source-note"><strong>Intenzita není úhrn:</strong> Historická původní intenzita deště má dlouhá období nulových záznamů, i když se zaznamenaly srážky. Nelze ji považovat za důkaz sucha ani ji automaticky dopočítat z úhrnu. Neschválené rekonstrukce a externí reference se zde nezobrazují.</p>
+</section>
+<style is:global>
+#srazky-archiv .rain-archive-table{min-width:720px}
+#srazky-archiv .rain-archive-table th[scope=row]{text-align:left}
+#srazky-archiv .rain-year-note[hidden]{display:none}
+#srazky-archiv .rain-year-note{border-left:3px solid var(--teal);padding-left:12px}
+#srazky-archiv .rain-month-bar{height:7px;width:100%;min-width:70px;max-width:135px;border-radius:3px;background:var(--panel-2);border:1px solid var(--line);overflow:hidden;margin-top:5px}
+#srazky-archiv .rain-month-bar span{display:block;height:100%;background:var(--teal)}
+#srazky-archiv .rain-archive-table td:last-child{max-width:230px;white-space:normal}
+</style>
+<script>
+ import {getHistoryInterval} from '../../shared/api/client';
+ import {rainfallCoverage,rainYearRisk} from '../../shared/domain/rainfall-atlas';
+ import {pragueMidnightIso} from '../../shared/domain/statistics';
+ import {formatValue} from '../../shared/domain/metrics';
+ const root=document.querySelector<HTMLElement>('[data-rain-archive]');
+ if(root){
+  const form=root.querySelector<HTMLFormElement>('[data-rain-form]')!;
+  const select=root.querySelector<HTMLSelectElement>('[data-rain-year]')!;
+  const status=root.querySelector<HTMLElement>('[data-rain-status]')!;
+  const body=root.querySelector<HTMLTableSectionElement>('[data-rain-months]')!;
+  const note=root.querySelector<HTMLElement>('[data-rain-risk]')!;
+  const names=['Leden','Únor','Březen','Duben','Květen','Červen','Červenec','Srpen','Září','Říjen','Listopad','Prosinec'];
+  const set=(key:string,value:string)=>{root.querySelector<HTMLElement>('[data-rain-'+key+']')!.textContent=value;};
+  const empty=(message:string)=>{body.replaceChildren();const td=body.insertRow().insertCell();td.colSpan=7;td.textContent=message;};
+  let active:AbortController|undefined;
+  const refresh=async()=>{
+   const year=Number(select.value);
+   if(!Number.isInteger(year)||!Array.from(select.options).some(o=>Number(o.value)===year))return;
+   active?.abort();const controller=new AbortController();active=controller;
+   const signal=controller.signal;
+   note.hidden=true;note.textContent='';
+   for(const key of ['total','available','wet-dry'])set(key,'—');
+   status.textContent='Načítám původní srážkové souhrny…';status.dataset.state='';
+   empty('Načítám…');
+   try{
+    const data=await getHistoryInterval('rain',pragueMidnightIso(year+'-01-01'),
+     pragueMidnightIso((year+1)+'-01-01'),'daily',signal);
+    if(signal.aborted)return;
+    const r=rainfallCoverage(year,data);
+    const highest=Math.max(0,...r.months.map(m=>m.sumMm??0));
+    body.replaceChildren();
+    for(const m of r.months){
+     const row=body.insertRow();const th=document.createElement('th');th.scope='row';th.textContent=names[m.month-1]!;row.append(th);
+     const amount=row.insertCell();
+     amount.textContent=m.sumMm===null?'—':formatValue(m.sumMm,1)+' mm';
+     if(m.sumMm!==null&&highest>0){
+      const bar=document.createElement('div');bar.className='rain-month-bar';bar.setAttribute('aria-hidden','true');
+      const segment=document.createElement('span');segment.style.width=(100*m.sumMm/highest)+'%';bar.append(segment);amount.append(bar);
+     }
+     for(const v of [m.wetDays,m.dryDays,m.missingDays,m.suspectDays])row.insertCell().textContent=String(v);
+     row.insertCell().textContent=m.risk??(m.missingDays||m.suspectDays?'Neúplné denní souhrny':'Bez konečné QC');
+    }
+    set('total',r.sumMm===null?'—':formatValue(r.sumMm,1)+' mm');
+    set('available',r.availableDays+' / '+r.expectedDays);
+    set('wet-dry',r.wetDays+' / '+r.dryDays);
+    const risk=rainYearRisk(year);
+    if(risk){note.textContent='Známé omezení roku '+year+': '+risk+' Úhrny zůstávají původní a předběžné.';note.hidden=false;}
+    status.textContent='Rok '+year+' · původní denní souhrny · bez konečné QC';
+    status.dataset.state='warning';
+   }catch{
+    if(signal.aborted)return;
+    empty('Denní souhrny nejsou dostupné.');status.textContent='Srážky za rok '+year+' nelze načíst.';status.dataset.state='error';
+   }
+  };
+  form.addEventListener('submit',event=>{event.preventDefault();void refresh();});
+  document.addEventListener('astro:before-swap',()=>active?.abort(),{once:true});
+ }
+</script>
