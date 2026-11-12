@@ -42,7 +42,7 @@ const records={
  records:{
   minTemp:{value:-18.2,unit:'°C',localDate:'2012-02-06',quality:'unverified_original'},
   maxTemp:{value:36.5,unit:'°C',localDate:'2015-08-08',quality:'unverified_original'},
-  maxDailyRain:{value:32.5,unit:'mm',localDate:'2023-08-26',quality:'unverified_original'},
+  maxDailyRain:{value:32.5,unit:'mm',localDate:'2021-07-25',quality:'unverified_original'},
   maxWindGust:{value:23.5,unit:'m/s',localDate:'2020-03-10',quality:'unverified_original'}
  },
  dayTypes:{frost:430,ice:121,summer:310,tropical:45},
@@ -54,14 +54,15 @@ const daily=(url)=>{
  const last=pragueLocalDate(url.searchParams.get('to')??'');
  if(!metric||!first||!last)throw Error('Invalid requested dates');
  const dates=calendarDates(first,last);
+ const rainGapFixture=metric==='rain'&&first==='2021-01-01'&&last==='2022-01-01';
  return {
   schemaVersion:'1',metric,unit:metric==='rain'?'mm':metric==='outHumidity'?'%':'°C',
   resolution:'daily',dataRevision:'browser-daily-only',
   points:dates.map((date,i)=>({
    startTime:pragueMidnightIso(date),
    endTime:pragueMidnightIso(new Date(Date.parse(date+'T00:00:00Z')+86400000).toISOString().slice(0,10)),
-   value:metric==='rain'?(i%7===0?2.5:0):metric==='outHumidity'?(i===0?null:i===1?0:70+Math.sin(i/17)*7):15+Math.sin(i/17)*7,
-   quality:metric==='outHumidity'&&i===0?'missing':'derived',source:'weewx_daily',provenance:'browser-only'
+   value:metric==='rain'?(rainGapFixture&&i===0?null:rainGapFixture&&i===1?-1:i%7===0?2.5:0):metric==='outHumidity'?(i===0?null:i===1?0:70+Math.sin(i/17)*7):15+Math.sin(i/17)*7,
+   quality:(metric==='outHumidity'||rainGapFixture)&&i===0?'missing':'derived',source:'weewx_daily',provenance:'browser-only'
   }))
  };
 };
@@ -157,6 +158,8 @@ try{
       document.querySelector('[data-extreme-value="minTemp"]')?.textContent?.includes('-18,2')
       ,null,{timeout:12000});
      assert.equal(await page.locator('[data-extreme-timeline] tr').count(),4);
+     assert.match(await page.locator('[data-extreme-date="maxDailyRain"]').textContent()??'',/známé omezení/);
+     assert.match(await page.locator('[data-extreme-timeline]').textContent()??'',/Červenec 2021/);
      assert.equal(await page.locator('[data-extreme-cards] li').count(),4);
      const onPhone=viewport.width<650;
      const cardsMode=await page.locator('[data-extreme-cards]').evaluate(
@@ -184,6 +187,20 @@ try{
       document.querySelector('[data-trend-status]')?.textContent?.includes('Originální')
       &&document.querySelector('[data-trend-rows]')?.textContent?.includes('mm')
       ,null,{timeout:12000});
+     const rainYearRow=page.locator('[data-trend-rows] tr').filter({has:page.getByRole('cell',{name:'2021',exact:true})});
+     assert.match(await rainYearRow.textContent()??'',/Známé omezení · mimo trend/);
+     await page.locator('[data-rain-year]').selectOption('2021');
+     await page.locator('[data-rain-form] button').click();
+     await page.waitForFunction(()=>document.querySelector('[data-rain-available]')?.textContent==='363 / 365',null,{timeout:12000});
+     assert.equal(await page.locator('[data-rain-months] tr').count(),12);
+     assert.equal(await page.locator('[data-rain-wet-dry]').textContent(),'52 / 311');
+     assert.equal(await page.locator('[data-rain-months] tr').first().locator('td').nth(3).textContent(),'1');
+     assert.equal(await page.locator('[data-rain-months] tr').first().locator('td').nth(4).textContent(),'1');
+     assert.match(await page.locator('[data-rain-risk]').textContent()??'',/Červenec 2021/);
+     await page.locator('[data-rain-year]').selectOption('2024');
+     await page.locator('[data-rain-form] button').click();
+     await page.waitForFunction(()=>document.querySelector('[data-rain-available]')?.textContent==='366 / 366',null,{timeout:12000});
+     assert.equal(await page.locator('[data-rain-risk]').isVisible(),false);
      await page.locator('[data-rh-year]').selectOption('2022');
      await page.locator('[data-rh-form] button').click();
      await page.waitForFunction(()=>document.querySelector('[data-rh-available]')?.textContent==='363 / 365'
