@@ -135,7 +135,7 @@ test('day-boundary tampering and duplicate daily rows fail closed',async t=>{
  assert.equal(response.statusCode,503);
  assert.equal(response.json().error.code,'UPSTREAM_UNAVAILABLE');
  const duplicated=structuredClone(original);
- duplicated.rain.push({...duplicated.rain[0]});
+ duplicated.rain.push({...duplicated.rain[0]!});
  duplicated.rain.sort((a,b)=>a.dateTime-b.dateTime);
  const d=make(duplicated),other=buildApp(d.reader,clock);t.after(()=>other.close());
  assert.equal((await other.inject('/api/v1/climate/dashboard'+q)).statusCode,503);
