@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-17 – Diagnostika časových překryvů 25.–26. července 2026
+- Čistě čtecí SQL nově lokalizuje jednotlivé překrývající se nebo nepokryté intervaly denních teplot, včetně okrajových mezer v místním 24h dni; původní naměřené hodnoty se nepublikují ani nemění.
+- Podle ověřeného auditu činí překryvy 3120/1800 s a nepokrytý čas 720/0 s; přidány regresní testy intervalové aritmetiky a operátorský postup.
+
 ## 2026-11-17 – Historický graf úvodní stránky po načtení DOM
 - Na hlavní stránce se vykreslovací knihovna ECharts pro posledních 24 hodin načítá samostatným dynamickým blokem až po DOMContentLoaded. Stránka již nemusí čekat na vykreslovací balíček před dokončením HTML parsování.
 - Zachován skutečný archivní graf, barvy, kvalita bodů, ovládací prvky i fallback. Zrušení opožděné inicializace při výměně stránky; bezpečný text při chybě načítání knihovny.
