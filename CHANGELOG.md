@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-17 – Přístupnější texty veřejného webu
+- Úvod, aktuální měření, grafy, senzory, rekordy i stav stanice používají srozumitelnější češtinu místo interních názvů databází, API a diagnostických zkratek.
+- Odborné vysvětlení kvality měření zůstává v rozbalitelných podrobnostech; chybějící data a nejisté historické rekordy se nadále nezaměňují za ověřená měření.
+- Identifikace GitHub commitu byla odebrána z běžné patičky, ale je k dispozici v rozbalitelné sekci O stanici.
+- Bez změn meteorologických výpočtů, API, databází a produkčního WeeWX.
+
+
 ## 2026-11-17 – Volitelný ověřený TLS režim pro Fastify API
 - Přidána konfigurace `WEATHER_DB_TLS_MODE=verify` a volitelná důvěryhodná CA z externího PEM souboru; ověřování certifikátu se nikdy nevypíná.
 - Readiness při vyžádaném TLS ověřuje skutečný `Ssl_cipher` z databázové session. Chybná nebo nečitelná CA konfigurace selže uzavřeně.

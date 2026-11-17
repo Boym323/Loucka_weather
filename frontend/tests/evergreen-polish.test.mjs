@@ -20,11 +20,11 @@ test('weather source microcopy remains precise without redundant qualifiers',asy
  const chart=await read('src/features/history/HistoryChart.astro');
  assert.match(current,/Přečteno /);
  assert.match(current,/Naměřeno /);
- assert.match(current,/GW3000 · ostatní veličiny z posledního záznamu WeeWX/);
- assert.match(current,/Archive|Archiv WeeWX/);
+ assert.match(current,/Část údajů přichází živě, ostatní pocházejí z posledního uloženého měření/);
+ assert.match(current,/data-current-provenance/);
  assert.match(current,/reading\.quality==='missing'\|\|reading\.quality==='suspect'/);
  assert.match(wind,/U každé hodnoty uvádíme její zdroj/);
  assert.match(wind,/reading\?\.source==='gw3000_live'|value\?\.source==='gw3000_live'/);
- assert.match(chart,/chybějící intervaly zůstávají prázdné/);
+ assert.match(chart,/Kde chybí měření, graf má mezeru/);
  assert.match(chart,/connectNulls:false/);
 });

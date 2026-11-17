@@ -18,7 +18,8 @@ test('approved homepage places real measurements, wind and history in one glass 
  assert.match(page,/evergreen-hero/);
  assert.match(page,/evergreen-spotlight/);
  assert.match(page,/webcam\.pocasi-loucka\.eu\/zapadni_kamera\.jpg/);
- assert.match(page,/čas pořízení snímku není ověřen/);
+ assert.match(page,/snímek nemusí být právě pořízený/);
+ assert.match(page,/čas pořízení neověřen/);
  assert.doesNotMatch(page,/6,5 °C|476 m|Davis Vantage Pro2|Polojasno/);
 });
 

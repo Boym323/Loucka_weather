@@ -35,7 +35,8 @@ test('light and dark modes preserve data distinctions',async()=>{
  assert.match(layout,/localStorage\.getItem\('loucka-theme'\)/);
  assert.match(css,/:root\[data-theme="dark"\]/);
  assert.match(css,/--atlas-hero-text:#eff5f3/);
- assert.match(current,/Živé měření GW3000/);
+ assert.match(current,/quality\.textContent='Živé měření'/);
+ assert.match(current,/reading\.source!=='gw3000_live'/);
  assert.match(current,/Rekonstruované měření/);
  assert.match(current,/Nedostupné měření/);
 });

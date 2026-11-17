@@ -15,7 +15,7 @@ const channels=[
   <div><span class="eyebrow">Aktuální stav archivních měření</span><h2 id="sensor-directory-title">Měřené veličiny</h2></div>
   <span class="status-chip" data-sensors-status role="status">Načítám</span>
  </div>
- <p class="lead">Číslování označuje databázové kanály WeeWX, ne ověřenou fyzickou polohu čidel. Vyber kanál a zobraz jeho skutečný průběh za 24 hodin.</p>
+ <p class="lead">Vyber měření a podívej se na jeho poslední hodnotu i průběh během uplynulého dne. Čísla čidel nemusí odpovídat jejich umístění.</p>
  <div class="sensor-directory-toolbar">
   <label class="sensor-search-label" for="sensor-search">Hledat senzor
    <input id="sensor-search" type="search" data-sensor-search placeholder="Název nebo kanál" autocomplete="off" />
@@ -32,7 +32,7 @@ const channels=[
  <div class="sensor-channel-grid sensor-directory-list">
   {channels.map(item=><details class="sensor-channel sensor-directory-entry" data-sensor-id={item.id} data-sensor-state="loading">
    <summary class="sensor-directory-row">
-    <span class="sensor-directory-name">{item.name}<small>{item.id} · WeeWX</small></span>
+    <span class="sensor-directory-name">{item.name}<small>Zobrazit graf a podrobnosti</small></span>
     <span class="sensor-directory-reading">
      <strong><span data-sensor-value={item.id}>—</span><small>{item.unit}</small></strong>
      <span class="sensor-state" data-sensor-quality={item.id}>Čeká na měření</span>
@@ -42,16 +42,17 @@ const channels=[
     </span>
    </summary>
    <div class="sensor-directory-detail">
-    <h3>Vývoj za posledních 24 hodin</h3>
+    <h3>Průběh za posledních 24 hodin</h3>
+    <p class="source-note">Označení v archivu: {item.id}</p>
     <div class="sensor-mini-trend" data-sensor-trend={item.id} aria-label={'Průběh posledních 24 hodin: '+item.name}>
      <span class="source-note">Graf se načte po otevření kanálu</span>
     </div>
-    <p class="source-note">Průběh tvoří pouze platná archivní měření. Chybějící intervaly nejsou spojeny čarou. Stav neprokazuje fyzickou identitu ani kalibraci senzoru.</p>
+    <p class="source-note">Čára se přeruší tam, kde měření chybí. Podle dostupných dat nelze vždy určit přesné umístění čidla.</p>
    </div>
   </details>)}
  </div>
  <p class="sensor-directory-empty" data-sensor-empty hidden>Žádný kanál neodpovídá filtru.</p>
- <p class="source-note">Dostupnost znamená platný archivní údaj, nikoli potvrzené připojení konkrétního zařízení. Nula je skutečná naměřená hodnota; neznámý údaj označujeme „—“.</p>
+ <p class="source-note">Pomlčka znamená, že údaj není dostupný. Nula je skutečně naměřená hodnota, nikoliv chybějící údaj.</p>
 </section>
 <script>
  import {getCurrent,getHistoryInterval} from '../../shared/api/client';
@@ -105,7 +106,7 @@ const channels=[
    filterRows();
   }).catch(()=>{
    if(controller.signal.aborted)return;
-   if(status){status.textContent='Archivní API nedostupné';status.className='status-chip error';}
+   if(status){status.textContent='Měření se nenačítají';status.className='status-chip error';}
    for(const entry of entries){entry.dataset.sensorState='unavailable';}
    filterRows();
   });
