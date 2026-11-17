@@ -4,7 +4,7 @@
  * Produces desktop/mobile screenshots in test-results/preview-screenshots.
  */
 import { chromium } from 'playwright';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 
 const base=process.env.LOUCKA_PREVIEW_URL || 'https://dev.pocasi-loucka.eu';
 const out='test-results/preview-screenshots';
@@ -21,6 +21,7 @@ const sizes=[
  {name:'mobil',width:390,height:844}
 ];
 const errors=[];
+const visitorPerformance=[];
 const expectedCommit=process.env.LOUCKA_EXPECT_COMMIT || '';
 const checkPublicReady=async()=>{
  try{
@@ -132,8 +133,12 @@ try{
       errors.push(size.name+': approved four-feature observatory design is incomplete');
      if(!layout.windSpeed||!layout.windGust||!layout.heroChart)
       errors.push(size.name+': real anemometer speed/gust or 24h archive chart missing from hero');
+     // Source identity and freshness caution are the contract; the public
+     // wording was simplified in PR #114 and must not fail on that copy edit.
+     const sourceIdentified=layout.sourceLabel.includes('západní kamery');
+     const freshnessCaution=/čas pořízení snímku není ověřen|snímek nemusí být právě pořízený/i.test(layout.sourceLabel);
      if(layout.landscapeImage!=='https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg'||
-      !layout.sourceLabel.includes('čas pořízení snímku není ověřen'))
+      !sourceIdentified||!freshnessCaution)
       errors.push(size.name+': panorama must be authentic and source/freshness clearly labelled');
      if(!layout.solarRise||layout.solarRise==='—'||!layout.moonPhase||layout.moonPhase==='—')
       errors.push(size.name+': astronomical cycle did not calculate');
@@ -281,6 +286,31 @@ try{
       if(!/[0-9]/.test(value)||value==='—')
        errors.push(size.name+': '+metric+' annual summary missing: '+value);
      }
+    }
+    if(path==='/grafy/'){
+     for(const period of ['today','yesterday','7d','30d','this-year','year']){
+      if(await page.locator('[data-advanced-history] [data-period="'+period+'"]').count()!==1)
+       errors.push(size.name+': missing friendly history period '+period);
+     }
+    }
+    if(path==='/klimatologie/'){
+     // Real-source historical moments are lazy and must be checked after scroll.
+     await page.locator('[data-climate-highlights]').scrollIntoViewIfNeeded({timeout:12000});
+     const highlightReady=await page.waitForFunction(()=>{
+      const status=document.querySelector('[data-highlights-status]');
+      return status?.dataset.state==='warning'||status?.dataset.state==='error';
+     },null,{timeout:16000}).then(()=>true).catch(()=>false);
+     const highlights=await page.evaluate(()=>({
+      state:document.querySelector('[data-highlights-status]')?.dataset.state??'pending',
+      count:document.querySelectorAll('.atlas-highlight-card').length,
+      maximum:document.querySelector('[data-highlight-value="maxTemp"]')?.textContent?.trim()??'',
+      minimum:document.querySelector('[data-highlight-value="minTemp"]')?.textContent?.trim()??'',
+      caution:document.querySelector('[data-highlight-note="maxDailyRain"]')?.textContent?.trim()??''
+     }));
+     console.log('LIVE CLIMATE HIGHLIGHTS',size.name,JSON.stringify(highlights));
+     if(!highlightReady||highlights.state!=='warning'||highlights.count!==4||
+      !/[0-9]/.test(highlights.maximum)||!/[0-9]/.test(highlights.minimum))
+      errors.push(size.name+': historical highlights not populated from original API');
     }
     // Both comparison views load only when scrolled into the viewport.
     // DOM existence and a reachable API endpoint do not prove the charts rendered.
@@ -498,6 +528,30 @@ try{
      const status=await page.locator('[data-day-history-status]').textContent();
      console.log('SAME DAY HISTORY',size.name,status?.trim());
     }
+    // Passive lab snapshot from this EXISTING page visit: no extra API requests.
+    // Do not interpret these as field Core Web Vitals or SQL timing.
+    const sample=await page.evaluate(()=>{
+     const nav=performance.getEntriesByType('navigation')[0];
+     const fcp=performance.getEntriesByType('paint')
+      .find(entry=>entry.name==='first-contentful-paint');
+     const api=performance.getEntriesByType('resource')
+      .filter(entry=>entry.name.startsWith(location.origin+'/api/v1/')&&
+       entry.initiatorType==='fetch'&&entry.responseEnd>0);
+     const round=n=>Number.isFinite(n)&&n>=0?Math.round(n*100)/100:null;
+     const elapsed=api.map(entry=>entry.duration).filter(n=>Number.isFinite(n)&&n>=0)
+      .sort((a,b)=>a-b);
+     return {
+      ttfbMs:nav?round(nav.responseStart-nav.requestStart):null,
+      domContentLoadedMs:nav?round(nav.domContentLoadedEventEnd-nav.startTime):null,
+      navigationDurationMs:nav?round(nav.duration):null,
+      firstContentfulPaintMs:fcp?round(fcp.startTime):null,
+      navigationTransferBytes:nav?.transferSize??null,
+      apiFetchCount:elapsed.length,
+      apiFetchP95Ms:elapsed.length?round(elapsed[Math.ceil(.95*elapsed.length)-1]):null
+     };
+    });
+    visitorPerformance.push({viewport:size.name,route:path,...sample});
+    console.log('VISITOR LAB TIMING',size.name,path,JSON.stringify(sample));
     // Interactions can scroll the viewport. Reset before full-page screenshots
     // so sticky navigation is captured at its real top-of-page position.
     await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
@@ -605,6 +659,15 @@ try{
 
 }catch(e){errors.push('Preview health: '+String(e));}
 finally{await browser.close();}
+await writeFile(out+'/visitor-performance.json',JSON.stringify({
+ schemaVersion:1,measuredAtUtc:new Date().toISOString(),
+ expectedDevCommit:expectedCommit||null,environment:'headless-chromium-single-visit',
+ scope:'public-dev-existing-visual-smoke',notFieldWebVitals:true,noExtraRequests:true,
+ incomplete:errors.length>0,
+ limitations:'One lab navigation per route/viewport; resource timings may omit cache/buffered entries. Not a cold SQL, load, or field-percentile measurement.',
+ samples:visitorPerformance
+},null,2)+'\n','utf8');
+console.log('VISITOR LAB TIMINGS saved:',visitorPerformance.length,'page samples');
 if(errors.length){
  console.error('VISUAL SMOKE FAILED:\n'+errors.join('\n'));
  process.exitCode=1;

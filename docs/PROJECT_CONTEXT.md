@@ -1,5 +1,8 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**17. 11. 2026 – návrh pasivního reportu návštěvnického výkonu:** Nový PR rozšiřuje existující veřejný dev vizuální smoke o anonymní laboratorní časy načtení bez nového HTTP požadavku. Po případném merge vzniká `visitor-performance.json` ve screenshot artefaktu. Stavy LXC, TLS, grantů, záloh ani produkční připravenosti tím nejsou ověřeny. Runbook: `docs/VISITOR_PERFORMANCE_AND_RELEASE_GATES_2026-11-17.md`.
+
+
 **Návrh 17. 11. 2026 – návštěvnický úvod klimatologie:** Na samostatné frontend větvi jsou připravené čtyři historické zajímavosti ze stávajícího veřejného original-only records endpointu s označením předběžnosti a známých srážkových omezení. Přibyla přímá navigace na meziroční grafy a srovnání sezón. Neznamená to změnu DB, schválení QC ani potvrzení o nasazení; CI/preview ověřovat podle konkrétního commitu.
 
 **Srážky 2009–2026 – porovnání a atlas (12. 11. 2026):** Skutečný read-only SQL originál vs pracovní rekonstrukce ve stejném rozsahu do 2026-10-29 15:10 UTC: změny ročních úhrnů jen 2009–2011 (−367,62 mm), 2021 (−658,448 mm, červenec 701,015→42,567 mm) a 2025 (−30,5 mm). Pracovní max roční 2024 1057,7 mm, max denní 30. 6. 2011 63,96 mm, obojí necertifikované. 221 čekajících položek: 4 rain nuly již v pracovní kopii, 9 nečíselných rain, 1 chybějící 2022-09-15 řádek ze staré DB, 204 nečíselných rainRate (48 s kladným rain), 3 číselné GW1000 rate k cílené revizi. Originální rainRate 2009–2025 nemá kladné hodnoty. Frontendová sekce srážkového atlasu a ochrana ročního sklonu/rekordů používá jen původní data, nové testy a dokumentace docs/RAIN_ARCHIVE_IMPACT_2026-11-12.md. Žádné zápisy, automatické approval ani veřejný reconstructed dataset; CI/živé nasazení ověřovat zvlášť.
