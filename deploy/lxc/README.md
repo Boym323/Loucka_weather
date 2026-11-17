@@ -1,5 +1,17 @@
 # Testovací LXC: synchronizace main a HTTPS náhled
 
+## Stav implementace k 17. 11. 2026 — PR #58 a #78 jsou již sloučené
+
+Původní kroky v části „Povinný bezpečný přechod“ níže jsou **historický instalační runbook**, nikoli nově čekající PR nebo pokyn je znovu provést. Zbývá skutečná read-only verifikace na LXC podle [issue #69](https://github.com/Boym323/Loucka_weather/issues/69).
+
+Jednorázový pouze čtecí přehled jako root na DEV LXC (bez přenášení soukromých logů):
+
+```bash
+bash /home/loucka/Loucka_weather/deploy/lxc/preview-operations-check.sh
+```
+
+Skript hodnotí timer `active/waiting` a naplánované spuštění, aktivní i uložený nftables guard, shodu lokální a veřejné nasazené revize a Fastify readiness. **Nespouští restart, firewall reload, git pull ani SQL.** Výstup PASS nezastupuje empirický reboot firewallu, ověření NPM oproti neautorizovanému klientovi, backend rollback ani bezpečnostní DB audit (`--trusted-lan` a kontrolu grantů). Žádný z těchto provozních důkazů nelze odvodit jen ze zeleného GitHub CI.
+
 **Test only, not production.** Debian 13, Node.js 24, Git, nginx, systemd, user loucka. Nejprve nainstaluj podle níže uvedených kroků.
 
 ## Co se děje

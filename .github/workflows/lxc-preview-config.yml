@@ -20,6 +20,7 @@ jobs:
         run: |
           bash -n deploy/lxc/auto-deploy-preview.sh
           bash -n deploy/lxc/site-readiness-audit.sh
+          bash -n deploy/lxc/preview-operations-check.sh
           bash -n deploy/lxc/loucka-preview-api-activate.sh
           grep -Fqx 'OnActiveSec=45s' deploy/lxc/loucka-preview-sync.timer
           grep -Fqx 'OnUnitInactiveSec=2min' deploy/lxc/loucka-preview-sync.timer
