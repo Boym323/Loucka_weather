@@ -6,6 +6,7 @@ import {createReadStream} from 'node:fs';
 import {readFile,lstat,readdir} from 'node:fs/promises';
 import {join} from 'node:path';
 import type {ArchiveReader} from './store.js';
+import {parseVideoRange} from './video-range.js';
 
 /** Override filesystem locations only for isolated Fastify contract tests.
  * Default runtime locations still come from the staging environment.
@@ -117,9 +118,29 @@ export function registerExtras(app:FastifyInstance,reader:ArchiveReader,sources:
  app.get<{Params:{file:string}}>('/api/v1/camera/timelapse/:file',async(req,reply)=>{
   if(!fileNameOk(req.params.file,'video'))return reply.code(404).send();
   const path=join(cameraDir,'timelapse',req.params.file);
-  try{await limitFile(path,60_000_000);}
-  catch{return reply.code(404).send();}
-  return reply.header('Cache-Control','public,max-age=3600').type('video/mp4').send(createReadStream(path));
+  let size:number;
+  try{
+   const stat=await limitFile(path,60_000_000);
+   if(stat.size<1)throw Error('Empty video');
+   size=stat.size;
+  }catch{return reply.code(404).send();}
+  // HTML5 video playback and seeking need byte-range delivery. A full-file
+  // 200 response alone is insufficient for some Safari/iOS/Chromium clients.
+  const range=parseVideoRange(req.headers.range,size);
+  reply.header('Accept-Ranges','bytes')
+   .header('Cache-Control','public,max-age=3600')
+   .type('video/mp4');
+  if(range==='invalid'){
+   return reply.code(416).header('Content-Range','bytes */'+size).send();
+  }
+  if(range){
+   const {start,end}=range;
+   return reply.code(206)
+    .header('Content-Range','bytes '+start+'-'+end+'/'+size)
+    .header('Content-Length',end-start+1)
+    .send(createReadStream(path,{start,end}));
+  }
+  return reply.header('Content-Length',size).send(createReadStream(path));
  });
  app.get('/api/v1/alerts/local',async()=>{
   try{

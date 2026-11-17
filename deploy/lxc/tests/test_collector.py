@@ -87,6 +87,18 @@ class TestCameraArchive(unittest.TestCase):
                 self.assertEqual(len(list((Path(temp) / "frames").glob("*.jpg"))), 1)
                 self.assertEqual(len(json.loads((Path(temp) / "index.json").read_text())["frames"]), 1)
 
+    def test_capture_index_survives_failed_ffmpeg_transcode(self):
+        jpeg = b"\xff\xd8\xff" + b"verified-data" + b"\xff\xd9"
+        with tempfile.TemporaryDirectory() as temp, patch.object(mod, "CAMERA_DIR", Path(temp)):
+            with patch.object(mod, "fetch_bytes", return_value=jpeg), \
+                 patch.object(mod, "generate_yesterday_video", side_effect=RuntimeError("mock ffmpeg fail")):
+                with self.assertRaisesRegex(RuntimeError, "mock ffmpeg fail"):
+                    mod.capture_camera()
+            index = json.loads((Path(temp) / "index.json").read_text())
+            self.assertEqual(index["schemaVersion"], "1")
+            self.assertEqual(len(index["frames"]), 1)
+            self.assertTrue((Path(temp) / "frames" / index["frames"][0]["name"]).is_file())
+
     def test_yesterday_timelapse_uses_existing_frames_not_fake_images(self):
         day = datetime.now(timezone.utc).date() - timedelta(days=1)
         with tempfile.TemporaryDirectory() as temp, patch.object(mod, "CAMERA_DIR", Path(temp)):

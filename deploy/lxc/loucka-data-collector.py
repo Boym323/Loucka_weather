@@ -77,8 +77,12 @@ def capture_camera() -> None:
     for frame in folder.glob("????????T??????Z.jpg"):
         if datetime.strptime(frame.stem, "%Y%m%dT%H%M%SZ").replace(tzinfo=UTC) < cutoff:
             frame.unlink()
-    generate_yesterday_video()
-    save_index()
+    # Index of captured JPEGs must be published even if FFmpeg fails.
+    # Preserve the systemd failure signal for an unsuccessful transcode.
+    try:
+        generate_yesterday_video()
+    finally:
+        save_index()
 
 
 def generate_yesterday_video() -> None:

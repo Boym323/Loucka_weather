@@ -453,6 +453,26 @@ try{
      const videoNote=(await page.locator('[data-archive-video-note]').textContent())??'';
      console.log('CAMERA TIMELAPSE',size.name,JSON.stringify({days:mp4.length,available:mp4[0]!=='Žádné video',note:videoNote}));
      if(!videoNote.trim())errors.push(size.name+': camera timelapse status lacks explicit availability explanation');
+     // A dropdown entry does not prove the video stream is seekable.
+     // Request only 32 bytes and check a real 206, never download whole MP4.
+     const selectedVideo=await page.locator('[data-archive-video]').inputValue();
+     if(/^\/api\/v1\/camera\/timelapse\/\d{4}-\d{2}-\d{2}\.mp4$/.test(selectedVideo)){
+      const range=await page.evaluate(async url=>{
+       try{
+        const response=await fetch(url,{headers:{Range:'bytes=0-31'}});
+        const bytes=await response.arrayBuffer();
+        return {status:response.status,
+         contentRange:response.headers.get('content-range'),
+         acceptRanges:response.headers.get('accept-ranges'),
+         contentType:response.headers.get('content-type'),
+         bytes:bytes.byteLength};
+       }catch{return {status:0,contentRange:null,acceptRanges:null,contentType:null,bytes:0};}
+      },selectedVideo);
+      console.log('CAMERA VIDEO RANGE',size.name,JSON.stringify(range));
+      if(range.status!==206||!/^bytes 0-31\/[0-9]+$/.test(range.contentRange??'')||
+       range.acceptRanges!=='bytes'||!range.contentType?.includes('video/mp4')||range.bytes!==32)
+       errors.push(size.name+': camera MP4 byte-range playback failed');
+     }
      if(await page.locator('[data-archive-date]').count()!==1||
       await page.locator('[data-archive-day-frames]').count()!==1)
       errors.push(size.name+': missing date-filtered camera archive');
