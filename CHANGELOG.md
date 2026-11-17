@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-17 – Kontrola úplnosti původních denních souhrnů 2025
+- Nový čtecí DEV nástroj vypíše konkrétní chybějící dny v archive_day_* bez přepisu dat; odděluje neexistující denní řádek, nulový počet vzorků a přebytek sumtime včetně 23/25hodinových dní.
+- Doplněny izolované DST/časové regresní testy a provozní návod; sonda není automaticky spouštěná při deploymentu.
+
 ## 2026-11-17 – Diagnostika historických rekordů HTTP 503
 - Provozní DEV měření vrací na endpointu historických rekordů 8/8 HTTP 503; nové čtecí ověření identifikuje selhání SQL, denních hranic či výpočtu bez úprav archivu.
 - Sonda používá právě tři původní denní SELECT dotazy, bezpečné kódy chyb a žádné meteorologické hodnoty v logu; připraveny regresní testy.
