@@ -4,7 +4,7 @@
  * Produces desktop/mobile screenshots in test-results/preview-screenshots.
  */
 import { chromium } from 'playwright';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 
 const base=process.env.LOUCKA_PREVIEW_URL || 'https://dev.pocasi-loucka.eu';
 const out='test-results/preview-screenshots';
@@ -21,6 +21,7 @@ const sizes=[
  {name:'mobil',width:390,height:844}
 ];
 const errors=[];
+const visitorPerformance=[];
 const expectedCommit=process.env.LOUCKA_EXPECT_COMMIT || '';
 const checkPublicReady=async()=>{
  try{
@@ -498,6 +499,30 @@ try{
      const status=await page.locator('[data-day-history-status]').textContent();
      console.log('SAME DAY HISTORY',size.name,status?.trim());
     }
+    // Passive lab snapshot from this EXISTING page visit: no extra API requests.
+    // Do not interpret these as field Core Web Vitals or SQL timing.
+    const sample=await page.evaluate(()=>{
+     const nav=performance.getEntriesByType('navigation')[0];
+     const fcp=performance.getEntriesByType('paint')
+      .find(entry=>entry.name==='first-contentful-paint');
+     const api=performance.getEntriesByType('resource')
+      .filter(entry=>entry.name.startsWith(location.origin+'/api/v1/')&&
+       entry.initiatorType==='fetch'&&entry.responseEnd>0);
+     const round=n=>Number.isFinite(n)&&n>=0?Math.round(n*100)/100:null;
+     const elapsed=api.map(entry=>entry.duration).filter(n=>Number.isFinite(n)&&n>=0)
+      .sort((a,b)=>a-b);
+     return {
+      ttfbMs:nav?round(nav.responseStart-nav.requestStart):null,
+      domContentLoadedMs:nav?round(nav.domContentLoadedEventEnd-nav.startTime):null,
+      navigationDurationMs:nav?round(nav.duration):null,
+      firstContentfulPaintMs:fcp?round(fcp.startTime):null,
+      navigationTransferBytes:nav?.transferSize??null,
+      apiFetchCount:elapsed.length,
+      apiFetchP95Ms:elapsed.length?round(elapsed[Math.ceil(.95*elapsed.length)-1]):null
+     };
+    });
+    visitorPerformance.push({viewport:size.name,route:path,...sample});
+    console.log('VISITOR LAB TIMING',size.name,path,JSON.stringify(sample));
     // Interactions can scroll the viewport. Reset before full-page screenshots
     // so sticky navigation is captured at its real top-of-page position.
     await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
@@ -605,6 +630,15 @@ try{
 
 }catch(e){errors.push('Preview health: '+String(e));}
 finally{await browser.close();}
+await writeFile(out+'/visitor-performance.json',JSON.stringify({
+ schemaVersion:1,measuredAtUtc:new Date().toISOString(),
+ expectedDevCommit:expectedCommit||null,environment:'headless-chromium-single-visit',
+ scope:'public-dev-existing-visual-smoke',notFieldWebVitals:true,noExtraRequests:true,
+ incomplete:errors.length>0,
+ limitations:'One lab navigation per route/viewport; resource timings may omit cache/buffered entries. Not a cold SQL, load, or field-percentile measurement.',
+ samples:visitorPerformance
+},null,2)+'\n','utf8');
+console.log('VISITOR LAB TIMINGS saved:',visitorPerformance.length,'page samples');
 if(errors.length){
  console.error('VISUAL SMOKE FAILED:\n'+errors.join('\n'));
  process.exitCode=1;
