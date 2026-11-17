@@ -579,10 +579,28 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
   let load=existing&&existing.expires>at?existing.load:null;
   if(!load){
    load=(async()=>{
+    const buildStarted=performance.now();
     const selectedMetrics=['outTemp','rain','windSpeed'] as const;
-    const sourceRows=await Promise.all(selectedMetrics.map(metric=>
-     reader.dailySummaries!(metric,start,end,days+1)));
-    const perMetric={} as Record<(typeof selectedMetrics)[number],DailySummaryRow[]>;
+    const readMs:Partial<Record<(typeof selectedMetrics)[number],number>>={};
+    const sourceRows=await Promise.all(selectedMetrics.map(async metric=>{
+     const readStarted=performance.now();
+     try{return await reader.dailySummaries!(metric,start,end,days+1);}
+     finally{readMs[metric]=Math.round((performance.now()-readStarted)*100)/100;}
+    }));
+    const queryWallMs=performance.now()-buildStarted;
+    // Single-pass calendar validation and indexing. The previous dashboard
+    // repeatedly reformatted the same Prague date for every year/month.
+    // Keep the read order and original rows for identical aggregates and ETag.
+    const byYear={
+     outTemp:new Map<string,DailySummaryRow[]>(),
+     rain:new Map<string,DailySummaryRow[]>(),
+     windSpeed:new Map<string,DailySummaryRow[]>()
+    };
+    const byMonth={
+     outTemp:new Map<string,DailySummaryRow[]>(),
+     rain:new Map<string,DailySummaryRow[]>(),
+     windSpeed:new Map<string,DailySummaryRow[]>()
+    };
     selectedMetrics.forEach((metric,i)=>{
      const rows=sourceRows[i]!;
      if(rows.length>days)throw new Error('Climate day summary exceeded cap');
@@ -593,8 +611,13 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
        localMidnight(date)!==row.dateTime)
        throw new Error('Unsorted or off-calendar climate daily summary');
       previous=row.dateTime;
+      for(const [index,key] of [[byYear[metric],date.slice(0,4)],
+       [byMonth[metric],date.slice(0,7)]] as const){
+       const bucket=index.get(key);
+       if(bucket)bucket.push(row);
+       else index.set(key,[row]);
+      }
      }
-     perMetric[metric]=rows;
     });
     const measure=(metric:(typeof selectedMetrics)[number],aggregation:'mean'|'sum'|'min'|'max',
      rows:DailySummaryRow[]):number|null=>{
@@ -604,7 +627,7 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
      }catch{return null;} // One bad month does not invent a value for other months.
     };
     const groupedYear=(metric:(typeof selectedMetrics)[number],year:number)=>
-     perMetric[metric].filter(row=>Number(localDateAt(row.dateTime).slice(0,4))===year);
+     byYear[metric].get(String(year))??[];
     const selectedRows={
      outTemp:groupedYear('outTemp',selected),
      rain:groupedYear('rain',selected),
@@ -636,21 +659,36 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
      temperatureHigh:[] as (number|null)[]};
     for(let month=1;month<=12;month++){
      const monthKey=label+'-'+String(month).padStart(2,'0');
-     const matching=(rows:DailySummaryRow[])=>
-      rows.filter(row=>localDateAt(row.dateTime).slice(0,7)===monthKey);
-     const temp=matching(selectedRows.outTemp);
+     const matching=(metric:(typeof selectedMetrics)[number])=>
+      byMonth[metric].get(monthKey)??[];
+     const temp=matching('outTemp');
      monthly.temperature.push(measure('outTemp','mean',temp));
      monthly.temperatureLow.push(measure('outTemp','min',temp));
      monthly.temperatureHigh.push(measure('outTemp','max',temp));
-     monthly.rain.push(measure('rain','sum',matching(selectedRows.rain)));
-     monthly.wind.push(measure('windSpeed','mean',matching(selectedRows.windSpeed)));
+     monthly.rain.push(measure('rain','sum',matching('rain')));
+     monthly.wind.push(measure('windSpeed','mean',matching('windSpeed')));
     }
-    return {schemaVersion:'1',year:selected,units,dataset:'original',
+    const result={schemaVersion:'1',year:selected,units,dataset:'original',
      source:'weewx_daily',qcStatus:'original_unverified',
      annualYears,summary,annual,monthly,
      calendarTimezone:'Europe/Prague',dataRevision:'dashboard-'+
       createHash('sha256').update(JSON.stringify(sourceRows)).digest('hex').slice(0,20),
      disclaimer:'Preliminary original WeeWX summaries; missing data remain null and historical extremes are not QC-certified.'};
+    // One bounded diagnostic event per cold cache refresh, only when explicitly
+    // enabled. No HTTP addresses, user identifiers, archive values or secrets.
+    if(process.env.WEATHER_API_PERF_LOG==='YES'){
+     const memory=process.memoryUsage();
+     const round=(n:number)=>Math.round(n*100)/100;
+     const mib=(n:number)=>Math.round(n/1048576*10)/10;
+     console.info(JSON.stringify({event:'climate_dashboard_refresh',year:selected,
+      durationMs:round(performance.now()-buildStarted),
+      queryWallMs:round(queryWallMs),
+      processingMs:round(performance.now()-buildStarted-queryWallMs),
+      queryMs:readMs,rows:Object.fromEntries(selectedMetrics.map((metric,i)=>
+       [metric,sourceRows[i]!.length])),
+      rssMiB:mib(memory.rss),heapUsedMiB:mib(memory.heapUsed)}));
+    }
+    return result;
    })();
    dashboardCache.set(cacheKey,{expires:at+300000,load});
    if(dashboardCache.size>10){
