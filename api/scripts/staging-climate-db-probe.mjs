@@ -9,6 +9,11 @@ import {performance} from 'node:perf_hooks';
 import {createMariaDbReader} from '../dist/src/db.js';
 import {safeDriverError,countValidDailyRows} from './climate-db-probe-lib.mjs';
 
+// Never use production or arbitrary CLI arguments for a staging-only diagnostic.
+if(process.env.WEATHER_STAGING_ENABLED!=='YES'||process.argv.length!==2){
+ console.error('This read-only climate probe is restricted to the configured DEV staging environment.');
+ process.exit(2);
+}
 const start=Math.floor(Date.parse('2025-01-01T00:00:00+01:00')/1000);
 const end=Math.floor(Date.parse('2026-01-01T00:00:00+01:00')/1000);
 const maxRows=367;
