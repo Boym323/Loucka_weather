@@ -18,7 +18,8 @@
  <div class="camera-timelapse-block">
   <div class="section-heading"><h3>Denní časosběrné video</h3><select data-archive-video aria-label="Vybrat den časosběru" disabled><option>Žádné video</option></select></div>
   <video controls preload="none" playsinline data-archive-player hidden aria-label="Časosběr z kamerových archivních fotografií"></video>
-  <p class="source-note" data-archive-video-note>Video se vytvoří z alespoň šesti uložených snímků předchozího dne, pokud je na LXC dostupný FFmpeg.</p>
+  <p class="source-note" data-archive-video-note role="status">Video se vytvoří z alespoň šesti uložených snímků předchozího dne, pokud je na LXC dostupný FFmpeg.</p>
+  <a class="panel-link" data-archive-video-download hidden download>Stáhnout vybraný časosběr MP4</a>
  </div>
 </section>
 <script>
@@ -28,7 +29,19 @@
   const frames=root.querySelector<HTMLElement>('[data-archive-frames]');
   const select=root.querySelector<HTMLSelectElement>('[data-archive-video]');
   const player=root.querySelector<HTMLVideoElement>('[data-archive-player]');
+  const videoNote=root.querySelector<HTMLElement>('[data-archive-video-note]');
+  const download=root.querySelector<HTMLAnchorElement>('[data-archive-video-download]');
   const ctrl=new AbortController();
+  // Browser codecs or media byte ranges can fail after the archive index
+  // correctly lists a video. Report the playback failure to the visitor.
+  player?.addEventListener('error',()=>{
+   if(ctrl.signal.aborted)return;
+   if(videoNote)videoNote.textContent='Video se nepodařilo přehrát. Zkus stáhnout MP4; pokud ani to nefunguje, ověř dostupnost souboru na serveru.';
+  });
+  player?.addEventListener('loadedmetadata',()=>{
+   if(ctrl.signal.aborted)return;
+   if(videoNote)videoNote.textContent='Časosběr je připravený k přehrání. Časy snímků odpovídají archivaci, ne ověřenému času kamery.';
+  });
   // The public reverse proxy limits concurrent requests. Scheduling thumbnails
   // prevents dozens of JPEG requests from triggering HTTP 429 and blank cards.
   const thumbnailQueue:Array<()=>void>=[];
@@ -84,19 +97,25 @@
      link.append(img,label);frames.append(link);
     }
    }
-   if(select&&player&&data.videos?.length){
+   const videos=(Array.isArray(data.videos)?data.videos:[]).filter(v=>
+    typeof v.url==='string'&&/^\/api\/v1\/camera\/timelapse\/\d{4}-\d{2}-\d{2}\.mp4$/.test(v.url));
+   if(select&&player&&videos.length){
     select.replaceChildren();
-    const videos=data.videos.filter(v=>/^\/api\/v1\/camera\/timelapse\/\d{4}-\d{2}-\d{2}\.mp4$/.test(v.url));
-    for(const v of videos){const option=document.createElement('option');option.value=v.url;option.textContent=v.date;select.append(option);}
-    if(videos.length){
-     const note=root.querySelector<HTMLElement>('[data-archive-video-note]');
-     if(note)note.textContent='Uložené MP4 je dostupné; časosběr se sestavuje z archivovaných fotografií.';
-     select.disabled=false;player.hidden=false;player.src=videos[0].url;
-     select.addEventListener('change',()=>{player.src=select.value;player.load();});
+    for(const v of videos){
+     const option=document.createElement('option');option.value=v.url;option.textContent=v.date;
+     select.append(option);
     }
-   } else {
-    const note=root.querySelector<HTMLElement>('[data-archive-video-note]');
-    if(note)note.textContent='Zatím není dostupné žádné časosběrné MP4. Převod probíhá až po uzavření dne, pokud existuje alespoň šest snímků a funguje FFmpeg.';
+    const choose=(url:string)=>{
+     if(ctrl.signal.aborted)return;
+     player.pause();player.src=url;player.load();
+     if(download){download.hidden=false;download.href=url;}
+     if(videoNote)videoNote.textContent='Časosběr '+(select.selectedOptions[0]?.textContent??'')+
+      ' je připravený. Klikni na přehrát; případně stáhni MP4.';
+    };
+    select.disabled=false;player.hidden=false;choose(videos[0].url);
+    select.addEventListener('change',()=>choose(select.value));
+   }else{
+    if(videoNote)videoNote.textContent='Zatím není dostupné žádné časosběrné MP4. Převod probíhá po uzavření dne, pokud existuje alespoň šest snímků a funguje FFmpeg.';
    }
   }).catch(()=>{
    if(ctrl.signal.aborted)return;

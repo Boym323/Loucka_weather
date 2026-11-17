@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-17 – Kamera: přehrávání MP4 časosběru a diagnostika
+- HTTP `/api/v1/camera/timelapse/:file` podporuje standardní byte-range GET (206 + Content-Range / Accept-Ranges), začátek/konec souboru a suffix; neplatné/nepodporované rozsahy odmítá 416.
+- Na stránce kamery se chyba přehrávání zobrazí návštěvníkovi a lze stáhnout příslušný MP4; seznam funguje pouze pro bezpečné publikované URL a netvrdí, že samotný index zaručuje přehratelnost.
+- Sběrný skript zapisuje aktuální index JPEG i pokud FFmpeg při tvorbě timelapse selže, aniž by se tím zakryl nenulový exit sběrné systemd služby.
+- API injekční testy pokrývají jednotlivé range, invalidní range, stream a chybějící MP4. Public dev smoke vyžaduje 206 jen pokud existuje video; bez videí neoznačuje skutečné přehrání za ověřené.
+- Produkční WeeWX, MariaDB a archiv historických meteorologických dat zůstávají beze změny.
+
+
 ## 2026-11-17 – Diagnostika časových překryvů 25.–26. července 2026
 - Čistě čtecí SQL nově lokalizuje jednotlivé překrývající se nebo nepokryté intervaly denních teplot, včetně okrajových mezer v místním 24h dni; původní naměřené hodnoty se nepublikují ani nemění.
 - Podle ověřeného auditu činí překryvy 3120/1800 s a nepokrytý čas 720/0 s; přidány regresní testy intervalové aritmetiky a operátorský postup.

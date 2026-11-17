@@ -284,3 +284,53 @@ test('camera and CHMI report real validated collector files from explicit isolat
  assert.equal(monitor.components.camera.status,'ok');
  assert.equal(monitor.components.chmi.status,'ok');
 });
+
+test('camera MP4 endpoint supports single byte-range requests, suffix seeks and safe failures',async t=>{
+ const {app,files}=await isolatedSourceApp(t);
+ const folder=join(files.cameraDir,'timelapse');
+ await mkdir(folder,{recursive:true});
+ const url='/api/v1/camera/timelapse/2026-11-16.mp4';
+ const bytes=Buffer.from('0123456789abcdefghijklmnopqrstuvwxyz');
+ await writeFile(join(folder,'2026-11-16.mp4'),bytes);
+ const full=await app.inject(url);
+ assert.equal(full.statusCode,200,full.body);
+ assert.equal(full.headers['content-type'],'video/mp4');
+ assert.equal(full.headers['accept-ranges'],'bytes');
+ assert.equal(full.headers['content-length'],String(bytes.length));
+ assert.equal(full.body,bytes.toString());
+ const beginning=await app.inject({url,headers:{range:'bytes=0-9'}});
+ assert.equal(beginning.statusCode,206);
+ assert.equal(beginning.headers['content-range'],'bytes 0-9/'+bytes.length);
+ assert.equal(beginning.headers['content-length'],'10');
+ assert.equal(beginning.body,'0123456789');
+ const rest=await app.inject({url,headers:{range:'bytes=10-'}});
+ assert.equal(rest.statusCode,206);
+ assert.equal(rest.body,bytes.subarray(10).toString());
+ const suffix=await app.inject({url,headers:{range:'bytes=-4'}});
+ assert.equal(suffix.statusCode,206);
+ assert.equal(suffix.body,'wxyz');
+ const clipped=await app.inject({url,headers:{range:'bytes=32-999'}});
+ assert.equal(clipped.statusCode,206);
+ assert.equal(clipped.headers['content-range'],'bytes 32-35/36');
+ assert.equal(clipped.body,'wxyz');
+ for(const invalid of ['bytes=999-','bytes=10-9','bytes=0-2,5-7','bytes=-0','bytes=','items=0-5']){
+  const result=await app.inject({url,headers:{range:invalid}});
+  assert.equal(result.statusCode,416,invalid);
+  assert.equal(result.headers['content-range'],'bytes */'+bytes.length);
+  assert.equal(result.headers['accept-ranges'],'bytes');
+ }
+ assert.equal((await app.inject('/api/v1/camera/timelapse/bad.mp4')).statusCode,404);
+ await writeFile(join(folder,'2026-11-16.mp4'),'');
+ assert.equal((await app.inject(url)).statusCode,404);
+});
+
+test('video range parser is bounded to one safe range',async()=>{
+ const {parseVideoRange}=await import('../src/video-range.js');
+ assert.equal(parseVideoRange(undefined,10),null);
+ assert.deepEqual(parseVideoRange('bytes=-25',10),{start:0,end:9});
+ assert.deepEqual(parseVideoRange('bytes=4-4',10),{start:4,end:4});
+ assert.equal(parseVideoRange('bytes=9999999999999999999999-',10),'invalid');
+ assert.equal(parseVideoRange('bytes=-0',10),'invalid');
+ assert.equal(parseVideoRange('bytes=0-1,2-3',10),'invalid');
+ assert.equal(parseVideoRange('bytes=0-',0),'invalid');
+});
