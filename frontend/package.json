@@ -14,7 +14,7 @@
     "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
-    "astro": "7.4.7",
+    "astro": "7.4.11",
     "echarts": "6.1.0"
   },
   "devDependencies": {
