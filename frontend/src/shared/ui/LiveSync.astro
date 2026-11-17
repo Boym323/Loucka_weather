@@ -39,12 +39,12 @@
    }
   }catch{
    if(controller.signal.aborted)return;
-   label('Archivní režim',false);
+   label('Poslední měření',false);
    if(hadLive){hadLive=false;window.dispatchEvent(new CustomEvent('loucka:live-expired'));}
   }
  }
  void getStationCapabilities(controller.signal).then(capabilities=>{
-  if(!capabilities.includes('live_sse')){label('Archivní režim',false);return;}
+  if(!capabilities.includes('live_sse')){label('Poslední měření',false);return;}
   eventSource=new EventSource('/api/v1/live?units=metricwx');
   eventSource.addEventListener('observation',event=>{
    try{dispatchLive(JSON.parse((event as MessageEvent).data) as Observation);}catch{}
@@ -57,10 +57,10 @@
   });
   eventSource.addEventListener('archive-updated',notifyArchive);
   eventSource.addEventListener('reset',notifyArchive);
-  eventSource.addEventListener('error',()=>{if(status?.textContent!=='GW3000 · živě')label('Archivní režim',false);});
+  eventSource.addEventListener('error',()=>{if(status?.textContent!=='Živá měření')label('Poslední měření',false);});
   void pollLive();
   currentTimer=setInterval(()=>void pollLive(),30000);
- }).catch(()=>label('Archivní režim',false));
+ }).catch(()=>label('Poslední měření',false));
  document.addEventListener('astro:before-swap',()=>{
   controller.abort();eventSource?.close();if(currentTimer)clearInterval(currentTimer);
  },{once:true});

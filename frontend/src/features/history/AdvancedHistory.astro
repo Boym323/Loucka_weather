@@ -1,6 +1,6 @@
 <section class="section advanced-history" data-advanced-history aria-labelledby="advanced-history-heading">
  <div class="section-heading">
-  <div><span class="eyebrow">Prohlížeč archivu · WeeWX</span><h2 id="advanced-history-heading">Podrobný historický graf</h2></div>
+  <div><span class="eyebrow">Vyber si období a měření</span><h2 id="advanced-history-heading">Podrobný historický graf</h2></div>
   <span class="status-chip" data-advanced-status role="status">Načítám</span>
  </div>
  <div class="history-presets" role="group" aria-label="Rychlý výběr časového období">
@@ -42,8 +42,12 @@
  </form>
  <div class="advanced-history-chart" data-advanced-canvas role="img" aria-label="Dynamický časový graf archivních měření"></div>
  <div class="chart-summary" data-advanced-summary aria-live="polite"></div>
- <p class="source-note" data-history-quality-note>Mezera v grafu znamená chybějící nebo podezřelou hodnotu, ne nulu. Původ a kvalita bodu jsou dostupné v detailu po najetí nebo klepnutí; API může označit měření, odvozenou hodnotu či rekonstrukci.</p>
- <p class="source-note">Pro období do 2 dnů původní intervaly, do 40 dnů hodinové agregace, delší období denní agregace. Graf respektuje mezery, místní kalendářní dny a změny CET/CEST. CSV obsahuje pouze data skutečně vrácená API.</p>
+ <p class="source-note" data-history-quality-note>Mezery znamenají chybějící nebo nejistá měření. Podrobnosti o každém bodu uvidíš po najetí nebo klepnutí.</p>
+ <details class="history-data-details">
+  <summary>Jak číst graf a odkud údaje pocházejí?</summary>
+  <p class="source-note">Rozlišujeme naměřené, odvozené a rekonstruované hodnoty. Údaje zobrazujeme v místním čase včetně změn letního a zimního času. U delších období používáme hodinové nebo denní souhrny; CSV obsahuje skutečně vrácené hodnoty včetně označení kvality.</p>
+  <p class="source-note" data-history-quality-summary>Počty jednotlivých druhů měření se zobrazí po načtení grafu.</p>
+ </details>
 </section>
 <script>
  import {getHistoryInterval} from '../../shared/api/client';
@@ -61,6 +65,7 @@
   const canvas=root.querySelector<HTMLElement>('[data-advanced-canvas]')!;
   const status=root.querySelector<HTMLElement>('[data-advanced-status]');
   const summary=root.querySelector<HTMLElement>('[data-advanced-summary]');
+  const qualitySummary=root.querySelector<HTMLElement>('[data-history-quality-summary]');
   const exportButton=root.querySelector<HTMLButtonElement>('[data-history-export]');
   const chart=echarts.init(canvas,undefined,{renderer:'svg'});
   const observer=new ResizeObserver(()=>chart.resize());observer.observe(canvas);
@@ -123,7 +128,7 @@
     const days=Math.round((Date.parse(toDate+'T00:00:00Z')-Date.parse(fromDate+'T00:00:00Z'))/86400000)+1;
     if(!Number.isFinite(days)||days<1||days>731)throw new Error('Vyber období od 1 dne do 2 let.');
     const resolution=days<=2?'raw':days<=40?'hourly':'daily';
-    if(status){status.textContent='Načítám '+resolution+'…';status.className='status-chip';}
+    if(status){status.textContent='Načítám graf…';status.className='status-chip';}
     const keys=[...new Set([metric,compare].filter(Boolean))];
     results=await Promise.all(keys.map(k=>getHistoryInterval(k,from,to,resolution,signal)));
     if(signal.aborted)return;
@@ -205,7 +210,8 @@
      return n;
     },{measured:0,derived:0,reconstructed:0,missing:0});
     const total=counts.measured+counts.derived+counts.reconstructed;
-    if(status){status.textContent=`${total} platných · ${counts.measured} měřených · ${counts.derived} odvozených · ${counts.reconstructed} rekonstruovaných · ${counts.missing} mezer · ${resolution}`;status.className='status-chip '+(total?'ok':'warning');}
+    if(status){status.textContent=`Zobrazeno ${total} hodnot · ${counts.missing} mezer`;status.className='status-chip '+(total?'ok':'warning');}
+    if(qualitySummary)qualitySummary.textContent=`${counts.measured} měřených, ${counts.derived} odvozených, ${counts.reconstructed} rekonstruovaných a ${counts.missing} chybějících nebo nejistých bodů. Rozlišení grafu: ${resolution}.`;
     if(summary){
      for(const result of results){
       const vals=result.points.filter(valid).map(p=>p.value as number);
@@ -215,7 +221,7 @@
        const reconstructed=result.points.filter(p=>valid(p)&&p.quality==='reconstructed').length;
        const derived=result.points.filter(p=>valid(p)&&p.quality==='derived').length;
        const gaps=result.points.length-vals.length;
-       span.textContent=`${names[result.metric]??result.metric}: min ${formatValue(Math.min(...vals),1)} / max ${formatValue(Math.max(...vals),1)} ${units[result.metric]??result.unit} · ${measured} měř. / ${derived} odvozených / ${reconstructed} rekonstr. / ${gaps} mezer`;
+       span.textContent=`${names[result.metric]??result.metric}: od ${formatValue(Math.min(...vals),1)} do ${formatValue(Math.max(...vals),1)} ${units[result.metric]??result.unit} · ${gaps} mezer`;
       }else span.textContent=(names[result.metric]??result.metric)+': bez měření';
       summary.append(span);
      }
@@ -226,7 +232,7 @@
     if(signal.aborted)return;
     chart.clear();
     if(status){status.textContent='Historie nedostupná';status.className='status-chip error';}
-    if(summary)summary.textContent=e instanceof Error?e.message:'Historické API není dostupné.';
+    if(summary)summary.textContent=e instanceof Error&&e.message.startsWith('Vyber období')?e.message:'Údaje se nepodařilo načíst. Zkus změnit období nebo stránku obnovit.';
    }
   }
   root.querySelectorAll<HTMLButtonElement>('[data-period]').forEach(b=>b.addEventListener('click',()=>setPreset(b.dataset.period??'7d')));

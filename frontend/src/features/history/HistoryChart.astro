@@ -118,8 +118,7 @@ const tabs = [
     if(signal.aborted)return;
     chart.clear();
     if(status){status.textContent='Historie nedostupná';status.classList.add('error');}
-    if(message)message.textContent='Historická data se nepodařilo načíst. '+
-     (error instanceof Error&&error.message.startsWith('API HTTP')?error.message:'Zkuste to znovu.');
+    if(message)message.textContent='Graf se nepodařilo načíst. Zkus to znovu.';
    }
   }
   root.querySelectorAll<HTMLButtonElement>('[data-select-metric]').forEach(btn=>btn.addEventListener('click',()=>{
