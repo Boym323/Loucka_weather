@@ -133,8 +133,12 @@ try{
       errors.push(size.name+': approved four-feature observatory design is incomplete');
      if(!layout.windSpeed||!layout.windGust||!layout.heroChart)
       errors.push(size.name+': real anemometer speed/gust or 24h archive chart missing from hero');
+     // Source identity and freshness caution are the contract; the public
+     // wording was simplified in PR #114 and must not fail on that copy edit.
+     const sourceIdentified=layout.sourceLabel.includes('západní kamery');
+     const freshnessCaution=/čas pořízení snímku není ověřen|snímek nemusí být právě pořízený/i.test(layout.sourceLabel);
      if(layout.landscapeImage!=='https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg'||
-      !layout.sourceLabel.includes('čas pořízení snímku není ověřen'))
+      !sourceIdentified||!freshnessCaution)
       errors.push(size.name+': panorama must be authentic and source/freshness clearly labelled');
      if(!layout.solarRise||layout.solarRise==='—'||!layout.moonPhase||layout.moonPhase==='—')
       errors.push(size.name+': astronomical cycle did not calculate');
