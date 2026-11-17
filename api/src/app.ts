@@ -560,7 +560,7 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
    return bad(reply,req.id,'DATASET_UNAVAILABLE','No approved dataset published',503);
   const currentDate=localDateAt(Math.floor(now().getTime()/1000));
   const currentYear=Number(currentDate.slice(0,4));
-  if(!label||!/^(20\\d{2})$/.test(label)||Number(label)<2009||
+  if(!label||!/^20[0-9]{2}$/.test(label)||Number(label)<2009||
    Number(label)>Math.min(2100,currentYear))
    return bad(reply,req.id,'INVALID_RANGE','Select a year from 2009 through the current Prague year',422);
   if(!reader.dailySummaries)
