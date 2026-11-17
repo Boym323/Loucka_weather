@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-17 – Historický graf úvodní stránky po načtení DOM
+- Na hlavní stránce se vykreslovací knihovna ECharts pro posledních 24 hodin načítá samostatným dynamickým blokem až po DOMContentLoaded. Stránka již nemusí čekat na vykreslovací balíček před dokončením HTML parsování.
+- Zachován skutečný archivní graf, barvy, kvalita bodů, ovládací prvky i fallback. Zrušení opožděné inicializace při výměně stránky; bezpečný text při chybě načítání knihovny.
+- Veřejný dev smoke nově vyžaduje skutečně vykreslené SVG historického grafu, nestačí jen přítomnost prázdného kontejneru. Předchozí měření home DCL 2,79–2,95s / FCP 1,58–1,72s je výchozí vzorek, **ne důkaz očekávaného zrychlení**. Pozor: home je v průchodu první cold navigace, jiné stránky warm cache; tyto vzorky proto nejdou férově přímo srovnávat.
+- Beze změn originálních meteorologických dat, API, databázových oprávnění, TLS, WeeWX nebo produkce.
+
+
 ## 2026-11-17 – Kontrola úplnosti původních denních souhrnů 2025
 - Nový čtecí DEV nástroj vypíše konkrétní chybějící dny v archive_day_* bez přepisu dat; odděluje neexistující denní řádek, nulový počet vzorků a přebytek sumtime včetně 23/25hodinových dní.
 - Doplněny izolované DST/časové regresní testy a provozní návod; sonda není automaticky spouštěná při deploymentu.

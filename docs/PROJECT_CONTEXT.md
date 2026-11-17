@@ -1,5 +1,8 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**17. 11. 2026 – home performance:** Finální public smoke pro commit `77908e2` PASS, issue #133 uzavřeno. Homepage měla v tomto vzorku DCL 2792/2946 ms a FCP 1580/1720 ms desktop/mobil. PR na odložený ECharts HistoryChart po DOMContentLoaded, s prohlížečovým důkazem skutečně vykresleného SVG. Zatím bez potvrzeného nového browser benchmarku; porovnat teprve po nasazení. SQL archiv netknut.
+
+
 **17. 11. 2026 – výkonový test:** DEV endpoint /api/v1/climate/records má 8/8 HTTP 503, ostatní měřené endpointy 8/8 PASS, RSS ~69 MiB v krátkém okně. Připravena staging-only SELECT diagnostika climate-records-diagnostic.mjs, která zatím nebyla na LXC spuštěna. Data, DB granty i TLS beze změn.
 
 

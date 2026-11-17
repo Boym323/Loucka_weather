@@ -147,6 +147,16 @@ try{
       errors.push(size.name+': approved four-feature observatory design is incomplete');
      if(!layout.windSpeed||!layout.windGust||!layout.heroChart)
       errors.push(size.name+': real anemometer speed/gust or 24h archive chart missing from hero');
+     // The chart engine loads only after DOMContentLoaded. Verify its SVG
+     // and a real completed archive request, not merely placeholder markup.
+     const chartPainted=await page.waitForFunction(()=>{
+      const root=document.querySelector('.evergreen-hero [data-history-chart]');
+      const status=root?.querySelector('[data-chart-status]')?.textContent??'';
+      return !!root?.querySelector('[data-chart-canvas] svg') &&
+       /naměřených bodů/.test(status);
+     },null,{timeout:16000}).then(()=>true).catch(()=>false);
+     if(!chartPainted)
+      errors.push(size.name+': deferred homepage history chart did not paint a real archive SVG');
      // Source identity and freshness caution are the contract; the public
      // wording was simplified in PR #114 and must not fail on that copy edit.
      const sourceIdentified=layout.sourceLabel.includes('západní kamery');
