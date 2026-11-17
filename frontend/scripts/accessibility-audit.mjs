@@ -14,6 +14,7 @@ const routes = [
   '/klimatologie/sezony/', '/klimatologie/rocenka/'
 ];
 const viewports = [
+  { name: 'mobil-uzky', width: 320, height: 700 },
   { name: 'mobil', width: 390, height: 844 },
   { name: 'desktop', width: 1440, height: 900 }
 ];
@@ -47,7 +48,33 @@ try {
         if (activeTheme !== theme) {
           throw new Error('Theme mismatch: expected ' + theme + ', received ' + activeTheme);
         }
-        if (path === '/klimatologie/' && viewport.name === 'mobil') {
+        // Inspect actual geometry as well as WCAG markup. A scrollable table
+        // is fine, but a page-wide horizontal scrollbar or clipped h1 is not.
+        const geometry = await page.evaluate(() => {
+          const heading = document.querySelector('main h1') ?? document.querySelector('h1');
+          const title = heading?.getBoundingClientRect();
+          const nav = document.querySelector('.mobile-dock > a');
+          return {
+            pageWidth: document.documentElement.scrollWidth,
+            viewportWidth: innerWidth,
+            headingLeft: title?.left ?? null,
+            headingRight: title?.right ?? null,
+            mobileTargetHeight: nav?.getBoundingClientRect().height ?? null
+          };
+        });
+        if (geometry.pageWidth > viewport.width + 2) {
+          throw new Error('Page-wide horizontal overflow: ' + geometry.pageWidth +
+            'px for ' + viewport.width + 'px viewport');
+        }
+        if (geometry.headingLeft !== null &&
+            (geometry.headingLeft < -2 || geometry.headingRight > viewport.width + 2)) {
+          throw new Error('Main heading is clipped outside viewport');
+        }
+        if (viewport.width <= 390 && geometry.mobileTargetHeight !== null &&
+            geometry.mobileTargetHeight < 44) {
+          throw new Error('Mobile navigation target shorter than 44px');
+        }
+        if (path === '/klimatologie/' && viewport.width <= 390) {
           // Scan a revealed menu too, not just the hidden default state.
           const summary = page.locator('[data-climate-quick-nav] summary');
           await summary.click();

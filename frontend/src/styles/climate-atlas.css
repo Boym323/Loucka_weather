@@ -288,7 +288,7 @@
 .climate-atlas .atlas-rank-action{
  display:inline-flex;align-items:center;justify-content:center;
  background:var(--panel-2);color:var(--teal);border:1px solid var(--line);
- border-radius:7px;padding:7px 11px;min-height:38px;cursor:pointer;
+ border-radius:7px;padding:9px 11px;min-height:44px;cursor:pointer;
  font-size:12px;font-weight:650;white-space:nowrap
 }
 .climate-atlas .atlas-rank-action:hover{border-color:var(--teal)}

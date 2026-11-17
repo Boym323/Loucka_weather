@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-17 – Návštěvnický a mobilní audit webu (PR #118)
+- Oprava veřejného testu živých měření a návratu k archivu na srozumitelné texty zavedené v PR #114. Zachována kontrola skutečného původu `gw3000_live`, čerstvosti a nenahrazení archivního deště.
+- Přesun více než 58 statistických dotazů do odloženého načítání až při dosažení detailního klimatologického přehledu. Přímá navigace na graf i ruční změna roku stále fungují.
+- Odpojování listenerů po přechodu mezi stránkami a ochrana před opožděným otevřením SSE. Mobilní ovládání rekordních dnů min. 44 px.
+- A11y audit všech 15 stránek nově také na šířce 320 px, ve světlém a tmavém režimu. Dokumentovány skutečné výsledky dev smoke a nejistoty laboratorních časů.
+- Jen frontend, testy a dokumentace; žádná změna MariaDB, API, WeeWX či produkce. Staging výsledek ověřit po merge podle komitu.
+
+
 ## 2026-11-17 – Měření načítání dev webu během vizuální kontroly (návrh PR)
 - Stávající veřejný test dev webu zaznamenává pasivně navigační TTFB, DOMContentLoaded, First Contentful Paint a souhrn browser fetch požadavků API.
 - Anonymní JSON report se ukládá do již používaného artefaktu `preview-screenshots`; nezachytává URL s parametry, meteo hodnoty ani údaje návštěvníků. Žádné další HTTP/SQL požadavky.
