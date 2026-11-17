@@ -417,11 +417,13 @@ try{
      errors.push(size.name+': monitoring dashboard must list five independent sources');
     if(path==='/rekordy/'){
      await page.waitForFunction(()=>{
-      const state=document.querySelector('[data-records-status]')?.textContent??'';
-      return state.includes('Orientační rekordy')||state.includes('Rekordy nedostupné');
+      const state=document.querySelector('[data-records-status]');
+      return state?.classList.contains('warning')||state?.classList.contains('error');
      },null,{timeout:42000});
-     const state=(await page.locator('[data-records-status]').textContent())?.trim()??'';
-     if(!state.includes('Orientační rekordy'))errors.push(size.name+': provisional climatology records missing: '+state);
+     const recordState=await page.locator('[data-records-status]').evaluate(el=>({
+      preliminary:el.classList.contains('warning'),message:el.textContent?.trim()??''
+     }));
+     if(!recordState.preliminary)errors.push(size.name+': provisional climatology records missing: '+recordState.message);
      const coverage=await page.locator('[data-records-coverage]').textContent();
      if(!coverage?.includes('teplota'))errors.push(size.name+': records coverage not disclosed');
      const maximum=(await page.locator('[data-record-value="maxTemp"]').textContent())?.trim()??'';

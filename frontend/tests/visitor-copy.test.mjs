@@ -44,7 +44,8 @@ test('graph period labels match calendar-based requests and smoke accepts prelim
  }
  assert.match(history,/const shiftLocalDate=/);
  assert.match(history,/Date\.UTC\(/);
- assert.match(smoke,/state\.includes\('Orientační rekordy'\)/);
- assert.doesNotMatch(smoke,/state\.includes\('Původní data'\)/);
+ assert.match(smoke,/classList\.contains\('warning'\)/);
+ assert.match(smoke,/classList\.contains\('error'\)/);
+ assert.doesNotMatch(smoke,/state\.includes\('(?:Původní data|Orientační rekordy)'\)/);
  assert.match(smoke,/temperature record value was not painted/);
 });
