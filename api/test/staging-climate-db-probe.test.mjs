@@ -37,6 +37,8 @@ test('staging probe is syntactically valid and bounded, read-only',async()=>{
  const source=await readFile(f,'utf8');
  assert.equal(spawnSync(process.execPath,['--check',f.pathname]).status,0);
  for(const name of ['outTemp','rain','windSpeed'])assert.ok(source.includes(name));
+ assert.match(source,/WEATHER_STAGING_ENABLED/);
+ assert.match(source,/process\.argv\.length!==2/);
  assert.match(source,/readOnly:true/);
  assert.match(source,/originalArchiveUntouched:true/);
  assert.match(source,/maxRows=367/);
