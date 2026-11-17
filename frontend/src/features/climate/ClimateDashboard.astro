@@ -329,8 +329,6 @@ const climateSections=[
     for(const name of ['temperature','rain','wind'])badge('[data-chart-status="'+name+'"]','Nedostupné','error');
    }
   }
-  root.querySelector<HTMLButtonElement>('[data-climate-reload]')?.addEventListener('click',()=>void refresh());
-  yearSelect?.addEventListener('change',()=>void refresh());
   // Statistics are expensive (58+ API requests). The detailed section is
   // below the visitor highlights; defer requests until it becomes visible.
   // Navigating directly to an anchor still enters the viewport and loads.
@@ -340,6 +338,11 @@ const climateSections=[
    if(entries.some(entry=>entry.isIntersecting)){visibility.disconnect();start();}
   },{rootMargin:'180px'});
   visibility.observe(root);
+  const manualRefresh=()=>{
+   started=true;visibility.disconnect();void refresh();
+  };
+  root.querySelector<HTMLButtonElement>('[data-climate-reload]')?.addEventListener('click',manualRefresh);
+  yearSelect?.addEventListener('change',manualRefresh);
   document.addEventListener('astro:before-swap',()=>{
    controller?.abort();visibility.disconnect();observer.disconnect();
    Object.values(canvas).forEach(c=>c.dispose());
