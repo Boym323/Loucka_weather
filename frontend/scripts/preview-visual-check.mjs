@@ -287,6 +287,31 @@ try{
        errors.push(size.name+': '+metric+' annual summary missing: '+value);
      }
     }
+    if(path==='/grafy/'){
+     for(const period of ['today','yesterday','7d','30d','this-year','year']){
+      if(await page.locator('[data-advanced-history] [data-period="'+period+'"]').count()!==1)
+       errors.push(size.name+': missing friendly history period '+period);
+     }
+    }
+    if(path==='/klimatologie/'){
+     // Real-source historical moments are lazy and must be checked after scroll.
+     await page.locator('[data-climate-highlights]').scrollIntoViewIfNeeded({timeout:12000});
+     const highlightReady=await page.waitForFunction(()=>{
+      const status=document.querySelector('[data-highlights-status]');
+      return status?.dataset.state==='warning'||status?.dataset.state==='error';
+     },null,{timeout:16000}).then(()=>true).catch(()=>false);
+     const highlights=await page.evaluate(()=>({
+      state:document.querySelector('[data-highlights-status]')?.dataset.state??'pending',
+      count:document.querySelectorAll('.atlas-highlight-card').length,
+      maximum:document.querySelector('[data-highlight-value="maxTemp"]')?.textContent?.trim()??'',
+      minimum:document.querySelector('[data-highlight-value="minTemp"]')?.textContent?.trim()??'',
+      caution:document.querySelector('[data-highlight-note="maxDailyRain"]')?.textContent?.trim()??''
+     }));
+     console.log('LIVE CLIMATE HIGHLIGHTS',size.name,JSON.stringify(highlights));
+     if(!highlightReady||highlights.state!=='warning'||highlights.count!==4||
+      !/[0-9]/.test(highlights.maximum)||!/[0-9]/.test(highlights.minimum))
+      errors.push(size.name+': historical highlights not populated from original API');
+    }
     // Both comparison views load only when scrolled into the viewport.
     // DOM existence and a reachable API endpoint do not prove the charts rendered.
     if(path==='/klimatologie/'){
