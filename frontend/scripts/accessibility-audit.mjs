@@ -14,6 +14,7 @@ const routes = [
   '/klimatologie/sezony/', '/klimatologie/rocenka/'
 ];
 const viewports = [
+  { name: 'mobil-uzky', width: 320, height: 700 },
   { name: 'mobil', width: 390, height: 844 },
   { name: 'desktop', width: 1440, height: 900 }
 ];
@@ -47,7 +48,7 @@ try {
         if (activeTheme !== theme) {
           throw new Error('Theme mismatch: expected ' + theme + ', received ' + activeTheme);
         }
-        if (path === '/klimatologie/' && viewport.name === 'mobil') {
+        if (path === '/klimatologie/' && viewport.width <= 390) {
           // Scan a revealed menu too, not just the hidden default state.
           const summary = page.locator('[data-climate-quick-nav] summary');
           await summary.click();
