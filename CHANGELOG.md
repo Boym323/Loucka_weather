@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-17 – Čtecí prověrka TLS a oprávnění DEV databáze (návrh PR)
+- Nová explicitně spouštěná staging-only sonda ověří skutečný `Ssl_cipher`, vyžádané ověřování DB certifikátu a SELECT-only přístup k cílovému archivu i klíčovým denním tabulkám.
+- Nadbytečná zápisová práva v jiných schématech a aktivní role blokují produkční verdikt, aniž by zastavovaly veřejné čtení původních dat. Výstup nikdy nevypisuje credential, identitu účtu, adresu DB ani text grantů.
+- Samostatné unit testy dokládají fail-closed TLS, zápisová práva a scope, ale reálné LXC spuštění stále čeká; automatický audit ani změny konfigurace se nedělají.
+- Žádné SQL zápisy, změna Fastify runtime, MariaDB, produkčního WeeWX ani rekonstruovaných dat.
+
+
 ## 2026-11-17 – Regresní rozpočet požadavků klimatologie (PR)
 - Veřejný dev test po optimalizaci #119 prokázal 10 API fetchů namísto 69 na desktopu i mobilu během úplného průchodu klimatologií (run #44148375636). Přidána trvalá kontrola nejvýše 20 fetchů a přesně jednoho souhrnného dashboard requestu; zachovává prostor pro krátké opakování požadavků.
 - Jedná se o laboratorní počet požadavků, nikoli důkaz vyšší rychlosti zobrazení. Výsledky z návštěvnického počítače, studený SQL dotaz a provozní TLS zůstávají samostatnou prací.
