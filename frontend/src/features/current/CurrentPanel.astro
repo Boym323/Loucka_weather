@@ -132,13 +132,15 @@ const quickReadings = [
   if(archiveRetryTimer){clearTimeout(archiveRetryTimer);archiveRetryTimer=undefined;}
   if(!controller.signal.aborted)void refresh();
  };
+ const archiveUpdated=()=>{if(!controller.signal.aborted)void refresh();};
  if(section){
   void refresh();
-  window.addEventListener('loucka:archive-updated',()=>{if(!controller.signal.aborted)void refresh();});
+  window.addEventListener('loucka:archive-updated',archiveUpdated);
   window.addEventListener('loucka:live-observation',applyLive);
   window.addEventListener('loucka:live-expired',restoreArchive);
  }
  document.addEventListener('astro:before-swap',()=>{
+  window.removeEventListener('loucka:archive-updated',archiveUpdated);
   window.removeEventListener('loucka:live-observation',applyLive);
   window.removeEventListener('loucka:live-expired',restoreArchive);
   if(archiveRetryTimer){clearTimeout(archiveRetryTimer);archiveRetryTimer=undefined;}
