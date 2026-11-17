@@ -472,6 +472,35 @@ try{
       if(range.status!==206||!/^bytes 0-31\/[0-9]+$/.test(range.contentRange??'')||
        range.acceptRanges!=='bytes'||!range.contentType?.includes('video/mp4')||range.bytes!==32)
        errors.push(size.name+': camera MP4 byte-range playback failed');
+      // A successful HTTP range proves transport only. Exercise the native
+      // browser decoder where the test Chromium advertises H.264 support.
+      const playback=await page.locator('[data-archive-player]').evaluate(async video=>{
+       const supports=video.canPlayType('video/mp4; codecs="avc1.42E01E"');
+       const earlyError=video.error?.code??null;
+       if(!supports)return {supported:false,started:false,earlyError,mediaError:null,
+        readyState:video.readyState,networkState:video.networkState};
+       video.muted=true;
+       let timeout;
+       try{
+        await Promise.race([
+         video.play(),
+         new Promise((_,reject)=>{timeout=setTimeout(()=>reject(new Error('timeout')),12000);})
+        ]);
+        return {supported:true,started:video.readyState>=2,
+         earlyError,mediaError:video.error?.code??null,
+         readyState:video.readyState,networkState:video.networkState};
+       }catch{
+        return {supported:true,started:false,earlyError,mediaError:video.error?.code??null,
+         readyState:video.readyState,networkState:video.networkState};
+       }finally{
+        if(timeout!==undefined)clearTimeout(timeout);
+        video.pause();
+       }
+      });
+      console.log('CAMERA VIDEO PLAYBACK',size.name,JSON.stringify(playback));
+      if(playback.earlyError!==null)errors.push(size.name+': camera player errored before user started playback');
+      if(playback.supported&&!playback.started)
+       errors.push(size.name+': camera MP4 playback did not start in Chromium');
      }
      if(await page.locator('[data-archive-date]').count()!==1||
       await page.locator('[data-archive-day-frames]').count()!==1)

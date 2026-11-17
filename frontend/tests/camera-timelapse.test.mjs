@@ -11,7 +11,11 @@ test('camera timelapse retains video controls and safe MP4 download fallback',as
  assert.match(component,/player\?\.addEventListener\('error'/);
  assert.match(component,/player\?\.addEventListener\('loadedmetadata'/);
  assert.match(component,/download\.href=url/);
- assert.match(component,/player\.pause\(\);player\.src=url;player\.load\(\)/);
+ assert.match(component,/const choose=\(url:string,userSelected=false\)=>/);
+ assert.match(component,/player\.src=url/);
+ assert.match(component,/if\(userSelected\)player\.load\(\)/);
+ assert.match(component,/choose\(videos\[0\]\.url\)/);
+ assert.match(component,/choose\(select\.value,true\)/);
  assert.match(component,/videos\.length/);
  assert.match(component,/žádné časosběrné MP4/);
 });
@@ -22,4 +26,7 @@ test('public camera smoke requests actual partial MP4 when a video is listed',as
  assert.match(script,/bytes=0-31/);
  assert.match(script,/range\.status!==206/);
  assert.match(script,/camera MP4 byte-range playback failed/);
+ assert.match(script,/CAMERA VIDEO PLAYBACK/);
+ assert.match(script,/camera MP4 playback did not start in Chromium/);
+ assert.match(script,/camera player errored before user started playback/);
 });
