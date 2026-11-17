@@ -15,3 +15,11 @@ test('dev smoke records passive anonymous navigation and API evidence',async()=>
  assert.ok(source.indexOf('visitorPerformance.push')<source.indexOf('await page.screenshot('));
  assert.ok(source.indexOf('await writeFile(')>source.indexOf('finally{await browser.close();}'));
 });
+
+test('public camera retains source and freshness disclaimer after plain-language change',async()=>{
+ const source=await readFile(new URL('../scripts/preview-visual-check.mjs',import.meta.url),'utf8');
+ assert.match(source,/sourceIdentified=layout\.sourceLabel\.includes/);
+ assert.match(source,/freshnessCaution=/);
+ assert.match(source,/snímek nemusí být právě pořízený/);
+ assert.match(source,/čas pořízení snímku není ověřen/);
+});
