@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-17 – Měření načítání dev webu během vizuální kontroly (návrh PR)
+- Stávající veřejný test dev webu zaznamenává pasivně navigační TTFB, DOMContentLoaded, First Contentful Paint a souhrn browser fetch požadavků API.
+- Anonymní JSON report se ukládá do již používaného artefaktu `preview-screenshots`; nezachytává URL s parametry, meteo hodnoty ani údaje návštěvníků. Žádné další HTTP/SQL požadavky.
+- Laboratorní měření nejsou reálné návštěvnické Web Vitals ani benchmark studené DB. Dokumentovány bezpečnostní podmínky a dosud nesplněné produkční brány.
+- Bez změny API, přístupů, TLS, databází, produkčního WeeWX a bez produkčního nasazení.
+
+
 ## 2026-11-17 – Úvod klimatologického atlasu s historickými zajímavostmi (návrh PR)
 - Nové čtyři stručné karty historických extrémů na rozcestníku klimatologie, načítané až při zobrazení sekce výhradně z původního veřejného API, bez náhradních či vymyšlených hodnot.
 - Kontroly stavu `preliminary`, datasetu `original`, jednotek, data, numerických hodnot a původu. Známé srážkové anomálie jsou viditelně označené.
