@@ -44,6 +44,7 @@
   }
  }
  void getStationCapabilities(controller.signal).then(capabilities=>{
+  if(controller.signal.aborted)return;
   if(!capabilities.includes('live_sse')){label('Poslední měření',false);return;}
   eventSource=new EventSource('/api/v1/live?units=metricwx');
   eventSource.addEventListener('observation',event=>{
