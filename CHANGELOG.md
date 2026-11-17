@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-17 – Veřejný dev smoke i po změně API (návrh PR)
+- GitHub Actions ověřuje skutečně nasazený commit, grafy, klimatologii, GW3000 live a návrat k archivu nejen po změnách `frontend/**`, ale také po změnách `api/**` na `main`.
+- Tím se uzavírá mezera, kdy změna Fastify mohla úspěšně projít izolovaným CI bez automatického veřejného prohlížečového testu aktuálně nasazeného API.
+- Test zůstává read-only; žádné API, WeeWX, MariaDB, GW3000 ani produkční změny. Všechny runtime závěry dál závisí na skutečné synchronizaci dev LXC.
+
+
 ## 2026-11-17 – Čtecí prověrka TLS a oprávnění DEV databáze (návrh PR)
 - Nová explicitně spouštěná staging-only sonda ověří skutečný `Ssl_cipher`, vyžádané ověřování DB certifikátu a SELECT-only přístup k cílovému archivu i klíčovým denním tabulkám.
 - Nadbytečná zápisová práva v jiných schématech a aktivní role blokují produkční verdikt, aniž by zastavovaly veřejné čtení původních dat. Výstup nikdy nevypisuje credential, identitu účtu, adresu DB ani text grantů.

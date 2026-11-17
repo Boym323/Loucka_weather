@@ -1,5 +1,8 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**Veřejná dev CI kontrola backendu (návrh PR 17. 11. 2026):** Public GitHub Actions smoke workflow nově sleduje `api/**` i `frontend/**`; změny Fastify na main tak po automatickém dev sync projdou skutečným browser/archiv testem, nikoli jen izolovanými API unit testy. Výchozí kontrola bezpečnostní sondy ve Fastify CI je bez reálného LXC běhu; TLS a granty nejsou ověřeny.
+
+
 **Bezpečnost API – návrh staging attestation 17. 11. 2026:** V samostatné větvi je read-only skript pro jednorázové ověření aktuální DB relace a grantů API účtu na DEV LXC; vždy selže při neověřeném TLS, právech k zápisu do původního schématu či nadbytečných zápisových grantech do jiných schémat. Skript nikdy nemění DB ani nevypisuje přístupy. Reálné spuštění není doložené a produkce zůstává NO-GO; návod `docs/STAGING_DB_SECURITY_ATTESTATION_2026-11-17.md`.
 
 
