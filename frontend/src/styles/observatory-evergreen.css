@@ -390,6 +390,18 @@
 .evergreen-station-card>p{
  color:var(--muted);font-size:12px;line-height:1.45;margin:12px 0
 }
+.evergreen-station-card details{
+ margin:4px 0 12px
+}
+.evergreen-station-card details summary{
+ display:flex;align-items:center;min-height:44px;
+ padding:10px 0;cursor:pointer;color:var(--teal);
+ font-size:13px;font-weight:600
+}
+.evergreen-station-card details p{
+ font-size:12px;line-height:1.5;color:var(--muted);
+ margin:6px 0 0
+}
 .evergreen-station-card .observatory-text-link{
  font-size:12px;color:var(--teal);margin-top:auto
 }
