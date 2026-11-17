@@ -105,15 +105,20 @@
      const option=document.createElement('option');option.value=v.url;option.textContent=v.date;
      select.append(option);
     }
-    const choose=(url:string)=>{
+    const choose=(url:string,userSelected=false)=>{
      if(ctrl.signal.aborted)return;
-     player.pause();player.src=url;player.load();
+     player.pause();
+     // With preload="none" setting src is enough. Calling load() on page
+     // startup forces an unnecessary MP4 request alongside queued thumbnails,
+     // and can hit shared Nginx rate limits before the visitor presses Play.
+     player.src=url;
+     if(userSelected)player.load();
      if(download){download.hidden=false;download.href=url;}
      if(videoNote)videoNote.textContent='Časosběr '+(select.selectedOptions[0]?.textContent??'')+
       ' je připravený. Klikni na přehrát; případně stáhni MP4.';
     };
     select.disabled=false;player.hidden=false;choose(videos[0].url);
-    select.addEventListener('change',()=>choose(select.value));
+    select.addEventListener('change',()=>choose(select.value,true));
    }else{
     if(videoNote)videoNote.textContent='Zatím není dostupné žádné časosběrné MP4. Převod probíhá po uzavření dne, pokud existuje alespoň šest snímků a funguje FFmpeg.';
    }
