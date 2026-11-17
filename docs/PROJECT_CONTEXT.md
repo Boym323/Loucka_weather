@@ -1,5 +1,8 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**Bezpečnost API – návrh staging attestation 17. 11. 2026:** V samostatné větvi je read-only skript pro jednorázové ověření aktuální DB relace a grantů API účtu na DEV LXC; vždy selže při neověřeném TLS, právech k zápisu do původního schématu či nadbytečných zápisových grantech do jiných schémat. Skript nikdy nemění DB ani nevypisuje přístupy. Reálné spuštění není doložené a produkce zůstává NO-GO; návod `docs/STAGING_DB_SECURITY_ATTESTATION_2026-11-17.md`.
+
+
 **17. 11. 2026 – výkon klimatologie potvrzený na DEV:** Po PR #119 a nasazení `e13bf6e` veřejný run `44148375636` PASS: 15 veřejných tras, desktop/mobilní klimatologické grafy, GW3000 SSE a bezpečný návrat k archivu. Úplná návštěva klimatologie vyvolala 10 fetchů API (předchozí baseline 69), tj. o 85,5 % méně; nikoliv ale prokázané zrychlení načítání stránky. Nový samostatný PR přidává limit 20 fetchů a právě jedno souhrnné načtení jako regresní ochranu. Produkční bezpečnostní brány stále NO-GO.
 
 
