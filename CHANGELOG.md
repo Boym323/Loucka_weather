@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-17 – Obnovení historického API a kvality grafů
+- Fastify kontrola read-only práv nyní vyhodnocuje pouze cílové produkční archivní schéma; nesouvisející oprávnění účtu na `loucka_reconstruction` již neshazují veřejné čtecí API.
+- Historický graf zobrazuje počty měřených, odvozených, rekonstruovaných a chybějících bodů; tooltip uvádí kvalitu a původ vrácený API. NULL a podezřelé hodnoty zůstávají mezerami, nikoli nulami.
+- Ověřeno na vývojovém LXC proti produkčnímu archivu pouze pro čtení: readiness, historie, denní a měsíční statistiky. Testy API a frontendu prošly; žádný databázový zápis ani produkční deploy.
+
 ## 2026-11-12 – Srážkový atlas a ochrana historických trendů
 - Aktuální read-only porovnání originálu a rekonstrukce v 18 ročních oknech 2009–2026 do stejného cutoff. Úhrny se liší v pěti letech, zejména červenec 2021 (701,015 → 42,567 mm), pracovní nejvyšší roční a denní úhrny nejsou certifikované rekordy. 221 pending srážkových položek rozděleno podle skutečného aktuálního stavu; žádné nové opravy.
 - Nová sekce `/klimatologie/trendy/#srazky-archiv`: měsíční původní úhrny, dny s deštěm/nulou, missing/suspect a známá rizika. Roční srážkový sklon vyžaduje i časové pokrytí ≥90 % a vynechá známé problematické roky; původní hodnoty zůstávají viditelné. Extrémy označí známé problematické srážkové dny.

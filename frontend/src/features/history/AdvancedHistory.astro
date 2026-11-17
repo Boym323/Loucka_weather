@@ -42,6 +42,7 @@
  </form>
  <div class="advanced-history-chart" data-advanced-canvas role="img" aria-label="Dynamický časový graf archivních měření"></div>
  <div class="chart-summary" data-advanced-summary aria-live="polite"></div>
+ <p class="source-note" data-history-quality-note>Mezera v grafu znamená chybějící nebo podezřelou hodnotu, ne nulu. Původ a kvalita bodu jsou dostupné v detailu po najetí nebo klepnutí; API může označit měření, odvozenou hodnotu či rekonstrukci.</p>
  <p class="source-note">Pro období do 2 dnů původní intervaly, do 40 dnů hodinové agregace, delší období denní agregace. Graf respektuje mezery, místní kalendářní dny a změny CET/CEST. CSV obsahuje pouze data skutečně vrácená API.</p>
 </section>
 <script>
@@ -68,6 +69,8 @@
   const now=new Date();
   let activeRange='7d',controller:AbortController|undefined,results:HistoryResponse[]=[];
   const valid=(p:HistoryPoint)=>p.value!==null&&Number.isFinite(p.value)&&p.quality!=='missing'&&p.quality!=='suspect';
+  const qualityName=(quality:HistoryPoint['quality'])=>({measured:'měřeno',derived:'odvozeno',reconstructed:'rekonstruováno',suspect:'podezřelé',missing:'chybí'}[quality]);
+  const escapeHtml=(value:string)=>value.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]??c));
   const names:Record<string,string>={
    outTemp:'Teplota',outHumidity:'Vlhkost',barometer:'Tlak',windSpeed:'Vítr',
    windGust:'Nárazy větru',rain:'Srážky',rainRate:'Intenzita srážek',
@@ -161,7 +164,20 @@
      tooltip:{trigger:'axis',confine:true,
       backgroundColor:light?'#ffffff':'#1a282d',
       borderColor:gridColor,textStyle:{color:light?'#1d302f':'#eff5f3'},
-      axisPointer:{type:'line',lineStyle:{color:ink,opacity:.5}}},
+      axisPointer:{type:'line',lineStyle:{color:ink,opacity:.5}},
+      formatter:(items:any)=>{
+       const rows=Array.isArray(items)?items:items?[items]:[];
+       if(!rows.length)return '';
+       const first=rows[0];
+       const date=new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',dateStyle:'medium',timeStyle:'short'}).format(new Date(first.value[0]));
+       const details=rows.map(item=>{
+        const result=results[item.seriesIndex],p=result?.points[item.dataIndex];
+        const value=valid(p)?formatValue(p.value,2)+' '+(units[result.metric]??result.unit):'—';
+        const origin=p?.provenance?` · ${escapeHtml(p.provenance)}`:'';
+        return `${item.marker}${escapeHtml(item.seriesName)}: ${value} <small>(${p?qualityName(p.quality):'bez údaje'}${origin})</small>`;
+       });
+       return `<strong>${escapeHtml(date)}</strong><br>${details.join('<br>')}`;
+      }},
      grid:{left:compact?45:56,right:series.length>1?(compact?48:65):(compact?9:24),
       top:series.length>1?48:24,bottom:compact?69:75,containLabel:false},
      xAxis:{type:'time',splitNumber:compact?3:7,boundaryGap:false,
@@ -181,14 +197,25 @@
        dataBackground:{lineStyle:{color:gridColor},areaStyle:{color:gridColor}}}
      ]
     },true);
-    const total=results.reduce((n,r)=>n+r.points.filter(valid).length,0);
-    if(status){status.textContent=total+' měření · '+resolution;status.className='status-chip '+(total?'ok':'warning');}
+    const counts=results.flatMap(r=>r.points).reduce((n,p)=>{
+     if(!valid(p))n.missing++;
+     else if(p.quality==='measured')n.measured++;
+     else if(p.quality==='reconstructed')n.reconstructed++;
+     else n.derived++;
+     return n;
+    },{measured:0,derived:0,reconstructed:0,missing:0});
+    const total=counts.measured+counts.derived+counts.reconstructed;
+    if(status){status.textContent=`${total} platných · ${counts.measured} měřených · ${counts.derived} odvozených · ${counts.reconstructed} rekonstruovaných · ${counts.missing} mezer · ${resolution}`;status.className='status-chip '+(total?'ok':'warning');}
     if(summary){
      for(const result of results){
       const vals=result.points.filter(valid).map(p=>p.value as number);
       const span=document.createElement('span');
       if(vals.length){
-       span.textContent=(names[result.metric]??result.metric)+': min '+formatValue(Math.min(...vals),1)+' / max '+formatValue(Math.max(...vals),1)+' '+(units[result.metric]??result.unit);
+       const measured=result.points.filter(p=>valid(p)&&p.quality==='measured').length;
+       const reconstructed=result.points.filter(p=>valid(p)&&p.quality==='reconstructed').length;
+       const derived=result.points.filter(p=>valid(p)&&p.quality==='derived').length;
+       const gaps=result.points.length-vals.length;
+       span.textContent=`${names[result.metric]??result.metric}: min ${formatValue(Math.min(...vals),1)} / max ${formatValue(Math.max(...vals),1)} ${units[result.metric]??result.unit} · ${measured} měř. / ${derived} odvozených / ${reconstructed} rekonstr. / ${gaps} mezer`;
       }else span.textContent=(names[result.metric]??result.metric)+': bez měření';
       summary.append(span);
      }

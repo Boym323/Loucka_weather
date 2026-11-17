@@ -36,16 +36,29 @@ export function createMariaDbReader():ArchiveReader{
   })().catch(error=>{summaryUnitsPromise=undefined;throw error;});
   return summaryUnitsPromise;
  };
- const forbidden=/\b(?:ALL PRIVILEGES|INSERT|UPDATE|DELETE|ALTER|CREATE|DROP|TRIGGER|EVENT|FILE|SUPER|RELOAD|GRANT OPTION|REFERENCES|LOCK TABLES|PROCESS|EXECUTE)\b/i;
  let grantCheck:Promise<void>|undefined;
  function ensureReadOnly():Promise<void>{
   if(grantCheck!==undefined)return grantCheck;
   grantCheck=(async()=>{
-   const rows=await pool.query('SHOW GRANTS') as Record<string,unknown>[];
-   const grants=rows.flatMap(row=>Object.values(row)).filter((v):v is string=>typeof v==='string');
-   if(!grants.length||grants.some(grant=>forbidden.test(grant))
-       ||!grants.some(grant=>/\bSELECT\b/i.test(grant)))
-    throw new Error('Staging database credentials must be SELECT-only');
+   // Check effective rights only on the configured archive schema. A shared
+   // read-only web identity may have unrelated grants on other schemas; those
+   // must neither disable this API nor weaken the production archive check.
+   const users=await pool.query(`SELECT CONCAT(QUOTE(SUBSTRING_INDEX(CURRENT_USER(),'@',1)),
+       '@',QUOTE(SUBSTRING_INDEX(CURRENT_USER(),'@',-1))) AS grantee`) as {grantee:string}[];
+   const grantee=users[0]?.grantee;
+   if(!grantee)throw new Error('Cannot establish database account for read-only check');
+   const globalRows=await pool.query(`SELECT PRIVILEGE_TYPE FROM information_schema.USER_PRIVILEGES
+       WHERE GRANTEE=?`,[grantee]) as {PRIVILEGE_TYPE:string}[];
+   const schemaRows=await pool.query(`SELECT PRIVILEGE_TYPE FROM information_schema.SCHEMA_PRIVILEGES
+       WHERE GRANTEE=? AND TABLE_SCHEMA=?`,[grantee,schema]) as {PRIVILEGE_TYPE:string}[];
+   const tableRows=await pool.query(`SELECT PRIVILEGE_TYPE FROM information_schema.TABLE_PRIVILEGES
+       WHERE GRANTEE=? AND TABLE_SCHEMA=?`,[grantee,schema]) as {PRIVILEGE_TYPE:string}[];
+   const grants=[...globalRows,...schemaRows,...tableRows].map(row=>String(row.PRIVILEGE_TYPE).toUpperCase());
+   const forbidden=new Set(['INSERT','UPDATE','DELETE','CREATE','DROP','ALTER','INDEX','REFERENCES',
+     'CREATE TEMPORARY TABLES','LOCK TABLES','EXECUTE','CREATE VIEW','SHOW VIEW','CREATE ROUTINE',
+     'ALTER ROUTINE','EVENT','TRIGGER','GRANT OPTION','FILE','SUPER','RELOAD','PROCESS']);
+   if(!grants.includes('SELECT')||grants.some(privilege=>forbidden.has(privilege)))
+    throw new Error('Archive database credentials must be SELECT-only on '+schema);
   })().catch(error=>{grantCheck=undefined;throw error;});
   return grantCheck;
  }
