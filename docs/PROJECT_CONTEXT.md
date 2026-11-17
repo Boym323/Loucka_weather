@@ -1,5 +1,8 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**17. 11. 2026 – výkonový test:** DEV endpoint /api/v1/climate/records má 8/8 HTTP 503, ostatní měřené endpointy 8/8 PASS, RSS ~69 MiB v krátkém okně. Připravena staging-only SELECT diagnostika climate-records-diagnostic.mjs, která zatím nebyla na LXC spuštěna. Data, DB granty i TLS beze změn.
+
+
 **17. 11. 2026 – návštěvnický jazyk:** Hlavní texty klimatologických kapitol (extrémy, trendy, sezóny, ročenka) a stránky o půdě/ovzduší jsou česky bez odborného žargonu, zatímco odborná metodika, zdroj WeeWX, limity a neověřené historické záznamy jsou v rozbalovacích vysvětleních. Odborné výpočty a původ archivních dat se nemění.
 
 

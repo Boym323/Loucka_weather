@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-17 – Diagnostika historických rekordů HTTP 503
+- Provozní DEV měření vrací na endpointu historických rekordů 8/8 HTTP 503; nové čtecí ověření identifikuje selhání SQL, denních hranic či výpočtu bez úprav archivu.
+- Sonda používá právě tři původní denní SELECT dotazy, bezpečné kódy chyb a žádné meteorologické hodnoty v logu; připraveny regresní testy.
+
+
 ## 2026-11-17 – Srozumitelnější klimatologie a půdní měření
 - Hlavní vysvětlení u extrémů, trendů, sezón, ročenky a půdních čidel používají běžnou češtinu místo interních pojmů `QC`, `dataset original` a `forenzně schválené`.
 - Informace o původních denních souhrnech, metodě Theil–Sen, neověřených historických záznamech a možnostech výpadků zůstávají dostupné po rozkliknutí. Varování před neúplností a chybami srážek se neztrácí.
