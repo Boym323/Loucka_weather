@@ -418,12 +418,14 @@ try{
     if(path==='/rekordy/'){
      await page.waitForFunction(()=>{
       const state=document.querySelector('[data-records-status]')?.textContent??'';
-      return state.includes('Původní data')||state.includes('Rekordy nedostupné');
+      return state.includes('Orientační rekordy')||state.includes('Rekordy nedostupné');
      },null,{timeout:42000});
      const state=(await page.locator('[data-records-status]').textContent())?.trim()??'';
-     if(!state.includes('Původní data'))errors.push(size.name+': provisional climatology records missing: '+state);
+     if(!state.includes('Orientační rekordy'))errors.push(size.name+': provisional climatology records missing: '+state);
      const coverage=await page.locator('[data-records-coverage]').textContent();
      if(!coverage?.includes('teplota'))errors.push(size.name+': records coverage not disclosed');
+     const maximum=(await page.locator('[data-record-value="maxTemp"]').textContent())?.trim()??'';
+     if(!maximum||maximum==='—')errors.push(size.name+': temperature record value was not painted');
     }
     if(path==='/puda-ovzdusi/'){
      if(await page.locator('[data-soil-live]').count()!==4)

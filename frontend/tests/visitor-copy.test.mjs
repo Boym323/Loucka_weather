@@ -35,3 +35,16 @@ test('plain-language copy still warns about gaps and uncertain records',async()=
  assert.match(records,/<summary>Jak rekordy počítáme\?<\/summary>/);
  assert.match(sensor,/Nula je skutečně naměřená hodnota/);
 });
+
+test('graph period labels match calendar-based requests and smoke accepts preliminary record status',async()=>{
+ const history=await source('src/features/history/AdvancedHistory.astro');
+ const smoke=await source('scripts/preview-visual-check.mjs');
+ for(const label of ['Dnes','Včera','7 dní','30 dní','Letos','Minulý rok']){
+  assert.ok(history.includes('>'+label+'</button>'),'Chybí rychlá volba '+label);
+ }
+ assert.match(history,/const shiftLocalDate=/);
+ assert.match(history,/Date\.UTC\(/);
+ assert.match(smoke,/state\.includes\('Orientační rekordy'\)/);
+ assert.doesNotMatch(smoke,/state\.includes\('Původní data'\)/);
+ assert.match(smoke,/temperature record value was not painted/);
+});
