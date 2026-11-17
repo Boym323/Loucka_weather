@@ -550,11 +550,23 @@ try{
       firstContentfulPaintMs:fcp?round(fcp.startTime):null,
       navigationTransferBytes:nav?.transferSize??null,
       apiFetchCount:elapsed.length,
+      climateDashboardFetchCount:api.filter(entry=>
+       new URL(entry.name).pathname==='/api/v1/climate/dashboard').length,
       apiFetchP95Ms:elapsed.length?round(elapsed[Math.ceil(.95*elapsed.length)-1]):null
      };
     });
     visitorPerformance.push({viewport:size.name,route:path,...sample});
     console.log('VISITOR LAB TIMING',size.name,path,JSON.stringify(sample));
+    if(path==='/klimatologie/'){
+     // Baseline after PR #119: 10 fetches in a full desktop/mobile smoke,
+     // including lazy charts and historical comparisons. Permit normal
+     // variation/retries but reject accidental return to 58+ stat requests.
+     if(sample.apiFetchCount>20)
+      errors.push(size.name+': climate API request budget exceeded: '+sample.apiFetchCount+' > 20');
+     if(sample.climateDashboardFetchCount!==1)
+      errors.push(size.name+': expected exactly one batched climate dashboard fetch, found '+
+       sample.climateDashboardFetchCount);
+    }
     // Interactions can scroll the viewport. Reset before full-page screenshots
     // so sticky navigation is captured at its real top-of-page position.
     await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
