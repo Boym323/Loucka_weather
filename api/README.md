@@ -94,6 +94,18 @@ Doporučeno `systemd EnvironmentFile` s oprávněním 0600 mimo Git. Chybějíc�
 
 **Nenahrazuje bezpečnostní schválení produkce:** náhledový Nginx má pouze základní limit 5 požadavků/s s burstem 12; chybí API limit na klienta a sdílená cache. Zbývá také ověřené QC senzorů/rekonstrukcí, bezpečnostní audit, validace SQL proti cílovému WeeWX schématu a zátěžové testy výhradně na izolovaném snapshotu. MQTT observation, ověřený katalog senzorů a fyzická telemetrie kamery nejsou dostupné; tyto výstupy zůstávají poctivě vypnuté nebo prázdné.
 
+## Ověřené TLS spojení k MariaDB (staging)
+
+Node API nyní podporuje volitelné ověření serverového certifikátu pomocí MariaDB Connector/Node.js. Výchozí režim zůstává `off` kvůli kompatibilitě se stávajícím dev nasazením; samotný commit TLS na LXC **nezapíná**.
+
+- `WEATHER_DB_TLS_MODE=verify` – požadovat TLS s ověřením serverového certifikátu (`rejectUnauthorized: true`).
+- `WEATHER_DB_TLS_CA_FILE=/absolute/path/to/ca.pem` – volitelný soubor důvěryhodné CA, pokud serverový certifikát není vystaven veřejnou CA. Soubor uchovávej mimo Git a musí jej umět číst účet API.
+- `WEATHER_DB_TLS_MODE=off` – stávající režim; pokud je přitom nastavená CA, aplikace odmítne start kvůli rozporné konfiguraci.
+
+**Postup aktivace:** nejprve ověř certifikát MariaDB serveru a shodu jeho SAN s adresou použitou v `WEATHER_DB_HOST`, případně nastav odpovídající DNS jméno. Nastav `WEATHER_DB_TLS_MODE=verify` (a je-li potřeba `WEATHER_DB_TLS_CA_FILE`) v zabezpečeném systemd EnvironmentFile mimo repozitář. Restartuj pouze dev API, zkontroluj `/api/v1/readyz` a ověř stav `Ssl_cipher` přímo v jeho databázovém spojení. Pokud ověření selže, připrav důvěryhodný certifikát; nepoužívej `rejectUnauthorized:false`.
+
+Při režimu `verify` kontroluje readiness přes `SHOW SESSION STATUS LIKE 'Ssl_cipher'`, že skutečné spojení API používá šifrování. Nastavení samo o sobě neprokazuje, že TLS už bylo na dev LXC aktivováno. Produkční WeeWX ani MariaDB konfiguraci tento kód nemění.
+
 ## Konsolidované roční pohledy (read-only)
 
 GET /api/v1/climate/annual-matrix?metric=outTemp&units=metricwx&dataset=original vrací roky od 2009 se stavem QC, časovým pokrytím a metodikou vážených průměrů. Podrobnosti: docs/ANNUAL_CONSOLIDATION_2026-11-03.md. Zdrojové archive a rekonstrukce se nemění.
