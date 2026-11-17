@@ -1,4 +1,5 @@
 import mariadb from 'mariadb';
+import {resolveDatabaseTlsOptions} from './db-tls.js';
 import {metricNames} from './metrics.js';
 import type {Metric} from './metrics.js';
 import type {ArchiveReader,ArchiveRow,DailySummaryRow} from './store.js';
@@ -15,10 +16,12 @@ export function createMariaDbReader():ArchiveReader{
  if(!/^[A-Za-z0-9_.-]{1,64}$/.test(schema))throw new Error('Unsafe database schema');
  const port=Number(process.env.WEATHER_DB_PORT||3306);
  if(!Number.isSafeInteger(port)||port<1||port>65535)throw new Error('Invalid database port');
+ const ssl=resolveDatabaseTlsOptions();
  const pool=mariadb.createPool({
   host:required('WEATHER_DB_HOST'),port,database:schema,
   user:required('WEATHER_DB_USER'),password:required('WEATHER_DB_PASSWORD'),
   connectionLimit:2,connectTimeout:3000,acquireTimeout:5000
+  ,...(ssl?{ssl}:{})
  });
  const table='`'+schema+'`.`archive`';
  const summaryTable=(metric:Metric):string=>{
@@ -185,6 +188,12 @@ export function createMariaDbReader():ArchiveReader{
    },
    async ping():Promise<void>{
      await ensureReadOnly();
+     // Check the actual pooled session, not only the configured TLS options.
+     // This makes readiness fail closed when verified TLS was explicitly requested.
+     if(ssl){
+       const status=await pool.query("SHOW SESSION STATUS LIKE 'Ssl_cipher'") as {Variable_name:string;Value:string}[];
+       if(!status[0]?.Value)throw new Error('Verified database TLS is required');
+     }
      await pool.query(`SELECT dateTime FROM ${table} ORDER BY dateTime DESC LIMIT 1`);
    },
    async close():Promise<void>{await pool.end();}

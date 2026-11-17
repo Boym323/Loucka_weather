@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-17 – Volitelný ověřený TLS režim pro Fastify API
+- Přidána konfigurace `WEATHER_DB_TLS_MODE=verify` a volitelná důvěryhodná CA z externího PEM souboru; ověřování certifikátu se nikdy nevypíná.
+- Readiness při vyžádaném TLS ověřuje skutečný `Ssl_cipher` z databázové session. Chybná nebo nečitelná CA konfigurace selže uzavřeně.
+- Přidány izolované testy nastavení a operátorský postup. TLS zůstává výchozí vypnuté, dokud není na dev LXC ověřen důvěryhodný serverový certifikát; produkční DB ani služby se nemění.
+
+
 ## 2026-11-17 – Obnovení historického API a kvality grafů
 - Fastify kontrola read-only práv nyní vyhodnocuje pouze cílové produkční archivní schéma; nesouvisející oprávnění účtu na `loucka_reconstruction` již neshazují veřejné čtecí API.
 - Historický graf zobrazuje počty měřených, odvozených, rekonstruovaných a chybějících bodů; tooltip uvádí kvalitu a původ vrácený API. NULL a podezřelé hodnoty zůstávají mezerami, nikoli nulami.
