@@ -35,8 +35,11 @@ const months=['Leden','Únor','Březen','Duben','Květen','Červen','Červenec',
    <header class="atlas-yearbook-header">
     <p class="atlas-eyebrow">POČASÍ LOUČKA / ROČENKA STANICE</p>
     <h2 id="yearbook-heading">Rok <span data-yearbook-title>—</span></h2>
-    <p>Vlastní meteorologický archiv z původních měření WeeWX. Neúplná a podezřelá historická data se nevydávají za ověřené klimatologické hodnoty.</p>
-    <p class="source-note" data-yearbook-revision>Čeká na skutečné zdrojové údaje.</p>
+    <p>Ročenka vzniká z měření místní stanice. Starší údaje mohou být neúplné nebo chybné, proto některé výsledky uvádíme jen orientačně.</p>
+    <details class="source-note atlas-yearbook-metadata">
+     <summary>Podrobnosti o zdrojových datech</summary>
+     <p data-yearbook-revision>Čeká na skutečné zdrojové údaje.</p>
+    </details>
    </header>
    <section aria-labelledby="yearbook-summary">
     <div class="chapter"><h3 id="yearbook-summary">I. Rok v číslech</h3></div>
@@ -72,7 +75,11 @@ const months=['Leden','Únor','Březen','Duben','Květen','Červen','Červenec',
    <section aria-labelledby="yearbook-quality">
     <div class="chapter"><h3 id="yearbook-quality">IV. Zdroj a kvalita měření</h3></div>
     <p data-yearbook-quality>Úplnost a původ dat se ověřují.</p>
-    <p>Zdroj: osobní meteorologická stanice Loučka, originální denní souhrny WeeWX v časovém pásmu Europe/Prague; dataset <strong>original</strong>. Údaje neprošly kompletní historickou QC, mohou být ovlivněné změnami čidel, výpadky a problematickými srážkovými měřeními. Nejde o klimatologický normál ani oficiální certifikovanou ročenku ČHMÚ.</p>
+    <p>Údaje pocházejí z místní stanice v Loučce. Některé starší záznamy mohou být ovlivněny výpadky, výměnou čidel nebo chybami při měření deště. Nejde o oficiální klimatologickou ročenku ani o dlouhodobý klimatický normál.</p>
+    <details class="source-note">
+     <summary>Odborné informace o metodice</summary>
+     <p>Počítáme z původních denních souhrnů WeeWX pro Europe/Prague. Používáme původní datovou sadu, nikoliv odborně schválené rekonstruované záznamy; úplná historická kontrola kvality dosud není dokončena.</p>
+    </details>
    </section>
    <footer class="atlas-yearbook-footer">Počasí Loučka · osobní meteorologická kronika od roku 2009 · <span data-yearbook-date></span> · Předběžné originální podklady.</footer>
   </article>
@@ -172,14 +179,14 @@ const months=['Leden','Únor','Březen','Duben','Květen','Červen','Červenec',
     const complete=[t,r,w].every(row=>row&&row.value!==null&&
      row.validDays/row.elapsedDays>=.9);
     set('[data-yearbook-quality]',coverage.join(' · ')+'. '+
-     (complete?'Roční denní pokrytí dosahuje alespoň 90 % u všech tří veličin, historická QC však stále chybí.':
+     (complete?'U všech tří veličin máme údaje alespoň pro 90 % dní. Starší záznamy ale ještě nejsou úplně ověřené.':
       'Některá veličina nemá 90% denní pokrytí; meziroční závěry proto vyžadují opatrnost.'));
     set('[data-yearbook-revision]','Roční revize: teplota '+tempMatrix.dataRevision+
      ', srážky '+rainMatrix.dataRevision+', vítr '+windMatrix.dataRevision+'.');
     set('[data-yearbook-date]','Sestaveno '+new Intl.DateTimeFormat('cs-CZ',{
      dateStyle:'medium',timeZone:'Europe/Prague'
     }).format(new Date()));
-    status.textContent='Ročenka '+year+' sestavena z dostupných originálních dat · bez dokončené QC';
+    status.textContent='Ročenka '+year+' sestavena z dostupných měření · předběžné výsledky';
     status.dataset.state='warning';print.disabled=false;
    }catch{
     if(ctrl.signal.aborted||ticket!==generation)return;

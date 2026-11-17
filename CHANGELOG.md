@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-17 – Srozumitelnější klimatologie a půdní měření
+- Hlavní vysvětlení u extrémů, trendů, sezón, ročenky a půdních čidel používají běžnou češtinu místo interních pojmů `QC`, `dataset original` a `forenzně schválené`.
+- Informace o původních denních souhrnech, metodě Theil–Sen, neověřených historických záznamech a možnostech výpadků zůstávají dostupné po rozkliknutí. Varování před neúplností a chybami srážek se neztrácí.
+- Revizní otisky ročenky přesunuty do rozbalovacích technických podrobností; kvalita dat zůstává uvedená také v samotné tištěné ročence.
+- Jen texty a testy, bez změny výpočtů, API, MariaDB či produkčního webu.
+
+
 ## 2026-11-17 – Stabilní přechod mezi živými a archivními měřeními
 - Panel aktuálního počasí ignoruje opožděné odpovědi starších souběžných archivních GET. Nová data a návrat ze živých měření už nemohou být přepsány starším dotazem.
 - Při návratu k archivu se sjednotí stavové CSS třídy místo souběžných `ok`, `warning` a `error`.

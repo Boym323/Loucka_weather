@@ -10,7 +10,7 @@ import RainfallArchive from '../../features/climate/RainfallArchive.astro';
   <header class="atlas-edition-hero">
    <p class="atlas-eyebrow">02 / Vývoj počasí v čase</p>
    <h1 class="atlas-title">Trendy od roku 2009</h1>
-   <p class="atlas-subtitle">Dlouhodobé změny z vlastních měření. Každý bod je skutečný konsolidovaný roční souhrn, nikoli odhad chybějících let.</p>
+   <p class="atlas-subtitle">Podívej se, jak se v Loučce vyvíjely teploty, déšť a vítr. Každý rok vychází z dostupných měření; chybějící roky nedoplňujeme odhadem.</p>
   </header>
   <AtlasNav active="trendy"/>
   <section class="atlas-panel" aria-labelledby="trend-chart-title">
@@ -29,10 +29,14 @@ import RainfallArchive from '../../features/climate/RainfallArchive.astro';
    <div class="atlas-chart" data-trend-chart role="img" aria-label="Graf ročních hodnot s vyznačením skutečně dostupných let"></div>
    <div class="atlas-results">
     <div class="atlas-result"><span>Podložené dokončené roky</span><strong data-trend-valid>—</strong><small>Požadováno dostatečné pokrytí</small></div>
-    <div class="atlas-result"><span>Popisný sklon / 10 let</span><strong data-trend-slope>—</strong><small>Theil–Sen, není test statistické významnosti</small></div>
+    <div class="atlas-result"><span>Orientační změna za 10 let</span><strong data-trend-slope>—</strong><small>Odhad směru vývoje, nikoliv jistý dlouhodobý trend</small></div>
     <div class="atlas-result"><span>Roky s jakýmikoli hodnotami</span><strong data-trend-samples>—</strong><small>Bez imputace chybějících let</small></div>
    </div>
-   <p class="source-note" data-trend-method>Originální WeeWX bez úplné kontroly kvality. Sloupce ukazují jen dostupné záznamy. Trend se vypočítá, jen pokud alespoň 8 dostatečně pokrytých dokončených let zahrnuje nejméně 10 roků.</p>
+   <p class="source-note" data-trend-method>Pro srovnání používáme jen roky s dostatkem měření. Výsledky jsou orientační.</p>
+   <details class="source-note">
+    <summary>Jak odhad dlouhodobého vývoje počítáme?</summary>
+    <p>Používáme robustní metodu Theil–Sen z nejméně osmi dostatečně pokrytých dokončených let v rozpětí alespoň deseti roků. Nejde o test statistické významnosti. Data pocházejí z původních denních souhrnů WeeWX a mohou být ovlivněna historickými změnami čidel nebo výpadky.</p>
+   </details>
   </section>
   <section class="atlas-panel" aria-labelledby="trend-table-title">
    <h2 id="trend-table-title">Přehled všech dostupných roků</h2>
@@ -148,7 +152,7 @@ import RainfallArchive from '../../features/climate/RainfallArchive.astro';
      (slope>0?'+':'')+formatValue(slope*10,2)+' '+unit);
     set('[data-trend-method]',(slope===null?
      'K popisnému sklonu chybí alespoň osm dostatečně pokrytých dokončených let v rozpětí 10 let. Chybějící souhrny nedoplňujeme.':
-     'Theil–Senův sklon z '+trendRows.length+' dokončených let; popisný odhad, nikoliv průkazný klimatický trend. Stanice a její senzory mohly během historie projít změnami.')+
+     'Orientační změna spočítaná z '+trendRows.length+' dokončených let. Stanice i její čidla se mohla během let změnit; výsledek sám o sobě neprokazuje změnu klimatu.')+
      (metric==='rain'?' U srážek jsou známá problematická období viditelná, ale mimo výpočet sklonu; požadujeme i známé časové pokrytí nejméně 90 %.':''));
     body.replaceChildren();
     for(const row of [...rows].reverse()){
