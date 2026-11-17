@@ -1,5 +1,8 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**17. 11. 2026 – kamera / časosběr:** Oprava chybějící HTTP Range 206 pro `/api/v1/camera/timelapse/:file`, 416 pro neplatné rozsahy a kontrola 32 B přes public dev smoke, když v indexu existuje skutečné MP4. Frontend nabízí stažení a chybovou zprávu při selhání videa. Collector nyní publikuje index JPEG i po neúspěšném FFmpeg běhu. Reálnou příčinu na LXC (existence MP4/FFmpeg/codec/oprávnění) musí potvrdit provozní diagnostika; data ani databáze se nemění.
+
+
 **17. 11. 2026 – home performance:** Finální public smoke pro commit `77908e2` PASS, issue #133 uzavřeno. Homepage měla v tomto vzorku DCL 2792/2946 ms a FCP 1580/1720 ms desktop/mobil. PR na odložený ECharts HistoryChart po DOMContentLoaded, s prohlížečovým důkazem skutečně vykresleného SVG. Zatím bez potvrzeného nového browser benchmarku; porovnat teprve po nasazení. SQL archiv netknut.
 
 

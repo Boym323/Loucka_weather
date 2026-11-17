@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-17 – Kamera: přehrávání MP4 časosběru a diagnostika
+- HTTP `/api/v1/camera/timelapse/:file` podporuje standardní byte-range GET (206 + Content-Range / Accept-Ranges), začátek/konec souboru a suffix; neplatné/nepodporované rozsahy odmítá 416.
+- Na stránce kamery se chyba přehrávání zobrazí návštěvníkovi a lze stáhnout příslušný MP4; seznam funguje pouze pro bezpečné publikované URL a netvrdí, že samotný index zaručuje přehratelnost.
+- Sběrný skript zapisuje aktuální index JPEG i pokud FFmpeg při tvorbě timelapse selže, aniž by se tím zakryl nenulový exit sběrné systemd služby.
+- API injekční testy pokrývají jednotlivé range, invalidní range, stream a chybějící MP4. Public dev smoke vyžaduje 206 jen pokud existuje video; bez videí neoznačuje skutečné přehrání za ověřené.
+- Produkční WeeWX, MariaDB a archiv historických meteorologických dat zůstávají beze změny.
+
+
 ## 2026-11-17 – Historický graf úvodní stránky po načtení DOM
 - Na hlavní stránce se vykreslovací knihovna ECharts pro posledních 24 hodin načítá samostatným dynamickým blokem až po DOMContentLoaded. Stránka již nemusí čekat na vykreslovací balíček před dokončením HTML parsování.
 - Zachován skutečný archivní graf, barvy, kvalita bodů, ovládací prvky i fallback. Zrušení opožděné inicializace při výměně stránky; bezpečný text při chybě načítání knihovny.
