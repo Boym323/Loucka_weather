@@ -23,3 +23,11 @@ test('public camera retains source and freshness disclaimer after plain-language
  assert.match(source,/snímek nemusí být právě pořízený/);
  assert.match(source,/čas pořízení snímku není ověřen/);
 });
+
+test('public dev climate regression guards batched API request budget',async()=>{
+ const script=await readFile(new URL('../scripts/preview-visual-check.mjs',import.meta.url),'utf8');
+ assert.match(script,/climateDashboardFetchCount/);
+ assert.match(script,/apiFetchCount>20/);
+ assert.match(script,/climateDashboardFetchCount!==1/);
+ assert.match(script,/api\/v1\/climate\/dashboard/);
+});

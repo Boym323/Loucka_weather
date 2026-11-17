@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-17 – Regresní rozpočet požadavků klimatologie (PR)
+- Veřejný dev test po optimalizaci #119 prokázal 10 API fetchů namísto 69 na desktopu i mobilu během úplného průchodu klimatologií (run #44148375636). Přidána trvalá kontrola nejvýše 20 fetchů a přesně jednoho souhrnného dashboard requestu; zachovává prostor pro krátké opakování požadavků.
+- Jedná se o laboratorní počet požadavků, nikoli důkaz vyšší rychlosti zobrazení. Výsledky z návštěvnického počítače, studený SQL dotaz a provozní TLS zůstávají samostatnou prací.
+- Jen read-only testy a dokumentace, žádný zásah do WeeWX, MariaDB, Fastify ani produkce.
+
+
 ## 2026-11-17 – Klimatologický přehled bez desítek jednotlivých API dotazů (PR)
 - Nový read-only `/api/v1/climate/dashboard` sjednocuje roční, měsíční a extrémní klimatologické údaje z původních denních souhrnů WeeWX; provádí tři omezené SELECT dotazy místo 58+ samostatných HTTP statistických požadavků.
 - Zachován shodný serverový výpočet průměrů s časovým vážením, jednotky, CET/CEST, skutečné nuly, chybějící období a označení předběžné kvality. Odmítnutí neexistujícího approved datasetu a kontrola mřížky.

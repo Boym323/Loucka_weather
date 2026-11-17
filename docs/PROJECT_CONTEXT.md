@@ -1,5 +1,8 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**17. 11. 2026 – výkon klimatologie potvrzený na DEV:** Po PR #119 a nasazení `e13bf6e` veřejný run `44148375636` PASS: 15 veřejných tras, desktop/mobilní klimatologické grafy, GW3000 SSE a bezpečný návrat k archivu. Úplná návštěva klimatologie vyvolala 10 fetchů API (předchozí baseline 69), tj. o 85,5 % méně; nikoliv ale prokázané zrychlení načítání stránky. Nový samostatný PR přidává limit 20 fetchů a právě jedno souhrnné načtení jako regresní ochranu. Produkční bezpečnostní brány stále NO-GO.
+
+
 **Klimatologická agregace (PR etapa 17. 11. 2026):** Nový bounded read-only endpoint `/api/v1/climate/dashboard` má nahradit 58+ samostatných ročních/měsíčních dotazů pouze třemi čteními originálních denních souhrnů, se zachováním shodných serverových agregací a označení QC. Plná návštěva klimatologie před změnou: 69 API fetchů (public smoke run `44144985564`). Ověření výkonu **po změně** vyžaduje samostatnou revizi, zelené CI a skutečný dev smoke; dosud nejde o doložené zlepšení. Viz `docs/CLIMATE_DASHBOARD_BATCH_2026-11-17.md`. Produkční MariaDB a WeeWX se nemění.
 
 
