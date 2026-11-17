@@ -31,3 +31,16 @@ test('public dev climate regression guards batched API request budget',async()=>
  assert.match(script,/climateDashboardFetchCount!==1/);
  assert.match(script,/api\/v1\/climate\/dashboard/);
 });
+
+test('homepage does not block DOMContentLoaded on the ECharts history engine',async()=>{
+ const component=await readFile(new URL('../src/features/history/HistoryChart.astro',import.meta.url),'utf8');
+ const engine=await readFile(new URL('../src/shared/charts/history-engine.ts',import.meta.url),'utf8');
+ const smoke=await readFile(new URL('../scripts/preview-visual-check.mjs',import.meta.url),'utf8');
+ assert.doesNotMatch(component,/import \* as echarts from 'echarts\/core'/);
+ assert.match(component,/document\.addEventListener\('DOMContentLoaded',start,\{once:true\}\)/);
+ assert.match(component,/import\('\.\.\/\.\.\/shared\/charts\/history-engine'\)/);
+ assert.match(component,/if\(departed\)return/);
+ assert.match(engine,/echarts\.use\(\[LineChart,BarChart,GridComponent,TooltipComponent,DataZoomComponent,SVGRenderer\]\)/);
+ assert.match(smoke,/deferred homepage history chart did not paint a real archive SVG/);
+ assert.match(smoke,/\[data-chart-canvas\] svg/);
+});

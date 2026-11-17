@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-17 – Historický graf úvodní stránky po načtení DOM
+- Na hlavní stránce se vykreslovací knihovna ECharts pro posledních 24 hodin načítá samostatným dynamickým blokem až po DOMContentLoaded. Stránka již nemusí čekat na vykreslovací balíček před dokončením HTML parsování.
+- Zachován skutečný archivní graf, barvy, kvalita bodů, ovládací prvky i fallback. Zrušení opožděné inicializace při výměně stránky; bezpečný text při chybě načítání knihovny.
+- Veřejný dev smoke nově vyžaduje skutečně vykreslené SVG historického grafu, nestačí jen přítomnost prázdného kontejneru. Předchozí měření home DCL 2,79–2,95s / FCP 1,58–1,72s je výchozí vzorek, **ne důkaz očekávaného zrychlení**.
+- Beze změn originálních meteorologických dat, API, databázových oprávnění, TLS, WeeWX nebo produkce.
+
+
 ## 2026-11-17 – Diagnostika historických rekordů HTTP 503
 - Provozní DEV měření vrací na endpointu historických rekordů 8/8 HTTP 503; nové čtecí ověření identifikuje selhání SQL, denních hranic či výpočtu bez úprav archivu.
 - Sonda používá právě tři původní denní SELECT dotazy, bezpečné kódy chyb a žádné meteorologické hodnoty v logu; připraveny regresní testy.

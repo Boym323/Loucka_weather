@@ -35,15 +35,16 @@ const tabs = [
  import { getHistoryRange } from '../../shared/api/client';
  import { getMetric, formatValue } from '../../shared/domain/metrics';
  import type { HistoryResponse } from '../../shared/domain/weather';
- import * as echarts from 'echarts/core';
- import { LineChart, BarChart } from 'echarts/charts';
- import { GridComponent, TooltipComponent, DataZoomComponent } from 'echarts/components';
- import { SVGRenderer } from 'echarts/renderers';
-
- echarts.use([LineChart, BarChart, GridComponent, TooltipComponent, DataZoomComponent, SVGRenderer]);
+ // Delay the large ECharts engine until the document is interactive.
+ // No history value or endpoint is changed; the visible real chart still paints.
  const formatTime=(value:number)=>new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',hour:'2-digit',minute:'2-digit',day:'numeric',month:'numeric'}).format(new Date(value));
  const colorByMetric:Record<string,string>={outTemp:'#176878',outHumidity:'#386e96',barometer:'#665d83',windSpeed:'#27785e',windGust:'#27785e',rainRate:'#2879a3'};
- document.querySelectorAll<HTMLElement>('[data-history-chart]').forEach(root=>{
+ let departed=false;
+ document.addEventListener('astro:before-swap',()=>{departed=true;},{once:true});
+ const start=()=>{
+  void import('../../shared/charts/history-engine').then(({echarts})=>{
+   if(departed)return;
+   document.querySelectorAll<HTMLElement>('[data-history-chart]').forEach(root=>{
   const element=root.querySelector<HTMLElement>('[data-chart-canvas]');
   const message=root.querySelector<HTMLElement>('[data-chart-message]');
   const status=root.querySelector<HTMLElement>('[data-chart-status]');
@@ -140,5 +141,20 @@ const tabs = [
   const themeChanged=()=>{void update();};
   window.addEventListener('loucka:theme-change',themeChanged);
   void update();
- });
+   });
+  }).catch(()=>{
+   if(departed)return;
+   document.querySelectorAll<HTMLElement>('[data-history-chart]').forEach(root=>{
+    const status=root.querySelector<HTMLElement>('[data-chart-status]');
+    const message=root.querySelector<HTMLElement>('[data-chart-message]');
+    if(status){status.textContent='Historie nedostupná';status.className='status-chip error';}
+    if(message)message.textContent='Graf se nepodařilo připravit. Zkus stránku obnovit.';
+   });
+  });
+ };
+ // Astro's module script is now small and never awaits ECharts before
+ // DOMContentLoaded, so a slower chart chunk does not delay the page itself.
+ if(document.readyState==='loading')
+  document.addEventListener('DOMContentLoaded',start,{once:true});
+ else start();
 </script>
