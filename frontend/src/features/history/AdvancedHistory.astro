@@ -4,11 +4,14 @@
   <span class="status-chip" data-advanced-status role="status">Načítám</span>
  </div>
  <div class="history-presets" role="group" aria-label="Rychlý výběr časového období">
-  <button type="button" class="chart-tab" data-period="24h">24 hodin</button>
+  <button type="button" class="chart-tab" data-period="today">Dnes</button>
+  <button type="button" class="chart-tab" data-period="yesterday">Včera</button>
   <button type="button" class="chart-tab" data-period="7d" aria-pressed="true">7 dní</button>
   <button type="button" class="chart-tab" data-period="30d">30 dní</button>
-  <button type="button" class="chart-tab" data-period="year">Rok</button>
+  <button type="button" class="chart-tab" data-period="this-year">Letos</button>
+  <button type="button" class="chart-tab" data-period="year">Minulý rok</button>
  </div>
+ <p class="source-note">Rychlé volby používají kalendářní dny v místním čase Loučky.</p>
  <form class="advanced-history-form" data-history-form>
   <label>Od <input type="date" name="from" required min="2009-01-01" /></label>
   <label>Do <input type="date" name="to" required min="2009-01-01" /></label>
@@ -71,7 +74,6 @@
   const observer=new ResizeObserver(()=>chart.resize());observer.observe(canvas);
   const formatter=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Prague',year:'numeric',month:'2-digit',day:'2-digit'});
   const localDate=(date:Date)=>formatter.format(date);
-  const now=new Date();
   let activeRange='7d',controller:AbortController|undefined,results:HistoryResponse[]=[];
   const valid=(p:HistoryPoint)=>p.value!==null&&Number.isFinite(p.value)&&p.quality!=='missing'&&p.quality!=='suspect';
   const qualityName=(quality:HistoryPoint['quality'])=>({measured:'měřeno',derived:'odvozeno',reconstructed:'rekonstruováno',suspect:'podezřelé',missing:'chybí'}[quality]);
@@ -106,13 +108,25 @@
   };
   const dateInput=(key:string)=>form.elements.namedItem(key) as HTMLInputElement;
   const metricInput=(key:string)=>form.elements.namedItem(key) as HTMLSelectElement;
+  // Calendar arithmetic is done on local date strings, not elapsed milliseconds:
+  // CET/CEST transitions must not move a preset to a different day.
+  const shiftLocalDate=(date:string,offset:number)=>{
+   const [year,month,day]=date.split('-').map(Number);
+   return new Date(Date.UTC(year,month-1,day+offset)).toISOString().slice(0,10);
+  };
   function setPreset(preset:string){
    activeRange=preset;
-   const days=preset==='24h'?1:preset==='7d'?7:preset==='30d'?30:365;
-   const end=localDate(now);
-   const start=localDate(new Date(now.getTime()-(days-1)*86400000));
-   dateInput('from').value=preset==='year'?String(Number(end.slice(0,4))-1)+'-01-01':start;
-   dateInput('to').value=preset==='year'?String(Number(end.slice(0,4))-1)+'-12-31':end;
+   const end=localDate(new Date());
+   const year=Number(end.slice(0,4));
+   let fromDate=end,toDate=end;
+   if(preset==='yesterday')fromDate=toDate=shiftLocalDate(end,-1);
+   else if(preset==='year'){
+    fromDate=(year-1)+'-01-01';toDate=(year-1)+'-12-31';
+   }else if(preset==='this-year')fromDate=year+'-01-01';
+   else if(preset==='7d'||preset==='30d')
+    fromDate=shiftLocalDate(end,1-(preset==='7d'?7:30));
+   dateInput('from').value=fromDate;
+   dateInput('to').value=toDate;
    root.querySelectorAll<HTMLButtonElement>('[data-period]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.period===preset)));
    void refresh();
   }

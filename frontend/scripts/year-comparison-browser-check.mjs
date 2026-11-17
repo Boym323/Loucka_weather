@@ -126,18 +126,24 @@ try{
    null,{timeout:25000});
   assert.equal(await all.locator('[data-temperature-highlight] option').count(),18);
   assert.equal(await all.locator('[data-temperature-chart] svg').count(),1);
-  assert.match(await all.locator('[data-temperature-summary]').textContent()??'',/18 z 18/);
+  assert.match(await all.locator('[data-temperature-summary]').textContent()??'',/3 z 18/);
+  assert.equal(await all.locator('[data-temperature-show-all]').isChecked(),false);
   const chartLabel=await all.locator('[data-temperature-chart]').getAttribute('aria-label');
   assert.match(chartLabel??'',/2009–2026/);
   await all.locator('[data-temperature-resolution]').selectOption('monthly');
   assert.match(await all.locator('[data-temperature-summary]').textContent()??'',/měsíční/);
   await all.locator('[data-temperature-highlight]').selectOption('2024');
-  await all.locator('[data-temperature-show-all]').uncheck();
-  assert.match(await all.locator('[data-temperature-summary]').textContent()??'',/1 z 18/);
   await all.locator('[data-temperature-filter] summary').click();
+  await all.locator('[data-temperature-only-selected]').click();
+  assert.match(await all.locator('[data-temperature-summary]').textContent()??'',/1 z 18/);
   await all.locator('[data-temperature-year="2025"]').check();
   assert.match(await all.locator('[data-temperature-summary]').textContent()??'',/2 z 18/);
   await all.locator('[data-temperature-select-all]').click();
+  assert.match(await all.locator('[data-temperature-summary]').textContent()??'',/18 z 18/);
+  assert.equal(await all.locator('[data-temperature-show-all]').isChecked(),true);
+  await all.locator('[data-temperature-show-all]').uncheck();
+  assert.match(await all.locator('[data-temperature-summary]').textContent()??'',/3 z 18/);
+  await all.locator('[data-temperature-show-all]').check();
   assert.match(await all.locator('[data-temperature-summary]').textContent()??'',/18 z 18/);
   await all.locator('[data-temperature-resolution]').selectOption('daily');
   assert.match(await all.locator('[data-temperature-summary]').textContent()??'',/denní/);
@@ -146,7 +152,7 @@ try{
   await all.locator('[data-temperature-average]').check();
   await all.locator('[data-temperature-range]').check();
   assert.equal(await all.locator('[data-temperature-chart] svg').count(),1);
-  console.log('ALL YEARS TEMP',width,'18 years, daily/monthly, filters, baseline/range, SVG');
+  console.log('ALL YEARS TEMP',width,'recent years default, all 18 on demand, daily/monthly, filters, SVG');
   const section=page.locator('[data-year-comparison]');
   await section.scrollIntoViewIfNeeded();
   await page.waitForFunction(()=>{
