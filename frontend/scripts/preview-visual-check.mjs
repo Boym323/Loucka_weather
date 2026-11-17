@@ -236,6 +236,9 @@ try{
      }
     }
     if(path==='/klimatologie/'){
+     // Rich annual statistics now load only when a visitor reaches them.
+     // Scroll before asserting real API paints, not the placeholder markup.
+     await page.locator('[data-climate-dashboard]').scrollIntoViewIfNeeded({timeout:12000});
      await page.waitForFunction(()=>{
       const status=document.querySelector('[data-climate-status]')?.textContent??'';
       const chart=document.querySelector('[data-chart-status="temperature"]')?.textContent??'';
