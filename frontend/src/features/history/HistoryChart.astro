@@ -12,7 +12,7 @@ const tabs = [
 ---
 <section class:list={['section',{'history-hero':hero}]} data-history-chart data-compact={compact ? 'true' : 'false'} data-hero={hero ? 'true' : 'false'} data-default-metric={defaultMetric} aria-labelledby={compact?'home-chart-title':'history-chart-title'}>
  <div class="section-heading">
-  <div><span class="eyebrow">Archivní měření · WeeWX</span><h2 id={compact?'home-chart-title':'history-chart-title'}>{hero?'Teplota · posledních 24 hodin':compact?(defaultMetric==='windGust'?'Nárazy větru · 24 hodin':'Posledních 24 hodin'):'Interaktivní meteorologický graf'}</h2></div>
+  <div><span class="eyebrow">Vývoj počasí v čase</span><h2 id={compact?'home-chart-title':'history-chart-title'}>{hero?'Teplota · posledních 24 hodin':compact?(defaultMetric==='windGust'?'Nárazy větru · 24 hodin':'Posledních 24 hodin'):'Interaktivní meteorologický graf'}</h2></div>
   <span class="status-chip" data-chart-status role="status">Načítání grafu</span>
  </div>
  <div class="chart-toolbar" role="group" aria-label="Vybrat veličinu">
@@ -26,10 +26,10 @@ const tabs = [
  </div>}
  <figure class="chart-figure">
   <div class:list={['chart-box',{'large':!compact}]} data-chart-canvas role="img" aria-label="Graf meteorologických měření v čase"></div>
-  <figcaption class="chart-message" data-chart-message>Načítají se ověřené archivní intervaly. Chybějící data nepropojujeme.</figcaption>
+  <figcaption class="chart-message" data-chart-message>Načítám průběh počasí…</figcaption>
  </figure>
  <div class="chart-summary" data-chart-summary aria-live="polite"></div>
- <p class="history-legend">Archiv WeeWX · časy Europe/Prague · chybějící intervaly zůstávají prázdné.</p>
+ <p class="history-legend">Všechny časy jsou místní. Kde chybí měření, graf má mezeru.</p>
 </section>
 <script>
  import { getHistoryRange } from '../../shared/api/client';
@@ -102,7 +102,7 @@ const tabs = [
      }]
     });
     if(status){status.textContent=valid.length+' naměřených bodů';status.classList.add('ok');}
-    if(message)message.textContent=valid.length?'Časy na ose v Europe/Prague. Neplatná a chybějící měření nejsou vykreslena.':'Pro vybraný rozsah nejsou platná měření.';
+    if(message)message.textContent=valid.length?'Mezery označují chybějící měření.':'Pro vybraný rozsah nejsou platná měření.';
     if(summary&&valid.length){
      const values=valid.map(point=>point[1]);
      const min=Math.min(...values),max=Math.max(...values);

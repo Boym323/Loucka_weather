@@ -17,7 +17,7 @@ const quickReadings = [
 ---
 <section class="section current-panel" data-current-panel data-variant={variant} aria-labelledby="current-title">
  <div class="section-heading">
-  <div><span class="eyebrow">Aktuální počasí · GW3000 / WeeWX</span><h2 id="current-title">{variant==='observatory'?'Aktuální měření':variant==='dashboard'?'Aktuální podmínky':'Aktuální údaje'}</h2></div>
+  <div><span class="eyebrow">Počasí v Loučce</span><h2 id="current-title">{variant==='observatory'?'Aktuální měření':variant==='dashboard'?'Aktuální podmínky':'Aktuální údaje'}</h2></div>
   <span data-current-status class="status-chip" role="status">Načítám měření</span>
  </div>
  <p class="source-note" data-current-updated>Čekám na poslední archivní záznam.</p>
@@ -31,7 +31,7 @@ const quickReadings = [
    <span class="sr-only" data-quick-quality={metric.id}>Čeká na měření</span>
   </div>)}
  </div>}
- <p class="source-note source-note-bottom" data-current-provenance>Původní archiv WeeWX · METRICWX · podezřelé a chybějící údaje se nezobrazují jako nula.</p>
+ <p class="source-note source-note-bottom" data-current-provenance>Měření přímo ze stanice nebo poslední uložené údaje. Chybějící hodnoty nezaměňujeme za nulu.</p>
 </section>
 <script>
  import { getCurrent } from '../../shared/api/client';
@@ -52,11 +52,11 @@ const quickReadings = [
   archiveRetryCount=0;
   if(archiveRetryTimer){clearTimeout(archiveRetryTimer);archiveRetryTimer=undefined;}
   if(status){
-   status.textContent=response.stale?'Zastaralé měření':'Archivní měření';
+   status.textContent=response.stale?'Starší měření':'Poslední měření';
    status.classList.add(response.stale?'warning':'ok');
   }
-  if(updated)updated.textContent='Archiv WeeWX · naměřeno '+formatTimestamp(response.observedAt);
-  if(provenance)provenance.textContent='Archiv WeeWX · chybějící a podezřelé hodnoty zůstávají nevyplněné.';
+  if(updated)updated.textContent='Naměřeno '+formatTimestamp(response.observedAt);
+  if(provenance)provenance.textContent='Zobrazeno poslední uložené měření. Nedostupné údaje necháváme prázdné.';
   for(const metric of activeMetrics){
    const node=section.querySelector<HTMLElement>('[data-metric-value="'+metric.id+'"]');
    const quality=section.querySelector<HTMLElement>('[data-metric-quality="'+metric.id+'"]');
@@ -85,9 +85,9 @@ const quickReadings = [
   if(lastLiveEvent)applyLive(lastLiveEvent);
  }).catch(()=>{
   if(controller.signal.aborted)return;
-  if(status){status.textContent='API nedostupné';status.classList.add('error');}
+  if(status){status.textContent='Měření nedostupné';status.classList.add('error');}
   if(updated)updated.textContent='Archivní měření se znovu načítá; živý zdroj není dostupný.';
-  if(provenance)provenance.textContent='Přechod na původní archiv WeeWX · opakované načtení při dočasné nedostupnosti API.';
+  if(provenance)provenance.textContent='Zkoušíme znovu načíst poslední dostupné měření.';
   if(archiveRetryCount<3&&!archiveRetryTimer){
    const delay=4000*(++archiveRetryCount);
    archiveRetryTimer=setTimeout(()=>{
@@ -95,7 +95,7 @@ const quickReadings = [
     if(!controller.signal.aborted)void refresh();
    },delay);
   }else if(archiveRetryCount>=3&&updated){
-   updated.textContent='Archivní API je dočasně nedostupné. Zkuste stránku obnovit.';
+   updated.textContent='Měření se právě nedaří načíst. Zkus stránku obnovit.';
   }
  });
  // Live readings are displayed only for metrics present in the authenticated
@@ -119,12 +119,12 @@ const quickReadings = [
    const quality=section.querySelector<HTMLElement>('[data-metric-quality="'+metric.id+'"]')??
     section.querySelector<HTMLElement>('[data-quick-quality="'+metric.id+'"]');
    if(node)node.textContent=formatValue(reading.value,metric.digits);
-   if(quality){quality.textContent='Živé měření GW3000';quality.dataset.readingState='measured';}
+   if(quality){quality.textContent='Živé měření';quality.dataset.readingState='measured';}
   }
-  if(status){status.textContent='GW3000 · živá měření';status.className='status-chip ok';}
-  if(provenance)provenance.textContent='Živá data GW3000 · ostatní veličiny z posledního záznamu WeeWX.';
+  if(status){status.textContent='Živá měření';status.className='status-chip ok';}
+  if(provenance)provenance.textContent='Část údajů přichází živě, ostatní pocházejí z posledního uloženého měření.';
   if(updated)updated.textContent=(data.timestampMeaning==='gateway_polled_at'?'Přečteno ':'Naměřeno ')+
-   formatTimestamp(data.observedAt)+' · GW3000';
+   formatTimestamp(data.observedAt);
  };
  const restoreArchive=()=>{
   lastLiveEvent=undefined;

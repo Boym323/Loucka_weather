@@ -1,6 +1,6 @@
-<span class="live-archive-indicator" data-live-archive title="Skutečná GW3000 data, nebo bezpečný archivní fallback">
+<span class="live-archive-indicator" data-live-archive title="Živé údaje ze stanice, nebo poslední uložené měření">
  <span class="live-archive-dot" aria-hidden="true"></span>
- <span data-live-archive-status role="status">Zjišťuji stav GW3000</span>
+ <span data-live-archive-status role="status">Načítám stav měření</span>
 </span>
 <script>
  import {getStationCapabilities} from '../api/client';
@@ -25,7 +25,7 @@
   if(!fresh(data))return false;
   hadLive=true;
   window.dispatchEvent(new CustomEvent('loucka:live-observation',{detail:data}));
-  label('GW3000 · živě',true);return true;
+  label('Živá měření',true);return true;
  }
  const notifyArchive=()=>window.dispatchEvent(new CustomEvent('loucka:archive-updated'));
  async function pollLive(){
@@ -34,7 +34,7 @@
    if(!response.ok)throw Error('Live gateway unavailable');
    const result=await response.json() as Observation;
    if(!dispatchLive(result)){
-    label('Archivní režim',false);
+    label('Poslední měření',false);
     if(hadLive){hadLive=false;window.dispatchEvent(new CustomEvent('loucka:live-expired'));}
    }
   }catch{

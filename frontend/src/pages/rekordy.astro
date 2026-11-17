@@ -5,7 +5,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
  <div class="page-intro">
   <span class="eyebrow">Loučka · původní archiv 2009–2026</span>
   <h1>Historické rekordy a charakteristické dny</h1>
-  <p>Předběžné výsledky z denních souhrnů WeeWX. Nejde o definitivní rekordy po forenzní kontrole historických dat.</p>
+  <p>Jaké byly největší mrazy, vedra, deště a nárazy větru? Prohlédni si nejvýraznější hodnoty z dostupné historie. Některé starší údaje ještě nejsou úplně ověřené.</p>
  </div>
  <section class="section" data-climate-records>
   <div class="section-heading">
@@ -43,7 +43,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
    <div>Nejvyšší teplota <strong data-today-value="maxTemp">—</strong></div>
   </div>
   <p class="source-note" data-today-coverage>Porovnání dostupných stejných kalendářních dní předchozích roků.</p>
-  <p class="source-note">Rekordy jsou <strong>orientační</strong>: původní srážky a další období obsahují neověřené anomálie. Fyzikální omezení odstraňuje jen zjevně chybná čísla. Chybějící dny nezapočítáváme jako dny bez mrazu či srážek. Čas pořízení extrému nelze bez přesnější kontroly denních souhrnů potvrdit.</p>
+  <p class="source-note"><strong>Pozor:</strong> Výsledky jsou orientační. Některá starší měření, zejména srážky, mohou být chybná a chybějící dny do počtů nezahrnujeme.</p>
+  <details class="records-data-details">
+   <summary>Jak rekordy počítáme?</summary>
+   <p class="source-note">Vycházíme z původních denních souhrnů. Zjevně nesmyslné hodnoty filtrujeme, ale všechny historické anomálie zatím nejsou ověřeny. Bez podrobnější kontroly nelze u všech extrémů určit přesný čas měření.</p>
+  </details>
  </section>
 </BaseLayout>
 <script>
@@ -66,17 +70,17 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     const value=root.querySelector<HTMLElement>('[data-record-value="'+key+'"]');
     const date=root.querySelector<HTMLElement>('[data-record-date="'+key+'"]');
     if(value)value.textContent=fmt(item);
-    if(date)date.textContent=item?'Archivní den: '+item.localDate+' · bez QC':'Bez podloženého záznamu';
+    if(date)date.textContent=item?'Zaznamenáno '+item.localDate+' · orientačně':'Bez spolehlivého údaje';
    }
    for(const [key,value] of Object.entries(data.dayTypes)){
     const target=root.querySelector<HTMLElement>('[data-daycount="'+key+'"]');
     if(target)target.textContent=Number.isSafeInteger(value)?value.toLocaleString('cs-CZ'):'—';
    }
    const coverage=root.querySelector<HTMLElement>('[data-records-coverage]');
-   if(coverage)coverage.textContent='Úplnost kalendářních dní (nikoli jednotlivých měření): teplota '+data.coverage.temperatureDays+
+   if(coverage)coverage.textContent='Dny s dostupnými údaji – teplota '+data.coverage.temperatureDays+
     ' / '+data.coverage.calendarDays+', srážky '+data.coverage.rainDays+
     ' / '+data.coverage.calendarDays+', vítr '+data.coverage.windDays+' / '+data.coverage.calendarDays+
-    '. Dny s nedostatečnými podklady nezapočítáváme.';
+    '. Dny bez dostatečných údajů se do přehledu nepočítají.';
    for(const [key,item] of Object.entries({minTemp:data.todayCalendar.minTemp,maxTemp:data.todayCalendar.maxTemp})){
     const target=root.querySelector<HTMLElement>('[data-today-value="'+key+'"]');
     if(target)target.textContent=fmt(item);
@@ -84,9 +88,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
    const today=root.querySelector<HTMLElement>('[data-today-coverage]');
    if(today)today.textContent='Den '+data.todayCalendar.monthDay+
     ' · potvrzené denní souhrny '+data.todayCalendar.sampleYears+
-    ' předchozích roků (není úplná historická QC).';
+    ' předchozích roků. Údaje jsou orientační.';
    const status=root.querySelector<HTMLElement>('[data-records-status]');
-   if(status){status.textContent='Původní data · bez QC';status.className='status-chip warning';}
+   if(status){status.textContent='Orientační rekordy';status.className='status-chip warning';}
   }).catch(()=>{
    if(ctrl.signal.aborted)return;
    const status=root.querySelector<HTMLElement>('[data-records-status]');

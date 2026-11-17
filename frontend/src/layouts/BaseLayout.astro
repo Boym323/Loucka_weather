@@ -7,7 +7,6 @@ import '../styles/accessibility.css';
 import '../styles/theme-picker.css';
 import '../styles/climate-atlas.css';
 import '../styles/wind-compass-v2.css';
-import DeploymentInfo from '../shared/ui/DeploymentInfo.astro';
 import LiveSync from '../shared/ui/LiveSync.astro';
 import MobileDock from '../shared/ui/MobileDock.astro';
 import SiteIcon from '../shared/ui/SiteIcon.astro';
@@ -83,7 +82,7 @@ const active = Astro.url.pathname;
   </header>
   <main id="obsah" class="wrap content"><slot /></main>
   <MobileDock />
-  <footer class="site-footer"><div class="wrap footer-inner"><span>© Počasí Loučka · vývojový náhled</span><DeploymentInfo /><a href="/o-stanici/">O projektu a zdrojích dat</a></div></footer>
+  <footer class="site-footer"><div class="wrap footer-inner"><span>© Počasí Loučka · vývojový náhled</span><a href="/o-stanici/">O stanici a měření</a></div></footer>
   <script>
    const clock=document.querySelector<HTMLElement>('[data-prague-clock]');
    const tick=()=>{if(clock)clock.textContent=new Intl.DateTimeFormat('cs-CZ',{dateStyle:'short',timeStyle:'short',timeZone:'Europe/Prague'}).format(new Date());};

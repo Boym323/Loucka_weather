@@ -6,7 +6,7 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
 <section class:list={['section','forecast-panel',{ 'forecast-compact':compact }]} data-forecast-panel aria-labelledby="forecast-heading">
  <div class="section-heading">
   <div class="panel-title"><SiteIcon name="weather" size={18}/><h2 id="forecast-heading">Předpověď pro Loučku</h2></div>
-  <span class="status-chip" data-forecast-status role="status">Načítám model</span>
+  <span class="status-chip" data-forecast-status role="status">Načítám předpověď</span>
  </div>
  <div class="forecast-tabs" aria-label="Následující dny">
   {Array.from({length:6},(_,i)=><div class="forecast-day" data-forecast-day={i}>
@@ -76,11 +76,11 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
     put('min',fmt(d.temperature_2m_min[i])+'°');
     put('rain',fmt(d.precipitation_sum[i])+' mm');
    }
-   if(status){status.textContent='Modelová data';status.classList.add('ok');}
+   if(status){status.textContent='Předpověď dostupná';status.classList.add('ok');}
    if(msg)msg.textContent='Předpověď počasí pro oblast Loučky, okres Zlín. Změny mohou nastat při aktualizaci modelu.';
   }).catch(()=>{
    if(controller.signal.aborted)return;
-   if(status){status.textContent='Model nedostupný';status.classList.add('warning');}
+   if(status){status.textContent='Předpověď nedostupná';status.classList.add('warning');}
    if(msg)msg.textContent='Předpověď se nepodařilo načíst. Naměřené hodnoty stanice zůstávají dostupné.';
   });
   document.addEventListener('astro:before-swap',()=>controller.abort(),{once:true});
