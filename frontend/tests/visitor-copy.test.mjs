@@ -49,3 +49,22 @@ test('graph period labels match calendar-based requests and smoke accepts prelim
  assert.doesNotMatch(smoke,/state\.includes\('(?:Původní data|Orientační rekordy)'\)/);
  assert.match(smoke,/temperature record value was not painted/);
 });
+
+test('climate atlas uses readable headlines while keeping source limitations on demand',async()=>{
+ const soil=await source('src/pages/puda-ovzdusi.astro');
+ const extremes=await source('src/pages/klimatologie/extremy.astro');
+ const trend=await source('src/pages/klimatologie/trendy.astro');
+ const season=await source('src/pages/klimatologie/sezony.astro');
+ const yearbook=await source('src/pages/klimatologie/rocenka.astro');
+ assert.match(soil,/Co právě měří čidla v půdě/);
+ assert.match(soil,/<summary>Jak poznáme, odkud údaje pocházejí\?<\/summary>/);
+ assert.match(extremes,/Tyto rekordy jsou zatím orientační/);
+ assert.match(extremes,/červenci 2021 a únoru 2025/);
+ assert.match(trend,/Orientační změna za 10 let/);
+ assert.match(trend,/<summary>Jak odhad dlouhodobého vývoje počítáme\?<\/summary>/);
+ assert.match(trend,/Theil–Sen/);
+ assert.match(season,/<summary>Jak počítáme sezónní rozdíly\?<\/summary>/);
+ assert.match(yearbook,/<summary>Podrobnosti o zdrojových datech<\/summary>/);
+ assert.match(yearbook,/<summary>Odborné informace o metodice<\/summary>/);
+ assert.match(yearbook,/data-yearbook-revision/);
+});

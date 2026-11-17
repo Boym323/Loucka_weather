@@ -5,7 +5,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
  <div class="page-intro">
   <span class="eyebrow">Senzory · půda · ovzduší</span>
   <h1>Půdní měření a kvalita ovzduší</h1>
-  <p>Živá data z pasivního čtení GW3000 a oddělené archivní průběhy WeeWX. Kanály označují veličiny, nikoliv automaticky ověřené umístění čidla.</p>
+  <p>Co právě měří čidla v půdě a okolním vzduchu? Pod aktuálními hodnotami najdeš také dostupné grafy z minulých dní.</p>
  </div>
  <section class="section" data-soil-air>
   <div class="section-heading"><h2>Aktuální měření</h2><span class="status-chip" data-soil-live-status role="status">Zjišťuji živá data</span></div>
@@ -20,8 +20,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <small data-soil-live-quality={item.key}>{item.unit} · čerstvé měření se zjišťuje</small>
    </div>)}
   </div>
-  <p class="source-note" data-soil-time>Čas posledního přečtení GW3000 se ověřuje.</p>
-  <h2>Archivní průběhy · sedmidenní souhrny nebo posledních 24 hodin</h2>
+  <p class="source-note" data-soil-time>Zjišťuji čas posledních údajů ze stanice.</p>
+  <h2>Jak se údaje měnily</h2>
+  <p class="source-note">Podle dostupnosti měření zobrazujeme posledních sedm dokončených dní nebo posledních 24 hodin.</p>
   <div class="soil-air-grid">
    {[
     {key:'pm25_1',title:'PM2,5 · archivní kanál',unit:'µg/m³'},
@@ -35,7 +36,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <p class="source-note" data-soil-summary={item.key}>Archivní hodnoty se připravují · {item.unit}</p>
    </article>)}
   </div>
-  <p class="source-note">Kanál půdní teploty 2 může být bez údajů, zatímco ostatní kanály měří; každou časovou řadu proto hodnotíme zvlášť. Půdní vlhkost kanálu 1 pochází přímo z lokální GW3000 odpovědi. Historii půdní vlhkosti nyní nelze spolehlivě vykreslit ze schváleného veřejného archivu; neodvozujeme ji z teploty půdy. Nepřiřazujeme fyzické hloubky ani kvalitu baterie bez evidence instalace.</p>
+  <p class="source-note">Některá čidla mohou mít v historii mezery. Chybějící hodnoty neodhadujeme a bez ověření neuvádíme hloubku umístění čidla.</p>
+  <details class="source-note">
+   <summary>Jak poznáme, odkud údaje pocházejí?</summary>
+   <p>Půdní vlhkost kanálu 1 čteme přímo z GW3000. Historii půdní vlhkosti zatím z archivu spolehlivě nezobrazujeme a neodvozujeme ji z teploty půdy. Půdní teplotní kanál 2 může mít výpadky nezávisle na ostatních. Neověřené fyzické umístění čidel ani stav baterií nedoplňujeme odhadem.</p>
+  </details>
  </section>
 </BaseLayout>
 <script>

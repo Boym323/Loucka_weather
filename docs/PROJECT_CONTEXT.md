@@ -1,5 +1,8 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**17. 11. 2026 – návštěvnický jazyk:** Hlavní texty klimatologických kapitol (extrémy, trendy, sezóny, ročenka) a stránky o půdě/ovzduší jsou česky bez odborného žargonu, zatímco odborná metodika, zdroj WeeWX, limity a neověřené historické záznamy jsou v rozbalovacích vysvětleních. Odborné výpočty a původ archivních dat se nemění.
+
+
 **17. 11. 2026 – stabilita live→archiv:** Oprava panelu aktuálních dat zavádí `archiveRequestSerial`, aby opožděné HTTP odpovědi z dřívějšího stavu nemohly přepsat aktuální archivní měření nebo stavový chip. Izolovaný Playwright test simuluje obě odpovědi jen v prohlížeči a ověřuje tři šířky. Bez databázových a produkčních změn.
 
 
