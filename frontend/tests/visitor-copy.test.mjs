@@ -68,3 +68,10 @@ test('climate atlas uses readable headlines while keeping source limitations on 
  assert.match(yearbook,/<summary>Odborné informace o metodice<\/summary>/);
  assert.match(yearbook,/data-yearbook-revision/);
 });
+
+test('expanded climate method notes have accessible 44px disclosure targets',async()=>{
+ const css=await source('src/styles/climate-atlas.css');
+ assert.match(css,/\.climate-atlas details\.source-note > summary/);
+ assert.match(css,/\[data-soil-air\] details\.source-note > summary/);
+ assert.match(css,/min-height:44px/);
+});
