@@ -145,3 +145,56 @@ test('API does not claim to have a dashboard when day-summary tables are absent'
  const app=buildApp(reader,clock);t.after(()=>app.close());
  assert.equal((await app.inject('/api/v1/climate/dashboard'+q)).statusCode,503);
 });
+
+test('opt-in climate diagnostics record bounded cold refresh once, never expose readings',async t=>{
+ const originalInfo=console.info;
+ const oldMode=process.env.WEATHER_API_PERF_LOG;
+ const recorded:string[]=[];
+ process.env.WEATHER_API_PERF_LOG='YES';
+ console.info=(...args:unknown[])=>{recorded.push(args.map(String).join(' '));};
+ const fake=make(),app=buildApp(fake.reader,clock);
+ try{
+  const response=await app.inject('/api/v1/climate/dashboard'+q);
+  assert.equal(response.statusCode,200,response.body);
+  const next=await app.inject('/api/v1/climate/dashboard'+q);
+  assert.equal(next.statusCode,200,next.body);
+  assert.equal(fake.calls(),3);
+  const events=recorded.filter(s=>s.includes('"event":"climate_dashboard_refresh"'));
+  assert.equal(events.length,1,'warm cache must not generate another timing event');
+  const timing=JSON.parse(events[0]!) as Record<string,unknown>;
+  assert.equal(timing.year,2025);
+  assert.equal(timing.event,'climate_dashboard_refresh');
+  for(const metric of ['durationMs','queryWallMs','processingMs','rssMiB','heapUsedMiB'])
+   assert.ok(typeof timing[metric]==='number'&&Number.isFinite(timing[metric]));
+  assert.deepEqual(timing.rows,{outTemp:5,rain:3,windSpeed:3});
+  const queryMs=timing.queryMs as Record<string,unknown>;
+  assert.deepEqual(Object.keys(queryMs).sort(),['outTemp','rain','windSpeed']);
+  assert.ok(Object.values(queryMs).every(v=>typeof v==='number'&&v>=0));
+  assert.equal('readings' in timing,false);
+  assert.equal('databaseHost' in timing,false);
+  assert.equal('schema' in timing,false);
+ }finally{
+  console.info=originalInfo;
+  if(oldMode===undefined)delete process.env.WEATHER_API_PERF_LOG;
+  else process.env.WEATHER_API_PERF_LOG=oldMode;
+  await app.close();
+ }
+});
+
+test('ordinary climate dashboard requests do not log weather or timing without opt-in',async t=>{
+ const originalInfo=console.info,oldMode=process.env.WEATHER_API_PERF_LOG;
+ const recorded:string[]=[];
+ delete process.env.WEATHER_API_PERF_LOG;
+ console.info=(...args:unknown[])=>{recorded.push(args.map(String).join(' '));};
+ const fake=make(),app=buildApp(fake.reader,clock);
+ try{
+  const response=await app.inject('/api/v1/climate/dashboard'+q);
+  assert.equal(response.statusCode,200,response.body);
+  assert.equal(recorded.filter(s=>s.includes('climate_dashboard_refresh')).length,0);
+ }finally{
+  console.info=originalInfo;
+  if(oldMode===undefined)delete process.env.WEATHER_API_PERF_LOG;
+  else process.env.WEATHER_API_PERF_LOG=oldMode;
+  await app.close();
+ }
+});

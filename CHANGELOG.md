@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-17 – Efektivnější roční/měsíční klimatologické indexy a opt-in časování
+- Roční a měsíční skupiny souhrnného endpointu `/api/v1/climate/dashboard` vznikají jediným ověřeným průchodem denních řádků, nikoliv opakovaným formátováním všech dat pro každý graf. Výsledky původních agregací zůstávají stejné.
+- Výslovné `WEATHER_API_PERF_LOG=YES` po cache miss zapíše anonymní čas SQL read fáze včetně čekání na pool, zpracování, počty denních řádků a RSS/heap. Žádné počasí, přístupové údaje ani identifikátory návštěvníků se nelogují.
+- Izolované testy hlídají stejné výstupní hodnoty, jeden výkonový log po nové dávce a žádné logování bez opt-in.
+- Jen API, testy a dokumentace; žádné změny MariaDB oprávnění, TLS, zdrojového archivu, WeeWX ani produkce.
+
+
 ## 2026-11-17 – Výslovná výjimka pro důvěryhodnou LAN v DB auditu
 - Provozovatel potvrdil požadavek na komunikaci API a MariaDB výhradně v LAN bez povinného TLS. Auditní sonda nově přijímá příznak `--trusted-lan`; výchozí bezpečný režim nadále požaduje certifikátem ověřené TLS.
 - Skutečný stav přenosu zůstává transparentní v `transportEncrypted`, `certificateVerified` a `warnings`; žádné vypnutí skutečné TLS konfigurace ani skryté označení nešifrované relace za šifrovanou.
