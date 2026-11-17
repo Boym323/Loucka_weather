@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-17 – Stabilní přechod mezi živými a archivními měřeními
+- Panel aktuálního počasí ignoruje opožděné odpovědi starších souběžných archivních GET. Nová data a návrat ze živých měření už nemohou být přepsány starším dotazem.
+- Při návratu k archivu se sjednotí stavové CSS třídy místo souběžných `ok`, `warning` a `error`.
+- Offline Playwright test se zadrženou starší odpovědí ověřuje aktuální údaje na 320/390/1440 px. Bez simulovaných požadavků na skutečnou MariaDB a GW3000.
+- Jen frontend a regresní testy, žádné zásahy do archivu ani do produkčního WeeWX.
+
+
 ## 2026-11-17 – Efektivnější roční/měsíční klimatologické indexy a opt-in časování
 - Roční a měsíční skupiny souhrnného endpointu `/api/v1/climate/dashboard` vznikají jediným ověřeným průchodem denních řádků, nikoliv opakovaným formátováním všech dat pro každý graf. Výsledky původních agregací zůstávají stejné.
 - Výslovné `WEATHER_API_PERF_LOG=YES` po cache miss zapíše anonymní čas SQL read fáze včetně čekání na pool, zpracování, počty denních řádků a RSS/heap. Žádné počasí, přístupové údaje ani identifikátory návštěvníků se nelogují.

@@ -46,14 +46,21 @@ const quickReadings = [
  let lastLiveEvent:Event|undefined;
  let archiveRetryCount=0;
  let archiveRetryTimer:ReturnType<typeof setTimeout>|undefined;
+ // A late archive response must not overwrite newer archive/failover state.
+ // Keep the latest request only; aborting the old GET is not always enough
+ // (it may already have completed at the reverse proxy).
+ let archiveRequestSerial=0;
  // Archive GET can transiently hit the public reverse-proxy rate limit during
  // live->archive failover. Retry a bounded number of times without page reload.
- const refresh=()=>getCurrent(controller.signal).then(response=>{
+ const refresh=()=>{
+  const serial=++archiveRequestSerial;
+  return getCurrent(controller.signal).then(response=>{
+  if(controller.signal.aborted||serial!==archiveRequestSerial)return;
   archiveRetryCount=0;
   if(archiveRetryTimer){clearTimeout(archiveRetryTimer);archiveRetryTimer=undefined;}
   if(status){
    status.textContent=response.stale?'Starší měření':'Poslední měření';
-   status.classList.add(response.stale?'warning':'ok');
+   status.className='status-chip '+(response.stale?'warning':'ok');
   }
   if(updated)updated.textContent='Naměřeno '+formatTimestamp(response.observedAt);
   if(provenance)provenance.textContent='Zobrazeno poslední uložené měření. Nedostupné údaje necháváme prázdné.';
@@ -84,8 +91,8 @@ const quickReadings = [
   }
   if(lastLiveEvent)applyLive(lastLiveEvent);
  }).catch(()=>{
-  if(controller.signal.aborted)return;
-  if(status){status.textContent='Měření nedostupné';status.classList.add('error');}
+  if(controller.signal.aborted||serial!==archiveRequestSerial)return;
+  if(status){status.textContent='Měření nedostupné';status.className='status-chip error';}
   if(updated)updated.textContent='Archivní měření se znovu načítá; živý zdroj není dostupný.';
   if(provenance)provenance.textContent='Zkoušíme znovu načíst poslední dostupné měření.';
   if(archiveRetryCount<3&&!archiveRetryTimer){
@@ -98,6 +105,7 @@ const quickReadings = [
    updated.textContent='Měření se právě nedaří načíst. Zkus stránku obnovit.';
   }
  });
+ };
  // Live readings are displayed only for metrics present in the authenticated
  // custom upload. Archive-only interval rain is never confused with gateway rain totals.
  const applyLive=(event:Event)=>{
@@ -106,7 +114,7 @@ const quickReadings = [
    readings:Record<string,{value:number;quality:string;source:string}>}>).detail;
   const received=Date.parse(data?.receivedAt??'');
   if(data?.state!=='live'||data.units!=='metricwx'||!Number.isFinite(received)||
-   Date.now()-received>120000)return;
+   Date.now()-received>120000||received>Date.now()+60000)return;
   lastLiveEvent=event;
   const readings=data.readings??{};
   const all=[...activeMetrics,{id:'rain',digits:1},{id:'radiation',digits:0},{id:'UV',digits:1},{id:'pm25_1',digits:1}];

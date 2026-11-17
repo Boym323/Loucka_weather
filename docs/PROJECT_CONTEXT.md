@@ -1,5 +1,8 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**17. 11. 2026 – stabilita live→archiv:** Oprava panelu aktuálních dat zavádí `archiveRequestSerial`, aby opožděné HTTP odpovědi z dřívějšího stavu nemohly přepsat aktuální archivní měření nebo stavový chip. Izolovaný Playwright test simuluje obě odpovědi jen v prohlížeči a ověřuje tři šířky. Bez databázových a produkčních změn.
+
+
 **17. 11. 2026 – profilování klimatologie:** Samostatná dev větev zrychluje zpracování tří souhrnných metrik single-pass indexem ročních/měsíčních dat a přidává opt-in anonymní výkonový log `climate_dashboard_refresh` přes `WEATHER_API_PERF_LOG=YES`. Předchozí reálný dev veřejný smoke měl na `/klimatologie/` 10 API fetchů místo 69; podle toho nelze odhadnout SQL P95. Provozní DB práva a TLS jsou provozovatelem odložena a kód je nemění. Více `docs/CLIMATE_DASHBOARD_PROFILING_2026-11-17.md`.
 
 
