@@ -83,6 +83,28 @@ const temperatureYears=()=>{
   source:'weewx_daily',qcStatus:'original_unverified',firstYear:2009,
   endsBefore:'2026-11-07',dataRevision:'synthetic-browser-only',points};
 };
+const dashboard=(url)=>{
+ const selected=Number(url.searchParams.get('year')??2025);
+ const latest=Math.min(2025,selected);
+ const annualYears=Array.from({length:Math.min(6,latest-2008)},(_,i)=>latest-i);
+ const constant=value=>Array.from({length:12},()=>value);
+ return {schemaVersion:'1',year:selected,units:'metricwx',
+  dataset:'original',source:'weewx_daily',qcStatus:'original_unverified',
+  calendarTimezone:'Europe/Prague',dataRevision:'dashboard-00000000000000000000',
+  annualYears,
+  summary:{temperature:10,rain:700,wind:2,maxTemp:33},
+  annual:{
+   temperature:annualYears.map(y=>10+(y-2020)*.1),
+   rain:annualYears.map(y=>700+(y-2020)*2),
+   wind:annualYears.map(y=>2+(y-2020)*.04),
+   temperatureCoverage:annualYears.map(()=>.96)
+  },
+  monthly:{
+   temperature:constant(10),rain:constant(58),wind:constant(2),
+   temperatureLow:constant(-10),temperatureHigh:constant(30)
+  }
+ };
+};
 const raw=(url)=>{
  const from=Date.parse(url.searchParams.get('from')??'');
  const to=Date.parse(url.searchParams.get('to')??'');
@@ -111,6 +133,7 @@ try{
     let result;
     try{
      if(u.pathname==='/api/v1/climate/records')result=records;
+     else if(u.pathname==='/api/v1/climate/dashboard')result=dashboard(u);
      else if(u.pathname==='/api/v1/climate/annual-matrix')
       result=yearly(u.searchParams.get('metric'));
      else if(u.pathname==='/api/v1/climate/temperature-years')
@@ -162,6 +185,22 @@ try{
      assert.equal(await page.locator('[data-highlight-date="maxDailyRain"]').getAttribute('datetime'),'2021-07-25');
      assert.match(await page.locator('[data-highlight-note="maxDailyRain"]').textContent()??'',/Známé omezení/);
      assert.equal(await page.locator('.atlas-quick-links a').count(),3);
+     // New read-only batched dashboard must paint from one HTTP response,
+     // preserving 12 month values and preliminary extrema after lazy scroll.
+     await page.locator('[data-climate-dashboard]').scrollIntoViewIfNeeded();
+     await page.waitForFunction(()=>document.querySelector('[data-climate-status]')
+      ?.textContent?.includes('Archivní souhrny'),null,{timeout:12000});
+     assert.equal((await page.locator('[data-climate-year]').inputValue()),'2025');
+     assert.equal(await page.locator('[data-year-table] tr').count(),6);
+     assert.equal(await page.locator('[data-chart="temperature"] svg').count(),1);
+     assert.equal(await page.locator('[data-chart="rain"] svg').count(),1);
+     assert.equal(await page.locator('[data-chart="wind"] svg').count(),1);
+     assert.equal(await page.locator('[data-chart="rain"]').getAttribute('data-valid-months'),'12');
+     await page.locator('[data-climate-year]').selectOption('2024');
+     await page.waitForFunction(()=>
+      document.querySelector('[data-climate-status]')?.textContent?.includes('2024'),
+      null,{timeout:12000});
+     assert.equal((await page.locator('[data-summary="temperature"]').textContent())?.trim(),'10,0 °C');
     }
     if(path.endsWith('/extremy/')){
      await page.waitForFunction(()=>

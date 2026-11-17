@@ -67,6 +67,45 @@ export async function getStatistics(
  return data;
 }
 
+/** Bounded climate atlas dashboard: three SELECT-only daily-summary scans, never reconstructed. */
+export interface ClimateDashboard {
+ schemaVersion:'1';year:number;units:'metricwx';dataset:'original';
+ source:'weewx_daily';qcStatus:'original_unverified';
+ calendarTimezone:'Europe/Prague';dataRevision:string;
+ annualYears:number[];
+ summary:{temperature:number|null;rain:number|null;wind:number|null;maxTemp:number|null};
+ annual:{temperature:(number|null)[];rain:(number|null)[];wind:(number|null)[];
+  temperatureCoverage:(number|null)[]};
+ monthly:{temperature:(number|null)[];rain:(number|null)[];wind:(number|null)[];
+  temperatureLow:(number|null)[];temperatureHigh:(number|null)[]};
+}
+export async function getClimateDashboard(year:number,signal?:AbortSignal):Promise<ClimateDashboard>{
+ if(!Number.isSafeInteger(year)||year<2009||year>2100)throw new Error('Neplatný rok klimatologie');
+ const params=new URLSearchParams({year:String(year),units:'metricwx',dataset:'original'});
+ const data=await request('/api/v1/climate/dashboard?'+params,signal) as Partial<ClimateDashboard>;
+ const numeric=(value:unknown):value is number|null=>
+  value===null||typeof value==='number'&&Number.isFinite(value);
+ const series=(value:unknown,length:number)=>
+  Array.isArray(value)&&value.length===length&&value.every(numeric);
+ const years=data.annualYears;
+ if(data.schemaVersion!=='1'||data.year!==year||data.units!=='metricwx'||
+  data.dataset!=='original'||data.source!=='weewx_daily'||
+  data.qcStatus!=='original_unverified'||data.calendarTimezone!=='Europe/Prague'||
+  typeof data.dataRevision!=='string'||!/^dashboard-[a-f0-9]{20}$/.test(data.dataRevision)||
+  !Array.isArray(years)||years.length>6||years.some((y,i)=>
+   !Number.isInteger(y)||y<2009||y>year||(i>0&&y!==years[i-1]-1))||
+  !data.summary||!data.annual||!data.monthly||
+  !['temperature','rain','wind','maxTemp'].every(key=>
+   numeric((data.summary as unknown as Record<string,unknown>)[key]))||
+  !['temperature','rain','wind','temperatureCoverage'].every(key=>
+   series((data.annual as unknown as Record<string,unknown>)[key],years.length))||
+  !['temperature','rain','wind','temperatureLow','temperatureHigh'].every(key=>
+   series((data.monthly as unknown as Record<string,unknown>)[key],12))||
+  data.annual.temperatureCoverage.some(value=>value!==null&&(value<0||value>1)))
+  throw new Error('Neplatný nebo neověřený klimatologický přehled');
+ return data as ClimateDashboard;
+}
+
 export async function getHistoryInterval(
  metric:string,from:string,to:string,resolution:'raw'|'hourly'|'daily',
  signal?:AbortSignal
