@@ -1,5 +1,8 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**Klimatologická agregace (PR etapa 17. 11. 2026):** Nový bounded read-only endpoint `/api/v1/climate/dashboard` má nahradit 58+ samostatných ročních/měsíčních dotazů pouze třemi čteními originálních denních souhrnů, se zachováním shodných serverových agregací a označení QC. Plná návštěva klimatologie před změnou: 69 API fetchů (public smoke run `44144985564`). Ověření výkonu **po změně** vyžaduje samostatnou revizi, zelené CI a skutečný dev smoke; dosud nejde o doložené zlepšení. Viz `docs/CLIMATE_DASHBOARD_BATCH_2026-11-17.md`. Produkční MariaDB a WeeWX se nemění.
+
+
 **Návštěvnická revize 17. 11. 2026 (PR #118):** Dev smoke ověřil 15 veřejných tras a nasazení commitu `9c7ac20`, ale celkový workflow selhal na starých textech v live/failover testu. Opravena semantika testu, odložen detail klimatologických dotazů do viewportu, odstraněn zbytkový listener pro aktualizaci archivu při navigaci, přidán 320px Axe audit. Předchozí dev výkonový log byl jediný CI běh; detaily a nezavřené blocker v `docs/VISITOR_MOBILE_AUDIT_2026-11-17.md`. NIC netvrdí o produkční readiness či schválení QC.
  
 

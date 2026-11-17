@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-17 – Klimatologický přehled bez desítek jednotlivých API dotazů (PR)
+- Nový read-only `/api/v1/climate/dashboard` sjednocuje roční, měsíční a extrémní klimatologické údaje z původních denních souhrnů WeeWX; provádí tři omezené SELECT dotazy místo 58+ samostatných HTTP statistických požadavků.
+- Zachován shodný serverový výpočet průměrů s časovým vážením, jednotky, CET/CEST, skutečné nuly, chybějící období a označení předběžné kvality. Odmítnutí neexistujícího approved datasetu a kontrola mřížky.
+- Frontend validuje celý přehled, jednotné API vrací ETag/304 a omezenou pětiminutovou cache; zachované přepínání roků. Izolované API a browser testy; veřejný dev provozní důkaz až po merge.
+- Bez zásahu do `archive`, rekonstrukce a produkčního WeeWX; auto-sync může restartovat jen vývojové API.
+
+
 ## 2026-11-17 – Návštěvnický a mobilní audit webu (PR #118)
 - Oprava veřejného testu živých měření a návratu k archivu na srozumitelné texty zavedené v PR #114. Zachována kontrola skutečného původu `gw3000_live`, čerstvosti a nenahrazení archivního deště.
 - Přesun více než 58 statistických dotazů do odloženého načítání až při dosažení detailního klimatologického přehledu. Přímá navigace na graf i ruční změna roku stále fungují.
