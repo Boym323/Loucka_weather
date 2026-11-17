@@ -5,6 +5,7 @@
  */
 import { chromium } from 'playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
+import {deploymentRelation} from './deployment-provenance.mjs';
 
 const base=process.env.LOUCKA_PREVIEW_URL || 'https://dev.pocasi-loucka.eu';
 const out='test-results/preview-screenshots';
@@ -35,6 +36,9 @@ const checkPublicReady=async()=>{
 const waitForPublishedCommit=async () => {
  const deadline=Date.now()+6*60_000;
  let last='metadata not yet available';
+ let observedCommit='';
+ let observedRelation='mismatch';
+ let lastComparisonAt=0;
  while(Date.now()<deadline){
   try{
    const response=await fetch(base+'/deployment.json?verify='+Date.now(),{
@@ -44,19 +48,29 @@ const waitForPublishedCommit=async () => {
    if(response.ok){
     const body=await response.json();
     last=String(body.commit ?? 'unknown');
-    if(!expectedCommit||body.commit===expectedCommit){
+    // A previous push may be superseded before the 2-minute LXC sync finishes.
+    // Verify ancestry against GitHub: never accept a stale or unrelated SHA.
+    if(body.commit!==observedCommit||
+       (observedRelation==='mismatch'&&Date.now()-lastComparisonAt>30_000)){
+     observedCommit=body.commit;
+     lastComparisonAt=Date.now();
+     observedRelation=await deploymentRelation(expectedCommit,body.commit);
+    }
+    if(['exact','unconstrained','superseding'].includes(observedRelation)){
      // Publishing the static commit can briefly precede API activation.
      // Require stable readiness before visiting pages, including manual/scheduled runs.
      await new Promise(resolve=>setTimeout(resolve,2000));
      if(await checkPublicReady()){
       await new Promise(resolve=>setTimeout(resolve,1500));
       if(await checkPublicReady()){
-       console.log('Confirmed public deploy with ready API:',body.commit);
+       console.log('Confirmed public deploy with ready API:',body.commit,
+        observedRelation==='superseding'?'(GitHub-verified descendant of '+expectedCommit+')':
+         '('+observedRelation+')');
        return;
       }
      }
      last='API not yet stable after deploying '+body.commit;
-    }
+    }else last='Deployment '+last+' is '+observedRelation+' vs expected '+(expectedCommit||'current');
    } else last='HTTP '+response.status;
   }catch(e){last=String(e);}
   await new Promise(resolve=>setTimeout(resolve,12000));
