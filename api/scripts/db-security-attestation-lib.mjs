@@ -16,8 +16,11 @@ const isWrite=row=>forbidden.has(privilege(row));
 
 export function evaluateSecurityAttestation({
  expectedSchema,targetSchema,globalRows=[],schemaRows=[],tableRows=[],
- cipher='',tlsVerifyConfigured=false,activeRole=null
+ cipher='',tlsVerifyConfigured=false,activeRole=null,transportPolicy='verify-tls'
 }){
+ if(transportPolicy!=='verify-tls'&&transportPolicy!=='trusted-lan')
+  throw new Error('Unsupported attestation transport policy');
+ const tlsRequired=transportPolicy==='verify-tls';
  const validTarget=typeof targetSchema==='string'&&targetSchema===expectedSchema&&
   targetSchema==='pocasi-loucka.eu';
  const globalSelect=globalRows.some(r=>privilege(r)==='SELECT');
@@ -34,17 +37,23 @@ export function evaluateSecurityAttestation({
  const encrypted=typeof cipher==='string'&&cipher.trim().length>0;
  const verifiedTls=encrypted&&tlsVerifyConfigured===true;
  const targetReadOnly=validTarget&&tableAllows&&!targetWrite;
- const ready=targetReadOnly&&verifiedTls&&!otherSchemaWrite&&!roleActive;
+ const ready=targetReadOnly&&(!tlsRequired||verifiedTls)&&!otherSchemaWrite&&!roleActive;
  const blockers=[];
  if(!validTarget)blockers.push('target_schema_not_expected_archive');
  if(!tableAllows)blockers.push('missing_required_archive_select');
  if(targetWrite)blockers.push('write_grants_affect_target_archive');
  if(otherSchemaWrite)blockers.push('same_api_identity_has_other_schema_write_grants');
  if(roleActive)blockers.push('active_role_requires_manual_privilege_review');
- if(!encrypted)blockers.push('database_session_not_encrypted');
- if(!tlsVerifyConfigured)blockers.push('database_certificate_verification_not_configured');
- return {ready,checks:{expectedOriginalSchema:validTarget,requiredSelect:tableAllows,
+ const warnings=[];
+ const transportFindings=[];
+ if(!encrypted)transportFindings.push('database_session_not_encrypted');
+ if(!tlsVerifyConfigured)transportFindings.push('database_certificate_verification_not_configured');
+ if(tlsRequired)blockers.push(...transportFindings);
+ else warnings.push(...transportFindings,
+  'trusted_lan_assumption_not_network_verified');
+ return {ready,transportPolicy,checks:{expectedOriginalSchema:validTarget,requiredSelect:tableAllows,
   targetReadOnly,transportEncrypted:encrypted,certificateVerified:verifiedTls,
+  transportEncryptionRequired:tlsRequired,
   noOtherSchemaWriteGrants:!otherSchemaWrite,noActiveRole:!roleActive},
-  blockers};
+  blockers,warnings};
 }

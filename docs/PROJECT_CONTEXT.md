@@ -1,5 +1,8 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**17. 11. 2026 – potvrzený DB audit a rozhodnutí LAN:** Staging DB audit v 18:59:09 UTC skutečně skončil `ready=false`: `expectedOriginalSchema=true`, `requiredSelect=true`, `targetReadOnly=true`, `transportEncrypted=false`, `certificateVerified=false`, `noOtherSchemaWriteGrants=false`. Provozovatel výslovně nevyžaduje TLS mezi API a MariaDB uvnitř důvěryhodné LAN. Nová explicitní volba `--trusted-lan` v jednorázové bezpečnostní sondě mění jen auditní politiku, žádná přístupová práva ani runtime. Nadbytečná zápisová práva účtu v jiném schématu zůstávají produkční blocker, segmentaci LAN je nutné potvrdit zvlášť.
+
+
 **Veřejná dev CI kontrola backendu (návrh PR 17. 11. 2026):** Public GitHub Actions smoke workflow nově sleduje `api/**` i `frontend/**`; změny Fastify na main tak po automatickém dev sync projdou skutečným browser/archiv testem, nikoli jen izolovanými API unit testy. Výchozí kontrola bezpečnostní sondy ve Fastify CI je bez reálného LXC běhu; TLS a granty nejsou ověřeny.
 
 

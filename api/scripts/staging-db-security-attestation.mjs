@@ -5,6 +5,9 @@
  * hostname, station data, rows or other secrets are ever printed.
  *
  * No TLS bypass is allowed: use resolveDatabaseTlsOptions from the real API.
+ * Explicit --trusted-lan changes only attestation policy, not the actual
+ * MariaDB connection or any Fastify TLS setting. The unencrypted state
+ * remains visible as a warning.
  */
 import mariadb from 'mariadb';
 import {resolveDatabaseTlsOptions} from '../dist/src/db-tls.js';
@@ -16,6 +19,10 @@ const required=key=>{
  return value;
 };
 async function main(){
+ const args=process.argv.slice(2);
+ if(args.length>1||(args.length===1&&args[0]!=='--trusted-lan'))
+  throw new Error('Unknown attestation argument');
+ const transportPolicy=args[0]==='--trusted-lan'?'trusted-lan':'verify-tls';
  if(process.env.WEATHER_STAGING_ENABLED!=='YES')throw new Error('Staging mode required');
  const targetSchema=required('WEATHER_DB_SCHEMA');
  if(!/^[A-Za-z0-9_.-]{1,64}$/.test(targetSchema))throw new Error('Invalid schema');
@@ -47,13 +54,13 @@ async function main(){
    expectedSchema:'pocasi-loucka.eu',targetSchema,
    globalRows,schemaRows,tableRows,cipher,
    tlsVerifyConfigured:ssl?.rejectUnauthorized===true,
-   activeRole:identity[0]?.activeRole
+   activeRole:identity[0]?.activeRole,transportPolicy
   });
   console.log(JSON.stringify({
    schemaVersion:'1',checkedAtUtc:new Date().toISOString(),stagingOnly:true,
    readOnlyQueries:true,source:'active_api_database_credentials',
    ...result,
-   caution:'A one-time session and grant check cannot certify backups, restore, firewall, application shutdown or long-term memory.'
+   caution:'Trusted-LAN mode is an explicit operator risk acceptance, not proof of segmentation. A one-time session/grant check cannot certify backups, firewall, restore, or long-term memory.'
   },null,2));
   if(!result.ready)process.exitCode=1;
  }finally{await conn.end();}

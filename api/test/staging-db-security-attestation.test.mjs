@@ -53,3 +53,35 @@ test('wrong schema and active roles fail closed',()=>{
  assert.equal(evaluateSecurityAttestation({...safe,targetSchema:'loucka_reconstruction'}).ready,false);
  assert.equal(evaluateSecurityAttestation({...safe,activeRole:'reader_role'}).ready,false);
 });
+
+test('explicit trusted-LAN policy accepts plaintext without pretending it is encrypted',()=>{
+ const result=evaluateSecurityAttestation({...safe,cipher:'',
+  tlsVerifyConfigured:false,transportPolicy:'trusted-lan'});
+ assert.equal(result.ready,true);
+ assert.equal(result.transportPolicy,'trusted-lan');
+ assert.equal(result.checks.transportEncrypted,false);
+ assert.equal(result.checks.certificateVerified,false);
+ assert.equal(result.checks.transportEncryptionRequired,false);
+ assert.deepEqual(result.blockers,[]);
+ assert.ok(result.warnings.includes('database_session_not_encrypted'));
+ assert.ok(result.warnings.includes('database_certificate_verification_not_configured'));
+ assert.ok(result.warnings.includes('trusted_lan_assumption_not_network_verified'));
+});
+
+test('trusted-LAN exception never hides excess writes, missing SELECT or active roles',()=>{
+ const allow={...safe,cipher:'',tlsVerifyConfigured:false,transportPolicy:'trusted-lan'};
+ const otherWrite=evaluateSecurityAttestation({...allow,
+  schemaRows:[grant(target,'SELECT'),grant('loucka_reconstruction','INSERT')]});
+ assert.equal(otherWrite.ready,false);
+ assert.ok(otherWrite.blockers.includes('same_api_identity_has_other_schema_write_grants'));
+ assert.ok(otherWrite.warnings.includes('database_session_not_encrypted'));
+ assert.equal(evaluateSecurityAttestation({...allow,schemaRows:[]}).ready,false);
+ assert.equal(evaluateSecurityAttestation({...allow,activeRole:'unknown_role'}).ready,false);
+});
+
+test('transport policy must be explicit and limited to trusted-LAN or verified TLS',()=>{
+ assert.throws(()=>evaluateSecurityAttestation({...safe,transportPolicy:'ignore-security'}),
+  /Unsupported attestation transport policy/);
+ assert.equal(evaluateSecurityAttestation({...safe,cipher:''}).ready,false,
+  'default remains strict');
+});
