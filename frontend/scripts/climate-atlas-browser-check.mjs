@@ -152,6 +152,16 @@ try{
      assert.equal(await page.locator('.climate-atlas-card').count(),4);
      assert.equal(await page.locator('#teplota-vsechny-roky').count(),1);
      assert.equal(await page.locator('#srovnani-let').count(),1);
+     assert.equal(await page.locator('.atlas-highlight-card').count(),4);
+     await page.locator('[data-climate-highlights]').scrollIntoViewIfNeeded();
+     await page.waitForFunction(()=>
+      document.querySelector('[data-highlights-status]')?.dataset.state==='warning',
+      null,{timeout:12000});
+     assert.match(await page.locator('[data-highlight-value="maxTemp"]').textContent()??'',/36,5 °C/);
+     assert.match(await page.locator('[data-highlight-value="minTemp"]').textContent()??'',/-18,2 °C/);
+     assert.equal(await page.locator('[data-highlight-date="maxDailyRain"]').getAttribute('datetime'),'2021-07-25');
+     assert.match(await page.locator('[data-highlight-note="maxDailyRain"]').textContent()??'',/Známé omezení/);
+     assert.equal(await page.locator('.atlas-quick-links a').count(),3);
     }
     if(path.endsWith('/extremy/')){
      await page.waitForFunction(()=>

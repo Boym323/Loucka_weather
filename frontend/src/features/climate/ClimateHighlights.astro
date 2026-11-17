@@ -1,0 +1,85 @@
+---
+import {highlightMetrics} from '../../shared/domain/climate-highlights.ts';
+---
+<section class="atlas-highlights" data-climate-highlights aria-labelledby="atlas-highlights-title">
+ <div class="atlas-highlights-heading">
+  <div>
+   <p class="atlas-eyebrow">Čtyři okamžiky z historie</p>
+   <h2 id="atlas-highlights-title">Počasí, které stojí za připomenutí</h2>
+   <p>Nejvýraznější záznamy od roku 2009. Podrobnosti a okolnosti měření najdeš v atlasu extrémů.</p>
+  </div>
+  <span class="atlas-highlights-status" data-highlights-status role="status">Připravuji archivní záznamy…</span>
+ </div>
+ <div class="atlas-highlights-grid">
+  {highlightMetrics.map(metric=><article class="atlas-highlight-card" data-highlight-card={metric.id}>
+   <h3>{metric.label}</h3>
+   <strong data-highlight-value={metric.id} aria-label="Hodnota zatím není k dispozici">—</strong>
+   <time data-highlight-date={metric.id}>Načítám den z archivu…</time>
+   <small data-highlight-note={metric.id}>Předběžný údaj</small>
+  </article>)}
+ </div>
+ <div class="atlas-highlights-links">
+  <a href="/klimatologie/extremy/">Prozkoumat rekordní dny</a>
+  <a href="/klimatologie/sezony/">Porovnat léta a zimy</a>
+ </div>
+ <p class="atlas-highlights-disclaimer">Záznamy jsou <strong>předběžné</strong>. Chybějící nebo neověřené údaje nevydáváme za potvrzené rekordy.</p>
+</section>
+<script>
+ import {featuredClimateRecords} from '../../shared/domain/climate-highlights.ts';
+ const root=document.querySelector<HTMLElement>('[data-climate-highlights]');
+ if(root){
+  const controller=new AbortController();
+  const status=root.querySelector<HTMLElement>('[data-highlights-status]')!;
+  let requested=false;
+  async function load(){
+   if(requested)return;requested=true;
+   try{
+    const response=await fetch('/api/v1/climate/records',{
+     headers:{Accept:'application/json'},signal:controller.signal
+    });
+    if(!response.ok)throw Error('Rekordní údaje nejsou dostupné');
+    const entries=featuredClimateRecords(await response.json());
+    if(!entries)throw Error('Neplatný zdroj rekordů');
+    if(controller.signal.aborted)return;
+    for(const entry of entries){
+     const value=root?.querySelector<HTMLElement>('[data-highlight-value="'+entry.id+'"]');
+     const date=root?.querySelector<HTMLTimeElement>('[data-highlight-date="'+entry.id+'"]');
+     const note=root?.querySelector<HTMLElement>('[data-highlight-note="'+entry.id+'"]');
+     if(value){
+      value.textContent=entry.value;
+      value.removeAttribute('aria-label');
+     }
+     if(date){
+      date.textContent=entry.date;
+      if(entry.isoDate)date.dateTime=entry.isoDate;
+      else date.removeAttribute('datetime');
+     }
+     if(note)note.textContent=entry.caution?
+      'Známé omezení srážkového záznamu – k ověření':
+      entry.available?'Předběžný záznam':'Údaj nelze spolehlivě zobrazit';
+    }
+    const visible=entries.filter(entry=>entry.available).length;
+    status.textContent=visible?
+     'Původní archiv · předběžné záznamy':
+     'V archivu zatím nejsou zobrazitelné hodnoty';
+    status.dataset.state=visible?'warning':'error';
+   }catch{
+    if(controller.signal.aborted)return;
+    status.textContent='Záznamy se nepodařilo načíst';
+    status.dataset.state='error';
+    root?.querySelectorAll<HTMLElement>('[data-highlight-date]').forEach(element=>{
+     element.textContent='Momentálně nedostupné';
+    });
+   }
+  }
+  const observer=new IntersectionObserver(entries=>{
+   if(entries.some(entry=>entry.isIntersecting)){
+    observer.disconnect();void load();
+   }
+  },{rootMargin:'250px'});
+  observer.observe(root);
+  document.addEventListener('astro:before-swap',()=>{
+   observer.disconnect();controller.abort();
+  },{once:true});
+ }
+</script>

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-17 – Úvod klimatologického atlasu s historickými zajímavostmi (návrh PR)
+- Nové čtyři stručné karty historických extrémů na rozcestníku klimatologie, načítané až při zobrazení sekce výhradně z původního veřejného API, bez náhradních či vymyšlených hodnot.
+- Kontroly stavu `preliminary`, datasetu `original`, jednotek, data, numerických hodnot a původu. Známé srážkové anomálie jsou viditelně označené.
+- Přímé odkazy na extrémy, sezóny, teploty všech roků a vlastní historické období. Mobilní rozložení a izolované unit/browser testy.
+- Bez změny API, WeeWX, MariaDB, rekonstrukce nebo produkčního archivu. CI, merge a převzetí dev synchronizací ověřit zvlášť.
+
 ## 2026-11-17 – Přehlednější historické grafy a klimatologie (návrh PR)
 - Rychlé volby historického grafu jsou přesné lokální kalendářní dny („Dnes“, „Včera“, „Letos“, „Minulý rok“); datumové posuny respektují hranice CET/CEST.
 - Graf meziročních teplot začíná třemi nejnovějšími dokončenými roky místo všech křivek; všechny roky lze jedním kliknutím zapnout. Metodika zůstává dostupná rozbalením a upozornění na neúplné údaje viditelné.
