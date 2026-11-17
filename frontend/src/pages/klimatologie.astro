@@ -40,11 +40,15 @@ import AllYearsTemperature from '../features/climate/AllYearsTemperature.astro';
     <span class="chapter-link">Vytvořit ročenku</span>
    </a>
   </div>
-  <p class="climate-atlas-note">Atlas pracuje s originálními denními souhrny WeeWX. Data mohou obsahovat výpadky a neověřené historické anomálie; rekordy i odhady vývoje jsou proto předběžné, nikoli certifikované klimatologické normály.</p>
+  <p class="climate-atlas-note">Starší měření nejsou vždy úplná. U rekordů a dlouhodobých srovnání proto ber výsledky jako orientační.</p>
+  <details class="climate-atlas-data-note">
+   <summary>Jak pracujeme s historickými údaji?</summary>
+   <p class="source-note">Používáme původní denní souhrny WeeWX. Některá období mají výpadky nebo neověřené anomálie; nejde o certifikované klimatologické normály. Chybějící hodnoty nenahrazujeme nulami.</p>
+  </details>
   <p class="source-note"><a href="/klimatologie/trendy/#srazky-archiv">Prozkoumat srážkové úhrny a známá omezení.</a> · <a href="/klimatologie/trendy/#vlhkost-archiv">Dostupnost historické vlhkosti a výpadky měření.</a></p>
   <div class="atlas-legacy-area" id="datovy-archiv">
-   <h2 class="atlas-section-heading">Datový archiv a dosavadní grafy</h2>
-   <p class="source-note">Stávající klimatologická analýza, teplota všech let, heatmapy a roční srovnání jsou zachovány. Původní odkazy na jednotlivé grafy zůstávají platné.</p>
+   <h2 class="atlas-section-heading">Další grafy a srovnání</h2>
+   <p class="source-note">Prozkoumej teploty napříč roky, kalendářní přehledy a srovnání vybraných období.</p>
    <ClimateDashboard />
    <AllYearsTemperature />
    <YearComparison />

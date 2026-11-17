@@ -7,9 +7,9 @@ import ChannelAvailability from '../features/sensors/ChannelAvailability.astro';
 ---
 <BaseLayout title="Senzory">
  <div class="page-intro">
-  <span class="eyebrow">Měřicí kanály · archiv WeeWX</span>
+  <span class="eyebrow">Co naše stanice sleduje</span>
   <h1>Senzory a měření</h1>
-  <p>Co stanice právě zaznamenává, které údaje jsou dostupné a jaká je jejich historie. Identitu a umístění čidel uvádíme pouze tam, kde jsou potvrzené.</p>
+  <p>Prohlédni si teplotu půdy, další čidla a jejich poslední naměřené hodnoty. U každého údaje najdeš také graf.</p>
  </div>
  <nav class="sensor-page-shortcuts" aria-label="Související podrobnosti">
   <a href="/puda-ovzdusi/"><strong>Půda a ovzduší</strong><span>Vlhkost půdy, UV, PM2,5 a grafy</span><span aria-hidden="true">↗</span></a>
@@ -17,18 +17,18 @@ import ChannelAvailability from '../features/sensors/ChannelAvailability.astro';
  </nav>
  <SensorChannels />
  <section class="sensor-advanced-section" aria-label="Odborné informace o senzorech">
-  <h2>Podrobnosti a původ dat</h2>
-  <p>Evidence dostupnosti, fyzické přiřazení a telemetrie jsou dostupné samostatně. Nemusíš procházet všechna technická pole při běžné návštěvě.</p>
+  <h2>Více o čidlech a měření</h2>
+  <p>Podrobné informace o dostupnosti, vybavení a stavu čidel najdeš v následujících sekcích.</p>
   <details class="sensor-advanced-group">
-   <summary><span><strong>Dostupnost archivních kanálů</strong><small>Počet záznamů, poslední měření a vztah ke GW3000</small></span><span class="sensor-expand-indicator" aria-hidden="true">⌄</span></summary>
+   <summary><span><strong>Dostupnost archivních kanálů</strong><small>Kdy byla měření dostupná a kolik jich máme</small></span><span class="sensor-expand-indicator" aria-hidden="true">⌄</span></summary>
    <div class="sensor-advanced-content"><ChannelAvailability /></div>
   </details>
   <details class="sensor-advanced-group">
-   <summary><span><strong>Fyzické senzory stanice</strong><small>Pouze ověřený inventář a identita zařízení</small></span><span class="sensor-expand-indicator" aria-hidden="true">⌄</span></summary>
+   <summary><span><strong>Fyzické senzory stanice</strong><small>Co o vybavení stanice skutečně víme</small></span><span class="sensor-expand-indicator" aria-hidden="true">⌄</span></summary>
    <div class="sensor-advanced-content"><AuditedSensorRegistry /></div>
   </details>
   <details class="sensor-advanced-group">
-   <summary><span><strong>Signál, baterie a diagnostika</strong><small>Surové hodnoty a jejich čas bez domýšlení jednotek</small></span><span class="sensor-expand-indicator" aria-hidden="true">⌄</span></summary>
+   <summary><span><strong>Signál, baterie a diagnostika</strong><small>Podrobné údaje o stavu čidel</small></span><span class="sensor-expand-indicator" aria-hidden="true">⌄</span></summary>
    <div class="sensor-advanced-content">
     <SensorDiagnostics />
     <section class="sensor-diagnostics-note" aria-labelledby="sensor-monitoring-title">
