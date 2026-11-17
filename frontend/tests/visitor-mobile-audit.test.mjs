@@ -12,6 +12,9 @@ test('15 public routes are audited at narrow mobile, standard phone and desktop 
  assert.match(script,/name: 'desktop', width: 1440/);
  assert.match(script,/for \(const theme of \['light', 'dark'\]\)/);
  assert.match(script,/viewport\.width <= 390/);
+ assert.match(script,/Page-wide horizontal overflow/);
+ assert.match(script,/Main heading is clipped outside viewport/);
+ assert.match(script,/Mobile navigation target shorter than 44px/);
 });
 test('live browser smoke recognizes visitor language without weakening source checks',async()=>{
  const smoke=await get('scripts/live-browser-check.mjs');
