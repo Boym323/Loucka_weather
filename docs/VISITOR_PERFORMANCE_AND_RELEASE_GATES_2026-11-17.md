@@ -21,7 +21,7 @@ Bezpečný existující postup na DEV LXC: `python3 /home/loucka/Loucka_weather/
 | UX | Všechny veřejné trasy, 320–1440 px, ovládání dotykem/klávesnicí, kontrast, mobilní historické grafy | Dokončit živý audit po merge |
 | Meteo přesnost | DST Europe/Prague, denní hranice, NULL vs. 0, předběžné rekordy, srážkové rizikové roky | Ponechat regresní kontroly, nezaměňovat QC a validní zobrazení |
 | Stabilita | Ověřená revize dev, opakované měření API i webu, pozorování RSS/heap a 503 | Dlouhodobě nedoloženo |
-| DB TLS | `WEATHER_DB_TLS_MODE=verify`, ověření CA/hostname, skutečně šifrovaná session, fail-closed | Kód v #113; aktivní LXC režim neověřen |
+| DB transport | Výchozí politika TLS verify; pro explicitně přijaté spojení výhradně v LAN lze zvolit `--trusted-lan`, evidovat plaintext a ověřit síťová omezení | Provozovatel TLS nevyžaduje; segmentace/ACL zatím provozně nedoloženy |
 | DB oprávnění | Ověřit `SHOW GRANTS` provozní API identity jen na cílovém schématu; žádná nepotřebná zápisová oprávnění ani QC | Provozní stav neověřen; před produkcí povinné |
 | Obnova | Testovaná záloha, rollback na WeeWX/Belchertown, monitorování, zdokumentované servisní okno | Bez živého testu NO-GO |
 | Produkce | Oddělená produkční akceptace, žádný automatický cutover z dev | Nepovoleno |

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-17 – Výslovná výjimka pro důvěryhodnou LAN v DB auditu
+- Provozovatel potvrdil požadavek na komunikaci API a MariaDB výhradně v LAN bez povinného TLS. Auditní sonda nově přijímá příznak `--trusted-lan`; výchozí bezpečný režim nadále požaduje certifikátem ověřené TLS.
+- Skutečný stav přenosu zůstává transparentní v `transportEncrypted`, `certificateVerified` a `warnings`; žádné vypnutí skutečné TLS konfigurace ani skryté označení nešifrované relace za šifrovanou.
+- Nadbytečná zápisová práva do jiných schémat **zůstávají blokující**. Žádný SQL zápis, odstraňování grantů, změna databáze, WeeWX či produkce.
+
+
 ## 2026-11-17 – Veřejný dev smoke i po změně API (návrh PR)
 - GitHub Actions ověřuje skutečně nasazený commit, grafy, klimatologii, GW3000 live a návrat k archivu nejen po změnách `frontend/**`, ale také po změnách `api/**` na `main`.
 - Tím se uzavírá mezera, kdy změna Fastify mohla úspěšně projít izolovaným CI bez automatického veřejného prohlížečového testu aktuálně nasazeného API.
