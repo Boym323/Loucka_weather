@@ -10,7 +10,11 @@ const issues=[];
 const browser=await chromium.launch({headless:true});
 const fmt=(n,d)=>new Intl.NumberFormat('cs-CZ',{minimumFractionDigits:d,maximumFractionDigits:d}).format(n);
 // Verify stable source semantics, not changeable explanatory wording.
-const hasLiveSourceLabel=text=>Boolean(text?.includes('Živá data GW3000')&&text.includes('WeeWX'));
+const hasLiveSourceLabel=text=>Boolean(
+ (text?.includes('Živá data GW3000')&&text.includes('WeeWX'))||
+ (text?.includes('Část údajů přichází živě')&&text.includes('posledního uloženého měření'))
+);
+const hasLiveStatus=text=>Boolean(text?.includes('Živá měření')||text?.includes('GW3000'));
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 
 async function liveCurrent(){
@@ -36,7 +40,9 @@ try{
    await page.waitForFunction(()=>{
     const chip=document.querySelector('[data-current-status]')?.textContent??'';
     const provenance=document.querySelector('[data-current-provenance]')?.textContent??'';
-    return chip.includes('GW3000')&&provenance.includes('Živá data GW3000');
+    return (chip.includes('Živá měření')||chip.includes('GW3000'))&&
+     (provenance.includes('Část údajů přichází živě')||
+      provenance.includes('Živá data GW3000'));
    },null,{timeout:30000});
    const before=await page.evaluate(()=>{
     const value=document.querySelector('[data-metric-value="outTemp"]')?.textContent?.trim()??'';
@@ -46,8 +52,8 @@ try{
     return {value,station,live,rain};
    });
    console.log('LIVE BROWSER INITIAL',JSON.stringify(before));
-   if(!before.station.includes('GW3000')||!before.live.includes('GW3000'))
-    issues.push('Real live GW3000 status did not appear on frontend');
+   if(!hasLiveStatus(before.station)||!hasLiveStatus(before.live))
+    issues.push('Real live observation did not appear in both source indicators');
    if(!before.rain.includes('Archivní')&&!before.rain.includes('Nedostupné'))
     issues.push('Interval rain was incorrectly labelled as direct GW3000 measurement');
    if(before.value==='—')issues.push('Real live outdoor temperature missing in browser');
@@ -93,8 +99,10 @@ try{
   page.on('pageerror',e=>issues.push(viewport.name+' deterministic JS: '+e.message));
   await page.goto(base+'/aktualne/',{waitUntil:'domcontentloaded',timeout:25000});
   try{
-   await page.waitForFunction(()=>document.querySelector('[data-current-status]')
-    ?.textContent?.includes('Archivní měření'),null,{timeout:16000});
+   await page.waitForFunction(()=>{
+    const chip=document.querySelector('[data-current-status]')?.textContent??'';
+    return /Poslední měření|Starší měření|Archivní měření|Zastaralé měření/.test(chip);
+   },null,{timeout:16000});
    const archive=await page.locator('[data-metric-value="rain"]').textContent();
    await page.evaluate(()=>{
     const stamp=new Date().toISOString();
@@ -119,7 +127,7 @@ try{
    }));
    console.log('BROWSER SYNTHETIC PAINT',viewport.name,JSON.stringify(rendered));
    if(rendered.temp!==fmt(43.21,1)||rendered.pm25!==fmt(55.55,1)||
-     !rendered.status?.includes('GW3000')||!hasLiveSourceLabel(rendered.provenance))
+     !hasLiveStatus(rendered.status)||!hasLiveSourceLabel(rendered.provenance))
     issues.push(viewport.name+': live event failed to paint selected metric values');
    if(rendered.rain!==(archive?.trim()??''))issues.push(viewport.name+': fake gateway interval rain displayed');
 
@@ -138,8 +146,11 @@ try{
     await page.waitForFunction(()=>{
      const chip=document.querySelector('[data-current-status]')?.textContent??'';
      const provenance=document.querySelector('[data-current-provenance]')?.textContent??'';
-     return (chip.includes('Archivní měření')||chip.includes('Zastaralé měření'))&&
-      provenance.includes('Archiv WeeWX')&&!provenance.includes('Živá data GW3000');
+     const archive=/Poslední měření|Starší měření|Archivní měření|Zastaralé měření/.test(chip);
+     const restored=provenance.includes('Zobrazeno poslední uložené měření')||
+      provenance.includes('Archiv WeeWX');
+     return archive&&restored&&
+      !provenance.includes('Živá data GW3000')&&!provenance.includes('přichází živě');
     },null,{timeout:35000});
    }catch(error){
     const diag=await page.evaluate(()=>({
