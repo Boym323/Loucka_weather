@@ -545,6 +545,126 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
   }
  });
 
+
+ // One visitor-oriented climate response replaces 58+ small HTTP requests with
+ // exactly three bounded SELECT-only day-summary reads. All aggregation is the
+ // same server-side WeeWX routine used by /statistics/{monthly,yearly}.
+ type ClimateDashboardQuery={year?:string;units?:OutputUnits;dataset?:Dataset};
+ const dashboardCache=new Map<string,{expires:number;load:Promise<unknown>}>();
+ app.get<{Querystring:ClimateDashboardQuery}>('/api/v1/climate/dashboard',{
+  schema:{querystring:{...commonQuery,required:['year'],
+   properties:{...commonQuery.properties,year:{type:'string'}}}}
+ },async(req,reply)=>{
+  const {year:label,units='metricwx',dataset='original'}=req.query;
+  if(dataset==='approved')
+   return bad(reply,req.id,'DATASET_UNAVAILABLE','No approved dataset published',503);
+  const currentDate=localDateAt(Math.floor(now().getTime()/1000));
+  const currentYear=Number(currentDate.slice(0,4));
+  if(!label||!/^(20\\d{2})$/.test(label)||Number(label)<2009||
+   Number(label)>Math.min(2100,currentYear))
+   return bad(reply,req.id,'INVALID_RANGE','Select a year from 2009 through the current Prague year',422);
+  if(!reader.dailySummaries)
+   return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Daily summaries unavailable',503);
+  const selected=Number(label),completed=Math.min(selected,currentYear-1);
+  const annualYears=Array.from({length:Math.min(6,Math.max(0,completed-2008))},(_,i)=>completed-i);
+  const earliest=Math.min(selected,...annualYears);
+  const last=Math.max(selected,...annualYears);
+  const start=localMidnight(earliest+'-01-01'),end=localMidnight((last+1)+'-01-01');
+  const days=Math.round((Date.parse((last+1)+'-01-01T00:00:00Z')-
+   Date.parse(earliest+'-01-01T00:00:00Z'))/86400000);
+  if(start===null||end===null||end<=start||days<1||days>2600)
+   return bad(reply,req.id,'LIMIT_EXCEEDED','Requested annual span is not supported',422);
+  const cacheKey=label+'|'+units+'|'+currentDate;
+  const at=Date.now(),existing=dashboardCache.get(cacheKey);
+  let load=existing&&existing.expires>at?existing.load:null;
+  if(!load){
+   load=(async()=>{
+    const selectedMetrics=['outTemp','rain','windSpeed'] as const;
+    const sourceRows=await Promise.all(selectedMetrics.map(metric=>
+     reader.dailySummaries!(metric,start,end,days+1)));
+    const perMetric={} as Record<(typeof selectedMetrics)[number],DailySummaryRow[]>;
+    selectedMetrics.forEach((metric,i)=>{
+     const rows=sourceRows[i]!;
+     if(rows.length>days)throw new Error('Climate day summary exceeded cap');
+     let previous=-1;
+     for(const row of rows){
+      const date=localDateAt(row.dateTime);
+      if(row.dateTime<=previous||row.dateTime<start||row.dateTime>=end||
+       localMidnight(date)!==row.dateTime)
+       throw new Error('Unsorted or off-calendar climate daily summary');
+      previous=row.dateTime;
+     }
+     perMetric[metric]=rows;
+    });
+    const measure=(metric:(typeof selectedMetrics)[number],aggregation:'mean'|'sum'|'min'|'max',
+     rows:DailySummaryRow[]):number|null=>{
+     try{
+      const result=aggregateSummaryRows(metric,aggregation,rows,units);
+      return result.valid>0&&result.value!==null&&Number.isFinite(result.value)?result.value:null;
+     }catch{return null;} // One bad month does not invent a value for other months.
+    };
+    const groupedYear=(metric:(typeof selectedMetrics)[number],year:number)=>
+     perMetric[metric].filter(row=>Number(localDateAt(row.dateTime).slice(0,4))===year);
+    const selectedRows={
+     outTemp:groupedYear('outTemp',selected),
+     rain:groupedYear('rain',selected),
+     windSpeed:groupedYear('windSpeed',selected)
+    };
+    const summary={
+     temperature:measure('outTemp','mean',selectedRows.outTemp),
+     rain:measure('rain','sum',selectedRows.rain),
+     wind:measure('windSpeed','mean',selectedRows.windSpeed),
+     maxTemp:measure('outTemp','max',selectedRows.outTemp)
+    };
+    const annual={temperature:[] as (number|null)[],rain:[] as (number|null)[],
+     wind:[] as (number|null)[],temperatureCoverage:[] as (number|null)[]};
+    for(const y of annualYears){
+     const temp=groupedYear('outTemp',y);
+     annual.temperature.push(measure('outTemp','mean',temp));
+     annual.rain.push(measure('rain','sum',groupedYear('rain',y)));
+     annual.wind.push(measure('windSpeed','mean',groupedYear('windSpeed',y)));
+     const from=localMidnight(y+'-01-01'),to=localMidnight((y+1)+'-01-01');
+     const expected=(to??0)-(from??0);
+     const coverageKnown=temp.length>0&&temp.every(row=>row.count===0||
+      (row.sumtime!==null&&row.sumtime!==undefined&&Number.isFinite(row.sumtime)&&row.sumtime>=0));
+     const seconds=temp.reduce((n,row)=>n+Number(row.sumtime??0),0);
+     annual.temperatureCoverage.push(annual.temperature.at(-1)!==null&&coverageKnown&&
+      expected>0&&seconds<=expected*1.01?Math.min(1,seconds/expected):null);
+    }
+    const monthly={temperature:[] as (number|null)[],rain:[] as (number|null)[],
+     wind:[] as (number|null)[],temperatureLow:[] as (number|null)[],
+     temperatureHigh:[] as (number|null)[]};
+    for(let month=1;month<=12;month++){
+     const monthKey=label+'-'+String(month).padStart(2,'0');
+     const matching=(rows:DailySummaryRow[])=>
+      rows.filter(row=>localDateAt(row.dateTime).slice(0,7)===monthKey);
+     const temp=matching(selectedRows.outTemp);
+     monthly.temperature.push(measure('outTemp','mean',temp));
+     monthly.temperatureLow.push(measure('outTemp','min',temp));
+     monthly.temperatureHigh.push(measure('outTemp','max',temp));
+     monthly.rain.push(measure('rain','sum',matching(selectedRows.rain)));
+     monthly.wind.push(measure('windSpeed','mean',matching(selectedRows.windSpeed)));
+    }
+    return {schemaVersion:'1',year:selected,units,dataset:'original',
+     source:'weewx_daily',qcStatus:'original_unverified',
+     annualYears,summary,annual,monthly,
+     calendarTimezone:'Europe/Prague',dataRevision:'dashboard-'+
+      createHash('sha256').update(JSON.stringify(sourceRows)).digest('hex').slice(0,20),
+     disclaimer:'Preliminary original WeeWX summaries; missing data remain null and historical extremes are not QC-certified.'};
+   })();
+   dashboardCache.set(cacheKey,{expires:at+300000,load});
+   if(dashboardCache.size>10){
+    const oldest=dashboardCache.keys().next().value;
+    if(oldest!==undefined)dashboardCache.delete(oldest);
+   }
+  }
+  try{return conditional(req,reply,await load,'public, max-age=120');}
+  catch{
+   dashboardCache.delete(cacheKey);
+   return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Climate dashboard could not be verified',503);
+  }
+ });
+
  // Read-only provisional records for completed calendar days, never silently
  // promote original data to audited historical records.
  const recordsCache=new DayScopedCache<ReturnType<typeof climateRecordsFromDaily>>(20*60_000,60*60_000);
