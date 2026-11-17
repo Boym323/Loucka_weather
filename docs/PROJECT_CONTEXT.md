@@ -1,5 +1,8 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**Návštěvnická revize 17. 11. 2026 (PR #118):** Dev smoke ověřil 15 veřejných tras a nasazení commitu `9c7ac20`, ale celkový workflow selhal na starých textech v live/failover testu. Opravena semantika testu, odložen detail klimatologických dotazů do viewportu, odstraněn zbytkový listener pro aktualizaci archivu při navigaci, přidán 320px Axe audit. Předchozí dev výkonový log byl jediný CI běh; detaily a nezavřené blocker v `docs/VISITOR_MOBILE_AUDIT_2026-11-17.md`. NIC netvrdí o produkční readiness či schválení QC.
+ 
+
 **17. 11. 2026 – návrh pasivního reportu návštěvnického výkonu:** Nový PR rozšiřuje existující veřejný dev vizuální smoke o anonymní laboratorní časy načtení bez nového HTTP požadavku. Po případném merge vzniká `visitor-performance.json` ve screenshot artefaktu. Stavy LXC, TLS, grantů, záloh ani produkční připravenosti tím nejsou ověřeny. Runbook: `docs/VISITOR_PERFORMANCE_AND_RELEASE_GATES_2026-11-17.md`.
 
 
