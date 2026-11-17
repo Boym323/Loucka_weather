@@ -1,5 +1,8 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**17. 11. 2026 – profilování klimatologie:** Samostatná dev větev zrychluje zpracování tří souhrnných metrik single-pass indexem ročních/měsíčních dat a přidává opt-in anonymní výkonový log `climate_dashboard_refresh` přes `WEATHER_API_PERF_LOG=YES`. Předchozí reálný dev veřejný smoke měl na `/klimatologie/` 10 API fetchů místo 69; podle toho nelze odhadnout SQL P95. Provozní DB práva a TLS jsou provozovatelem odložena a kód je nemění. Více `docs/CLIMATE_DASHBOARD_PROFILING_2026-11-17.md`.
+
+
 **17. 11. 2026 – potvrzený DB audit a rozhodnutí LAN:** Staging DB audit v 18:59:09 UTC skutečně skončil `ready=false`: `expectedOriginalSchema=true`, `requiredSelect=true`, `targetReadOnly=true`, `transportEncrypted=false`, `certificateVerified=false`, `noOtherSchemaWriteGrants=false`. Provozovatel výslovně nevyžaduje TLS mezi API a MariaDB uvnitř důvěryhodné LAN. Nová explicitní volba `--trusted-lan` v jednorázové bezpečnostní sondě mění jen auditní politiku, žádná přístupová práva ani runtime. Nadbytečná zápisová práva účtu v jiném schématu zůstávají produkční blocker, segmentaci LAN je nutné potvrdit zvlášť.
 
 
