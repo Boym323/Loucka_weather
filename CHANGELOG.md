@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-17 – Srozumitelnější klimatologie a půdní měření
+- Hlavní vysvětlení u extrémů, trendů, sezón, ročenky a půdních čidel používají běžnou češtinu místo interních pojmů `QC`, `dataset original` a `forenzně schválené`.
+- Informace o původních denních souhrnech, metodě Theil–Sen, neověřených historických záznamech a možnostech výpadků zůstávají dostupné po rozkliknutí. Varování před neúplností a chybami srážek se neztrácí.
+- Revizní otisky ročenky přesunuty do rozbalovacích technických podrobností; kvalita dat zůstává uvedená také v samotné tištěné ročence.
+- Jen texty a testy, bez změny výpočtů, API, MariaDB či produkčního webu.
+
+
 ## 2026-11-17 – Efektivnější roční/měsíční klimatologické indexy a opt-in časování
 - Roční a měsíční skupiny souhrnného endpointu `/api/v1/climate/dashboard` vznikají jediným ověřeným průchodem denních řádků, nikoliv opakovaným formátováním všech dat pro každý graf. Výsledky původních agregací zůstávají stejné.
 - Výslovné `WEATHER_API_PERF_LOG=YES` po cache miss zapíše anonymní čas SQL read fáze včetně čekání na pool, zpracování, počty denních řádků a RSS/heap. Žádné počasí, přístupové údaje ani identifikátory návštěvníků se nelogují.

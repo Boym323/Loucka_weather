@@ -1,5 +1,8 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**17. 11. 2026 – návštěvnický jazyk:** Hlavní texty klimatologických kapitol (extrémy, trendy, sezóny, ročenka) a stránky o půdě/ovzduší jsou česky bez odborného žargonu, zatímco odborná metodika, zdroj WeeWX, limity a neověřené historické záznamy jsou v rozbalovacích vysvětleních. Odborné výpočty a původ archivních dat se nemění.
+
+
 **17. 11. 2026 – profilování klimatologie:** Samostatná dev větev zrychluje zpracování tří souhrnných metrik single-pass indexem ročních/měsíčních dat a přidává opt-in anonymní výkonový log `climate_dashboard_refresh` přes `WEATHER_API_PERF_LOG=YES`. Předchozí reálný dev veřejný smoke měl na `/klimatologie/` 10 API fetchů místo 69; podle toho nelze odhadnout SQL P95. Provozní DB práva a TLS jsou provozovatelem odložena a kód je nemění. Více `docs/CLIMATE_DASHBOARD_PROFILING_2026-11-17.md`.
 
 
