@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-17 – Přehlednější historické grafy a klimatologie (návrh PR)
+- Rychlé volby historického grafu jsou přesné lokální kalendářní dny („Dnes“, „Včera“, „Letos“, „Minulý rok“); datumové posuny respektují hranice CET/CEST.
+- Graf meziročních teplot začíná třemi nejnovějšími dokončenými roky místo všech křivek; všechny roky lze jedním kliknutím zapnout. Metodika zůstává dostupná rozbalením a upozornění na neúplné údaje viditelné.
+- Opraven vizuální smoke pro předběžné rekordy po změně textů v PR #114 a doplněna kontrola skutečně vykreslené maximální teploty.
+- Pouze frontend a testy: původní archiv, API, QC, rekonstrukce ani produkční WeeWX se nemění. Výsledek CI a nasazení nové větve ověřit samostatně.
+
+
 ## 2026-11-17 – Přístupnější texty veřejného webu
 - Úvod, aktuální měření, grafy, senzory, rekordy i stav stanice používají srozumitelnější češtinu místo interních názvů databází, API a diagnostických zkratek.
 - Odborné vysvětlení kvality měření zůstává v rozbalitelných podrobnostech; chybějící data a nejisté historické rekordy se nadále nezaměňují za ověřená měření.

@@ -55,7 +55,10 @@ test('frontend mounts all-year overlay above pair comparison with accessible opt
  const page=await readFile(new URL('../src/pages/klimatologie.astro',import.meta.url),'utf8');
  const component=await readFile(new URL('../src/features/climate/AllYearsTemperature.astro',import.meta.url),'utf8');
  assert.ok(page.indexOf('<AllYearsTemperature />')<page.indexOf('<YearComparison />'));
- assert.match(component,/data-temperature-show-all checked/);
+ assert.match(component,/data-temperature-show-all/);
+ assert.doesNotMatch(component,/data-temperature-show-all checked/);
+ assert.match(component,/recentCompletedYears\(\)/);
+ assert.match(component,/<summary>Jak graf vzniká a co znamenají chybějící dny\?<\/summary>/);
  assert.match(component,/data-temperature-resolution/);
  assert.match(component,/data-temperature-highlight/);
  assert.match(component,/data-temperature-range checked/);

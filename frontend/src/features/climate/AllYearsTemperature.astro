@@ -6,8 +6,8 @@ import '../../styles/all-years-temperature.css';
  <div class="all-years-temp-heading">
   <div>
    <span class="eyebrow">Klimatologie · Loučka · archiv od roku 2009</span>
-   <h2 id="all-years-temp-title">Teplota všech roků v jednom grafu</h2>
-   <p>Jedna křivka představuje jeden rok. Dny jsou zarovnány podle kalendáře, takže můžeš přímo srovnat průběh zimy, jara i léta.</p>
+   <h2 id="all-years-temp-title">Jak se měnila teplota v jednotlivých letech?</h2>
+   <p>Začni s posledními dokončenými roky. Další roky si můžeš přidat nebo zobrazit všechny najednou.</p>
   </div>
   <span class="status-chip" data-temperature-status role="status" aria-live="polite">Připravuji data…</span>
  </div>
@@ -23,7 +23,7 @@ import '../../styles/all-years-temperature.css';
     <option value="">Načítání roků…</option>
    </select>
   </label>
-  <label class="all-years-temp-checkbox"><input type="checkbox" data-temperature-show-all checked/>
+  <label class="all-years-temp-checkbox"><input type="checkbox" data-temperature-show-all/>
    <span>Všechny roky</span></label>
   <label class="all-years-temp-checkbox"><input type="checkbox" data-temperature-average checked/>
    <span>Orientační průměr</span></label>
@@ -50,13 +50,17 @@ import '../../styles/all-years-temperature.css';
    <button type="button" data-temperature-only-selected>Jen zvýrazněný rok</button>
   </div>
  </details>
- <p class="source-note all-years-temp-disclaimer">
-  Zdroj: původní denní agregace WeeWX, datum Europe/Prague. Údaje ještě nejsou definitivně
-  historicky ověřené. Průměr a rozmezí vycházejí z dostupných hodnot dokončených roků,
-  nikoli z oficiálního klimatického normálu. Měsíční průměr se zobrazuje až od 50 %
-  naměřeného časového pokrytí. Rok 2009 je neúplný; probíhající rok končí posledním dokončeným dnem.
-  Žádné chybějící dny nejsou doplňovány nulou.
- </p>
+ <p class="source-note all-years-temp-caption">Historická srovnání jsou orientační. Některé starší dny chybí nebo ještě nebyly plně ověřené.</p>
+ <details class="all-years-temp-methodology">
+  <summary>Jak graf vzniká a co znamenají chybějící dny?</summary>
+  <p class="source-note all-years-temp-disclaimer">
+   Zdroj: původní denní agregace WeeWX, datum Europe/Prague. Údaje ještě nejsou definitivně
+   historicky ověřené. Průměr a rozmezí vycházejí z dostupných hodnot dokončených roků,
+   nikoli z oficiálního klimatického normálu. Měsíční průměr se zobrazuje až od 50 %
+   naměřeného časového pokrytí. Rok 2009 je neúplný; probíhající rok končí posledním dokončeným dnem.
+   Žádné chybějící dny nejsou doplňovány nulou.
+  </p>
+ </details>
 </section>
 <script>
  import {getTemperatureYears} from '../../shared/api/client';
@@ -88,6 +92,10 @@ import '../../styles/all-years-temperature.css';
   let selectedYear:number|null=null;
   let visible=new Set<number>();
   let requestStarted=false;
+  const currentYear=Number(new Intl.DateTimeFormat('en-GB',{
+   timeZone:'Europe/Prague',year:'numeric'
+  }).format(new Date()));
+  const recentCompletedYears=()=>overlay?.years.filter(year=>year<currentYear).slice(-3)??[];
   const colors=[
    '#4d718f','#b4786a','#788c65','#956f9f','#709897','#b18b55',
    '#6b83a3','#9a7864','#64817c','#a48b9d','#778d58','#bd7b62',
@@ -107,7 +115,7 @@ import '../../styles/all-years-temperature.css';
    for(const year of overlay.years){
     const option=document.createElement('option');
     option.value=String(year);
-    option.textContent=year===overlay.years.at(-1)?year+' · probíhá':String(year);
+    option.textContent=year===currentYear?year+' · probíhá':String(year);
     highlight.append(option);
     const label=document.createElement('label');
     label.className='all-years-temp-year-choice';
@@ -135,7 +143,7 @@ import '../../styles/all-years-temperature.css';
    const selected=selectedYear;
    const selectedCoverage=data.validDays.get(selected)??0;
    coverage.textContent=selected+' · '+selectedCoverage+' dnů s daty';
-   const complete=years.filter(y=>y<years.at(-1)!);
+   const complete=years.filter(y=>y<currentYear);
    const hasBaseline=complete.length>=3;
    const showRange=range.checked&&hasBaseline;
    const dark=document.documentElement.dataset.theme==='dark';
@@ -227,7 +235,7 @@ import '../../styles/all-years-temperature.css';
     '. Nulové a chybějící hodnoty se nezaměňují.');
    summary.textContent='Zobrazeno '+visible.size+' z '+years.length+
     ' roků · '+(mode.value==='daily'?'denní':'měsíční')+
-    ' teploty · průměr dokončených roků 2009–'+(years.at(-1)!-1);
+    ' teploty · orientační průměr dostupných dokončených roků';
    chart.resize();
   };
   const load=async()=>{
@@ -238,8 +246,9 @@ import '../../styles/all-years-temperature.css';
     loaded=await getTemperatureYears(abort.signal);
     if(abort.signal.aborted)return;
     overlay=overlayTemperatureYears(loaded,'daily');
-    selectedYear=overlay.years.at(-1)??null;
-    visible=new Set(overlay.years);
+    selectedYear=recentCompletedYears().at(-1)??overlay.years.at(-1)??null;
+    visible=new Set(recentCompletedYears());
+    if(!visible.size&&selectedYear!==null)visible.add(selectedYear);
     buildYearControls();syncCheckboxes();render();
     message('Archiv WeeWX · bez finální QC','warning');
    }catch{
@@ -259,7 +268,8 @@ import '../../styles/all-years-temperature.css';
   });
   showAll.addEventListener('change',()=>{
    if(!overlay||selectedYear===null)return;
-   visible=new Set(showAll.checked?overlay.years:[selectedYear]);
+   visible=new Set(showAll.checked?overlay.years:recentCompletedYears());
+   visible.add(selectedYear);
    syncCheckboxes();render();
   });
   average.addEventListener('change',render);
