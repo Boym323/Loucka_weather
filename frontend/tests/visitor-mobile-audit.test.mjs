@@ -6,7 +6,7 @@ const get=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 test('15 public routes are audited at narrow mobile, standard phone and desktop in both themes',async()=>{
  const script=await get('scripts/accessibility-audit.mjs');
  const routes=script.match(/const routes = \[([\s\S]*?)\];/)?.[1];
- assert.equal((routes?.match(/'\/[^']*\/'/g)||[]).length,15);
+ assert.equal((routes?.match(/'\/[^']*'/g)||[]).length,15);
  assert.match(script,/name: 'mobil-uzky', width: 320/);
  assert.match(script,/name: 'mobil', width: 390/);
  assert.match(script,/name: 'desktop', width: 1440/);
