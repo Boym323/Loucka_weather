@@ -281,6 +281,11 @@
 .climate-atlas .atlas-ranking-exclusions{
  border-top:1px solid var(--line);padding-top:12px
 }
+.climate-atlas details.source-note > summary,
+[data-soil-air] details.source-note > summary{
+ display:flex;align-items:center;min-height:44px;padding:10px 8px;
+ cursor:pointer;color:var(--teal);
+}
 .climate-atlas .atlas-ranking-exclusions>summary{
  cursor:pointer;font-weight:650;color:var(--text);padding:7px 0
 }
