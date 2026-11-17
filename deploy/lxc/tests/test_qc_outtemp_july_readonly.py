@@ -26,8 +26,8 @@ class JulyReadOnlyQc(unittest.TestCase):
         self.assertEqual(utc_bounds(date(2026,10,25))[1] - utc_bounds(date(2026,10,25))[0],25*3600)
 
     def test_sql_is_bounded_select_only_and_deduplicates_overlaps(self):
-        statements = re.sub(r"--[^\\n]*", "", SQL)
-        self.assertNotRegex(statements, r"(?im)^\\s*(?:INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|REPLACE|TRUNCATE|SET)\\b")
+        statements = re.sub(r"--[^\n]*", "", SQL)
+        self.assertNotRegex(statements, r"(?im)^\s*(?:INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|REPLACE|TRUNCATE|SET)\b")
         for epoch in ("1784930400","1785016800","1785103200"):
             self.assertIn(epoch, SQL)
         self.assertIn("dateTime>1784930400 AND a.dateTime<=1785103200", SQL)
