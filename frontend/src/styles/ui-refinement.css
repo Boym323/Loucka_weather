@@ -121,9 +121,11 @@
 #camera-current,#camera-photos,#camera-archive-title,#camera-timelapse-title{scroll-margin-top:95px}
 .camera-layout-enhanced{
  grid-template-columns:minmax(0,3.2fr) minmax(230px,.8fr);
+ grid-template-areas:"camera sidebar" "archive archive";
  gap:16px
 }
 .camera-layout-enhanced .camera-panel{
+ grid-area:camera;
  padding:clamp(12px,2vw,20px)!important;
  border-radius:var(--ui-card-radius)
 }
@@ -176,6 +178,7 @@
  color:var(--muted)
 }
 .camera-layout-enhanced .camera-sidebar{
+ grid-area:sidebar;
  gap:12px;
  align-content:start
 }
@@ -212,6 +215,7 @@
 }
 
 /* Two separate media experiences, with video ahead of the image archive. */
+.camera-layout-enhanced .camera-archive-section{grid-area:archive;margin-top:0}
 .camera-archive-section{
  border-radius:var(--ui-card-radius);
  padding:clamp(14px,2.5vw,24px);
@@ -314,7 +318,10 @@
 .camera-photos-block .camera-day-choice input{min-height:44px;color-scheme:inherit}
 .camera-photos-block .camera-day-browser .chart-tab{min-height:44px}
 @media(max-width:900px){
- .camera-layout-enhanced{grid-template-columns:1fr}
+ .camera-layout-enhanced{
+  grid-template-columns:minmax(0,1fr);
+  grid-template-areas:"camera" "archive" "sidebar"
+ }
 }
 @media(max-width:760px){
  .evergreen-home .evergreen-scene{
@@ -414,11 +421,14 @@
  .camera-layout-enhanced .camera-sidebar{grid-template-columns:1fr}
  .camera-layout-enhanced .camera-panel{padding:12px!important}
  .camera-layout-enhanced .camera-image-large{border-radius:11px}
- .camera-layout-enhanced .camera-actions{gap:8px}
- .camera-layout-enhanced .camera-actions button,.camera-layout-enhanced .camera-actions a{
-  flex:1 1 auto;
-  min-width:min(100%,115px);
-  font-size:12px
+ .camera-layout-enhanced .camera-actions{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px
+ }
+ .camera-layout-enhanced .camera-actions button,
+ .camera-layout-enhanced .camera-actions a{
+  display:inline-flex;align-items:center;justify-content:center;
+  text-align:center;width:100%;min-width:0;
+  font-size:12px;line-height:1.3;padding-inline:8px
  }
  .camera-mode-heading{
   display:grid;
