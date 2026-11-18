@@ -43,6 +43,7 @@ try{
   }
   if(!loaded){errors.push(width+'px: local preview unavailable');await context.close();continue;}
   // The screenshots must never show numerical values alongside "unavailable".
+  const labelSyntheticFixture=async()=>{
   await page.waitForFunction(()=>document.querySelector('.evergreen-hero [data-current-status]')
    ?.textContent?.includes('Poslední měření'),null,{timeout:10000});
   await page.evaluate(()=>{
@@ -54,6 +55,8 @@ try{
    for(const quality of section?.querySelectorAll('[data-metric-quality]')??[])
     quality.textContent='Testovací údaj';
   });
+  };
+  await labelSyntheticFixture();
   const measure=()=>page.evaluate(()=>{
    const q=selector=>document.querySelector(selector);
    const hero=q('.evergreen-hero'),featured=q('.evergreen-hero .metric-card.featured');
@@ -112,6 +115,7 @@ try{
   if(width===390||width===1440){
    await page.evaluate(()=>localStorage.setItem('loucka-theme','dark'));
    await page.reload({waitUntil:'domcontentloaded'});
+   await labelSyntheticFixture();
    const dark=await page.evaluate(()=>({
     theme:document.documentElement.dataset.theme,
     background:getComputedStyle(document.querySelector('.evergreen-hero')).backgroundColor
