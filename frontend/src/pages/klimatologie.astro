@@ -64,9 +64,18 @@ import AllYearsTemperature from '../features/climate/AllYearsTemperature.astro';
     <a href="#srovnani-let">Porovnat dva roky</a>
     <a href="/grafy/">Vybrat vlastní období</a>
    </nav>
-   <ClimateDashboard />
-   <AllYearsTemperature />
-   <YearComparison />
+   <details class="atlas-expert-section" data-climate-subsection="summary" open>
+    <summary><strong>Roční a měsíční přehledy</strong><span>Souhrny, měsíční teploty, srážky a vítr</span></summary>
+    <div class="atlas-expert-content"><ClimateDashboard /></div>
+   </details>
+   <details class="atlas-expert-section" data-climate-subsection="temperatures">
+    <summary><strong>Teploty napříč roky</strong><span>Historické roky v jednom srovnání</span></summary>
+    <div class="atlas-expert-content"><AllYearsTemperature /></div>
+   </details>
+   <details class="atlas-expert-section" data-climate-subsection="comparison">
+    <summary><strong>Porovnání dvou roků</strong><span>Interaktivní grafy, kalendáře a podrobné hodnoty</span></summary>
+    <div class="atlas-expert-content"><YearComparison /></div>
+   </details>
    </div>
   </details>
  </div>
@@ -81,8 +90,16 @@ import AllYearsTemperature from '../features/climate/AllYearsTemperature.astro';
    const target=document.getElementById(id);
    if(id==='datovy-archiv'||(target&&analysis.contains(target))){
     analysis.open=true;
-    // The fragment might have been resolved before the details became visible.
-    if(target)requestAnimationFrame(()=>target.scrollIntoView({block:'start'}));
+    // Reveal all nested native disclosures above the target, preserving
+    // the historical #teplota-vsechny-roky / #srovnani-let deep links.
+    if(target){
+     let node=target.parentElement;
+     while(node&&node!==analysis){
+      if(node instanceof HTMLDetailsElement)node.open=true;
+      node=node.parentElement;
+     }
+     requestAnimationFrame(()=>target.scrollIntoView({block:'start'}));
+    }
    }
   };
   revealFragment();
