@@ -185,12 +185,18 @@ def generate_timelapses(now: datetime | None = None) -> None:
     # break when a newer preview appears. Always retain the newest per day.
     previews = sorted(folder.glob("????-??-??-v??????????.mp4"))
     newest_by_day = {video.name[:10]: video for video in previews}
-    for video in previews:
-        created = int(video.stem.rsplit("-v", 1)[1])
-        if (video != newest_by_day[video.name[:10]]
-                and created < now.timestamp() - PREVIEW_KEEP_SECONDS):
-            video.unlink()
+    completed_days = {video.stem for video in folder.glob("????-??-??.mp4")}
     cutoff = today - timedelta(days=34)
+    for video in previews:
+        day = video.name[:10]
+        created = int(video.stem.rsplit("-v", 1)[1])
+        # Keep the last unfinished preview if generation is stalled, but no
+        # preview should survive retention or a completed video's grace period.
+        if created < now.timestamp() - PREVIEW_KEEP_SECONDS and (
+                video != newest_by_day[day]
+                or day in completed_days
+                or date.fromisoformat(day) < cutoff):
+            video.unlink()
     for video in folder.glob("????-??-??.mp4"):
         if date.fromisoformat(video.stem) < cutoff:
             video.unlink()
