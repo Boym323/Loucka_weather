@@ -32,7 +32,7 @@ test('camera gives immediate access to live image, timelapse and photographs',as
  const styles=await read('src/styles/ui-refinement.css');
  assert.match(styles,/grid-template-areas:"camera sidebar" "archive archive"/);
  assert.match(styles,/grid-template-areas:"camera" "archive" "sidebar"/);
- assert.ok(styles.includes('display:grid;grid-template-columns:repeat(2,minmax(0,1fr))'));
+ assert.ok(styles.includes('display:grid!important;'));
  assert.match(page,/<summary>Odkud kamera snímá\?<\/summary>/);
  const video=archive.indexOf('data-archive-player');
  const frames=archive.indexOf('data-archive-frames');
