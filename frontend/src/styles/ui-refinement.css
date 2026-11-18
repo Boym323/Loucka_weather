@@ -473,3 +473,104 @@
 @media(prefers-reduced-motion:reduce){
  .camera-view-navigation a{transition:none}
 }
+
+
+/* Climate atlas: chapter navigation is the primary visitor task.
+   Historical records remain prominent only when the original API can verify them. */
+.climate-atlas .atlas-chapter-heading{
+ display:flex;align-items:end;justify-content:space-between;gap:12px 28px;
+ margin:22px 2px 14px
+}
+.climate-atlas .atlas-chapter-heading h2{
+ margin:6px 0 0;
+ font-size:clamp(23px,2.5vw,30px);font-weight:650;
+ line-height:1.18;letter-spacing:-.035em
+}
+.climate-atlas .atlas-chapter-heading>p{
+ margin:0;color:var(--muted);font-size:13px;line-height:1.5;
+ max-width:30ch
+}
+.climate-atlas .climate-atlas-grid{gap:12px;margin-bottom:24px}
+.climate-atlas .climate-atlas-card{
+ position:relative;
+ display:grid;grid-template-rows:auto auto 1fr auto;
+ gap:10px;min-height:190px;padding:22px 24px;
+ border-radius:var(--ui-card-radius);
+ border:1px solid var(--line);
+ box-shadow:0 2px 8px rgba(20,60,67,.035);
+ transition:background-color .16s ease,border-color .16s ease,transform .16s ease
+}
+.climate-atlas .climate-atlas-card::after{
+ content:'↗';position:absolute;top:16px;right:19px;
+ color:var(--teal);font-size:17px;line-height:1
+}
+.climate-atlas .climate-atlas-card .number{
+ padding-right:28px;font-size:11px;font-weight:700;letter-spacing:.1em
+}
+.climate-atlas .climate-atlas-card h3{
+ margin:0;font-size:clamp(20px,2vw,26px);
+ font-weight:650;letter-spacing:-.035em;line-height:1.18
+}
+.climate-atlas .climate-atlas-card p{
+ max-width:54ch;font-size:14px;line-height:1.52
+}
+.climate-atlas .climate-atlas-card .chapter-link{
+ font-size:13px;font-weight:700;line-height:1.45
+}
+.climate-atlas .climate-atlas-card:hover{
+ background:var(--panel-2);border-color:var(--teal);
+ transform:translateY(-2px)
+}
+.climate-atlas .climate-atlas-card:focus-visible{
+ outline:3px solid var(--teal);outline-offset:3px
+}
+.climate-atlas .atlas-highlights{margin-top:12px}
+.climate-atlas .atlas-highlights-fallback{
+ padding:15px 17px;border:1px dashed var(--line);
+ border-radius:11px;background:var(--panel-2);
+ color:var(--muted);font-size:13px;line-height:1.6
+}
+.climate-atlas .atlas-highlights-fallback[hidden],
+.climate-atlas .atlas-highlights-grid[hidden]{display:none!important}
+.climate-atlas .atlas-highlights-fallback .chart-tab{
+ display:inline-flex;align-items:center;min-height:44px;
+ margin:10px 0 0;padding:10px 14px;
+ background:var(--panel);color:var(--text);
+ border:1px solid var(--line);border-radius:var(--ui-control-radius);
+ font-size:13px;font-weight:650
+}
+.climate-atlas .atlas-highlights-fallback .chart-tab:hover{border-color:var(--teal)}
+.climate-atlas .atlas-highlights-fallback .chart-tab:focus-visible{
+ outline:3px solid var(--teal);outline-offset:2px
+}
+@media(max-width:760px){
+ .climate-atlas .atlas-edition-hero{
+  padding:19px 18px;margin-bottom:12px
+ }
+ .climate-atlas .atlas-edition-hero .atlas-title{
+  margin:6px 0 9px;font-size:clamp(29px,7.8vw,39px)
+ }
+ .climate-atlas .atlas-edition-hero .atlas-subtitle{
+  font-size:13px;line-height:1.52
+ }
+ .climate-atlas .atlas-chapter-heading{
+  display:block;margin:18px 2px 11px
+ }
+ .climate-atlas .atlas-chapter-heading>p{
+  margin-top:7px;max-width:58ch;font-size:12px
+ }
+ .climate-atlas .climate-atlas-grid{
+  grid-template-columns:minmax(0,1fr);gap:10px;margin-bottom:17px
+ }
+ .climate-atlas .climate-atlas-card{
+  min-height:0;padding:16px 18px;gap:8px;
+ }
+ .climate-atlas .climate-atlas-card h3{font-size:21px}
+ .climate-atlas .climate-atlas-card p{font-size:13px;line-height:1.45}
+ .climate-atlas .climate-atlas-card::after{top:13px;right:15px}
+ .climate-atlas .atlas-highlights-heading h2{font-size:23px}
+}
+@media(prefers-reduced-motion:reduce){
+ .climate-atlas .climate-atlas-card{transition:none}
+ .climate-atlas .climate-atlas-card:hover{transform:none}
+}
