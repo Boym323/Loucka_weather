@@ -123,8 +123,15 @@
  .evergreen-home .evergreen-hero .history-hero .chart-box{
   height:155px!important;min-height:155px!important
  }
- .evergreen-home .evergreen-more-heading{margin-top:6px}
- .evergreen-home .evergreen-more-heading a{display:inline-flex;min-height:var(--ux-tap-target);align-items:center}
+ .evergreen-home .evergreen-more-heading{
+  display:grid;grid-template-columns:minmax(0,1fr);gap:8px;
+  margin-top:6px;min-width:0
+ }
+ .evergreen-home .evergreen-more-heading a{
+  display:inline-flex;justify-self:start;min-width:0;max-width:100%;
+  min-height:var(--ux-tap-target);align-items:center;
+  white-space:normal;overflow-wrap:anywhere
+ }
  .climate-atlas-nav{display:none}
  .climate-mobile-chapters{
   display:grid;gap:7px;min-width:0;
