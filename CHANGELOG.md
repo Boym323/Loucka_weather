@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-18 – Zpřehlednění klimatologického atlasu
+- Kapitoly Extrémy, Trendy, Srovnání sezón a Meteorologická ročenka se nově zobrazují před historickými rekordy, aby se návštěvník dostal rychleji k cíli.
+- Výraznější nadpis, kompaktnější mobilní karty, sjednocená typografie, přístupný focus a zachované barvy obou motivů.
+- Při chybě nebo prázdném výsledku zůstává krátká vysvětlující zpráva s možností opakovat načtení namísto čtyř prázdných hodnot.
+- Zdroj dat, historické hodnoty, varování o předběžnosti a všechny meteorologické výpočty zůstávají nezměněné.
+- Dokumentace: `docs/CLIMATE_VISUAL_POLISH_2026-11-18.md`.
+
+
 ## 2026-11-18 – Vizuální doladění přehledu, grafů a kamery
 - Mobilní úvod ponechává skutečná měření dominantní a odděluje jejich přehled, denní souhrn, větrnou růžici a 24h graf do vzdušnějších karet.
 - Grafy a související ovládací prvky mají sjednocenou typografii, popisky, stavy a přístupné ovládání. Chybějící záznamy nadále zůstávají mezerami, bez odhadů.
