@@ -49,6 +49,7 @@ test('mobile homepage promotes practical routes without duplicating weather API 
  }
  assert.match(styles,/\.evergreen-home>\.atlas-home-analytics\.evergreen-analytics\{order:3\}/);
  assert.match(styles,/\.evergreen-home>\.observatory-instruments\.evergreen-spotlight\{order:4\}/);
+ assert.match(styles,/\.evergreen-home \.evergreen-more-heading\{\s*display:grid/);
  assert.match(layout,/import '\.\.\/styles\/ux-stages\.css'/);
 });
 
