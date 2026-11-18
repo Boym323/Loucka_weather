@@ -54,7 +54,12 @@ try{
     overflowElements:[...document.querySelectorAll('body *')].filter(el=>{
      const rect=el.getBoundingClientRect();
      return rect.width>0&&rect.right>window.innerWidth+2&&getComputedStyle(el).position!=='fixed';
-    }).slice(0,10).map(el=>el.tagName.toLowerCase()+(el.className&&typeof el.className==='string'?'.'+el.className.trim().replace(/\s+/g,'.'):'')),
+    }).slice(0,10).map(el=>{
+     const rect=el.getBoundingClientRect();
+     const name=el.tagName.toLowerCase()+(el.className&&typeof el.className==='string'?'.'+el.className.trim().replace(/\s+/g,'.'):'');
+     const parent=el.parentElement;
+     return name+' ['+Math.round(rect.left)+'..'+Math.round(rect.right)+'] parent='+(parent?.className&&typeof parent.className==='string'?parent.className:'none');
+    }),
     heroWidth:hero.getBoundingClientRect().width,
     heroRight:hero.getBoundingClientRect().right,
     columns,metricColumns,
