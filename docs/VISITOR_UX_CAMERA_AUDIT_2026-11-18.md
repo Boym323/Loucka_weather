@@ -19,6 +19,7 @@ následný veřejný smoke konkrétního commitu**.
 | P2 | Galerie měla permanentní 450ms časovač i po vyčerpání fronty náhledů. | Samovypínací plánování dalších JPEG, spuštěné pouze pokud čekají další snímky. |
 | P2 | Stránka stavu opakovala monitorovací požadavky i při skryté kartě. | Pozastaveno 30s obnovování v neaktivní kartě, obnovení po návratu, odpojení listenerů při navigaci. |
 | P3 | Hodiny ve společné hlavičce nevypínaly minutový interval při výměně Astro stránky. | Úklid časovače při `astro:before-swap`. |
+| P3 | Některé akce kamery měly malé dotykové cíle. | Tlačítka a navigační odkazy kamery mají výšku alespoň 44 px. |
 | P3 | Kamera obsahovala interní provozní texty a slabší popis stránky. | Návštěvnická čeština, upřesnění časových zón archivu a denních videí, popis stránky pro vyhledávání. |
 
 ## Kontrola rozsahu změn
