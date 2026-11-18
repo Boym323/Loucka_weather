@@ -3,6 +3,7 @@
 ## 2026-11-18 – Audit návštěvnického UX, kamera a provozní úspory
 - Opravené samostatné kotvy pro archiv a časosběr na stránce kamery, přístupnější ovládání nejnovějšího MP4 bez úplného reloadu náhledů.
 - Stav externího JPEG již nepřepisuje dostupnost posledního archivního snímku; chyba zobrazení má náhradní text bez rozbitého obrázku.
+- Galerie JPEG po vyčerpání fronty vypíná plánovač náhledů místo permanentního 450ms intervalu.
 - Stránka stavu neprovádí pravidelné kontroly při skryté kartě a hlavička korektně uklízí časovač hodin při navigaci.
 - Srozumitelnější návštěvnické texty a explicitní informace o UTC galerii proti místním časům videí.
 - Nové regresní testy a veřejné smoke aserce; provozní/produkční brány a meteorologická databáze bez změn. Závěry a omezení v `docs/VISITOR_UX_CAMERA_AUDIT_2026-11-18.md`.
