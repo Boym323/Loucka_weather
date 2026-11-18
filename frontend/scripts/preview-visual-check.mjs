@@ -205,7 +205,7 @@ try{
       errors.push(size.name+': missing advanced climate disclosure');
      }else{
       if(await disclosure.evaluate(el=>el.open))errors.push(size.name+': expert charts must start collapsed');
-      await disclosure.locator('summary').click();
+      await disclosure.locator(':scope > summary').click();
       if(!await disclosure.evaluate(el=>el.open))errors.push(size.name+': climate expert panel did not expand');
      }
      if(size.name==='mobil'&&await page.locator('[data-climate-mobile-chapter]').count()!==1)
