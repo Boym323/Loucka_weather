@@ -54,6 +54,9 @@ test('camera behavioral integration contracts and genuine data provenance are un
  assert.match(archive,/validVideo=/);
  assert.match(page,/getCameraStatus/);
  assert.match(page,/Čas pořízení snímku není dostupný/);
+ assert.match(page,/data-camera-auto aria-describedby="camera-auto-hint" aria-pressed="false"/);
+ assert.match(page,/id="camera-auto-hint" class="sr-only"/);
+ assert.doesNotMatch(page,/data-camera-auto aria-label=/);
  assert.match(archive,/nikoli přesně ověřený okamžik pořízení/);
 });
 
