@@ -18,7 +18,11 @@ try{
    await page.reload({waitUntil:'domcontentloaded'});
    await page.locator('[data-climate-highlights]').scrollIntoViewIfNeeded({timeout:12000});
    await page.waitForFunction(()=>document.querySelector('[data-highlights-status]')?.dataset.state==='error',null,{timeout:12000});
-   await page.evaluate(()=>window.scrollTo(0,0));
+   await page.evaluate(()=>{
+    document.documentElement.style.scrollBehavior='auto';
+    window.scrollTo(0,0);
+   });
+   await page.waitForFunction(()=>window.scrollY<=1,null,{timeout:5000});
    const info=await page.evaluate(()=>{
     const y=s=>document.querySelector(s)?.getBoundingClientRect().top+scrollY;
     return {viewport:innerWidth,scrollWidth:document.documentElement.scrollWidth,
