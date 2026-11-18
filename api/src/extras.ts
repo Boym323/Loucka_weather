@@ -26,7 +26,7 @@ const loadJson=async(path:string,max=150000)=>{
  return JSON.parse(await readFile(path,'utf8')) as Record<string,unknown>;
 };
 const fileNameOk=(name:string,kind:'frame'|'video')=>kind==='frame'?
- /^\d{8}T\d{6}Z\.jpg$/.test(name):/^\d{4}-\d{2}-\d{2}\.mp4$/.test(name);
+ /^\d{8}T\d{6}Z\.jpg$/.test(name):/^\d{4}-\d{2}-\d{2}(?:-v\d{10})?\.mp4$/.test(name);
 export async function archiveCameraStatus(sources:ExtraSourceFiles={}){
  const cameraDir=sources.cameraDir??defaultCameraDir;
  try{
@@ -81,12 +81,12 @@ export function registerExtras(app:FastifyInstance,reader:ArchiveReader,sources:
    const frames=Array.isArray(data.frames)?data.frames.filter((v):v is {name:string;fetchedAt:string}=>
     typeof v==='object'&&v!==null&&typeof (v as any).name==='string'&&
     fileNameOk((v as any).name,'frame')&&typeof (v as any).fetchedAt==='string').slice(0,120):[];
-   const videos=Array.isArray(data.videos)?data.videos.filter((v):v is {name:string;date:string}=>
+   const videos=Array.isArray(data.videos)?data.videos.filter((v):v is {name:string;date:string;state?:string}=>
     typeof v==='object'&&v!==null&&typeof (v as any).name==='string'&&
     fileNameOk((v as any).name,'video')&&typeof (v as any).date==='string').slice(0,45):[];
    return {schemaVersion:'1',status:'ok',source:'public_camera_jpeg',timestampMeaning:'downloaded_not_captured',
     frames:frames.map(f=>({fetchedAt:f.fetchedAt,url:'/api/v1/camera/frames/'+f.name})),
-    videos:videos.map(v=>({date:v.date,url:'/api/v1/camera/timelapse/'+v.name}))};
+    videos:videos.map(v=>({date:v.date,state:v.state==='live'?'live':'complete',url:'/api/v1/camera/timelapse/'+v.name}))};
   }catch{return {schemaVersion:'1',status:'unavailable',frames:[],videos:[]};}
  });
  app.get<{Params:{date:string}}>('/api/v1/camera/archive/day/:date',async(req,reply)=>{

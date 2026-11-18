@@ -456,7 +456,7 @@ try{
      // A dropdown entry does not prove the video stream is seekable.
      // Request only 32 bytes and check a real 206, never download whole MP4.
      const selectedVideo=await page.locator('[data-archive-video]').inputValue();
-     if(/^\/api\/v1\/camera\/timelapse\/\d{4}-\d{2}-\d{2}\.mp4$/.test(selectedVideo)){
+     if(/^\/api\/v1\/camera\/timelapse\/\d{4}-\d{2}-\d{2}(?:-v\d{10})?\.mp4$/.test(selectedVideo)){
       const range=await page.evaluate(async url=>{
        try{
         const response=await fetch(url,{headers:{Range:'bytes=0-31'}});

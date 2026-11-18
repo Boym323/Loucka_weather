@@ -324,6 +324,32 @@ test('camera MP4 endpoint supports single byte-range requests, suffix seeks and 
  assert.equal((await app.inject(url)).statusCode,404);
 });
 
+
+test('camera index exposes live Prague-day preview and supports immutable MP4 range',async t=>{
+  const {app,files}=await isolatedSourceApp(t);
+  const folder=join(files.cameraDir,'timelapse');
+  await mkdir(folder,{recursive:true});
+  const live='2026-11-18-v1795000000.mp4';
+  const done='2026-11-17.mp4';
+  await writeFile(join(folder,live),'0123456789abcdef');
+  await writeFile(join(folder,done),'completed-mp4');
+  await writeFile(join(files.cameraDir,'index.json'),JSON.stringify({
+    schemaVersion:'1',dayTimezone:'Europe/Prague',frames:[],
+    videos:[{name:live,date:'2026-11-18',state:'live'},
+      {name:done,date:'2026-11-17',state:'complete'}]
+  }));
+  const listing=(await app.inject('/api/v1/camera/archive')).json();
+  assert.deepEqual(listing.videos,[
+    {date:'2026-11-18',state:'live',url:'/api/v1/camera/timelapse/'+live},
+    {date:'2026-11-17',state:'complete',url:'/api/v1/camera/timelapse/'+done}
+  ]);
+  const r=await app.inject({url:'/api/v1/camera/timelapse/'+live,headers:{range:'bytes=0-3'}});
+  assert.equal(r.statusCode,206);
+  assert.equal(r.body,'0123');
+  assert.equal((await app.inject('/api/v1/camera/timelapse/2026-11-18-vbad.mp4')).statusCode,404);
+  assert.ok([400,404].includes((await app.inject('/api/v1/camera/timelapse/2026-11-18-v1795000000.mp4%2F..')).statusCode));
+});
+
 test('video range parser is bounded to one safe range',async()=>{
  const {parseVideoRange}=await import('../src/video-range.js');
  assert.equal(parseVideoRange(undefined,10),null);

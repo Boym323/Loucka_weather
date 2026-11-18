@@ -4,7 +4,7 @@ Writes local staging files only. No DB connection, no modification of origin.
 """
 from __future__ import annotations
 import argparse
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from hashlib import sha256
 import json
 import os
@@ -13,6 +13,8 @@ import re
 import shutil
 import subprocess
 import sys
+from tempfile import TemporaryDirectory
+from zoneinfo import ZoneInfo
 from urllib.request import Request, urlopen
 from xml.etree import ElementTree as ET
 
@@ -22,6 +24,9 @@ CAMERA_DIR = Path(os.environ.get("LOUCKA_CAMERA_ARCHIVE_DIR", "/var/lib/loucka-c
 ALERTS_DIR = Path(os.environ.get("LOUCKA_ALERTS_DIR", "/var/lib/loucka-alerts"))
 ORP = "7209"  # Loucka 585432, district Zlin, SO ORP Valasske Klobouky
 UTC = timezone.utc
+LOCAL_TZ = ZoneInfo("Europe/Prague")
+PREVIEW_INTERVAL_SECONDS = 15 * 60
+PREVIEW_KEEP_SECONDS = 3 * 60 * 60
 
 
 def fetch_bytes(url: str, max_bytes: int, media: str) -> bytes:
@@ -49,13 +54,24 @@ def atomic_write(path: Path, data: bytes):
 
 def save_index() -> None:
     frames = sorted((CAMERA_DIR / "frames").glob("????????T??????Z.jpg"), reverse=True)[:120]
-    videos = sorted((CAMERA_DIR / "timelapse").glob("????-??-??.mp4"), reverse=True)[:45]
+    folder = CAMERA_DIR / "timelapse"
+    # Publish only the newest immutable preview per local day, or its finished MP4.
+    completed = {v.stem: v for v in folder.glob("????-??-??.mp4")}
+    previews = {}
+    for video in sorted(folder.glob("????-??-??-v??????????.mp4")):
+        previews[video.name[:10]] = video
+    videos = {**previews, **completed}  # A completed day supersedes its previews.
     index = {
         "schemaVersion": "1",
         "timestampMeaning": "downloaded_not_captured",
+        "dayTimezone": "Europe/Prague",
         "updatedAt": datetime.now(UTC).isoformat(),
         "frames": [{"name": f.name, "fetchedAt": datetime.strptime(f.stem, "%Y%m%dT%H%M%SZ").replace(tzinfo=UTC).isoformat()} for f in frames],
-        "videos": [{"name": v.name, "date": v.stem} for v in videos],
+        "videos": [
+            {"name": video.name, "date": day,
+             "state": "live" if "-v" in video.stem else "complete"}
+            for day, video in sorted(videos.items(), reverse=True)[:45]
+        ],
     }
     atomic_write(CAMERA_DIR / "index.json", json.dumps(index, ensure_ascii=False).encode())
 
@@ -80,36 +96,113 @@ def capture_camera() -> None:
     # Index of captured JPEGs must be published even if FFmpeg fails.
     # Preserve the systemd failure signal for an unsuccessful transcode.
     try:
-        generate_yesterday_video()
+        generate_timelapses()
     finally:
         save_index()
 
 
-def generate_yesterday_video() -> None:
+def frames_for_local_day(day: date) -> list[Path]:
+    """Return only real UTC-stamped JPEGs within a Prague calendar day.
+
+    Local midnight crosses a UTC date boundary, including on DST changeovers.
+    """
+    start = datetime.combine(day, time.min, LOCAL_TZ).astimezone(UTC)
+    end = datetime.combine(day + timedelta(days=1), time.min, LOCAL_TZ).astimezone(UTC)
+    candidates = []
+    for utc_day in {start.date(), end.date()}:
+        for frame in (CAMERA_DIR / "frames").glob(utc_day.strftime("%Y%m%d") + "T??????Z.jpg"):
+            try:
+                stamped = datetime.strptime(frame.stem, "%Y%m%dT%H%M%SZ").replace(tzinfo=UTC)
+            except ValueError:
+                continue
+            if start <= stamped < end:
+                candidates.append(frame)
+    return sorted(candidates)
+
+
+def render_local_day(day: date, destination: Path, frames: list[Path]) -> bool:
+    """Render to a private temporary file, then publish a validated MP4 atomically."""
+    if len(frames) < 6:
+        return False
+    # Explicit frame list avoids mixing adjacent Prague dates or DST transitions.
+    with TemporaryDirectory(prefix=".render-", dir=destination.parent) as work:
+        listing = Path(work) / "frames.ffconcat"
+        entries = ["ffconcat version 1.0"]
+        for frame in frames:
+            escaped = str(frame.absolute()).replace("'", "'\\''")
+            entries.extend(["file '" + escaped + "'", "duration 0.1"])
+        # The concat demuxer needs the final frame repeated to honor its duration.
+        escaped = str(frames[-1].absolute()).replace("'", "'\\''")
+        entries.append("file '" + escaped + "'")
+        listing.write_text("\n".join(entries) + "\n", encoding="utf-8")
+        output = Path(work) / "video.mp4"
+        subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-nostdin", "-y",
+            "-f", "concat", "-safe", "0", "-i", str(listing),
+            "-vf", "scale=min(1280\\,iw):-2", "-r", "10",
+            "-c:v", "libx264", "-preset", "veryfast", "-crf", "31",
+            "-pix_fmt", "yuv420p", "-movflags", "+faststart",
+            "-f", "mp4", str(output)], check=True, timeout=140)
+        if not (1000 < output.stat().st_size <= 60_000_000):
+            raise ValueError("Invalid generated MP4 size")
+        output.replace(destination)
+    return True
+
+
+def generate_timelapses(now: datetime | None = None) -> None:
     if not shutil.which("ffmpeg"):
         print("ffmpeg missing: JPEG archive works; MP4 creation unavailable")
         return
-    day = (datetime.now(UTC) - timedelta(days=1)).date()
+    now = now or datetime.now(UTC)
+    today = now.astimezone(LOCAL_TZ).date()
+    yesterday = today - timedelta(days=1)
     folder = CAMERA_DIR / "timelapse"
     folder.mkdir(parents=True, exist_ok=True)
-    destination = folder / f"{day.isoformat()}.mp4"
-    if not destination.exists():
-        pattern = str(CAMERA_DIR / "frames" / (day.strftime("%Y%m%d") + "T*.jpg"))
-        if len(list((CAMERA_DIR / "frames").glob(day.strftime("%Y%m%d") + "T*.jpg"))) >= 6:
-            temp = destination.with_suffix(".partial")
-            try:
-                subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-nostdin", "-y",
-                    "-framerate", "10", "-pattern_type", "glob", "-i", pattern,
-                    "-vf", "scale=min(1280\\,iw):-2", "-c:v", "libx264", "-preset", "veryfast",
-                    "-crf", "31", "-pix_fmt", "yuv420p", "-movflags", "+faststart",
-                    "-f", "mp4", str(temp)], check=True, timeout=140)
-                if 1000 < temp.stat().st_size <= 60_000_000:
-                    temp.replace(destination)
-            finally:
-                temp.unlink(missing_ok=True)
-    for video in folder.glob("????-??-??.mp4"):
-        if datetime.fromisoformat(video.stem).date() < day - timedelta(days=34):
+
+    # Finish yesterday once after local midnight. A marker prevents a finished
+    # file being repeatedly re-encoded by the ten-minute collection timer.
+    completed = folder / f"{yesterday.isoformat()}.mp4"
+    marker = folder / f".{yesterday.isoformat()}.finalized"
+    if not marker.exists() and render_local_day(yesterday, completed, frames_for_local_day(yesterday)):
+        atomic_write(marker, b"finalized\n")
+
+    # Today's previews have unique immutable names. Never overwrite a video
+    # that another browser might currently be fetching through HTTP Range.
+    preview_files = sorted(folder.glob(f"{today.isoformat()}-v??????????.mp4"))
+    latest = preview_files[-1] if preview_files else None
+    latest_created = int(latest.stem.rsplit("-v", 1)[1]) if latest else 0
+    frames = frames_for_local_day(today)
+    newest_frame = (
+        datetime.strptime(frames[-1].stem, "%Y%m%dT%H%M%SZ").replace(tzinfo=UTC).timestamp()
+        if frames else 0
+    )
+    if (len(frames) >= 6
+            and (not latest or now.timestamp() - latest_created >= PREVIEW_INTERVAL_SECONDS)
+            and newest_frame > latest_created):
+        destination = folder / f"{today.isoformat()}-v{int(now.timestamp())}.mp4"
+        render_local_day(today, destination, frames)
+
+    # Keep recent preview versions so in-flight playback/Range requests do not
+    # break when a newer preview appears. Always retain the newest per day.
+    previews = sorted(folder.glob("????-??-??-v??????????.mp4"))
+    newest_by_day = {video.name[:10]: video for video in previews}
+    completed_days = {video.stem for video in folder.glob("????-??-??.mp4")}
+    cutoff = today - timedelta(days=34)
+    for video in previews:
+        day = video.name[:10]
+        created = int(video.stem.rsplit("-v", 1)[1])
+        # Keep the last unfinished preview if generation is stalled, but no
+        # preview should survive retention or a completed video's grace period.
+        if created < now.timestamp() - PREVIEW_KEEP_SECONDS and (
+                video != newest_by_day[day]
+                or day in completed_days
+                or date.fromisoformat(day) < cutoff):
             video.unlink()
+    for video in folder.glob("????-??-??.mp4"):
+        if date.fromisoformat(video.stem) < cutoff:
+            video.unlink()
+    for stamp in folder.glob(".????-??-??.finalized"):
+        if date.fromisoformat(stamp.name[1:11]) < cutoff:
+            stamp.unlink()
 
 
 def local(tag: str) -> str:

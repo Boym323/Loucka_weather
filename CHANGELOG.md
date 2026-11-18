@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-18 – Průběžný dnešní časosběr (DEV kamera)
+- Kamera nově sestavuje denní video podle kalendářního dne v Europe/Prague, správně i při přechodu zimního a letního času; po šesti různých JPEG jsou během dne vytvářeny průběžné verze nejvýše každých 15 minut (při desetiminutové archivaci přibližně každých 20 minut).
+- Průběžné MP4 mají neměnná verzovaná jména, publikují se až po úspěšném převodu a zůstávají ještě několik hodin k dispozici pro rozběhnuté HTTP Range přehrávání. Po místní půlnoci vzniká jednou dokončené denní MP4.
+- API a stránka kamery rozlišují průběžný a dokončený záznam; doplněny regresní testy pro místní hranice dne, DST, atomické zveřejnění a bezpečné přehrávání.
+- **Pro aktivaci na DEV LXC je nezbytné ručně přeinstalovat root-owned kolektor** z main do /usr/local/libexec; samotná synchronizace webu jej neaktualizuje. Produkční meteorologická databáze, WeeWX a původní JPEG snímky se nemění.
+
+
 ## 2026-11-17 – Kamera: přehrávání MP4 časosběru a diagnostika
 - HTTP `/api/v1/camera/timelapse/:file` podporuje standardní byte-range GET (206 + Content-Range / Accept-Ranges), začátek/konec souboru a suffix; neplatné/nepodporované rozsahy odmítá 416.
 - Na stránce kamery se chyba přehrávání zobrazí návštěvníkovi a lze stáhnout příslušný MP4; seznam funguje pouze pro bezpečné publikované URL a netvrdí, že samotný index zaručuje přehratelnost.
