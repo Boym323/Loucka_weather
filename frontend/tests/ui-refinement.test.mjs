@@ -27,6 +27,12 @@ test('camera gives immediate access to live image, timelapse and photographs',as
  }
  assert.match(page,/class="camera-view-navigation"/);
  assert.match(page,/<details class="section camera-direction camera-technical-note">/);
+ assert.ok(page.indexOf('<CameraArchive />')<page.indexOf('<aside class="camera-sidebar">'),
+  'on mobile, video and photos must precede secondary sidebar information');
+ const styles=await read('src/styles/ui-refinement.css');
+ assert.match(styles,/grid-template-areas:"camera sidebar" "archive archive"/);
+ assert.match(styles,/grid-template-areas:"camera" "archive" "sidebar"/);
+ assert.match(styles,/camera-actions\\{\\s*display:grid/);
  assert.match(page,/<summary>Odkud kamera snímá\?<\/summary>/);
  const video=archive.indexOf('data-archive-player');
  const frames=archive.indexOf('data-archive-frames');
