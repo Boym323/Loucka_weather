@@ -424,6 +424,16 @@ try{
      }));
      if(!controls.auto||!controls.fullscreen||!controls.latest)
       errors.push(size.name+': missing camera controls');
+     const cameraUx=await page.evaluate(()=>({
+      archiveLink:!!document.querySelector('.camera-mode-tabs a[href="#camera-archive-title"]'),
+      timelapseLink:!!document.querySelector('.camera-mode-tabs a[href="#camera-timelapse-title"]'),
+      archiveTarget:!!document.getElementById('camera-archive-title'),
+      timelapseTarget:!!document.getElementById('camera-timelapse-title'),
+      refresh:!!document.querySelector('[data-archive-video-refresh]'),
+      errorFallback:!!document.querySelector('[data-camera-image-fallback][hidden]')
+     }));
+     if(Object.values(cameraUx).some(v=>!v))
+      errors.push(size.name+': camera archive anchors, live refresh or safe image fallback missing');
      // A public JPEG may be rate-limited or unavailable. A correctly rendered
      // fallback is a valid UI state; an unresolved spinner or broken icon is not.
      await page.waitForFunction(()=>{
