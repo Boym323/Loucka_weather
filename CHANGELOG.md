@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-18 – UX etapy: mobilní počasí, grafy a klimatologický atlas
+- Jednotné označení posledních ověřených hodnot i po selhání aktualizace, bez doplňování nul nebo domnělých meteo dat.
+- Historické grafy mají srozumitelný prázdný/chybový stav a volbu pro opakování načtení.
+- Mobilní úvodní stránka přináší rychlé odkazy na předpověď, radar a kameru a řadí praktické informace před odborné karty. Kompaktnější graf zachovává skutečný archivní průběh.
+- Atlas má nativní výběr kapitol na mobilu a rozbalitelné pokročilé analýzy s funkčními hlubokými odkazy.
+- Nová cílená UX CSS vrstva a regresní testy, včetně odstranění 320px přetečení odkazu v nadpisu. Podrobnosti v `docs/UX_STAGES_2026-11-18.md`.
+- Pouze DEV frontend: bez zásahů do MariaDB, WeeWX, kamerového kolektoru nebo produkce.
+
+
 ## 2026-11-18 – Audit návštěvnického UX, kamera a provozní úspory
 - Opravené samostatné kotvy pro archiv a časosběr na stránce kamery, přístupnější ovládání nejnovějšího MP4 bez úplného reloadu náhledů.
 - Stav externího JPEG již nepřepisuje dostupnost posledního archivního snímku; chyba zobrazení má náhradní text bez rozbitého obrázku.
