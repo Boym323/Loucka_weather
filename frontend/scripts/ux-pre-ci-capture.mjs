@@ -43,6 +43,21 @@ try{
      if(provenance)provenance.textContent='Testovací hodnoty pro vizuální náhled, nikoli živá data ze stanice.';
     });
    }
+   if(name==='camera'){
+    const controls=await page.evaluate(()=>{
+     const root=document.querySelector('.camera-actions');
+     return {display:root?getComputedStyle(root).display:null,
+      columns:root?getComputedStyle(root).gridTemplateColumns.split(' ').filter(Boolean).length:0,
+      links:document.querySelectorAll('.camera-view-navigation a').length,
+      archiveBeforeAside:!!document.querySelector('.camera-layout-enhanced > .camera-archive-section'),
+      overflow:document.documentElement.scrollWidth>innerWidth+1};
+    });
+    console.log('CAMERA UI REVIEW',width,JSON.stringify(controls));
+    if(width<=390&&(controls.display!=='grid'||controls.columns!==2))
+     throw Error('mobile camera control grid lost: '+JSON.stringify(controls));
+    if(!controls.archiveBeforeAside||controls.links!==3||controls.overflow)
+     throw Error('camera navigation or layout regression: '+JSON.stringify(controls));
+   }
    await page.screenshot({path:out+'/'+name+'-'+width+'-overview.png',fullPage:true});
    await page.screenshot({path:out+'/'+name+'-'+width+'-fold.png',fullPage:false});
    if(name==='atlas'){

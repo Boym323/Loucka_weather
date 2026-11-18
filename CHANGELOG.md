@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-18 – Vizuální doladění přehledu, grafů a kamery
+- Mobilní úvod ponechává skutečná měření dominantní a odděluje jejich přehled, denní souhrn, větrnou růžici a 24h graf do vzdušnějších karet.
+- Grafy a související ovládací prvky mají sjednocenou typografii, popisky, stavy a přístupné ovládání. Chybějící záznamy nadále zůstávají mezerami, bez odhadů.
+- Kamera nyní nabídne jasnou navigaci Aktuální pohled / Časosběr / Fotografie, časosběr před archivem snímků a na mobilu obě média před odbornými informacemi.
+- Zachovány ovládací prvky přehrávání, stažení MP4, obnovování snímků, fullscreen a výběr dne. Provenience archivace versus pořízení snímku se nemění.
+- Cílená barevná a responsivní vrstva `ui-refinement.css`, regresní testy a snímky před/po úpravách.
+
+
 ## 2026-11-18 – Follow-up audit UX: mobil, live měření a atlas
 - Na mobilním úvodu jsou akce Předpověď / Radar / Kamera již pod aktuálními hodnotami, nikoliv až za historickým grafem.
 - Platný živý stav měření není přepsán neúspěšným požadavkem na archiv, chybové/retry stavy zůstávají pravdivé.

@@ -455,9 +455,9 @@ try{
      if(!controls.auto||!controls.fullscreen||!controls.latest)
       errors.push(size.name+': missing camera controls');
      const cameraUx=await page.evaluate(()=>({
-      archiveLink:!!document.querySelector('.camera-mode-tabs a[href="#camera-archive-title"]'),
-      timelapseLink:!!document.querySelector('.camera-mode-tabs a[href="#camera-timelapse-title"]'),
-      archiveTarget:!!document.getElementById('camera-archive-title'),
+      archiveLink:!!document.querySelector('.camera-view-navigation a[href="#camera-photos"]'),
+      timelapseLink:!!document.querySelector('.camera-view-navigation a[href="#camera-timelapse-title"]'),
+      archiveTarget:!!document.getElementById('camera-photos'),
       timelapseTarget:!!document.getElementById('camera-timelapse-title'),
       refresh:!!document.querySelector('[data-archive-video-refresh]'),
       errorFallback:!!document.querySelector('[data-camera-image-fallback]')
