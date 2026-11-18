@@ -72,6 +72,9 @@ try{
    return {
     viewport:window.innerWidth,
     scrollWidth:document.documentElement.scrollWidth,
+    quickTop:(q('.evergreen-quick-access')?.getBoundingClientRect().top??Infinity)+window.scrollY,
+    quickVisible:getComputedStyle(q('.evergreen-quick-access')).display!=='none',
+    windTop:(q('.evergreen-wind')?.getBoundingClientRect().top??Infinity)+window.scrollY,
     overflowElements:[...document.querySelectorAll('body *')].filter(el=>{
      const rect=el.getBoundingClientRect();
      return rect.width>0&&rect.right>window.innerWidth+2&&getComputedStyle(el).position!=='fixed';
@@ -100,6 +103,9 @@ try{
   const light=await measure();
   console.log('LAYOUT',width,JSON.stringify(light));
   if(light.scrollWidth>width+2)errors.push(width+'px: horizontal page overflow '+light.scrollWidth+'; suspects: '+light.overflowElements.join(', '));
+  if(width<=760&&!light.quickVisible)errors.push(width+'px: mobile quick links are hidden');
+  if(width<=390&&light.quickTop>850)errors.push(width+'px: practical weather shortcuts start too low ('+Math.round(light.quickTop)+'px)');
+  if(width<=760&&light.quickTop>=light.windTop)errors.push(width+'px: wind still precedes practical shortcuts');
   if(light.heroRight>width+2)errors.push(width+'px: hero extends past viewport');
   const expectedCols=width<=760?1:width<=1270?2:3;
   if(light.columns!==expectedCols)errors.push(width+'px: hero columns '+light.columns+' expected '+expectedCols);
