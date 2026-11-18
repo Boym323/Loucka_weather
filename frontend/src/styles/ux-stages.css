@@ -86,8 +86,10 @@
  border:1px solid var(--line);border-radius:9px;
  color:var(--text);background:var(--panel-2);font-size:13px;font-weight:650
 }
+.atlas-deep-dive-action .atlas-action-open{display:none}
 .atlas-deep-dive[open] .atlas-deep-dive-action{background:var(--panel-3)}
-.atlas-deep-dive[open] .atlas-deep-dive-action::after{content:' · aktivní'}
+.atlas-deep-dive[open] .atlas-action-open{display:inline}
+.atlas-deep-dive[open] .atlas-action-closed{display:none}
 .atlas-deep-dive-body{border-top:1px solid var(--line);padding:18px}
 .atlas-deep-dive-body [id],.climate-atlas [id]{scroll-margin-top:100px}
 .atlas-expert-section{
