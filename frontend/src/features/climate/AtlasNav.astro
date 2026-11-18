@@ -9,6 +9,12 @@ const entries=[
  {id:'rocenka',url:'/klimatologie/rocenka/',name:'Ročenka',no:'04',subtitle:'Příběh roku'}
 ] as const;
 ---
+<div class="climate-mobile-chapters">
+ <label for="climate-mobile-chapter">Kapitola atlasu</label>
+ <select id="climate-mobile-chapter" data-climate-mobile-chapter aria-label="Vybrat kapitolu klimatologického atlasu">
+  {entries.map(item=><option value={item.url} selected={item.id===active}>{item.name}</option>)}
+ </select>
+</div>
 <nav class="climate-atlas-nav" aria-label="Kapitoly Klimatologického atlasu">
  {entries.map(item=><a href={item.url} aria-current={item.id===active?'page':undefined}>
   <span class="atlas-chapter-number">{item.no}</span>
@@ -16,3 +22,12 @@ const entries=[
   <small>{item.subtitle}</small>
  </a>)}
 </nav>
+
+<script>
+ document.querySelectorAll<HTMLSelectElement>('[data-climate-mobile-chapter]').forEach(select=>{
+  select.addEventListener('change',()=>{
+   const target=select.value;
+   if(/^\/klimatologie\/(?:extremy\/|trendy\/|sezony\/|rocenka\/)?$/.test(target))window.location.assign(target);
+  });
+ });
+</script>
