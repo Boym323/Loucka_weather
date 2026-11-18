@@ -43,6 +43,8 @@ test('camera tabs point to distinct visible archive and timelapse sections',asyn
  assert.match(archive,/id="camera-archive-title"/);
  assert.match(archive,/id="camera-timelapse-title"/);
  assert.match(archive,/#camera-archive-title,#camera-timelapse-title\{scroll-margin-top:90px\}/);
+ assert.match(page,/\.camera-actions button,\.camera-mode-tabs a\{min-height:44px/);
+ assert.match(archive,/\.camera-timelapse-controls \.chart-tab\{min-height:44px/);
 });
 
 test('manual live video refresh preserves the existing playback unless a new video is selected',async()=>{
