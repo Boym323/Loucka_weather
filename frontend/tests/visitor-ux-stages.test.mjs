@@ -27,6 +27,17 @@ test('historical graphs offer a real retry and collapse unavailable chart canvas
  assert.match(styles,/\.chart-figure \.chart-box\[hidden\]\{display:none!important\}/);
 });
 
+test('advanced history shows an actionable fallback instead of a large empty plot',async()=>{
+ const source=await read('src/features/history/AdvancedHistory.astro');
+ const styles=await read('src/styles/ux-stages.css');
+ assert.match(source,/data-advanced-feedback hidden/);
+ assert.match(source,/data-advanced-retry/);
+ assert.match(source,/retry\?\.addEventListener\('click',\(\)=>void refresh\(\)\)/);
+ assert.match(source,/canvas\.hidden=true/);
+ assert.match(source,/if\(!total\)/);
+ assert.match(styles,/\.advanced-history \.advanced-history-chart\[hidden\]/);
+});
+
 test('mobile homepage promotes practical routes without duplicating weather API calls',async()=>{
  const source=await read('src/pages/index.astro');
  const styles=await read('src/styles/ux-stages.css');
