@@ -16,12 +16,18 @@
   </div>
  </div>
  <div class="camera-timelapse-block">
-  <div class="section-heading"><h3>Denní časosběrné video</h3><select data-archive-video aria-label="Vybrat den časosběru" disabled><option>Žádné video</option></select></div>
+  <div class="section-heading"><h3 id="camera-timelapse-title">Denní časosběrné video</h3><div class="camera-timelapse-controls"><select data-archive-video aria-label="Vybrat den časosběru" disabled><option>Žádné video</option></select><button type="button" class="chart-tab" data-archive-video-refresh aria-label="Načíst nejnovější časosběrné video">Načíst nejnovější</button></div></div>
   <video controls preload="none" playsinline data-archive-player hidden aria-label="Časosběr z kamerových archivních fotografií"></video>
   <p class="source-note" data-archive-video-note role="status">Dnešní časosběr vzniká průběžně přibližně každých 15–20 minut z alespoň šesti uložených snímků. Po půlnoci se denní video dokončí. Dny jsou podle času v Česku.</p>
   <a class="panel-link" data-archive-video-download hidden download>Stáhnout vybraný časosběr MP4</a>
  </div>
 </section>
+<style>
+ .camera-archive-section,.camera-timelapse-block{scroll-margin-top:90px}
+ .camera-timelapse-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+ .camera-timelapse-controls .chart-tab{min-height:36px;padding:7px 10px}
+ @media(max-width:650px){.camera-timelapse-controls{width:100%}.camera-timelapse-controls select{min-width:0;flex:1}.camera-timelapse-controls button{flex-shrink:0}}
+</style>
 <script>
  const root=document.querySelector<HTMLElement>('[data-camera-archive]');
  if(root){
@@ -31,6 +37,7 @@
   const player=root.querySelector<HTMLVideoElement>('[data-archive-player]');
   const videoNote=root.querySelector<HTMLElement>('[data-archive-video-note]');
   const download=root.querySelector<HTMLAnchorElement>('[data-archive-video-download]');
+  const videoRefresh=root.querySelector<HTMLButtonElement>('[data-archive-video-refresh]');
   const ctrl=new AbortController();
   // Browser codecs or media byte ranges can fail after the archive index
   // correctly lists a video. Report the playback failure to the visitor.
@@ -79,6 +86,71 @@
   }
   type Frame={fetchedAt:string;url:string};
   type Video={date:string;url:string;state?:'live'|'complete'};
+  let listedVideos:Video[]=[];
+  const validVideo=(video:Video)=>typeof video.url==='string'&&
+   /^\/api\/v1\/camera\/timelapse\/\d{4}-\d{2}-\d{2}(?:-v\d{10})?\.mp4$/.test(video.url);
+  const choose=(url:string,userSelected=false)=>{
+   if(ctrl.signal.aborted||!select||!player)return;
+   player.pause();
+   // Avoid immediate MP4 downloads on initial load. A user-requested switch
+   // can load the selected URL and its HTTP Range data.
+   player.src=url;
+   if(userSelected)player.load();
+   if(download){download.hidden=false;download.href=url;}
+   const isLive=listedVideos.find(v=>v.url===url)?.state==='live';
+   if(videoNote)videoNote.textContent='Časosběr '+(select.selectedOptions[0]?.textContent??'')+
+    ' je připravený. Klikni na přehrát; případně stáhni MP4.'+
+    (isLive?' Pro novější průběžný záznam použij Načíst nejnovější.':'');
+  };
+  const showVideos=(items:Video[],forceLatest=false)=>{
+   if(!select||!player||ctrl.signal.aborted)return;
+   const videos=items.filter(validVideo);
+   const previous=select.value;
+   listedVideos=videos;
+   if(videos.length){
+    select.replaceChildren();
+    for(const v of videos){
+     const option=document.createElement('option');option.value=v.url;
+     option.textContent=v.date+(v.state==='live'?' · průběžný':' · dokončený');
+     select.append(option);
+    }
+    select.disabled=false;player.hidden=false;
+    if(!previous)choose(videos[0].url);
+    else if(forceLatest||!videos.some(v=>v.url===previous)){
+     choose(videos[0].url,true);
+    }else{
+     select.value=previous;
+     // A refresh without a new MP4 must not interrupt current playback.
+     if(player.getAttribute('src')!==previous)choose(previous);
+     else if(videoNote)videoNote.textContent='Přehráváš nejnovější dostupnou verzi vybraného časosběru.';
+    }
+   }else{
+    select.replaceChildren();
+    const option=document.createElement('option');option.textContent='Žádné video';select.append(option);
+    select.disabled=true;player.pause();player.hidden=true;
+    if(download)download.hidden=true;
+    if(videoNote)videoNote.textContent='Zatím není dostupné žádné časosběrné MP4. Dnešní záznam vznikne po šesti různých snímcích, pokud funguje FFmpeg; dokončené video se vytváří po půlnoci.';
+   }
+  };
+  select?.addEventListener('change',()=>choose(select.value,true));
+  videoRefresh?.addEventListener('click',async()=>{
+   if(ctrl.signal.aborted||videoRefresh.disabled)return;
+   videoRefresh.disabled=true;
+   videoRefresh.textContent='Načítám…';
+   try{
+    const response=await fetch('/api/v1/camera/archive',{signal:ctrl.signal,cache:'no-store'});
+    if(!response.ok)throw Error('Camera archive HTTP '+response.status);
+    const data=await response.json() as {status:string;videos:Video[]};
+    if(ctrl.signal.aborted)return;
+    if(data.status!=='ok')throw Error('Camera archive unavailable');
+    showVideos(Array.isArray(data.videos)?data.videos:[],true);
+   }catch{
+    if(!ctrl.signal.aborted&&videoNote)videoNote.textContent='Novější časosběr se nepodařilo načíst. Stávající video zůstává dostupné; zkus to znovu.';
+   }finally{
+    videoRefresh.disabled=false;
+    videoRefresh.textContent='Načíst nejnovější';
+   }
+  });
   void fetch('/api/v1/camera/archive',{signal:ctrl.signal}).then(r=>r.json() as Promise<{status:string;frames:Frame[];videos:Video[]}>).then(data=>{
    if(ctrl.signal.aborted||!frames)return;
    frames.replaceChildren();
@@ -97,32 +169,7 @@
      link.append(img,label);frames.append(link);
     }
    }
-   const videos=(Array.isArray(data.videos)?data.videos:[]).filter(v=>
-    typeof v.url==='string'&&/^\/api\/v1\/camera\/timelapse\/\d{4}-\d{2}-\d{2}(?:-v\d{10})?\.mp4$/.test(v.url));
-   if(select&&player&&videos.length){
-    select.replaceChildren();
-    for(const v of videos){
-     const option=document.createElement('option');option.value=v.url;option.textContent=v.date+(v.state==='live'?' · průběžný':' · dokončený');
-     select.append(option);
-    }
-    const choose=(url:string,userSelected=false)=>{
-     if(ctrl.signal.aborted)return;
-     player.pause();
-     // With preload="none" setting src is enough. Calling load() on page
-     // startup forces an unnecessary MP4 request alongside queued thumbnails,
-     // and can hit shared Nginx rate limits before the visitor presses Play.
-     player.src=url;
-     if(userSelected)player.load();
-     if(download){download.hidden=false;download.href=url;}
-     if(videoNote)videoNote.textContent='Časosběr '+(select.selectedOptions[0]?.textContent??'')+
-      ' je připravený. Klikni na přehrát; případně stáhni MP4.'+
-      (videos.find(v=>v.url===url)?.state==='live'?' Pro novější průběžný záznam obnov stránku.':'');
-    };
-    select.disabled=false;player.hidden=false;choose(videos[0].url);
-    select.addEventListener('change',()=>choose(select.value,true));
-   }else{
-    if(videoNote)videoNote.textContent='Zatím není dostupné žádné časosběrné MP4. Dnešní záznam vznikne po šesti různých snímcích, pokud funguje FFmpeg; dokončené video se vytváří po půlnoci.';
-   }
+   showVideos(Array.isArray(data.videos)?data.videos:[]);
   }).catch(()=>{
    if(ctrl.signal.aborted)return;
    if(status)status.textContent='Archiv nedostupný';
