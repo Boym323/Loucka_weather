@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-18 – Audit návštěvnického UX, kamera a provozní úspory
+- Opravené samostatné kotvy pro archiv a časosběr na stránce kamery, přístupnější ovládání nejnovějšího MP4 bez úplného reloadu náhledů.
+- Stav externího JPEG již nepřepisuje dostupnost posledního archivního snímku; chyba zobrazení má náhradní text bez rozbitého obrázku.
+- Stránka stavu neprovádí pravidelné kontroly při skryté kartě a hlavička korektně uklízí časovač hodin při navigaci.
+- Srozumitelnější návštěvnické texty a explicitní informace o UTC galerii proti místním časům videí.
+- Nové regresní testy a veřejné smoke aserce; provozní/produkční brány a meteorologická databáze bez změn. Závěry a omezení v `docs/VISITOR_UX_CAMERA_AUDIT_2026-11-18.md`.
+
+
 ## 2026-11-18 – Průběžný dnešní časosběr (DEV kamera)
 - Kamera nově sestavuje denní video podle kalendářního dne v Europe/Prague, správně i při přechodu zimního a letního času; po šesti různých JPEG jsou během dne vytvářeny průběžné verze nejvýše každých 15 minut (při desetiminutové archivaci přibližně každých 20 minut).
 - Průběžné MP4 mají neměnná verzovaná jména, publikují se až po úspěšném převodu a zůstávají ještě několik hodin k dispozici pro rozběhnuté HTTP Range přehrávání. Po místní půlnoci vzniká jednou dokončené denní MP4.
