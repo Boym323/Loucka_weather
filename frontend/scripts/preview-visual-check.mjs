@@ -430,7 +430,7 @@ try{
       archiveTarget:!!document.getElementById('camera-archive-title'),
       timelapseTarget:!!document.getElementById('camera-timelapse-title'),
       refresh:!!document.querySelector('[data-archive-video-refresh]'),
-      errorFallback:!!document.querySelector('[data-camera-image-fallback][hidden]')
+      errorFallback:!!document.querySelector('[data-camera-image-fallback]')
      }));
      if(Object.values(cameraUx).some(v=>!v))
       errors.push(size.name+': camera archive anchors, live refresh or safe image fallback missing');
