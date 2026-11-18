@@ -17,6 +17,9 @@ test('camera timelapse retains video controls and safe MP4 download fallback',as
  assert.match(component,/choose\(videos\[0\]\.url\)/);
  assert.match(component,/choose\(select\.value,true\)/);
  assert.match(component,/videos\.length/);
+ assert.match(component,/v\.state==='live'/);
+ assert.match(component,/průběžný/);
+ assert.match(component,/-v\\d\{10\}/);
  assert.match(component,/žádné časosběrné MP4/);
 });
 
