@@ -62,7 +62,7 @@ const tabs = [
    if(status){status.textContent='Načítání…';status.className='status-chip';}
    if(retry)retry.hidden=true;
    if(figure)figure.dataset.chartState='loading';
-   element.hidden=false;
+   if(element)element.hidden=false;
    if(summary)summary.replaceChildren();
    if(message)message.textContent='Načítání archivních měření…';
    try{
@@ -110,7 +110,7 @@ const tabs = [
     });
     if(status){status.textContent=valid.length+' naměřených bodů';status.className='status-chip '+(valid.length?'ok':'warning');}
     if(figure)figure.dataset.chartState=valid.length?'ready':'empty';
-    element.hidden=!valid.length;
+    if(element)element.hidden=!valid.length;
     if(message)message.textContent=valid.length?'Mezery označují chybějící měření.':'Pro vybraný rozsah nejsou dostupné platné údaje. Zkus jinou veličinu nebo období.';
     if(summary&&valid.length){
      const values=valid.map(point=>point[1]);
@@ -128,7 +128,7 @@ const tabs = [
     chart.clear();
     if(status){status.textContent='Historie nedostupná';status.className='status-chip error';}
     if(figure)figure.dataset.chartState='error';
-    element.hidden=true;
+    if(element)element.hidden=true;
     if(retry)retry.hidden=false;
     if(message)message.textContent='Historická data se nepodařilo načíst. Můžeš zkusit opakovat požadavek.';
    }
