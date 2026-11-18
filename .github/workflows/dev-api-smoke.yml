@@ -1,0 +1,34 @@
+name: One-off live DEV API and MP4 smoke
+
+on:
+  push:
+    branches: [audit/dev-operational-smoke-20261118]
+    paths:
+      - ".github/workflows/dev-api-smoke.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+      - name: Ensure ffprobe is present
+        run: ffprobe -version | head -n 1
+      - name: Check deployed DEV metadata, API, noindex and full MP4
+        run: node scripts/dev-api-verification.mjs
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: live-api-mp4-results
+          path: frontend/test-results/dev-api-verify
+          retention-days: 7
+          if-no-files-found: warn
