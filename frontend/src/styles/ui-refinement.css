@@ -1,0 +1,461 @@
+/* Počasí Loučka · visual refinement
+   Scope: rendering and navigation only, never manufacture weather readings.
+   Retain the existing light/dark tokens and station identity. */
+:root{
+ --ui-control-radius:10px;
+ --ui-card-radius:17px;
+ --ui-space-sm:10px;
+ --ui-space-md:16px;
+ --ui-muted-readable:var(--muted);
+}
+
+/* Shared data controls: consistent weights, labels and touch dimensions. */
+:is([data-history-chart],.advanced-history,[data-rain-detail]){
+ --ui-data-grid:var(--line);
+}
+:is([data-history-chart],.advanced-history,[data-rain-detail]) .section-heading h2{
+ font-size:clamp(17px,2vw,21px);
+ font-weight:650;
+ letter-spacing:-.025em;
+ line-height:1.3
+}
+:is([data-history-chart],.advanced-history,[data-rain-detail]) .chart-toolbar{
+ display:flex;
+ flex-wrap:wrap;
+ gap:7px;
+ align-items:center
+}
+:is([data-history-chart],.advanced-history,[data-rain-detail]) .chart-tab{
+ min-height:40px;
+ padding:9px 13px;
+ border-radius:var(--ui-control-radius);
+ font-size:12px;
+ font-weight:600;
+ line-height:1.25
+}
+:is([data-history-chart],.advanced-history,[data-rain-detail]) .chart-tab[aria-pressed="true"]{
+ background:var(--panel-3);
+ border-color:var(--teal);
+ color:var(--text);
+ font-weight:700
+}
+:is([data-history-chart],.advanced-history,[data-rain-detail]) .chart-tab:focus-visible,
+.camera-view-navigation a:focus-visible{
+ outline:3px solid var(--teal);
+ outline-offset:2px
+}
+:is([data-history-chart],.advanced-history,[data-rain-detail]) .chart-summary{
+ display:flex;gap:8px 10px;align-items:center;
+ font-size:12px;line-height:1.5;margin-block:11px 5px
+}
+:is([data-history-chart],.advanced-history,[data-rain-detail]) .chart-summary span{
+ border:1px solid var(--line);
+ border-radius:8px;
+ background:var(--panel-2);
+ padding:7px 10px;
+ font-size:12px;
+ font-variant-numeric:tabular-nums
+}
+:is([data-history-chart],.advanced-history,[data-rain-detail]) .chart-message,
+:is([data-history-chart],.advanced-history,[data-rain-detail]) .history-legend,
+:is([data-history-chart],.advanced-history,[data-rain-detail]) .source-note{
+ font-size:12px;
+ line-height:1.55;
+ color:var(--ui-muted-readable)
+}
+[data-history-chart]:not([data-hero="true"]) .chart-figure{
+ background:var(--panel-2);
+ border:1px solid var(--line);
+ border-radius:var(--ui-card-radius);
+ padding:clamp(9px,2vw,17px)
+}
+[data-history-chart]:not([data-hero="true"]) .chart-box{
+ max-width:100%;
+}
+.advanced-history .advanced-history-chart{
+ border:1px solid var(--line);
+ border-radius:var(--ui-card-radius);
+ overflow:hidden;
+ background:var(--panel-2)
+}
+
+/* The camera is a visual destination rather than a wall of metadata. */
+.camera-page-intro{
+ padding-block:4px 12px
+}
+.camera-page-intro p{
+ max-width:65ch;
+ font-size:14px;
+ line-height:1.6
+}
+.camera-view-navigation{
+ display:flex;gap:8px;flex-wrap:wrap;
+ align-items:center;
+ margin:0 0 16px;
+ padding:0 0 13px;
+ border-bottom:1px solid var(--line)
+}
+.camera-view-navigation a{
+ min-height:44px;
+ display:inline-flex;align-items:center;justify-content:center;
+ gap:8px;
+ padding:9px 16px;
+ border:1px solid var(--line);
+ border-radius:999px;
+ background:var(--panel);
+ color:var(--text);
+ text-decoration:none;
+ font-size:13px;
+ font-weight:650;
+ transition:background-color .16s ease,border-color .16s ease
+}
+.camera-view-navigation a:first-child{
+ border-color:var(--teal);
+ background:var(--panel-3)
+}
+.camera-view-navigation a:hover{
+ background:var(--panel-3);
+ border-color:var(--teal)
+}
+.camera-view-navigation a span{font-size:17px;line-height:1;color:var(--teal)}
+#camera-current,#camera-photos,#camera-archive-title,#camera-timelapse-title{scroll-margin-top:95px}
+.camera-layout-enhanced{
+ grid-template-columns:minmax(0,3.2fr) minmax(230px,.8fr);
+ gap:16px
+}
+.camera-layout-enhanced .camera-panel{
+ padding:clamp(12px,2vw,20px)!important;
+ border-radius:var(--ui-card-radius)
+}
+.camera-layout-enhanced .camera-panel>.section-heading{
+ gap:8px;
+ margin-bottom:12px
+}
+.camera-layout-enhanced .camera-panel>.section-heading h2{
+ font-size:clamp(17px,2vw,20px)
+}
+.camera-layout-enhanced .camera-image-large{
+ background:var(--panel-2);
+ min-height:0;
+ aspect-ratio:16/9;
+ border-radius:13px;
+ overflow:hidden;
+ display:grid;
+ place-items:center
+}
+.camera-layout-enhanced .camera-image-large img{
+ display:block;
+ min-height:0;
+ max-height:none;
+ height:100%;
+ width:100%;
+ object-fit:contain
+}
+.camera-layout-enhanced .camera-image-large img[hidden]{display:none!important}
+.camera-layout-enhanced .camera-actions{
+ display:flex;
+ align-items:center;
+ gap:8px 10px;
+ margin-top:10px
+}
+.camera-layout-enhanced .camera-actions button,
+.camera-layout-enhanced .camera-actions a{
+ min-height:44px;
+ border-radius:var(--ui-control-radius)
+}
+.camera-layout-enhanced .camera-refresh{
+ padding:10px 15px;
+ background:var(--teal);
+ color:var(--panel);
+ font-weight:700
+}
+.camera-layout-enhanced [data-camera-message],
+.camera-layout-enhanced [data-camera-checked]{
+ font-size:12px;
+ line-height:1.55;
+ color:var(--muted)
+}
+.camera-layout-enhanced .camera-sidebar{
+ gap:12px;
+ align-content:start
+}
+.camera-layout-enhanced .camera-sidebar .section{
+ border-radius:var(--ui-card-radius)
+}
+.camera-layout-enhanced .camera-info .section-heading h2{
+ font-size:16px
+}
+.camera-technical-note{
+ padding:0!important;
+ overflow:clip
+}
+.camera-technical-note>summary{
+ cursor:pointer;
+ padding:14px 17px;
+ font-size:13px;
+ font-weight:650;
+ min-height:44px;
+ list-style-position:inside
+}
+.camera-technical-note[open]{
+ padding-bottom:12px!important
+}
+.camera-technical-note .camera-direction-symbol{
+ height:45px;
+ font-size:26px
+}
+.camera-technical-note .lead{
+ padding:0 16px;
+ margin-bottom:0;
+ font-size:12px;
+ line-height:1.6
+}
+
+/* Two separate media experiences, with video ahead of the image archive. */
+.camera-archive-section{
+ border-radius:var(--ui-card-radius);
+ padding:clamp(14px,2.5vw,24px);
+ margin-top:18px
+}
+.camera-archive-section .camera-archive-heading{
+ margin-bottom:7px
+}
+.camera-archive-section .camera-archive-heading h2{
+ font-size:clamp(19px,2.5vw,24px)
+}
+.camera-archive-intro{
+ margin:5px 0 18px;
+ max-width:75ch;
+ font-size:13px;
+ line-height:1.6;
+ color:var(--muted)
+}
+.camera-archive-views{display:grid;gap:19px}
+.camera-mode-surface{
+ min-width:0;
+ border:1px solid var(--line);
+ border-radius:var(--ui-card-radius);
+ background:var(--panel);
+ padding:clamp(12px,2vw,19px);
+}
+.camera-mode-heading{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ gap:10px 16px;
+ margin-bottom:13px
+}
+.camera-mode-heading .eyebrow{
+ font-size:11px;
+ letter-spacing:.07em;
+}
+.camera-mode-heading h3{
+ font-size:clamp(17px,2vw,21px);
+ font-weight:650;
+ letter-spacing:-.02em;
+ margin:4px 0
+}
+.camera-timelapse-block.camera-mode-surface{
+ border:1px solid var(--line);
+ margin:0;
+ padding:clamp(12px,2vw,19px);
+}
+.camera-timelapse-block .camera-timelapse-controls{
+ gap:8px;
+}
+.camera-timelapse-block .camera-timelapse-controls select{
+ min-height:44px;
+ border-radius:var(--ui-control-radius);
+ padding:9px 11px;
+ font-size:13px;
+ max-width:100%
+}
+.camera-timelapse-block video{
+ display:block;
+ width:100%;
+ max-width:none;
+ aspect-ratio:16/9;
+ border-radius:13px;
+ background:#071622;
+ border:1px solid var(--line)
+}
+.camera-timelapse-block video[hidden]{display:none!important}
+.camera-timelapse-block .source-note{
+ margin:10px 0;
+ max-width:78ch;
+ font-size:12px;
+ line-height:1.55
+}
+.camera-timelapse-block .panel-link{
+ display:inline-flex;
+ align-items:center;
+ min-height:44px;
+ font-size:13px;
+ font-weight:650
+}
+.camera-timelapse-block .panel-link[hidden]{display:none!important}
+.camera-photos-hint{font-size:12px;color:var(--muted)}
+.camera-photos-block .camera-archive-grid{gap:10px}
+.camera-photos-block .camera-archive-thumb{
+ border-radius:10px;
+ overflow:hidden;
+}
+.camera-photos-block .camera-archive-thumb>span:last-child:not(.camera-thumb-message){
+ font-size:12px;
+ padding:8px 10px;
+ line-height:1.45
+}
+.camera-photos-block .camera-day-browser{
+ margin-top:20px;
+ padding-top:16px
+}
+.camera-photos-block .camera-day-browser h3{font-size:15px}
+.camera-photos-block .camera-day-browser .source-note{font-size:12px;line-height:1.55}
+.camera-photos-block .camera-day-choice input{min-height:44px;color-scheme:inherit}
+.camera-photos-block .camera-day-browser .chart-tab{min-height:44px}
+@media(max-width:900px){
+ .camera-layout-enhanced{grid-template-columns:1fr}
+}
+@media(max-width:760px){
+ .evergreen-home .evergreen-scene{
+  padding-bottom:0
+ }
+ .evergreen-scene .atlas-hero.observatory-hero.evergreen-hero{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:auto;
+  grid-template-areas:"core" "quick" "daily" "wind" "chart";
+  gap:10px;
+  min-height:0;
+  overflow:visible;
+  padding:0;
+  background:transparent;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none
+ }
+ .evergreen-scene .evergreen-hero>.evergreen-core,
+ .evergreen-scene .evergreen-hero>.evergreen-daily,
+ .evergreen-scene .evergreen-hero>.evergreen-wind,
+ .evergreen-scene .evergreen-hero>.evergreen-chart{
+  min-width:0;
+  background:var(--panel);
+  border:1px solid var(--line)!important;
+  border-radius:var(--ui-card-radius);
+  box-shadow:0 2px 10px rgba(19,60,70,.045)
+ }
+ .evergreen-scene .evergreen-hero>.evergreen-core{
+  padding:14px 16px 10px!important;
+  background:var(--panel)
+ }
+ .evergreen-scene .evergreen-hero>.evergreen-quick-access{
+  margin:0!important;
+  padding:0 2px;
+  z-index:auto
+ }
+ .evergreen-scene .evergreen-hero>.evergreen-daily{
+  padding:8px 11px 10px!important;
+ }
+ .evergreen-scene .evergreen-hero>.evergreen-wind{
+  padding:10px 14px!important
+ }
+ .evergreen-scene .evergreen-hero>.evergreen-chart{
+  padding:12px 14px!important
+ }
+ .evergreen-home .evergreen-hero .wind-hero .wind-gauge{
+  width:100px;
+  height:100px
+ }
+ .evergreen-home .evergreen-hero .wind-hero .wind-layout{
+  grid-template-columns:100px minmax(0,1fr);
+  gap:13px;
+  margin-block:0
+ }
+ .evergreen-home .evergreen-hero .wind-hero .section-heading{
+  margin-bottom:7px
+ }
+ .evergreen-home .evergreen-hero .history-hero .chart-box{
+  height:145px!important;
+  min-height:145px!important
+ }
+ .evergreen-home .evergreen-hero .history-hero .history-legend{
+  font-size:12px
+ }
+ .evergreen-scene .evergreen-hero .evergreen-quick-access a{
+  min-height:48px;
+  border-radius:11px;
+  background:var(--panel);
+  border:1px solid var(--line);
+  box-shadow:0 1px 3px rgba(16,62,72,.04);
+  font-size:12px;
+  font-weight:650
+ }
+ .evergreen-scene .evergreen-hero .evergreen-quick-access a:hover{
+  border-color:var(--teal);
+  background:var(--panel-2)
+ }
+ .camera-view-navigation{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:6px;
+  margin-bottom:12px;
+ }
+ .camera-view-navigation a{
+  min-width:0;
+  padding:8px 7px;
+  font-size:12px;
+  gap:5px;
+  border-radius:11px;
+  text-align:center
+ }
+ .camera-view-navigation a span{font-size:14px}
+ .camera-layout-enhanced .camera-sidebar{grid-template-columns:1fr}
+ .camera-layout-enhanced .camera-panel{padding:12px!important}
+ .camera-layout-enhanced .camera-image-large{border-radius:11px}
+ .camera-layout-enhanced .camera-actions{gap:8px}
+ .camera-layout-enhanced .camera-actions button,.camera-layout-enhanced .camera-actions a{
+  flex:1 1 auto;
+  min-width:min(100%,115px);
+  font-size:12px
+ }
+ .camera-mode-heading{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  align-items:start;
+  gap:7px
+ }
+ .camera-timelapse-block .camera-timelapse-controls{
+  width:100%;
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+ }
+ .camera-timelapse-block .camera-timelapse-controls select{width:100%}
+ .camera-timelapse-block .camera-timelapse-controls button{
+  width:100%;
+  justify-self:stretch
+ }
+ .camera-photos-hint{display:none}
+ .camera-photos-block .camera-day-browser .section-heading{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:8px
+ }
+ .camera-photos-block .camera-day-choice{width:100%;justify-content:space-between}
+ .camera-photos-block .camera-day-choice input{width:100%;max-width:none;min-width:0}
+}
+@media(max-width:360px){
+ .evergreen-home .evergreen-hero .wind-hero .wind-layout{
+  grid-template-columns:94px minmax(0,1fr);
+  gap:8px
+ }
+ .evergreen-home .evergreen-hero .wind-hero .wind-gauge{
+  width:94px;height:94px
+ }
+ .camera-view-navigation a{font-size:11px;gap:3px;padding-inline:4px}
+}
+@media(prefers-reduced-motion:reduce){
+ .camera-view-navigation a{transition:none}
+}
