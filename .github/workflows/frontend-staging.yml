@@ -55,11 +55,14 @@ jobs:
           node scripts/climate-atlas-browser-check.mjs
           node scripts/wind-compass-browser-check.mjs
           node scripts/current-failover-race-browser-check.mjs
+          node scripts/climate-firstfold-review.mjs
       - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: evergreen-layout-audit
-          path: frontend/test-results/layout-audit
+          path: |
+            frontend/test-results/layout-audit
+            frontend/test-results/climate-firstfold-review
           retention-days: 7
           if-no-files-found: ignore
       - uses: actions/upload-artifact@v7

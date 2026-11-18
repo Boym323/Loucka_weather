@@ -15,33 +15,40 @@ import AllYearsTemperature from '../features/climate/AllYearsTemperature.astro';
    <p class="atlas-subtitle">Co si Loučka pamatuje o svém počasí? Prozkoumej výjimečné dny, porovnej roční období, sleduj dlouhodobý vývoj a sestav si osobní meteorologickou ročenku.</p>
   </header>
   <AtlasNav active="prehled" />
-  <ClimateHighlights />
-  <div class="climate-atlas-grid" aria-label="Kapitoly atlasu">
+  <div class="atlas-chapter-heading">
+   <div>
+    <p class="atlas-eyebrow">Prozkoumat původní archiv</p>
+    <h2 id="atlas-chapters-title">Vyber si kapitolu</h2>
+   </div>
+   <p>Čtyři cesty do historie počasí v Loučce.</p>
+  </div>
+  <div class="climate-atlas-grid" aria-labelledby="atlas-chapters-title">
    <a class="climate-atlas-card" href="/klimatologie/extremy/">
     <span class="number">01 / HISTORICKÉ MILNÍKY</span>
-    <h2>Extrémy</h2>
+    <h3>Extrémy</h3>
     <p>Nejnižší a nejvyšší naměřená teplota, srážkové epizody, vítr a významné kalendářní dny.</p>
     <span class="chapter-link">Prozkoumat rekordy</span>
    </a>
    <a class="climate-atlas-card" href="/klimatologie/trendy/">
     <span class="number">02 / VÝVOJ V ČASE</span>
-    <h2>Trendy</h2>
+    <h3>Trendy</h3>
     <p>Roční souhrny, srážkový atlas, pokrytí historické vlhkosti a popis změn teploty, srážek a větru.</p>
     <span class="chapter-link">Otevřít trendy</span>
    </a>
    <a class="climate-atlas-card" href="/klimatologie/sezony/">
     <span class="number">03 / KALENDÁŘ POČASÍ</span>
-    <h2>Srovnání sezón</h2>
+    <h3>Srovnání sezón</h3>
     <p>Porovnej dvě jara, léta, podzimy nebo zimy na společně dostupných dnech.</p>
     <span class="chapter-link">Vybrat roční období</span>
    </a>
    <a class="climate-atlas-card" href="/klimatologie/rocenka/">
     <span class="number">04 / OSOBNÍ ARCHIV</span>
-    <h2>Meteorologická ročenka</h2>
+    <h3>Meteorologická ročenka</h3>
     <p>Vytvoř přehled konkrétního roku z doložených měření a vytiskni jej do PDF.</p>
     <span class="chapter-link">Vytvořit ročenku</span>
    </a>
   </div>
+  <ClimateHighlights />
   <p class="climate-atlas-note">Starší měření nejsou vždy úplná. U rekordů a dlouhodobých srovnání proto ber výsledky jako orientační.</p>
   <details class="climate-atlas-data-note">
    <summary>Jak pracujeme s historickými údaji?</summary>
