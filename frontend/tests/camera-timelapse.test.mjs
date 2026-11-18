@@ -35,15 +35,18 @@ test('public camera smoke requests actual partial MP4 when a video is listed',as
 });
 
 
-test('camera tabs point to distinct visible archive and timelapse sections',async()=>{
+test('camera navigation points to actual live, photo and timelapse sections',async()=>{
  const page=await read('src/pages/kamera.astro');
  const archive=await read('src/features/camera/CameraArchive.astro');
- assert.match(page,/href="#camera-archive-title">Archiv snímků/);
- assert.match(page,/href="#camera-timelapse-title">Časosběr/);
+ const styles=await read('src/styles/ui-refinement.css');
+ for(const id of ['camera-current','camera-photos','camera-timelapse-title']){
+  assert.ok(page.includes('href="#'+id+'"'),'missing camera nav link '+id);
+  assert.ok((page+archive).includes('id="'+id+'"'),'missing camera anchor '+id);
+ }
+ assert.match(page,/class="camera-view-navigation"/);
  assert.match(archive,/id="camera-archive-title"/);
- assert.match(archive,/id="camera-timelapse-title"/);
- assert.match(archive,/#camera-archive-title,#camera-timelapse-title\{scroll-margin-top:90px\}/);
- assert.match(page,/\.camera-actions button,\.camera-mode-tabs a\{min-height:44px/);
+ assert.match(styles,/\.camera-view-navigation a\{/);
+ assert.match(styles,/min-height:44px/);
  assert.match(archive,/\.camera-timelapse-controls \.chart-tab\{min-height:44px/);
 });
 
