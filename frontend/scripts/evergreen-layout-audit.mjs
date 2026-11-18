@@ -12,6 +12,19 @@ const browser=await chromium.launch({headless:true});
 try{
  for(const width of widths){
   const context=await browser.newContext({viewport:{width,height:900},deviceScaleFactor:1});
+  // Coherent test-only API response, never a real station reading.
+  const layoutReadings={
+   outTemp:{value:-18.9,unit:'degC',quality:'measured',source:'weewx_archive'},
+   outHumidity:{value:100,unit:'percent',quality:'measured',source:'weewx_archive'},
+   barometer:{value:1045.3,unit:'hPa',quality:'measured',source:'weewx_archive'},
+   dewpoint:{value:-21.2,unit:'degC',quality:'measured',source:'weewx_archive'}
+  };
+  await context.route('**/api/v1/current**',route=>route.fulfill({
+   status:200,contentType:'application/json',
+   body:JSON.stringify({schemaVersion:'1',observedAt:new Date().toISOString(),stale:false,
+    units:'metricwx',dataset:'original',dataRevision:'browser-layout-only',
+    readings:layoutReadings})
+  }));
   const page=await context.newPage();
   // Geometry audit must be deterministic regardless of Loučka sunrise/sunset.
   await page.addInitScript(()=>{
@@ -29,12 +42,17 @@ try{
    await new Promise(resolve=>setTimeout(resolve,500));
   }
   if(!loaded){errors.push(width+'px: local preview unavailable');await context.close();continue;}
+  // The screenshots must never show numerical values alongside "unavailable".
+  await page.waitForFunction(()=>document.querySelector('.evergreen-hero [data-current-status]')
+   ?.textContent?.includes('Poslední měření'),null,{timeout:10000});
   await page.evaluate(()=>{
-   const values={outTemp:'-18,9',outHumidity:'100',barometer:'1045,3',dewpoint:'-21,2'};
-   for(const [id,value] of Object.entries(values)){
-    const node=document.querySelector('[data-metric-value="'+id+'"]');
-    if(node)node.textContent=value;
-   }
+   const section=document.querySelector('.evergreen-hero [data-current-panel]');
+   const status=section?.querySelector('[data-current-status]');
+   const note=section?.querySelector('[data-current-provenance]');
+   if(status){status.textContent='TEST – měření';status.className='status-chip warning';}
+   if(note)note.textContent='Syntetické hodnoty pouze pro vizuální test, nikoli počasí v Loučce.';
+   for(const quality of section?.querySelectorAll('[data-metric-quality]')??[])
+    quality.textContent='Testovací údaj';
   });
   const measure=()=>page.evaluate(()=>{
    const q=selector=>document.querySelector(selector);
