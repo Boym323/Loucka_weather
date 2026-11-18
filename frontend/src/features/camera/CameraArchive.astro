@@ -7,6 +7,7 @@
    <h3>Procházet archiv podle dne</h3>
    <label class="camera-day-choice">Den (UTC) <input type="date" data-archive-date /></label><button type="button" class="chart-tab" data-archive-load-day>Načíst den</button>
   </div>
+  <p class="source-note">Fotografie se procházejí po dnech UTC, denní videa podle času v Česku.</p>
   <p class="source-note" data-archive-day-status>Vyber datum od začátku archivace.</p>
   <div class="camera-archive-grid" data-archive-day-frames></div>
   <div class="camera-day-pagination" data-archive-page-controls hidden>
@@ -105,7 +106,7 @@
   const showVideos=(items:Video[],forceLatest=false)=>{
    if(!select||!player||ctrl.signal.aborted)return;
    const videos=items.filter(validVideo);
-   const previous=select.value;
+   const previous=select.disabled?'':select.value;
    listedVideos=videos;
    if(videos.length){
     select.replaceChildren();
@@ -116,7 +117,10 @@
     }
     select.disabled=false;player.hidden=false;
     if(!previous)choose(videos[0].url);
-    else if(forceLatest||!videos.some(v=>v.url===previous)){
+    else if(forceLatest&&videos[0].url===previous){
+     select.value=previous;
+     if(videoNote)videoNote.textContent='Už máš nejnovější dostupný časosběr.';
+    }else if(forceLatest||!videos.some(v=>v.url===previous)){
      choose(videos[0].url,true);
     }else{
      select.value=previous;
@@ -132,7 +136,7 @@
     if(videoNote)videoNote.textContent='Zatím není dostupné žádné časosběrné MP4. Dnešní záznam vznikne po šesti různých snímcích, pokud funguje FFmpeg; dokončené video se vytváří po půlnoci.';
    }
   };
-  select?.addEventListener('change',()=>choose(select.value,true));
+  if(select)select.addEventListener('change',()=>choose(select.value,true));
   videoRefresh?.addEventListener('click',async()=>{
    if(ctrl.signal.aborted||videoRefresh.disabled)return;
    videoRefresh.disabled=true;
