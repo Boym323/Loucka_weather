@@ -117,7 +117,7 @@
  background:var(--panel-3);
  border-color:var(--teal)
 }
-.camera-view-navigation a span{font-size:17px;line-height:1;color:var(--teal)}
+.camera-view-navigation a svg{width:18px;height:18px;flex-shrink:0;color:var(--teal)}
 #camera-current,#camera-photos,#camera-archive-title,#camera-timelapse-title{scroll-margin-top:95px}
 .camera-layout-enhanced{
  grid-template-columns:minmax(0,3.2fr) minmax(230px,.8fr);
@@ -410,7 +410,7 @@
   border-radius:11px;
   text-align:center
  }
- .camera-view-navigation a span{font-size:14px}
+ .camera-view-navigation a svg{width:16px;height:16px}
  .camera-layout-enhanced .camera-sidebar{grid-template-columns:1fr}
  .camera-layout-enhanced .camera-panel{padding:12px!important}
  .camera-layout-enhanced .camera-image-large{border-radius:11px}
