@@ -31,6 +31,11 @@ jobs:
           npm install --no-save --no-audit --no-fund playwright@1.56.1
           npx playwright install --with-deps chromium
           npm run preview -- --host 127.0.0.1 --port 4321 > /tmp/loucka-ux-capture.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:4321/ > /dev/null; then break; fi
+            sleep 1
+          done
+          curl --fail --show-error http://127.0.0.1:4321/ > /dev/null
           node scripts/ux-pre-ci-capture.mjs
       - name: Upload screenshots for human review before PR
         if: always()
