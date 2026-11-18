@@ -41,6 +41,23 @@
  padding-left:10px
 }
 
+/* Reuse the same compact feedback pattern on the full historical page. */
+.advanced-history .advanced-history-chart[hidden],
+.advanced-history .advanced-history-feedback[hidden]{display:none!important}
+.advanced-history-feedback{
+ display:flex;align-items:flex-start;flex-direction:column;gap:10px;
+ min-height:92px;margin:12px 0;padding:16px;
+ border:1px dashed var(--line);border-radius:10px;
+ background:var(--panel-2);color:var(--muted);line-height:1.55
+}
+.advanced-history-feedback .chart-retry{
+ display:inline-flex;align-items:center;justify-content:center;
+ min-height:var(--ux-tap-target);padding:9px 15px;
+ background:var(--panel);border:1px solid var(--teal);
+ border-radius:9px;color:var(--text);font-weight:650
+}
+.advanced-history-feedback .chart-retry[hidden]{display:none!important}
+
 /* On the atlas landing page, the historical tools are opt-in.
    The four entry chapters and their uncertainty warning stay in view. */
 .climate-mobile-chapters{display:none}
