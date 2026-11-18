@@ -90,6 +90,31 @@
 .atlas-deep-dive[open] .atlas-deep-dive-action::after{content:' · aktivní'}
 .atlas-deep-dive-body{border-top:1px solid var(--line);padding:18px}
 .atlas-deep-dive-body [id],.climate-atlas [id]{scroll-margin-top:100px}
+.atlas-expert-section{
+ border:1px solid var(--line);
+ border-radius:12px;
+ overflow:clip;
+ margin:14px 0;
+ background:var(--panel)
+}
+.atlas-expert-section>summary{
+ display:flex;align-items:center;justify-content:space-between;
+ gap:12px;cursor:pointer;min-height:62px;padding:14px 17px;
+ color:var(--text);list-style:none;
+}
+.atlas-expert-section>summary::-webkit-details-marker{display:none}
+.atlas-expert-section>summary::after{
+ content:"Rozbalit";font-size:12px;font-weight:600;color:var(--teal);
+}
+.atlas-expert-section[open]>summary::after{content:"Sbalit"}
+.atlas-expert-section>summary strong{font-size:15px}
+.atlas-expert-section>summary span{
+ font-size:12px;color:var(--muted);max-width:50%;text-align:right
+}
+.atlas-expert-section>summary:hover{background:var(--panel-2)}
+.atlas-expert-content{padding:14px;border-top:1px solid var(--line)}
+.atlas-expert-content>.section{margin-block:10px}
+
 
 /* Preserve the established desktop observatory. On mobile put visitors'
    everyday questions (forecast and radar) above specialist station cards. */
@@ -155,6 +180,9 @@
  .atlas-deep-dive-summary{padding:15px;min-height:84px;flex-wrap:wrap;gap:10px}
  .atlas-deep-dive-action{width:100%}
  .atlas-deep-dive-body{padding:12px}
+ .atlas-expert-section>summary{display:grid;min-height:60px;padding:12px 14px}
+ .atlas-expert-section>summary span{max-width:none;text-align:left}
+ .atlas-expert-content{padding:8px}
 }
 @media(max-width:359px){
  .evergreen-quick-access{gap:5px}
