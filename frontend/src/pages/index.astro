@@ -32,6 +32,11 @@ import SiteIcon from '../shared/ui/SiteIcon.astro';
     <div class="atlas-hero-top evergreen-core">
      <CurrentPanel variant="observatory" />
     </div>
+    <nav class="evergreen-quick-access" aria-label="Rychlý přístup k počasí">
+     <a href="#pocasi-predpoved"><SiteIcon name="weather" size={18}/> Předpověď</a>
+     <a href="#pocasi-radar"><SiteIcon name="radar" size={18}/> Radar</a>
+     <a href="#pocasi-kamera"><SiteIcon name="camera" size={18}/> Kamera</a>
+    </nav>
     <div class="atlas-hero-daily evergreen-daily">
      <DailySummaryStrip />
     </div>
@@ -46,11 +51,7 @@ import SiteIcon from '../shared/ui/SiteIcon.astro';
   </section>
 
   <div class="atlas-alert-line"><LocalWarnings compact /></div>
-  <nav class="evergreen-quick-access" aria-label="Rychlý přístup k počasí">
-   <a href="#pocasi-predpoved"><SiteIcon name="weather" size={18}/> Předpověď</a>
-   <a href="#pocasi-radar"><SiteIcon name="radar" size={18}/> Radar</a>
-   <a href="#pocasi-kamera"><SiteIcon name="camera" size={18}/> Kamera</a>
-  </nav>
+
 
   <section class="observatory-instruments evergreen-spotlight" aria-label="Kamera, astronomický den, historické měření a stanice">
    <section id="pocasi-kamera" class="atlas-media-card atlas-camera-tile evergreen-camera-tile" aria-labelledby="atlas-camera-title">
