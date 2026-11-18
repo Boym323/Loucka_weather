@@ -86,7 +86,9 @@ const active = Astro.url.pathname;
   <script>
    const clock=document.querySelector<HTMLElement>('[data-prague-clock]');
    const tick=()=>{if(clock)clock.textContent=new Intl.DateTimeFormat('cs-CZ',{dateStyle:'short',timeStyle:'short',timeZone:'Europe/Prague'}).format(new Date());};
-   tick(); setInterval(tick,60_000);
+   tick();
+   const clockTimer=window.setInterval(tick,60_000);
+   document.addEventListener('astro:before-swap',()=>window.clearInterval(clockTimer),{once:true});
   </script>
  </body>
 </html>
