@@ -19,12 +19,13 @@ import SiteIcon from '../shared/ui/SiteIcon.astro';
    
    <div class="camera-actions">
     <button type="button" class="camera-refresh" data-camera-refresh>↻ Obnovit snímek</button>
-    <button type="button" class="chart-tab" data-camera-auto aria-pressed="false">Automatické obnovení: vypnuto</button>
+    <button type="button" class="chart-tab" data-camera-auto aria-label="Automaticky obnovovat snímek každých 60 sekund" aria-pressed="false">Auto: vypnuto</button>
     <button type="button" class="chart-tab" data-camera-fullscreen>Celá obrazovka</button>
     <a class="panel-link" href="https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg" target="_blank" rel="noopener noreferrer">Otevřít originál ↗</a>
    </div>
    <p class="source-note" data-camera-checked>Načtení se ještě neověřilo.</p>
   </section>
+  <CameraArchive />
   <aside class="camera-sidebar">
    <section class="section camera-info">
     <div class="section-heading"><h2>Informace o kameře</h2><span class="status-chip">Západ</span></div>
@@ -45,7 +46,6 @@ import SiteIcon from '../shared/ui/SiteIcon.astro';
    <OverviewReadings />
   </aside>
  </div>
-<CameraArchive />
 </BaseLayout>
 <style>
  .camera-layout{display:grid;grid-template-columns:minmax(0,3fr) minmax(220px,1fr);gap:12px;align-items:start}.camera-panel{min-width:0}.camera-actions{display:flex;gap:16px;align-items:center;flex-wrap:wrap}.camera-refresh{padding:8px 12px;color:#052119;background:#43e6ab;border:0;border-radius:6px;font-weight:700}.camera-info dl{margin:12px 0}.camera-info dl div{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:10px 0;font-size:12px}.camera-info dt{color:var(--muted)}.camera-info dd{margin:0;text-align:right}.camera-panel [data-camera-message]{margin:10px 0}@media(max-width:750px){.camera-layout{grid-template-columns:1fr}}
@@ -108,7 +108,7 @@ import SiteIcon from '../shared/ui/SiteIcon.astro';
  auto?.addEventListener('click',()=>{
   if(timer!==undefined){window.clearInterval(timer);timer=undefined;}
   else timer=window.setInterval(()=>{if(document.visibilityState==='visible')reload();},60000);
-  if(auto){const enabled=timer!==undefined;auto.setAttribute('aria-pressed',String(enabled));auto.textContent=enabled?'Automatické obnovení: 60 s':'Automatické obnovení: vypnuto';}
+  if(auto){const enabled=timer!==undefined;auto.setAttribute('aria-pressed',String(enabled));auto.textContent=enabled?'Auto: 60 s':'Auto: vypnuto';}
  });
  fullscreen?.addEventListener('click',()=>{
   const target=root?.querySelector<HTMLElement>('.camera-image-large');
