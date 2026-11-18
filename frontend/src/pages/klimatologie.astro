@@ -48,7 +48,15 @@ import AllYearsTemperature from '../features/climate/AllYearsTemperature.astro';
    <p class="source-note">Používáme původní denní souhrny WeeWX. Některá období mají výpadky nebo neověřené anomálie; nejde o certifikované klimatologické normály. Chybějící hodnoty nenahrazujeme nulami.</p>
   </details>
   <p class="source-note"><a href="/klimatologie/trendy/#srazky-archiv">Prozkoumat srážkové úhrny a známá omezení.</a> · <a href="/klimatologie/trendy/#vlhkost-archiv">Dostupnost historické vlhkosti a výpadky měření.</a></p>
-  <div class="atlas-legacy-area" id="datovy-archiv">
+  <details class="atlas-legacy-area atlas-deep-dive" id="datovy-archiv" data-climate-deep-dive>
+   <summary class="atlas-deep-dive-summary">
+    <span class="atlas-deep-dive-intro">
+     <strong>Podrobná analýza a srovnání let</strong>
+     <small>Roční přehledy, grafy teplot, heatmapy a porovnání dvou roků</small>
+    </span>
+    <span class="atlas-deep-dive-action" aria-hidden="true">Otevřít analýzu</span>
+   </summary>
+   <div class="atlas-deep-dive-body">
    <h2 class="atlas-section-heading">Porovnej počasí podle roku</h2>
    <p class="source-note">Vyber si, co tě zajímá. Nemusíš procházet všechny grafy jeden po druhém.</p>
    <nav class="atlas-quick-links" aria-label="Přejít rovnou na vybrané grafy">
@@ -59,6 +67,25 @@ import AllYearsTemperature from '../features/climate/AllYearsTemperature.astro';
    <ClimateDashboard />
    <AllYearsTemperature />
    <YearComparison />
-  </div>
+   </div>
+  </details>
  </div>
 </BaseLayout>
+<script>
+ const analysis=document.querySelector<HTMLDetailsElement>('[data-climate-deep-dive]');
+ if(analysis){
+  const revealFragment=()=>{
+   const id=decodeURIComponent(window.location.hash.slice(1));
+   if(!id)return;
+   const target=document.getElementById(id);
+   if(id==='datovy-archiv'||(target&&analysis.contains(target))){
+    analysis.open=true;
+    // The fragment might have been resolved before the details became visible.
+    if(target)requestAnimationFrame(()=>target.scrollIntoView({block:'start'}));
+   }
+  };
+  revealFragment();
+  window.addEventListener('hashchange',revealFragment);
+  document.addEventListener('astro:before-swap',()=>window.removeEventListener('hashchange',revealFragment),{once:true});
+ }
+</script>
