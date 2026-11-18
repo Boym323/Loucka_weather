@@ -22,6 +22,20 @@ Nezasahovat do Fastify API, WeeWX, databází, live collectorů ani produkčníh
    motiv, focus-visible, minimální 44px dotykové cíle u kamerové navigace,
    a podporu prefers-reduced-motion.
 
+## Vizuální revize výsledného návrhu před PR
+- Úspěšný izolovaný screenshot běh: [GitHub Actions #44373715994](https://github.com/Boym323/Loucka_weather/actions/runs/44373715994).
+- Úvod 320 px: rychlé odkazy pod hlavním měřením při y = 612,6 px.
+  Úvod 390 px: y = 550,6 px; vítr a 24h graf jsou samostatné karty.
+- Kamera 320 i 390 px: tři kotvy fungují, galerie leží před sekundárním
+  sidebar panelem a ovladače se skládají do **dvou** sloupců.
+- Desktopová kamera 1440 px zachovává hlavní fotografii a boční informace.
+- Úvod, atlas i kamera na šířkách 320/390/1440 px mají
+  document.scrollWidth shodné s viewportem (žádný celostránkový
+  vodorovný posuv).
+- Snímky obsahují v části měření označené syntetické hodnoty a ostatní
+  API může být ve stavu fallback. Screenshoty ověřují **rozložení**,
+  nikoli aktuálnost skutečných meteorologických hodnot.
+
 ## Ověření
 - Referenční snímky: poslední zelený veřejný DEV smoke před úpravou,
   GitHub Actions #44299836283 (390px a 1440px).
