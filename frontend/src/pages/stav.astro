@@ -85,9 +85,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
    }
   }
   void refresh();
-  const timer=setInterval(()=>void refresh(),30000);
+  // Avoid background requests when the visitor is on a different tab.
+  const timer=setInterval(()=>{if(document.visibilityState==='visible')void refresh();},30000);
+  const onVisible=()=>{if(document.visibilityState==='visible')void refresh();};
+  document.addEventListener('visibilitychange',onVisible);
   document.addEventListener('astro:before-swap',()=>{
    controller.abort();clearInterval(timer);
+   document.removeEventListener('visibilitychange',onVisible);
   },{once:true});
  }
 </script>
