@@ -357,11 +357,36 @@ curl -fsS http://127.0.0.1:3100/api/v1/alerts/local | jq .
 
 Služby používají `StateDirectory` s `/var/lib/loucka-camera` a `/var/lib/loucka-alerts`. Není potřeba měnit nginx konfiguraci ani práva v MariaDB. Stávající Fastify API si při novém commitu samo obnoví backend; při uvádění do provozu případně `systemctl restart loucka-weather-api.service`. Pokud některý externí zdroj nebude dostupný, zůstane status `unavailable`; žádná automaticky domyšlená výstraha ani snímek se nevytvoří. CAP parser přímo ověřuje kód ORP 7209 (Loučka, okres Zlín). Pokud oficiální XML změní podobu nebo kódování oblasti, parser **odmítne** potvrdit stav „bez výstrahy“.
 
-**Kamera:** snímky každých 10 minut; kontrola JPEG, opakovaný identický snímek se nearchivuje; retence 35 dní. Z uložených obrázků vzniká denní MP4 pro předchozí UTC den, pokud má alespoň šest snímků a FFmpeg je dostupný. Pro přehled API publikuje nejvýše 120 posledních JPEG a 45 MP4. Čas u souboru = čas stažení z veřejné adresy, není to EXIF/capture timestamp. Výkon a spotřebu úložiště kontroluj přes `du -sh /var/lib/loucka-camera`. Důležité: samotná veřejná fotografie může obsahovat osoby nebo jiný osobní obsah; archivaci zapínej pouze při schválených zásadách soukromí a případném maskování obrazu.
+**Kamera:** snímky každých 10 minut; kontrola JPEG, opakovaný identický snímek se nearchivuje; retence 35 dní. Z uložených obrázků vzniká po šesti různých snímcích průběžné MP4 pro aktuální den podle `Europe/Prague`; při desetiminutovém sběru se obnovuje nejvýše každých 15 minut (obvykle jednou za 20 minut). Po místní půlnoci se předchozí den jednou dokončí. Rozpracované verze mají neměnná jména `YYYY-MM-DD-v<UTC-epoch>.mp4`, aby HTTP Range přehrávání neskočilo mezi dvěma různými soubory; starší verze se drží přibližně tři hodiny. Dokončený archiv má stálá jména `YYYY-MM-DD.mp4`. Vše vyžaduje dostupný FFmpeg. Pro přehled API publikuje nejvýše 120 posledních JPEG a 45 MP4. Čas u souboru = čas stažení z veřejné adresy, není to EXIF/capture timestamp. Výkon a spotřebu úložiště kontroluj přes `du -sh /var/lib/loucka-camera`. Důležité: samotná veřejná fotografie může obsahovat osoby nebo jiný osobní obsah; archivaci zapínej pouze při schválených zásadách soukromí a případném maskování obrazu.
 
 **ČHMÚ:** kontrola CAP po 10 minutách, TTL 45 minut, ukazuje jen ORP Valašské Klobouky, kód 7209. Při výpadku se nehlásí „bez výstrahy“. Není to oficiální varovný systém.
 
 Pořadí: nejprve sloučit a nasadit API i statický web, pak jednorázově nainstalovat root-owned collector a systemd jednotky. `git pull` samo o sobě **neaktualizuje** root-owned soubor v /usr/local/libexec. Zápisová práva k `/var/lib/loucka-*` nikdy nepřidávej uživateli nginx ani veřejným HTTP cestám.
+
+### Aktualizace průběžného časosběru na DEV LXC
+
+**Samotný auto-sync main nestačí:** systemd kamera spouští root-owned kopii
+`/usr/local/libexec/loucka-data-collector.py`, nikoli skript v Git checkoutu.
+Po sloučení změny a úspěšném testování aktualizuj pouze DEV LXC jako root:
+
+```bash
+runuser -u loucka -- git -C /home/loucka/Loucka_weather pull --ff-only origin main
+python3 -m unittest discover -s /home/loucka/Loucka_weather/deploy/lxc/tests -p 'test_collector.py'
+install -D -o root -g root -m 0755 \
+  /home/loucka/Loucka_weather/deploy/lxc/loucka-data-collector.py \
+  /usr/local/libexec/loucka-data-collector.py
+python3 -m py_compile /usr/local/libexec/loucka-data-collector.py
+systemctl start loucka-camera-collect.service
+systemctl status loucka-camera-collect.service --no-pager -l
+curl -fsS http://127.0.0.1:3100/api/v1/camera/archive | jq '.videos[:3]'
+```
+
+Dnešní položka musí mít `state:"live"` a nový název `-v<epoch>.mp4`;
+po půlnoci se změní na `state:"complete"`. Pokud je méně než šest různých
+snímků, dnešní video zatím nevznikne. Ověř `journalctl -u loucka-camera-collect.service -n 60 --no-pager`
+a `command -v ffmpeg`; případné starší videosekvence a meteorologická
+databáze se nemění. Otestuj MP4 také přes veřejné API s `Range: bytes=0-31`
+(očekává se HTTP 206). Nevypínej archivaci ani ČHMÚ timer.
 
 ### Ověření nových archivních a klimatologických API
 
