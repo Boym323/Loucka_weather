@@ -50,7 +50,8 @@ test('climate landing includes source-protected highlights and direct comparison
  const component=await readFile(new URL('../src/features/climate/ClimateHighlights.astro',import.meta.url),'utf8');
  const browser=await readFile(new URL('../scripts/climate-atlas-browser-check.mjs',import.meta.url),'utf8');
  assert.match(page,/<ClimateHighlights \/>/);
- assert.ok(page.indexOf('<ClimateHighlights />')<page.indexOf('climate-atlas-grid'));
+ assert.ok(page.indexOf('climate-atlas-grid')<page.indexOf('<ClimateHighlights />'),
+  'chapter navigation must precede optional record highlights');
  assert.match(page,/href="#teplota-vsechny-roky"/);
  assert.match(page,/href="#srovnani-let"/);
  assert.match(component,/data-highlights-status/);
