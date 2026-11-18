@@ -35,11 +35,11 @@ jobs:
             sleep 1
           done
           curl --fail --show-error http://127.0.0.1:4321/ > /dev/null
-          node scripts/ux-pre-ci-capture.mjs
+          node scripts/climate-firstfold-review.mjs
       - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: climate-before-ci-light-dark
-          path: frontend/test-results/pre-ci-screenshots
+          path: frontend/test-results/climate-firstfold-review
           retention-days: 7
           if-no-files-found: warn
