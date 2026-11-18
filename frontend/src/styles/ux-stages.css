@@ -1,0 +1,133 @@
+/* UX stages 1–3 · 18 November 2026.
+   Scoped presentation rules only. Never infer measurement quality or values
+   from CSS: visible provenance is supplied by the data components. */
+:root{
+ --ux-tap-target:44px;
+ --ux-content-measure:72ch;
+}
+
+/* A broken/unavailable chart is useful as a short explanation, not as a
+   large blank plot. Keep controls discoverable and preserve retry by keyboard. */
+[data-history-chart] .chart-figure[data-chart-state="error"],
+[data-history-chart] .chart-figure[data-chart-state="empty"]{
+ min-height:86px;
+ padding:15px;
+ display:flex;
+ flex-direction:column;
+ align-items:flex-start;
+ justify-content:center;
+ gap:9px;
+ border:1px dashed var(--line);
+ border-radius:10px;
+ background:var(--panel-2)
+}
+[data-history-chart] .chart-figure .chart-box[hidden]{display:none!important}
+[data-history-chart] .chart-figure .chart-retry[hidden]{display:none!important}
+[data-history-chart] .chart-retry{
+ display:inline-flex;align-items:center;justify-content:center;
+ min-height:var(--ux-tap-target);padding:9px 15px;
+ background:var(--panel);border:1px solid var(--teal);
+ border-radius:9px;color:var(--text);font-weight:650
+}
+[data-history-chart] .chart-retry:hover{background:var(--panel-3)}
+[data-history-chart] .chart-message{line-height:1.55}
+.current-panel[data-current-state="error"] [data-current-provenance]{
+ border-left:3px solid var(--red);
+ padding-left:10px;
+ max-width:var(--ux-content-measure)
+}
+.current-panel[data-current-state="stale"] [data-current-provenance]{
+ border-left:3px solid var(--gold);
+ padding-left:10px
+}
+
+/* On the atlas landing page, the historical tools are opt-in.
+   The four entry chapters and their uncertainty warning stay in view. */
+.climate-mobile-chapters{display:none}
+.atlas-deep-dive{
+ display:block;
+ border:1px solid var(--line);
+ border-radius:15px;
+ background:var(--panel);
+ margin:22px 0 14px;
+ overflow:clip
+}
+.atlas-deep-dive-summary{
+ display:flex;align-items:center;justify-content:space-between;
+ gap:20px;min-height:92px;padding:20px 22px;
+ cursor:pointer;list-style:none
+}
+.atlas-deep-dive-summary::-webkit-details-marker{display:none}
+.atlas-deep-dive-summary::marker{content:''}
+.atlas-deep-dive-summary:hover{background:var(--panel-2)}
+.atlas-deep-dive-intro{display:grid;gap:5px;min-width:0}
+.atlas-deep-dive-intro strong{font-size:clamp(16px,2vw,21px);font-weight:650;color:var(--text)}
+.atlas-deep-dive-intro small{font-size:13px;color:var(--muted);line-height:1.5}
+.atlas-deep-dive-action{
+ display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;
+ min-height:var(--ux-tap-target);padding:9px 15px;
+ border:1px solid var(--line);border-radius:9px;
+ color:var(--text);background:var(--panel-2);font-size:13px;font-weight:650
+}
+.atlas-deep-dive[open] .atlas-deep-dive-action{background:var(--panel-3)}
+.atlas-deep-dive[open] .atlas-deep-dive-action::after{content:' · aktivní'}
+.atlas-deep-dive-body{border-top:1px solid var(--line);padding:18px}
+.atlas-deep-dive-body [id],.climate-atlas [id]{scroll-margin-top:100px}
+
+/* Preserve the established desktop observatory. On mobile put visitors'
+   everyday questions (forecast and radar) above specialist station cards. */
+.evergreen-quick-access{display:none}
+@media(max-width:760px){
+ .evergreen-home{display:flex;flex-direction:column;gap:14px}
+ .evergreen-home>.evergreen-scene{order:0}
+ .evergreen-home>.atlas-alert-line{order:1}
+ .evergreen-home>.evergreen-quick-access{order:2}
+ .evergreen-home>.atlas-home-analytics.evergreen-analytics{order:3}
+ .evergreen-home>.observatory-instruments.evergreen-spotlight{order:4}
+ .evergreen-home>.evergreen-more-heading{order:5}
+ .evergreen-home>.atlas-home-destinations{order:6}
+ .evergreen-quick-access{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px
+ }
+ .evergreen-quick-access a{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;
+  min-width:0;min-height:var(--ux-tap-target);padding:9px 6px;
+  border:1px solid var(--line);border-radius:10px;
+  background:var(--panel);color:var(--text);text-decoration:none;
+  font-size:12px;font-weight:650
+ }
+ .evergreen-quick-access a svg{flex-shrink:0}
+ .evergreen-quick-access a:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+ #pocasi-kamera,#pocasi-predpoved,#pocasi-radar{scroll-margin-top:86px}
+ .evergreen-home .evergreen-intro{min-height:94px;margin-bottom:12px}
+ .evergreen-home .evergreen-landscape{height:215px}
+ .evergreen-home .evergreen-hero .evergreen-wind{padding-block:11px!important}
+ .evergreen-home .evergreen-hero .evergreen-chart{padding-block:11px!important}
+ .evergreen-home .evergreen-hero .history-hero .chart-box{
+  height:155px!important;min-height:155px!important
+ }
+ .evergreen-home .evergreen-more-heading{margin-top:6px}
+ .evergreen-home .evergreen-more-heading a{display:inline-flex;min-height:var(--ux-tap-target);align-items:center}
+ .climate-atlas-nav{display:none}
+ .climate-mobile-chapters{
+  display:grid;gap:7px;min-width:0;
+  margin:12px 0 16px;padding:12px;
+  border:1px solid var(--line);border-radius:12px;background:var(--panel)
+ }
+ .climate-mobile-chapters label{font-size:13px;font-weight:650;color:var(--text)}
+ .climate-mobile-chapters select{
+  width:100%;min-height:var(--ux-tap-target);
+  padding:9px 12px;border-radius:9px;border:1px solid var(--line);
+  background:var(--panel-2);color:var(--text);font-size:15px
+ }
+ .atlas-deep-dive-summary{padding:15px;min-height:84px;flex-wrap:wrap;gap:10px}
+ .atlas-deep-dive-action{width:100%}
+ .atlas-deep-dive-body{padding:12px}
+}
+@media(max-width:359px){
+ .evergreen-quick-access{gap:5px}
+ .evergreen-quick-access a{font-size:11px;gap:4px}
+}
+@media(prefers-reduced-motion:reduce){
+ .evergreen-quick-access a,.atlas-deep-dive-summary{transition:none}
+}
