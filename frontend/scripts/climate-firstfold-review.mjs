@@ -12,9 +12,10 @@ try{
   }));
   const page=await context.newPage();
   for(const theme of ['light','dark']){
-   await page.addInitScript(themeValue=>localStorage.setItem('loucka-theme',themeValue),theme);
    const resp=await page.goto('http://127.0.0.1:4321/klimatologie/',{waitUntil:'domcontentloaded',timeout:30000});
    if(!resp?.ok())throw Error('climate HTTP '+resp?.status());
+   await page.evaluate(selected=>localStorage.setItem('loucka-theme',selected),theme);
+   await page.reload({waitUntil:'domcontentloaded'});
    await page.locator('[data-climate-highlights]').scrollIntoViewIfNeeded({timeout:12000});
    await page.waitForFunction(()=>document.querySelector('[data-highlights-status]')?.dataset.state==='error',null,{timeout:12000});
    await page.evaluate(()=>window.scrollTo(0,0));
