@@ -1,26 +1,41 @@
 <section class="section camera-archive-section" data-camera-archive aria-labelledby="camera-archive-title">
- <div class="section-heading"><div><span class="eyebrow">Skutečně uložené záznamy</span><h2 id="camera-archive-title">Archiv západní kamery a časosběr</h2></div><span class="status-chip" data-archive-status role="status">Zjišťuji archiv</span></div>
- <p class="lead">Archiv průběžně ukládá skutečné fotografie z kamery. Čas u obrázku označuje okamžik uložení, nikoli přesně ověřený čas pořízení. Starší fotografie před zapnutím archivu nejsou dostupné.</p>
- <div class="camera-archive-grid" data-archive-frames></div>
- <div class="camera-day-browser">
-  <div class="section-heading">
-   <h3>Procházet archiv podle dne</h3>
-   <label class="camera-day-choice">Den (UTC) <input type="date" data-archive-date /></label><button type="button" class="chart-tab" data-archive-load-day>Načíst den</button>
-  </div>
-  <p class="source-note">Fotografie se procházejí po dnech UTC, denní videa podle času v Česku.</p>
-  <p class="source-note" data-archive-day-status>Vyber datum od začátku archivace.</p>
-  <div class="camera-archive-grid" data-archive-day-frames></div>
-  <div class="camera-day-pagination" data-archive-page-controls hidden>
-   <button type="button" class="chart-tab" data-archive-previous>← Předchozí</button>
-   <span class="source-note" data-archive-page-label>1 / 1</span>
-   <button type="button" class="chart-tab" data-archive-next>Další →</button>
-  </div>
- </div>
- <div class="camera-timelapse-block">
-  <div class="section-heading"><h3 id="camera-timelapse-title">Denní časosběrné video</h3><div class="camera-timelapse-controls"><select data-archive-video aria-label="Vybrat den časosběru" disabled><option>Žádné video</option></select><button type="button" class="chart-tab" data-archive-video-refresh aria-label="Načíst nejnovější časosběrné video">Načíst nejnovější</button></div></div>
-  <video controls preload="none" playsinline data-archive-player hidden aria-label="Časosběr z kamerových archivních fotografií"></video>
-  <p class="source-note" data-archive-video-note role="status">Dnešní video se během dne postupně doplňuje. Jakmile je v archivu alespoň šest různých fotografií, lze přehrát průběžný časosběr. Hotový záznam vznikne po půlnoci.</p>
-  <a class="panel-link" data-archive-video-download hidden download>Stáhnout vybraný časosběr MP4</a>
+ <div class="section-heading camera-archive-heading"><div><span class="eyebrow">Archiv skutečných záznamů</span><h2 id="camera-archive-title">Časosběr a fotografie</h2></div><span class="status-chip" data-archive-status role="status">Zjišťuji archiv</span></div>
+ <p class="camera-archive-intro">Záznamy ze západní kamery. Časy fotografií označují jejich uložení do archivu, nikoli přesně ověřený okamžik pořízení.</p>
+ <div class="camera-archive-views">
+  <section class="camera-timelapse-block camera-mode-surface" aria-labelledby="camera-timelapse-title">
+   <div class="section-heading camera-mode-heading">
+    <div><span class="eyebrow">Zrychlený průběh dne</span><h3 id="camera-timelapse-title">Denní časosběr</h3></div>
+    <div class="camera-timelapse-controls">
+     <select data-archive-video aria-label="Vybrat den časosběru" disabled><option>Žádné video</option></select>
+     <button type="button" class="chart-tab" data-archive-video-refresh aria-label="Načíst nejnovější časosběrné video">Načíst nejnovější</button>
+    </div>
+   </div>
+   <video controls preload="none" playsinline data-archive-player hidden aria-label="Časosběr z kamerových archivních fotografií"></video>
+   <p class="source-note" data-archive-video-note role="status">Dnešní časosběr se průběžně doplňuje. Hotové video dne vzniká po půlnoci.</p>
+   <a class="panel-link" data-archive-video-download hidden download>Stáhnout vybraný časosběr MP4</a>
+  </section>
+  <section class="camera-photos-block camera-mode-surface" id="camera-photos" aria-labelledby="camera-photos-title">
+   <div class="section-heading camera-mode-heading">
+    <div><span class="eyebrow">Jednotlivé okamžiky</span><h3 id="camera-photos-title">Archiv fotografií</h3></div>
+    <span class="camera-photos-hint">Nejnovější uložené snímky</span>
+   </div>
+   <div class="camera-archive-grid" data-archive-frames></div>
+   <div class="camera-day-browser">
+    <div class="section-heading">
+     <h3>Procházet podle dne</h3>
+     <label class="camera-day-choice">Den (UTC) <input type="date" data-archive-date /></label>
+     <button type="button" class="chart-tab" data-archive-load-day>Načíst den</button>
+    </div>
+    <p class="source-note">Fotografie jsou seskupeny podle dne UTC; denní video používá čas v Česku.</p>
+    <p class="source-note" data-archive-day-status>Vyber datum od začátku archivace.</p>
+    <div class="camera-archive-grid" data-archive-day-frames></div>
+    <div class="camera-day-pagination" data-archive-page-controls hidden>
+     <button type="button" class="chart-tab" data-archive-previous>← Předchozí</button>
+     <span class="source-note" data-archive-page-label>1 / 1</span>
+     <button type="button" class="chart-tab" data-archive-next>Další →</button>
+    </div>
+   </div>
+  </section>
  </div>
 </section>
 <style>
