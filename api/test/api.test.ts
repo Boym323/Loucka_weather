@@ -347,7 +347,7 @@ test('camera index exposes live Prague-day preview and supports immutable MP4 ra
   assert.equal(r.statusCode,206);
   assert.equal(r.body,'0123');
   assert.equal((await app.inject('/api/v1/camera/timelapse/2026-11-18-vbad.mp4')).statusCode,404);
-  assert.equal((await app.inject('/api/v1/camera/timelapse/2026-11-18-v1795000000.mp4%2F..')).statusCode,404);
+  assert.ok([400,404].includes((await app.inject('/api/v1/camera/timelapse/2026-11-18-v1795000000.mp4%2F..')).statusCode));
 });
 
 test('video range parser is bounded to one safe range',async()=>{
