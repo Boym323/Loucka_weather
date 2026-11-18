@@ -30,6 +30,21 @@
    `<meta name=robots noindex>` do sdíleného Astro layoutu a ohrožovat
    indexaci budoucí produkce. Živou odpověď Nginx/NPM je stále třeba ověřit.
 
+## Výsledek vizuální revize **před PR CI**
+- Branch-only screenshot preview: [GitHub Actions 44297813387](https://github.com/Boym323/Loucka_weather/actions/runs/44297813387) – **PASS**, bez spuštění PR test suite.
+- Úvod 390 px: rychlé odkazy začínají na y=536,6 px (dříve kolem 1 420 px);
+  na 320 px y=574,0 px. Obě varianty se dostaly na první obrazovku a před vítr.
+- Úvod: výška 390px snímku 4 933 → 4 896 px. Hlavní přínos je
+  **přístupnost praktických informací**, nikoli zásadní zkrácení všech sekcí.
+- Klimatologie 390 px se zavřenými pokročilými grafy: 10 898 → 2 572 px.
+  Po otevření všech tří kategorií zůstává bohatý odborný obsah zachovaný.
+- Vizuální kontrola 320, 390 a 1440 px pro úvod, atlas i kameru:
+  document.scrollWidth odpovídá viewportu, bez celostránkového
+  horizontálního přetečení. Nově opraveno i chybné „Otevřít analýzu · aktivní“
+  na jasné „Zavřít analýzu“.
+- Screenshoty používají real-data-shaped syntetické browser fixture;
+  tyto snímky nejsou důkazem provozního API ani skutečných měření.
+
 ## Výslovně neuzavřené body
 - Issue #143: ověření fyzického přehrání MP4 v iOS Safari a desktop Chrome,
   včetně posouvání v průběžném i dokončeném videu. HTTP 206 a H.264 byly
