@@ -1,0 +1,45 @@
+name: Climate visual review before PR CI
+
+on:
+  push:
+    branches: [feat/visual-polish-20261118]
+    paths:
+      - ".github/workflows/ui-climate-pre-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Install pinned dependencies and build
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+      - name: Render current branch, light and dark, before full CI
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+          npm run preview -- --host 127.0.0.1 --port 4321 > /tmp/loucka-visual.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            curl --fail --silent http://127.0.0.1:4321/ > /dev/null && break
+            sleep 1
+          done
+          curl --fail --show-error http://127.0.0.1:4321/ > /dev/null
+          node scripts/ux-pre-ci-capture.mjs
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: climate-before-ci-light-dark
+          path: frontend/test-results/pre-ci-screenshots
+          retention-days: 7
+          if-no-files-found: warn
