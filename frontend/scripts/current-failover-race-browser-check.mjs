@@ -20,12 +20,13 @@ try{
  for(const width of [320,390,1440]){
   const context=await browser.newContext({viewport:{width,height:850}});
   const blocked=[];
-  let holdInitial=true,latestRequests=0;
+  let holdInitial=true,latestRequests=0,failArchive=false;
   await context.route('**/api/v1/**',async route=>{
    const url=new URL(route.request().url());
    if(url.pathname==='/api/v1/current'){
     if(holdInitial){blocked.push(route);return;}
     latestRequests++;
+    if(failArchive)return route.fulfill({status:503,contentType:'application/json',body:'{"error":"isolated archive failure"}'});
     return route.fulfill({status:200,contentType:'application/json',body:newer});
    }
    if(url.pathname==='/api/v1/station')
@@ -63,6 +64,29 @@ try{
    assert.equal(await chip.evaluate(el=>el.classList.contains('error')),false,
     'recovered archive must not retain error styling');
    console.log('CURRENT ARCHIVE RACE',width,'latest response preserved, stale request ignored');
+   // A live observation is independent of the archive GET; a transient 503
+   // must not change its "live" status or live temperature.
+   await page.evaluate(()=>{
+    const now=new Date().toISOString();
+    window.dispatchEvent(new CustomEvent('loucka:live-observation',{detail:{
+     state:'live',receivedAt:now,observedAt:now,units:'metricwx',
+     source:'gw3000_live',timestampMeaning:'gateway_polled_at',
+     readings:{outTemp:{value:22.3,quality:'measured',source:'gw3000_live'}}
+    }}));
+   });
+   await page.waitForFunction(()=>document.querySelector('[data-current-panel] [data-current-status]')?.textContent==='Živá měření');
+   failArchive=true;
+   await page.evaluate(()=>window.dispatchEvent(new CustomEvent('loucka:archive-updated')));
+   await page.waitForTimeout(250);
+   assert.equal((await chip.textContent())?.trim(),'Živá měření',
+    'failed archive GET must not override the fresh live state');
+   assert.equal((await page.locator('[data-current-panel] [data-metric-value="outTemp"]').textContent())?.trim(),'22,3');
+   assert.equal(await page.locator('[data-current-panel]').getAttribute('data-current-state'),'live');
+   // Once live freshness is revoked, the archive failure must be visible.
+   await page.evaluate(()=>window.dispatchEvent(new CustomEvent('loucka:live-expired')));
+   await page.waitForFunction(()=>document.querySelector('[data-current-panel] [data-current-status]')?.textContent==='Aktualizace selhala');
+   assert.equal(await page.locator('[data-current-panel]').getAttribute('data-current-state'),'error');
+   console.log('CURRENT LIVE/ARCHIVE FAILURE',width,'fresh live preserved; archived failure shown after expiration');
   }finally{
    await context.close();
   }
