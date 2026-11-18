@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-18 – Follow-up audit UX: mobil, live měření a atlas
+- Na mobilním úvodu jsou akce Předpověď / Radar / Kamera již pod aktuálními hodnotami, nikoliv až za historickým grafem.
+- Platný živý stav měření není přepsán neúspěšným požadavkem na archiv, chybové/retry stavy zůstávají pravdivé.
+- Aktivní položka Klima ve spodním docku funguje i v podkapitolách atlasu.
+- Pokročilá klimatologie je rozdělena do tří nezávislých rozbalitelných sekcí, včetně bezpečných hlubokých odkazů.
+- Vizuální screenshoty používají izolovaná validní testovací měření a nezaměňují je za data stanice.
+- Dokumentace a regresní testy: `docs/UX_FOLLOWUP_FIXES_2026-11-18.md`. DEV konfigurace Nginx již obsahovala noindex; produkční DB, API ani WeeWX se nemění.
+
+
 ## 2026-11-18 – UX etapy: mobilní počasí, grafy a klimatologický atlas
 - Jednotné označení posledních ověřených hodnot i po selhání aktualizace, bez doplňování nul nebo domnělých meteo dat.
 - Historické grafy mají srozumitelný prázdný/chybový stav a volbu pro opakování načtení.
