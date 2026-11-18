@@ -27,6 +27,7 @@ const tabs = [
  <figure class="chart-figure">
   <div class:list={['chart-box',{'large':!compact}]} data-chart-canvas role="img" aria-label="Graf meteorologických měření v čase"></div>
   <figcaption class="chart-message" data-chart-message>Načítám průběh počasí…</figcaption>
+  <button class="chart-retry" type="button" data-chart-retry hidden>Zkusit znovu</button>
  </figure>
  <div class="chart-summary" data-chart-summary aria-live="polite"></div>
  <p class="history-legend">Všechny časy jsou místní. Kde chybí měření, graf má mezeru.</p>
@@ -49,6 +50,8 @@ const tabs = [
   const message=root.querySelector<HTMLElement>('[data-chart-message]');
   const status=root.querySelector<HTMLElement>('[data-chart-status]');
   const summary=root.querySelector<HTMLElement>('[data-chart-summary]');
+  const retry=root.querySelector<HTMLButtonElement>('[data-chart-retry]');
+  const figure=root.querySelector<HTMLElement>('.chart-figure');
   if(!element)return;
   const chart=echarts.init(element,undefined,{renderer:'svg'});
   const observer=new ResizeObserver(()=>chart.resize());observer.observe(element);
@@ -57,6 +60,9 @@ const tabs = [
   async function update(){
    controller?.abort();controller=new AbortController();const signal=controller.signal;
    if(status){status.textContent='Načítání…';status.className='status-chip';}
+   if(retry)retry.hidden=true;
+   if(figure)figure.dataset.chartState='loading';
+   element.hidden=false;
    if(summary)summary.replaceChildren();
    if(message)message.textContent='Načítání archivních měření…';
    try{
@@ -102,8 +108,10 @@ const tabs = [
       barMaxWidth:16
      }]
     });
-    if(status){status.textContent=valid.length+' naměřených bodů';status.classList.add('ok');}
-    if(message)message.textContent=valid.length?'Mezery označují chybějící měření.':'Pro vybraný rozsah nejsou platná měření.';
+    if(status){status.textContent=valid.length+' naměřených bodů';status.className='status-chip '+(valid.length?'ok':'warning');}
+    if(figure)figure.dataset.chartState=valid.length?'ready':'empty';
+    element.hidden=!valid.length;
+    if(message)message.textContent=valid.length?'Mezery označují chybějící měření.':'Pro vybraný rozsah nejsou dostupné platné údaje. Zkus jinou veličinu nebo období.';
     if(summary&&valid.length){
      const values=valid.map(point=>point[1]);
      const min=Math.min(...values),max=Math.max(...values);
@@ -118,10 +126,14 @@ const tabs = [
    }catch(error){
     if(signal.aborted)return;
     chart.clear();
-    if(status){status.textContent='Historie nedostupná';status.classList.add('error');}
-    if(message)message.textContent='Graf se nepodařilo načíst. Zkus to znovu.';
+    if(status){status.textContent='Historie nedostupná';status.className='status-chip error';}
+    if(figure)figure.dataset.chartState='error';
+    element.hidden=true;
+    if(retry)retry.hidden=false;
+    if(message)message.textContent='Historická data se nepodařilo načíst. Můžeš zkusit opakovat požadavek.';
    }
   }
+  retry?.addEventListener('click',()=>void update());
   root.querySelectorAll<HTMLButtonElement>('[data-select-metric]').forEach(btn=>btn.addEventListener('click',()=>{
    activeMetric=btn.dataset.selectMetric??'outTemp';
    root.querySelectorAll<HTMLButtonElement>('[data-select-metric]').forEach(b=>b.setAttribute('aria-pressed',String(b===btn)));
@@ -135,8 +147,10 @@ const tabs = [
   document.addEventListener('astro:before-swap',()=>{
    controller?.abort();observer.disconnect();chart.dispose();
    window.removeEventListener('loucka:theme-change',themeChanged);
+   window.removeEventListener('loucka:archive-updated',archiveChanged);
   },{once:true});
-  window.addEventListener('loucka:archive-updated',()=>{if(!controller?.signal.aborted)void update();});
+  const archiveChanged=()=>{if(!controller?.signal.aborted)void update();};
+  window.addEventListener('loucka:archive-updated',archiveChanged);
   // Reuse the existing API route: switching theme also recolors the chart axes.
   const themeChanged=()=>{void update();};
   window.addEventListener('loucka:theme-change',themeChanged);
@@ -147,8 +161,14 @@ const tabs = [
    document.querySelectorAll<HTMLElement>('[data-history-chart]').forEach(root=>{
     const status=root.querySelector<HTMLElement>('[data-chart-status]');
     const message=root.querySelector<HTMLElement>('[data-chart-message]');
+    const retry=root.querySelector<HTMLButtonElement>('[data-chart-retry]');
+    const figure=root.querySelector<HTMLElement>('.chart-figure');
+    const canvas=root.querySelector<HTMLElement>('[data-chart-canvas]');
     if(status){status.textContent='Historie nedostupná';status.className='status-chip error';}
-    if(message)message.textContent='Graf se nepodařilo připravit. Zkus stránku obnovit.';
+    if(figure)figure.dataset.chartState='error';
+    if(canvas)canvas.hidden=true;
+    if(retry){retry.hidden=false;retry.addEventListener('click',start,{once:true});}
+    if(message)message.textContent='Graf se nepodařilo připravit. Můžeš to zkusit znovu.';
    });
   });
  };
