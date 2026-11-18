@@ -54,6 +54,9 @@ test('manual live video refresh preserves the existing playback unless a new vid
  assert.match(component,/if\(player.getAttribute\('src'\)!==previous\)choose\(previous\)/);
  assert.match(component,/if\(!previous\)choose\(videos\[0\]\.url\)/);
  assert.doesNotMatch(component,/window\.location\.reload\(/);
+ assert.match(component,/function scheduleThumbnail\(\)/);
+ assert.match(component,/function enqueueThumbnail\(task:/);
+ assert.doesNotMatch(component,/const scheduler=setInterval\(/);
 });
 
 test('camera loading error is not hidden by an unrelated archive freshness status',async()=>{
