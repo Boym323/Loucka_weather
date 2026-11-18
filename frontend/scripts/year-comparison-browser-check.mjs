@@ -109,7 +109,7 @@ try{
   // Opt in explicitly before testing their unchanged real-source controls.
   const analysis=page.locator('[data-climate-deep-dive]');
   assert.equal(await analysis.evaluate(element=>element.open),false);
-  await analysis.locator('summary').click();
+  await analysis.locator(':scope > summary').click();
   assert.equal(await analysis.evaluate(element=>element.open),true);
   // The mobile climate menu must expose all sections without a horizontal strip.
   const quickNav=page.locator('[data-climate-quick-nav]');
