@@ -10,6 +10,10 @@ import {highlightMetrics} from '../../shared/domain/climate-highlights.ts';
   </div>
   <span class="atlas-highlights-status" data-highlights-status role="status">Připravuji archivní záznamy…</span>
  </div>
+ <div class="atlas-highlights-fallback" data-highlights-fallback role="status" hidden>
+  Historické zajímavosti se právě nenačítají. Kapitoly atlasu zůstávají dostupné.
+  <button type="button" class="chart-tab" data-highlights-retry>Opakovat načtení</button>
+ </div>
  <div class="atlas-highlights-grid">
   {highlightMetrics.map(metric=><article class="atlas-highlight-card" data-highlight-card={metric.id}>
    <h3>{metric.label}</h3>
@@ -30,9 +34,16 @@ import {highlightMetrics} from '../../shared/domain/climate-highlights.ts';
  if(root){
   const controller=new AbortController();
   const status=root.querySelector<HTMLElement>('[data-highlights-status]')!;
+  const grid=root.querySelector<HTMLElement>('.atlas-highlights-grid');
+  const fallback=root.querySelector<HTMLElement>('[data-highlights-fallback]');
+  const retry=root.querySelector<HTMLButtonElement>('[data-highlights-retry]');
   let requested=false;
-  async function load(){
-   if(requested)return;requested=true;
+  async function load(force=false){
+   if(requested&&!force)return;requested=true;
+   if(grid)grid.hidden=false;
+   if(fallback)fallback.hidden=true;
+   status.dataset.state='loading';
+   status.textContent='Načítám archivní záznamy…';
    try{
     const response=await fetch('/api/v1/climate/records',{
      headers:{Accept:'application/json'},signal:controller.signal
@@ -63,15 +74,19 @@ import {highlightMetrics} from '../../shared/domain/climate-highlights.ts';
      'Původní archiv · předběžné záznamy':
      'V archivu zatím nejsou zobrazitelné hodnoty';
     status.dataset.state=visible?'warning':'error';
+    if(!visible){
+     if(grid)grid.hidden=true;
+     if(fallback)fallback.hidden=false;
+    }
    }catch{
     if(controller.signal.aborted)return;
     status.textContent='Záznamy se nepodařilo načíst';
     status.dataset.state='error';
-    root?.querySelectorAll<HTMLElement>('[data-highlight-date]').forEach(element=>{
-     element.textContent='Momentálně nedostupné';
-    });
+    if(grid)grid.hidden=true;
+    if(fallback)fallback.hidden=false;
    }
   }
+  retry?.addEventListener('click',()=>void load(true));
   const observer=new IntersectionObserver(entries=>{
    if(entries.some(entry=>entry.isIntersecting)){
     observer.disconnect();void load();
