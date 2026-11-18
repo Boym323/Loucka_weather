@@ -3,14 +3,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import OverviewReadings from '../features/current/OverviewReadings.astro';
 import CameraArchive from '../features/camera/CameraArchive.astro';
 ---
-<BaseLayout title="Webkamera">
- <div class="page-intro"><span class="eyebrow">Pohled na Loučku a okolí</span><h1>Webkamera Loučka – západ</h1><p>Aktuální snímek západní kamery.</p></div>
+<BaseLayout title="Webkamera" description="Živý pohled západní kamerou na Loučku, archiv skutečně uložených snímků a dnešní průběžný časosběr.">
+ <div class="page-intro"><span class="eyebrow">Pohled na Loučku a okolí</span><h1>Webkamera Loučka – západ</h1><p>Poslední dostupný pohled západní kamery, archiv snímků a průběžný denní časosběr.</p></div>
  <div class="camera-layout camera-layout-enhanced">
   <section class="section camera-panel" data-camera>
    <div class="section-heading"><h2>Aktuální snímek</h2><span class="status-chip" data-camera-status role="status">Načítám snímek</span></div>
    <div class="camera-image camera-image-large"><img data-camera-image src="https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg" alt="Pohled webkamery na Loučku západním směrem" /></div>
    <p class="source-note" data-camera-message>Čas pořízení snímku není dostupný.</p>
-   <nav class="camera-mode-tabs" aria-label="Dostupné pohledy"><span class="chart-tab is-active">Aktuální snímek</span><a class="chart-tab" href="#camera-archive-title">Archiv snímků</a><a class="chart-tab" href="#camera-archive-title">Časosběr</a></nav>
+   <nav class="camera-mode-tabs" aria-label="Dostupné pohledy"><span class="chart-tab is-active">Aktuální snímek</span><a class="chart-tab" href="#camera-archive-title">Archiv snímků</a><a class="chart-tab" href="#camera-timelapse-title">Časosběr</a></nav>
    <div class="camera-actions">
     <button type="button" class="camera-refresh" data-camera-refresh>↻ Obnovit snímek</button>
     <button type="button" class="chart-tab" data-camera-auto aria-pressed="false">Automatické obnovení: vypnuto</button>
