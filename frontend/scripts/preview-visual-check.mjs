@@ -179,11 +179,13 @@ try{
       if(layout.instrumentColumns!==1)errors.push('Mobile hero must use one responsive column');
       const quick=await page.evaluate(()=>({
        count:document.querySelectorAll('.evergreen-quick-access a').length,
+       visibleTop:(document.querySelector('.evergreen-quick-access')?.getBoundingClientRect().top??Infinity)+window.scrollY,
+       inHero:!!document.querySelector('.evergreen-hero > .evergreen-quick-access'),
        forecastTop:document.querySelector('#pocasi-predpoved')?.getBoundingClientRect().top??0,
        cameraTop:document.querySelector('#pocasi-kamera')?.getBoundingClientRect().top??0,
        links:[...document.querySelectorAll('.evergreen-quick-access a')].every(a=>!!document.querySelector(a.getAttribute('href')??''))
       }));
-      if(quick.count!==3||!quick.links||quick.forecastTop>=quick.cameraTop)
+      if(quick.count!==3||!quick.links||!quick.inHero||quick.visibleTop>850||quick.forecastTop>=quick.cameraTop)
        errors.push(size.name+': mobile quick links or practical-information order regressed');
       if(layout.destinationColumns!==2)errors.push('Mobile destinations should use two columns at 390px');
       if(layout.svgIcons!==5)errors.push('Mobile dock must contain five SVG navigation icons');
@@ -364,6 +366,9 @@ try{
     // Both comparison views load only when scrolled into the viewport.
     // DOM existence and a reachable API endpoint do not prove the charts rendered.
     if(path==='/klimatologie/'){
+     const temperatures=page.locator('[data-climate-subsection="temperatures"]');
+     if(!await temperatures.evaluate(el=>el.open))
+      await temperatures.locator(':scope > summary').click();
      await page.locator('[data-all-years-temperature]').scrollIntoViewIfNeeded({timeout:12000});
      const allYearsReady=await page.waitForFunction(()=>{
       const root=document.querySelector('[data-all-years-temperature]');
@@ -383,6 +388,9 @@ try{
       errors.push(size.name+': all-years chart not rendered: '+JSON.stringify(state));
      }else console.log('LIVE ALL-YEARS TEMPERATURE',size.name,'real API and SVG verified');
 
+     const comparison=page.locator('[data-climate-subsection="comparison"]');
+     if(!await comparison.evaluate(el=>el.open))
+      await comparison.locator(':scope > summary').click();
      await page.locator('[data-year-comparison]').scrollIntoViewIfNeeded({timeout:12000});
      const comparisonReady=await page.waitForFunction(()=>{
       const root=document.querySelector('[data-year-comparison]');

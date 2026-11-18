@@ -12,6 +12,19 @@ const browser=await chromium.launch({headless:true});
 try{
  for(const width of widths){
   const context=await browser.newContext({viewport:{width,height:900},deviceScaleFactor:1});
+  // Coherent test-only API response, never a real station reading.
+  const layoutReadings={
+   outTemp:{value:-18.9,unit:'degC',quality:'measured',source:'weewx_archive'},
+   outHumidity:{value:100,unit:'percent',quality:'measured',source:'weewx_archive'},
+   barometer:{value:1045.3,unit:'hPa',quality:'measured',source:'weewx_archive'},
+   dewpoint:{value:-18.9,unit:'degC',quality:'measured',source:'weewx_archive'}
+  };
+  await context.route('**/api/v1/current**',route=>route.fulfill({
+   status:200,contentType:'application/json',
+   body:JSON.stringify({schemaVersion:'1',observedAt:new Date().toISOString(),stale:false,
+    units:'metricwx',dataset:'original',dataRevision:'browser-layout-only',
+    readings:layoutReadings})
+  }));
   const page=await context.newPage();
   // Geometry audit must be deterministic regardless of Loučka sunrise/sunset.
   await page.addInitScript(()=>{
@@ -29,13 +42,21 @@ try{
    await new Promise(resolve=>setTimeout(resolve,500));
   }
   if(!loaded){errors.push(width+'px: local preview unavailable');await context.close();continue;}
+  // The screenshots must never show numerical values alongside "unavailable".
+  const labelSyntheticFixture=async()=>{
+  await page.waitForFunction(()=>document.querySelector('.evergreen-hero [data-current-status]')
+   ?.textContent?.includes('Poslední měření'),null,{timeout:10000});
   await page.evaluate(()=>{
-   const values={outTemp:'-18,9',outHumidity:'100',barometer:'1045,3',dewpoint:'-21,2'};
-   for(const [id,value] of Object.entries(values)){
-    const node=document.querySelector('[data-metric-value="'+id+'"]');
-    if(node)node.textContent=value;
-   }
+   const section=document.querySelector('.evergreen-hero [data-current-panel]');
+   const status=section?.querySelector('[data-current-status]');
+   const note=section?.querySelector('[data-current-provenance]');
+   if(status){status.textContent='TEST – měření';status.className='status-chip warning';}
+   if(note)note.textContent='Syntetické hodnoty pouze pro vizuální test, nikoli počasí v Loučce.';
+   for(const quality of section?.querySelectorAll('[data-metric-quality]')??[])
+    quality.textContent='Testovací údaj';
   });
+  };
+  await labelSyntheticFixture();
   const measure=()=>page.evaluate(()=>{
    const q=selector=>document.querySelector(selector);
    const hero=q('.evergreen-hero'),featured=q('.evergreen-hero .metric-card.featured');
@@ -51,6 +72,9 @@ try{
    return {
     viewport:window.innerWidth,
     scrollWidth:document.documentElement.scrollWidth,
+    quickTop:(q('.evergreen-quick-access')?.getBoundingClientRect().top??Infinity)+window.scrollY,
+    quickVisible:getComputedStyle(q('.evergreen-quick-access')).display!=='none',
+    windTop:(q('.evergreen-wind')?.getBoundingClientRect().top??Infinity)+window.scrollY,
     overflowElements:[...document.querySelectorAll('body *')].filter(el=>{
      const rect=el.getBoundingClientRect();
      return rect.width>0&&rect.right>window.innerWidth+2&&getComputedStyle(el).position!=='fixed';
@@ -79,6 +103,9 @@ try{
   const light=await measure();
   console.log('LAYOUT',width,JSON.stringify(light));
   if(light.scrollWidth>width+2)errors.push(width+'px: horizontal page overflow '+light.scrollWidth+'; suspects: '+light.overflowElements.join(', '));
+  if(width<=760&&!light.quickVisible)errors.push(width+'px: mobile quick links are hidden');
+  if(width<=390&&light.quickTop>850)errors.push(width+'px: practical weather shortcuts start too low ('+Math.round(light.quickTop)+'px)');
+  if(width<=760&&light.quickTop>=light.windTop)errors.push(width+'px: wind still precedes practical shortcuts');
   if(light.heroRight>width+2)errors.push(width+'px: hero extends past viewport');
   const expectedCols=width<=760?1:width<=1270?2:3;
   if(light.columns!==expectedCols)errors.push(width+'px: hero columns '+light.columns+' expected '+expectedCols);
@@ -94,6 +121,7 @@ try{
   if(width===390||width===1440){
    await page.evaluate(()=>localStorage.setItem('loucka-theme','dark'));
    await page.reload({waitUntil:'domcontentloaded'});
+   await labelSyntheticFixture();
    const dark=await page.evaluate(()=>({
     theme:document.documentElement.dataset.theme,
     background:getComputedStyle(document.querySelector('.evergreen-hero')).backgroundColor

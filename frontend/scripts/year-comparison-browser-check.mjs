@@ -124,6 +124,9 @@ try{
    assert.equal(await quickNav.isVisible(),false);
    assert.equal(await page.locator('.climate-tabs').isVisible(),true);
   }
+  const temperatures=page.locator('[data-climate-subsection="temperatures"]');
+  if(!await temperatures.evaluate(el=>el.open))
+   await temperatures.locator(':scope > summary').click();
   const all=page.locator('[data-all-years-temperature]');
   assert.equal(await all.count(),1);
   await all.scrollIntoViewIfNeeded();
@@ -159,6 +162,9 @@ try{
   await all.locator('[data-temperature-range]').check();
   assert.equal(await all.locator('[data-temperature-chart] svg').count(),1);
   console.log('ALL YEARS TEMP',width,'recent years default, all 18 on demand, daily/monthly, filters, SVG');
+  const comparisonPanel=page.locator('[data-climate-subsection="comparison"]');
+  if(!await comparisonPanel.evaluate(el=>el.open))
+   await comparisonPanel.locator(':scope > summary').click();
   const section=page.locator('[data-year-comparison]');
   await section.scrollIntoViewIfNeeded();
   await page.waitForFunction(()=>{

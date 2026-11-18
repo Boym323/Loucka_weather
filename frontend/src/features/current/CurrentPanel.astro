@@ -96,20 +96,29 @@ const quickReadings = [
   if(lastLiveEvent)applyLive(lastLiveEvent);
  }).catch(()=>{
   if(controller.signal.aborted||serial!==archiveRequestSerial)return;
-  section.dataset.currentState='error';
-  if(status){status.textContent=lastArchiveObservedAt?'Aktualizace selhala':'Měření nedostupné';status.className='status-chip error';}
+  // A failed archive request is not proof the independent live gateway stopped.
+  // Revalidate the actual live timestamp before deciding which state to show.
+  const liveDetails=(lastLiveEvent as CustomEvent<{state?:string;units?:string;receivedAt?:string}>|undefined)?.detail;
+  const received=Date.parse(liveDetails?.receivedAt??'');
+  const liveStillFresh=liveDetails?.state==='live'&&liveDetails.units==='metricwx'&&
+   Number.isFinite(received)&&Date.now()-received<120000&&received<=Date.now()+60000;
+  if(liveStillFresh&&lastLiveEvent)applyLive(lastLiveEvent);
+  else{
+   section.dataset.currentState='error';
+   if(status){status.textContent=lastArchiveObservedAt?'Aktualizace selhala':'Měření nedostupné';status.className='status-chip error';}
   if(updated)updated.textContent=lastArchiveObservedAt?
    'Poslední známé měření: '+formatTimestamp(lastArchiveObservedAt):'Čas posledního měření není dostupný.';
   if(provenance)provenance.textContent=lastArchiveObservedAt?
    'Zobrazené hodnoty jsou poslední dostupné údaje, jejich aktuálnost nyní nelze ověřit.':
    'Údaje se nepodařilo načíst. Nezobrazujeme odhadované hodnoty.';
+  }
   if(archiveRetryCount<3&&!archiveRetryTimer){
    const delay=4000*(++archiveRetryCount);
    archiveRetryTimer=setTimeout(()=>{
     archiveRetryTimer=undefined;
     if(!controller.signal.aborted)void refresh();
    },delay);
-  }else if(archiveRetryCount>=3&&updated){
+  }else if(archiveRetryCount>=3&&updated&&!liveStillFresh){
    updated.textContent=lastArchiveObservedAt?
     'Poslední známé měření: '+formatTimestamp(lastArchiveObservedAt)+' · obnovení selhalo.':
     'Měření se právě nedaří načíst. Zkus stránku obnovit.';
