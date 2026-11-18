@@ -177,6 +177,14 @@ try{
       if(layout.analyticsColumns!==1)errors.push('Mobile analytical modules must stack');
       if(layout.observatoryColumns!==1)errors.push('Mobile camera, sky, history and station cards must stack');
       if(layout.instrumentColumns!==1)errors.push('Mobile hero must use one responsive column');
+      const quick=await page.evaluate(()=>({
+       count:document.querySelectorAll('.evergreen-quick-access a').length,
+       forecastTop:document.querySelector('#pocasi-predpoved')?.getBoundingClientRect().top??0,
+       cameraTop:document.querySelector('#pocasi-kamera')?.getBoundingClientRect().top??0,
+       links:[...document.querySelectorAll('.evergreen-quick-access a')].every(a=>!!document.querySelector(a.getAttribute('href')??''))
+      }));
+      if(quick.count!==3||!quick.links||quick.forecastTop>=quick.cameraTop)
+       errors.push(size.name+': mobile quick links or practical-information order regressed');
       if(layout.destinationColumns!==2)errors.push('Mobile destinations should use two columns at 390px');
       if(layout.svgIcons!==5)errors.push('Mobile dock must contain five SVG navigation icons');
       if(layout.moreLinks!==7)errors.push('Mobile More menu must expose remaining seven pages');
@@ -188,6 +196,20 @@ try{
       if(layout.destinationColumns!==3)errors.push('Desktop destinations should use three columns');
       if(layout.chartHeight<145)errors.push('Desktop integrated 24h chart must remain legible');
      }
+    }
+    // A short climate landing page keeps expert analyses behind a disclosure.
+    // Open it before checking the original rich charts and source data.
+    if(path==='/klimatologie/'){
+     const disclosure=page.locator('[data-climate-deep-dive]');
+     if(await disclosure.count()!==1){
+      errors.push(size.name+': missing advanced climate disclosure');
+     }else{
+      if(await disclosure.evaluate(el=>el.open))errors.push(size.name+': expert charts must start collapsed');
+      await disclosure.locator(':scope > summary').click();
+      if(!await disclosure.evaluate(el=>el.open))errors.push(size.name+': climate expert panel did not expand');
+     }
+     if(size.name==='mobil'&&await page.locator('[data-climate-mobile-chapter]').count()!==1)
+      errors.push(size.name+': missing mobile climate chapter selector');
     }
     // The year comparison is part of the existing climatology route (no extra route).
     if(path==='/klimatologie/'){

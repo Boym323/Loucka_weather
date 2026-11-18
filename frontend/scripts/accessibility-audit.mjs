@@ -75,8 +75,11 @@ try {
           throw new Error('Mobile navigation target shorter than 44px');
         }
         if (path === '/klimatologie/' && viewport.width <= 390) {
-          // Scan a revealed menu too, not just the hidden default state.
-          const summary = page.locator('[data-climate-quick-nav] summary');
+          // The expert dashboard is now opt-in. Open it before auditing the
+          // nested mobile section navigation so click is genuinely user-visible.
+          const analysis = page.locator('[data-climate-deep-dive]');
+          await analysis.locator(':scope > summary').click();
+          const summary = page.locator('[data-climate-quick-nav] > summary');
           await summary.click();
         }
         await page.addScriptTag({ content: axeSource });

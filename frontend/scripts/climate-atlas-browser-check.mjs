@@ -185,6 +185,10 @@ try{
      assert.equal(await page.locator('[data-highlight-date="maxDailyRain"]').getAttribute('datetime'),'2021-07-25');
      assert.match(await page.locator('[data-highlight-note="maxDailyRain"]').textContent()??'',/Známé omezení/);
      assert.equal(await page.locator('.atlas-quick-links a').count(),3);
+     const analysis=page.locator('[data-climate-deep-dive]');
+     assert.equal(await analysis.evaluate(element=>element.open),false);
+     await analysis.locator(':scope > summary').click();
+     assert.equal(await analysis.evaluate(element=>element.open),true);
      // New read-only batched dashboard must paint from one HTTP response,
      // preserving 12 month values and preliminary extrema after lazy scroll.
      await page.locator('[data-climate-dashboard]').scrollIntoViewIfNeeded();

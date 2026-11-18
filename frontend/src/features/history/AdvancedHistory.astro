@@ -44,6 +44,10 @@
   <button class="history-export" type="button" data-history-export disabled>Stáhnout CSV</button>
  </form>
  <div class="advanced-history-chart" data-advanced-canvas role="img" aria-label="Dynamický časový graf archivních měření"></div>
+ <div class="advanced-history-feedback" data-advanced-feedback hidden role="status">
+  <span data-advanced-feedback-text>Graf není dostupný.</span>
+  <button type="button" class="chart-retry" data-advanced-retry>Zkusit znovu</button>
+ </div>
  <div class="chart-summary" data-advanced-summary aria-live="polite"></div>
  <p class="source-note" data-history-quality-note>Mezery znamenají chybějící nebo nejistá měření. Podrobnosti o každém bodu uvidíš po najetí nebo klepnutí.</p>
  <details class="history-data-details">
@@ -68,6 +72,9 @@
   const canvas=root.querySelector<HTMLElement>('[data-advanced-canvas]')!;
   const status=root.querySelector<HTMLElement>('[data-advanced-status]');
   const summary=root.querySelector<HTMLElement>('[data-advanced-summary]');
+  const feedback=root.querySelector<HTMLElement>('[data-advanced-feedback]');
+  const feedbackText=root.querySelector<HTMLElement>('[data-advanced-feedback-text]');
+  const retry=root.querySelector<HTMLButtonElement>('[data-advanced-retry]');
   const qualitySummary=root.querySelector<HTMLElement>('[data-history-quality-summary]');
   const exportButton=root.querySelector<HTMLButtonElement>('[data-history-export]');
   const chart=echarts.init(canvas,undefined,{renderer:'svg'});
@@ -135,6 +142,8 @@
    const signal=controller.signal;results=[];
    if(exportButton)exportButton.disabled=true;
    if(summary)summary.replaceChildren();
+   if(feedback)feedback.hidden=true;
+   canvas.hidden=false;
    const fromDate=dateInput('from').value,toDate=dateInput('to').value;
    const metric=metricInput('metric').value,compare=metricInput('compare').value;
    try{
@@ -241,15 +250,27 @@
      }
     }
     if(exportButton)exportButton.disabled=!total;
+    if(!total){
+     canvas.hidden=true;
+     if(feedback)feedback.hidden=false;
+     if(feedbackText)feedbackText.textContent='Pro vybrané období nejsou dostupné platné hodnoty. Zkus změnit veličinu nebo období.';
+     if(retry)retry.hidden=true;
+    }else if(retry)retry.hidden=false;
     chart.resize();
    }catch(e){
     if(signal.aborted)return;
     chart.clear();
     if(status){status.textContent='Historie nedostupná';status.className='status-chip error';}
-    if(summary)summary.textContent=e instanceof Error&&e.message.startsWith('Vyber období')?e.message:'Údaje se nepodařilo načíst. Zkus změnit období nebo stránku obnovit.';
+    canvas.hidden=true;
+    if(feedback)feedback.hidden=false;
+    if(retry)retry.hidden=false;
+    if(feedbackText)feedbackText.textContent=e instanceof Error&&e.message.startsWith('Vyber období')?
+     e.message:'Údaje se nepodařilo načíst. Můžeš opakovat požadavek.';
+    if(summary)summary.textContent='Zobrazené hodnoty nebyly aktualizovány.';
    }
   }
-  root.querySelectorAll<HTMLButtonElement>('[data-period]').forEach(b=>b.addEventListener('click',()=>setPreset(b.dataset.period??'7d')));
+  retry?.addEventListener('click',()=>void refresh());
+   root.querySelectorAll<HTMLButtonElement>('[data-period]').forEach(b=>b.addEventListener('click',()=>setPreset(b.dataset.period??'7d')));
   form.addEventListener('submit',event=>{event.preventDefault();activeRange='custom';root.querySelectorAll<HTMLButtonElement>('[data-period]').forEach(b=>b.setAttribute('aria-pressed','false'));void refresh();});
   exportButton?.addEventListener('click',()=>{
    if(!results.length)return;
