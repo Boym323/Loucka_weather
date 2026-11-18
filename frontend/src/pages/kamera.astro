@@ -2,13 +2,14 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import OverviewReadings from '../features/current/OverviewReadings.astro';
 import CameraArchive from '../features/camera/CameraArchive.astro';
+import SiteIcon from '../shared/ui/SiteIcon.astro';
 ---
 <BaseLayout title="Webkamera" description="Živý pohled západní kamerou na Loučku, archiv skutečně uložených snímků a dnešní průběžný časosběr.">
  <div class="page-intro camera-page-intro"><span class="eyebrow">Pohled na Loučku a okolí</span><h1>Webkamera Loučka – západ</h1><p>Aktuální snímek, denní časosběr a historie fotografií na jednom místě.</p></div>
  <nav class="camera-view-navigation" aria-label="Části stránky webkamery">
-  <a href="#camera-current"><span aria-hidden="true">◉</span> Aktuální pohled</a>
-  <a href="#camera-timelapse-title"><span aria-hidden="true">▷</span> Časosběr</a>
-  <a href="#camera-photos"><span aria-hidden="true">▦</span> Fotografie</a>
+  <a href="#camera-current"><SiteIcon name="camera" size={18}/> Aktuální pohled</a>
+  <a href="#camera-timelapse-title"><SiteIcon name="clock" size={18}/> Časosběr</a>
+  <a href="#camera-photos"><SiteIcon name="archive" size={18}/> Fotografie</a>
  </nav>
  <div class="camera-layout camera-layout-enhanced">
   <section id="camera-current" class="section camera-panel" data-camera>
