@@ -98,11 +98,19 @@
  .evergreen-home{display:flex;flex-direction:column;gap:14px}
  .evergreen-home>.evergreen-scene{order:0}
  .evergreen-home>.atlas-alert-line{order:1}
- .evergreen-home>.evergreen-quick-access{order:2}
  .evergreen-home>.atlas-home-analytics.evergreen-analytics{order:3}
  .evergreen-home>.observatory-instruments.evergreen-spotlight{order:4}
  .evergreen-home>.evergreen-more-heading{order:5}
  .evergreen-home>.atlas-home-destinations{order:6}
+ .atlas-hero.observatory-hero.evergreen-hero{
+  grid-template-areas:"core" "quick" "daily" "wind" "chart"
+ }
+ .evergreen-hero .evergreen-quick-access{
+  grid-area:quick;
+  margin:4px 12px 8px;
+  position:relative;
+  z-index:1;
+ }
  .evergreen-quick-access{
   display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px
  }
