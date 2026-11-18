@@ -75,7 +75,8 @@ import AllYearsTemperature from '../features/climate/AllYearsTemperature.astro';
  const analysis=document.querySelector<HTMLDetailsElement>('[data-climate-deep-dive]');
  if(analysis){
   const revealFragment=()=>{
-   const id=decodeURIComponent(window.location.hash.slice(1));
+   let id='';
+   try{id=decodeURIComponent(window.location.hash.slice(1));}catch{return;}
    if(!id)return;
    const target=document.getElementById(id);
    if(id==='datovy-archiv'||(target&&analysis.contains(target))){
