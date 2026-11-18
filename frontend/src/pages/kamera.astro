@@ -17,9 +17,10 @@ import SiteIcon from '../shared/ui/SiteIcon.astro';
    <div class="camera-image camera-image-large"><img data-camera-image src="https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg" alt="Pohled webkamery na Loučku západním směrem" /><p class="camera-image-fallback" data-camera-image-fallback hidden>Aktuální záběr není dostupný. Zkus obnovit snímek nebo otevřít originál.</p></div>
    <p class="source-note" data-camera-message>Čas pořízení snímku není dostupný.</p>
    
+   <span id="camera-auto-hint" class="sr-only">Zapnutím se snímek automaticky obnovuje každých 60 sekund.</span>
    <div class="camera-actions">
     <button type="button" class="camera-refresh" data-camera-refresh>↻ Obnovit snímek</button>
-    <button type="button" class="chart-tab" data-camera-auto aria-label="Automaticky obnovovat snímek každých 60 sekund" aria-pressed="false">Auto: vypnuto</button>
+    <button type="button" class="chart-tab" data-camera-auto aria-describedby="camera-auto-hint" aria-pressed="false">Auto: vypnuto</button>
     <button type="button" class="chart-tab" data-camera-fullscreen>Celá obrazovka</button>
     <a class="panel-link" href="https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg" target="_blank" rel="noopener noreferrer">Otevřít originál ↗</a>
    </div>
