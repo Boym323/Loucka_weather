@@ -5,7 +5,7 @@ const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 
 test('slow mobile lab uses isolated, bounded cold runs with no visitor instrumentation',async()=>{
  const lab=await read('scripts/mobile-slow4g-lab.mjs');
- const workflow=await read('../../.github/workflows/preview-visual-smoke.yml');
+ const workflow=await read('../.github/workflows/preview-visual-smoke.yml');
  assert.match(lab,/Network\.setCacheDisabled/);
  assert.match(lab,/Network\.emulateNetworkConditions/);
  assert.match(lab,/Emulation\.setCPUThrottlingRate/);
