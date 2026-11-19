@@ -56,3 +56,11 @@ Nový `frontend/scripts/mobile-slow4g-lab.mjs` je **izolovaný Playwright + CDP 
 JSON `frontend/test-results/preview-screenshots/mobile-slow4g-lab.json` ukládá jednotlivé vzorky, mediány a pouze anonymní kategorie pomalých zdrojů. URL konkrétních zdrojů, jejich obsah, interní hosty, IP návštěvníků ani weather readings neukládá. Perf test je zatím v workflow `continue-on-error`: neznámý výchozí výkon se nesmí vydávat za vynutitelný budget a nestabilní externí webcam nesmí způsobovat falešný FAIL bezpečnostní brány. Každý běh má být přezkoumán.
 
 **Nelze numericky srovnávat skóre PageSpeed s těmito časy:** profil CDP používá skutečně emulované síťové podmínky na runneru, nikoli identický Lighthouse throttling a skórovací model. Jsou to synthetic, nikoli field data, neobsahuje INP, nevytváří se analytics endpoint a nevzniká žádné SQL.
+
+
+### 19. 11. 2026 – kamera a blokující CSS: síťový důkaz bez dalších requestů
+V již existujícím 3× CDP cold-mobile testu se po dobu stávajících návštěv úvodu připojí posluchače `Network.responseReceived` / `Network.loadingFinished` / `Network.loadingFailed`. Přiřazují odpovědi pouze in-memory: **konkrétní známý JPEG** nebo CSS ze stejného původu. Výstup neobsahuje URL, hlavičky jako text ani data snímku, pouze počet a kategorické/numerické atributy.
+
+`cameraTransfer`: počet odpovědí, anonymní typ (jpeg/webp/avif/other), HTTP status, přítomnost ETag a Last-Modified, politika cache (public/private/no-store/no-cache/unspecified), max-age v sekundách pokud je k dispozici, číselný Content-Length je-li zaslán, součet přenesených bajtů podle CDP a nativní šířka/výška. `stylesheetTransfer`: počet vlastních CSS odpovědí, přibližné bajty podle CDP, počet chyb. Nic z toho nevyžaduje další přístup k API nebo k originální DB.
+
+CDP `encodedDataLength` může zahrnovat protokolový overhead, keš bez nové sítě mívá 0 a hlavičky proxy mohou chybět. Měřitelný výsledek navázat na deployed SHA a srovnatelné throttling podmínky; za důkaz účinku obrázkové optimalizace nepovažovat samostatný pokles TTFB. Další případnou derivaci snímku provést jen s prokázaným podporovaným formátem URL/endpointu a zachovanou autenticitou i informací o stáří.

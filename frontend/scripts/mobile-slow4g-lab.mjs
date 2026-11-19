@@ -12,6 +12,8 @@ const base=process.env.LOUCKA_PREVIEW_URL||'https://dev.pocasi-loucka.eu';
 const expected=process.env.LOUCKA_EXPECT_COMMIT||'';
 const out='test-results/preview-screenshots/mobile-slow4g-lab.json';
 const repetitions=3;
+const sourceCameraUrl='https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg';
+// The source URL is used only for in-memory classification and never exported.
 const profile={
  viewport:{width:390,height:844},
  cpuThrottlingRate:4,
@@ -46,6 +48,63 @@ try{
   });
   const page=await context.newPage();
   const session=await context.newCDPSession(page);
+  // Observe already-requested assets via Chrome DevTools: no extra GET/HEAD,
+  // no response body access, no URLs in the result file.
+  const tracked=new Map();
+  const evidence={
+   camera:{responseCount:0,status:null,contentLengthBytes:null,
+    cdpWireBytesApprox:null,cacheMaxAgeSeconds:null,cachePolicy:'unspecified',
+    etagPresent:false,lastModifiedPresent:false,contentType:'unknown',
+    servedFromCache:false,width:null,height:null},
+   styles:{responseCount:0,cdpWireBytesApprox:0,failedCount:0}
+  };
+  const header=(raw,name)=>{
+   const entry=Object.entries(raw??{}).find(([key])=>key.toLowerCase()===name);
+   return entry==null?'':String(entry[1]);
+  };
+  session.on('Network.responseReceived',event=>{
+   const camera=event.response?.url===sourceCameraUrl;
+   const css=event.type==='Stylesheet'&&event.response?.url?.startsWith(new URL(base).origin+'/');
+   if(!camera&&!css)return;
+   const kind=camera?'camera':'style';
+   tracked.set(event.requestId,kind);
+   if(kind==='style'){evidence.styles.responseCount++;return;}
+   const c=evidence.camera,resp=event.response;
+   c.responseCount++;
+   c.status=Number.isInteger(resp.status)?resp.status:null;
+   const contentLength=Number(header(resp.headers,'content-length'));
+   c.contentLengthBytes=Number.isSafeInteger(contentLength)&&contentLength>0?contentLength:null;
+   const cacheControl=header(resp.headers,'cache-control').toLowerCase();
+   c.cachePolicy=cacheControl.includes('no-store')?'no-store':
+    cacheControl.includes('no-cache')?'no-cache':
+    cacheControl.includes('private')?'private':
+    cacheControl.includes('public')?'public':'unspecified';
+   const age=cacheControl.match(/(?:^|,)\s*max-age\s*=\s*(\d+)/);
+   c.cacheMaxAgeSeconds=age?Math.min(Number(age[1]),31536000):null;
+   c.etagPresent=!!header(resp.headers,'etag');
+   c.lastModifiedPresent=!!header(resp.headers,'last-modified');
+   c.contentType=/^image\/jpeg/i.test(resp.mimeType)?'jpeg':
+    /^image\/webp/i.test(resp.mimeType)?'webp':
+    /^image\/avif/i.test(resp.mimeType)?'avif':'other';
+   c.servedFromCache=!!(resp.fromDiskCache||resp.fromServiceWorker);
+  });
+  session.on('Network.loadingFinished',event=>{
+   const kind=tracked.get(event.requestId);
+   if(!kind)return;
+   const bytes=Number(event.encodedDataLength);
+   if(kind==='camera'){
+    if(Number.isFinite(bytes)&&bytes>=0)
+     evidence.camera.cdpWireBytesApprox=(evidence.camera.cdpWireBytesApprox??0)+Math.round(bytes);
+   }else if(Number.isFinite(bytes)&&bytes>=0){
+    evidence.styles.cdpWireBytesApprox+=Math.round(bytes);
+   }
+   tracked.delete(event.requestId);
+  });
+  session.on('Network.loadingFailed',event=>{
+   const kind=tracked.get(event.requestId);
+   if(kind==='style')evidence.styles.failedCount++;
+   tracked.delete(event.requestId);
+  });
   try{
    await session.send('Network.enable');
    await session.send('Network.setCacheDisabled',{cacheDisabled:true});
@@ -118,8 +177,15 @@ try{
      slowResourceClasses:resources
     };
    });
+   const dimensions=await page.evaluate(()=>{
+    const img=document.querySelector('.evergreen-landscape img');
+    return img?.complete&&img.naturalWidth>0?
+     {width:img.naturalWidth,height:img.naturalHeight}:null;
+   });
+   if(dimensions){evidence.camera.width=dimensions.width;evidence.camera.height=dimensions.height;}
    const record={
-    run,ttfbMs:round(metric.ttfbMs),fcpMs:round(metric.fcpMs),
+    run,cameraTransfer:evidence.camera,stylesheetTransfer:evidence.styles,
+    ttfbMs:round(metric.ttfbMs),fcpMs:round(metric.fcpMs),
     lcpCandidateMs:round(metric.lcpCandidateMs),
     lcpCandidateKind:metric.lcpCandidateKind,
     clsObservedSoFar:round(metric.clsObservedSoFar),
@@ -153,7 +219,7 @@ const report={
   lcpCandidateMs:median(samples.map(s=>s.lcpCandidateMs))
  },
  samples,failures,
- notes:'Synthetic CDP CPU/network emulation, not Lighthouse scoring or real-user p75. LCP candidate measured after camera image load or bounded timeout; CLS is observed-so-far. No INP/CrUX. Resource classes contain no URLs.'
+ notes:'Synthetic CDP CPU/network emulation, not Lighthouse scoring or real-user p75. LCP candidate measured after camera image load or bounded timeout; CLS is observed-so-far. No INP/CrUX. CDP encodedDataLength includes transfer overhead; camera Content-Length may be absent. Cache headers describe one cold response, not a validated warm reload. No source URLs, bodies, identities or readings are retained.'
 };
 await mkdir('test-results/preview-screenshots',{recursive:true});
 await writeFile(out,JSON.stringify(report,null,2)+'\n');
