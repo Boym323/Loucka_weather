@@ -85,7 +85,7 @@ try{
     if(vary.split(',').map(v=>v.trim()).includes('accept-encoding'))
      styles.varyAcceptEncodingResponses++;
     const cache=header(headers,'cache-control').toLowerCase();
-    if(cache.includes('immutable')&&/max-age\\s*=\\s*31536000/.test(cache))
+    if(cache.includes('immutable')&&/max-age\s*=\s*31536000/.test(cache))
      styles.immutableCacheResponses++;
     return;
    }
