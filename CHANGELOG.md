@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-19 – Jednodušší mobilní navigace a přístupnější historické grafy
+- Na telefonech již horní Menu neduplikuje spodní navigaci s panelem Více.
+- Podrobný graf umožňuje otevřít tabulkovou alternativu přesně vrácených hodnot, kvality a zdroje bez dalšího API požadavku; CSV export zůstává.
+- Časosběr používá skutečný archivní snímek pouze při shodném lokálním dni s videem; jinak zůstává bez náhledu. Jasné upozornění na provenienci snímků.
+- Regresní prohlížečový test 320/390/1440 ve světlém/tmavém motivu, `docs/UX_ACCESSIBLE_HISTORY_CAMERA_2026-11-19.md`.
+
+
 ## 2026-11-19 – Rychlejší načítání aktuálních meteorologických údajů
 - Aktuální archivní hodnoty se při souběžném načítání sdílí mezi panely; počáteční požadavek není třikrát odeslán do API.
 - Rozlišení živé GW3000 a původní WeeWX zůstává zachované. Po změně archivního záznamu a při zániku live se data znovu načítají.
