@@ -734,6 +734,14 @@
  .atlas-deep-dive-summary,.atlas-expert-section>summary){
  min-height:var(--ui-touch-target);
 }
+/* Match or exceed earlier two-class component selectors. */
+.advanced-history .chart-tab,
+[data-history-chart] .chart-tab,
+[data-rain-detail] .chart-tab,
+.atlas-radar-tile .radar-controls .chart-tab,
+.rain-actions .chart-tab{
+ min-height:var(--ui-touch-target);
+}
 :is(a,button,input,select,textarea,summary,[tabindex]):focus-visible{
  outline:3px solid var(--teal);
  outline-offset:3px;
