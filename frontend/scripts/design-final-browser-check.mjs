@@ -9,7 +9,7 @@ import {mkdir} from 'node:fs/promises';
 
 const base=process.env.LOCAL_PREVIEW_URL||'http://127.0.0.1:4321/';
 const routes=['/','/aktualne/','/grafy/','/kamera/','/klimatologie/'];
-const widths=[320,390,1440];
+const widths=[320,390,1024,1328,1440];
 const themes=['light','dark'];
 const out='test-results/design-final';
 await mkdir(out,{recursive:true});
@@ -53,7 +53,18 @@ try{
        h1Width:head?.width??0,h1Left:head?.left??0,h1Right:head?.right??0,
        introTextSize:introductory?parseFloat(getComputedStyle(introductory).fontSize):null,
        actions:actions.map(el=>({height:Math.round(el.getBoundingClientRect().height),name:el.tagName.toLowerCase()})),
-       dockVisible:!!document.querySelector('.mobile-dock')&&getComputedStyle(document.querySelector('.mobile-dock')).display!=='none'
+       dockVisible:!!document.querySelector('.mobile-dock')&&getComputedStyle(document.querySelector('.mobile-dock')).display!=='none',
+       spotlight:(()=>{
+        const root=document.querySelector('.evergreen-home .evergreen-spotlight');
+        if(!root)return null;
+        const selectors=['.evergreen-camera-tile','.observatory-sky','.observatory-history','.evergreen-station-card'];
+        return selectors.map(s=>{
+         const el=root.querySelector(s);
+         if(!el)return null;
+         const r=el.getBoundingClientRect();
+         return {top:Math.round(r.top),left:Math.round(r.left),width:Math.round(r.width)};
+        });
+       })()
       };
      });
      assert.equal(result.theme,theme,'theme selected');
@@ -65,10 +76,25 @@ try{
      for(const action of result.actions)
       assert.ok(action.height>=43,'touch control below 44px: '+path+' '+JSON.stringify(action));
      if(width<=390)assert.ok(result.dockVisible,'mobile dock missing');
-     if(width===390&&(path==='/'||path==='/kamera/')){
+     if(path==='/'){
+      const boxes=result.spotlight;
+      assert.ok(boxes?.length===4&&boxes.every(Boolean),'four observatory cards are present');
+      assert.ok(boxes.every(b=>b.width>140),'instrument cards are not squeezed');
+      const near=(a,b)=>Math.abs(a.top-b.top)<=3;
+      if(width>=1271){
+       assert.ok(boxes.every(b=>near(b,boxes[0])),'1328/1440 desktop must put all four instruments in one balanced row');
+       assert.ok(boxes.every((b,i)=>i===0||b.left>boxes[i-1].left+50),'desktop instruments must be ordered across columns');
+      }else if(width>760){
+       assert.ok(near(boxes[0],boxes[1])&&near(boxes[2],boxes[3]),'tablet must use balanced two-by-two cards');
+       assert.ok(boxes[2].top>boxes[0].top+30,'tablet row 2 must follow row 1');
+      }else{
+       assert.ok(boxes.every((b,i)=>i===0||b.top>boxes[i-1].top+30),'mobile instruments stack in source order');
+      }
+     }
+     if((width===390&&(path==='/'||path==='/kamera/'))||(width===1328&&path==='/')){
       await page.screenshot({
        path:out+'/'+(path==='/'?'home':'camera')+'-'+width+'-'+theme+'.png',
-       fullPage:false,animations:'disabled'
+       fullPage:width===1328,animations:'disabled'
       });
      }
      if(path==='/aktualne/'&&width===390){
@@ -96,5 +122,5 @@ if(failures.length){
  console.error('Design QA failures',JSON.stringify(failures));
  process.exitCode=1;
 }else{
- console.log('Design QA: 30 viewport/theme/route checks, captions, controls and synthetic text stress PASS');
+ console.log('Design QA: 50 viewport/theme/route checks, balanced instrument grid, captions, controls and synthetic text stress PASS');
 }
