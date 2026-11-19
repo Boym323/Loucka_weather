@@ -1,0 +1,44 @@
+name: Pre-CI P2 UX / media screenshots
+
+on:
+  push:
+    branches: [feat/ux-media-history-20261119]
+    paths:
+      - ".github/workflows/p2-pre-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Build preview
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+      - name: Verify and screenshot six responsive states
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+          npm run preview -- --host 127.0.0.1 --port 4321 > /tmp/loucka-p2-preview.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            curl -fsS http://127.0.0.1:4321/ >/dev/null && break
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:4321/ >/dev/null
+          UX_CAPTURE=1 node scripts/ux-media-history-browser-check.mjs
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: p2-ux-history-camera-screenshots
+          path: frontend/test-results/ux-media-history
+          retention-days: 7
