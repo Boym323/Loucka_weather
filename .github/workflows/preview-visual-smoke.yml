@@ -28,7 +28,9 @@ jobs:
         run: |
           npm ci --no-audit --no-fund
           npm install --no-save --no-audit --no-fund playwright@1.56.1
-          npx playwright install --with-deps chromium
+          # Avoid apt/security mirror outage; hosted runner already supplies
+          # browser libraries, only the pinned Chromium binary is downloaded.
+          npx playwright install chromium
       - name: Visit deployed dev website, check 11 routes, desktop and mobile
         working-directory: frontend
         run: node scripts/preview-visual-check.mjs

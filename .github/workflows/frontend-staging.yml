@@ -45,6 +45,7 @@ jobs:
           node --check scripts/home-css-route-browser-check.mjs
           node --check scripts/mobile-home-variant-browser-check.mjs
           node --check scripts/mobile-home-history-lazy-browser-check.mjs
+          node --check scripts/design-final-browser-check.mjs
       - name: Unit tests
         run: npm test
       - name: Build static website
@@ -52,7 +53,9 @@ jobs:
       - name: Verify responsive layout and legibility in Chromium
         run: |
           npm install --no-save --no-audit --no-fund playwright@1.56.1 axe-core@4.14.0
-          npx playwright install --with-deps chromium
+          # Ubuntu security apt mirror returned HTTP 503 on 19 Nov: use the
+          # runner's provisioned browser libraries; install only pinned Chromium.
+          npx playwright install chromium
           npm run preview -- --host 127.0.0.1 --port 4321 > /tmp/loucka-layout-preview.log 2>&1 &
           node scripts/evergreen-layout-audit.mjs
           node scripts/year-comparison-browser-check.mjs
@@ -66,6 +69,7 @@ jobs:
           node scripts/home-css-route-browser-check.mjs
           node scripts/mobile-home-variant-browser-check.mjs
           node scripts/mobile-home-history-lazy-browser-check.mjs
+          node scripts/design-final-browser-check.mjs
           node scripts/climate-firstfold-review.mjs
       - uses: actions/upload-artifact@v7
         if: always()
@@ -75,6 +79,7 @@ jobs:
             frontend/test-results/layout-audit
             frontend/test-results/climate-firstfold-review
             frontend/test-results/mobile-home-variant
+            frontend/test-results/design-final
           retention-days: 7
           if-no-files-found: ignore
       - uses: actions/upload-artifact@v7
