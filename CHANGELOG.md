@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-19 – Volitelný test kompaktního mobilního přehledu
+- Mobilní úvod může návštěvník porovnat s alternativou `/?mobile=compact` bez změny standardního zobrazení.
+- Testovací varianta zmenšuje dekorativní kamerovou krajinu a ponechá vítr a historický graf dostupné pod nativním tlačítkem; hodnoty, varování, zdroj a rychlé odkazy jsou zachované.
+- Testovací označení a návrat na běžnou verzi jsou viditelné jen v mobilní experimentální variantě; bez ukládání preferencí, analytics či dalších API požadavků.
+- Izolovaný Chromium screenshot test ověřuje 320/390/1440 a oba motivy. Před výchozím přepnutím je nutné skutečné uživatelské porovnání; viz `docs/MOBILE_FIRSTFOLD_TRIAL_2026-11-19.md`.
+
+
 ## 2026-11-19 – Přesnější laboratorní diagnostika pomalého načítání
 - Veřejný DEV prohlížečový smoke ukládá vedle TTFB/FCP také průběžného kandidáta LCP, dosud pozorované posuny rozložení, dlouhé úlohy a pět nejpomalejších kategorií zdrojů.
 - Report obsahuje pouze kategorie same-origin/externí a časy. Nikdy URL, parametry, IP, tokeny ani samotná meteorologická měření; nepřidává se žádný požadavek pro běžného návštěvníka.
