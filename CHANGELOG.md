@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-19 – Návrh gzip pro fingerprintované soubory DEV Nginxu
+- Konfigurace interního DEV Nginxu nově zapíná gzip **pouze** ve statické cestě `/_astro/` (CSS/JS/SVG nad 1024 B), s `Vary: Accept-Encoding`, úrovní 4 a dosavadní roční immutable cache; API, HTML, kamera, produkce a DB nedotčeny.
+- Předchozí 3× cold mobile lab ukázal dva CSS requesty ~195 916 B přenosu a hlavní autentický JPEG ~110 736 B včetně CDP overhead; nutno po ručním ověření gzip proti stejnému profilu znovu změřit. Nezaměňovat přenos s přesnou velikostí zdroje.
+- **Změna šablony se sama neaktivuje v běžící root-owned konfiguraci.** Provozní návod vysvětluje zálohu, `nginx -t`, kontrolu interních i veřejných HTTP hlaviček a explicitní rollback. Žádné automatické reloady ani produkční zásahy.
+
 ## 2026-11-19 – Velikost kamery a CSS z již běžících mobilních testů
 - Do 3× slow-4G/CPU veřejného DEV smoke doplněno čtení **existujících** CDP odpovědí hlavního JPEG a vlastních CSS: přenesené bajty včetně HTTP overhead, stav odpovědi, typ obrázku, nativní rozměry, případná hodnota Content-Length, cache max-age/typ politiky a přítomnost ETag/Last-Modified.
 - Jde jen o anonymní souhrny a kategorie. Neukládají se URL zdrojů, hlavičky jako text, obsah obrázků, IP, osobní údaje, hodnoty počasí ani identifikátory návštěvníků; nevytvářejí se žádné nové požadavky na server či DB.

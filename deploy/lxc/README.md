@@ -459,3 +459,49 @@ Volitelný operátorský graf není součástí veřejného Astro ani Nginx. K d
 Po synchronizaci `main`, kompilaci API a ověření lokálního balíčku správce explicitně spustí `bash deploy/lxc/install-loucka-rh-preview.sh`. Instalátor generuje nové root-only `/etc/loucka-weather/rh-preview.env` s přístupovým tokenem (pokud dosud neexistuje), instalačně se nedotýká `api.env`, Nginx ani databází; provede stavové/401 smoke testy a při chybě vypne jen sidecar.
 
 **Zabezpečení:** nginx/NPManager nesmí směrovat 3101. Port nikdy nevystavovat do LAN/WAN; přístup pouze přes SSH localhost forwarding, bez tokenu se privátní data vrací 401. Token nikdy neposílat do chatu či logu. Celý postup, konkrétní SHA-256, kontrola dat a rollback jsou v `docs/RH_2022_PRIVATE_COMPARE_SIDECAR.md`.
+
+
+### DEV-only Nginx compression for fingerprinted Astro assets
+
+The `deploy/lxc/nginx-preview.conf` template enables gzip **only** inside
+`location /_astro/` for CSS, JS and SVG with at least 1024 bytes. It does not
+change API JSON, non-fingerprinted HTML, the original camera JPEG, or
+`deployment.json`. Existing immutable cache and `nosniff` directives remain.
+
+**Important: a GitHub commit or DEV auto-sync does not install/reload the
+root-owned `/etc/nginx/conf.d/loucka-preview.conf`. Never assume the
+published site changed merely because this template was merged.** Before
+applying on DEV, verify the existing proxy/firewall and back up the live
+configuration; do not run an automatic root installer from the repo.
+
+Manual DEV-only acceptance using trusted console on the LXC, after comparing
+this template with local changes (including trusted-proxy includes):
+
+```sh
+sudo cp -a /etc/nginx/conf.d/loucka-preview.conf /root/loucka-preview-nginx.pre-gzip.conf
+sudo install -m 0644 deploy/lxc/nginx-preview.conf /etc/nginx/conf.d/loucka-preview.conf
+sudo nginx -t
+# Only after successful syntax check AND local proxy config review:
+sudo systemctl reload nginx
+```
+
+If `nginx -t` fails, immediately restore the backup and do not reload.
+If an external CDN/NPM modifies compression, fix its own configuration
+separately; don't add global `gzip on` for the API in this task.
+
+On DEV, inspect both internal (trusted LAN) and public HTTPS responses to
+a real fingerprinted CSS/JS asset found in the page's `/_astro/` links.
+Send `Accept-Encoding: gzip` and check:
+`Content-Encoding: gzip`, `Vary: Accept-Encoding`, unchanged
+`Cache-Control: public, max-age=31536000, immutable` and
+`X-Content-Type-Options: nosniff`. Also confirm the response without
+`Accept-Encoding` is valid, the site remains readable, and the
+camera JPEG and API behave exactly as before. A public edge can
+decompress or recode the internal response; both sides must be checked.
+Compare three identical CDP slow-mobile runs to the documented
+pre-change baseline; this template alone is not proof of faster LCP.
+
+Roll back on errors with
+`sudo cp -a /root/loucka-preview-nginx.pre-gzip.conf /etc/nginx/conf.d/loucka-preview.conf && sudo nginx -t && sudo systemctl reload nginx`.
+This is **DEV only**. Do not copy the configuration to the production
+Belchertown/WeeWX site.
