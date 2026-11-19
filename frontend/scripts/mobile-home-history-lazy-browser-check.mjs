@@ -41,12 +41,12 @@ try{
   return !!root?.querySelector('[data-chart-canvas] svg')&&status.includes('naměřených bodů');
  },null,{timeout:16000});
  assert.equal(historyRequests[0],'outTemp');
- await root.locator('[data-select-metric="outHumidity"]').click();
- await page.waitForFunction(()=>{
-  const element=document.querySelector('.evergreen-hero [data-select-metric="outHumidity"]');
-  return element?.getAttribute('aria-pressed')==='true';
- },null,{timeout:5000});
- assert.ok(historyRequests.includes('outHumidity'),'history metric switch must still request real history endpoint');
+ // The compact homepage intentionally hides the metric switch. Its real
+ // chart must paint and present the same provenance/coverage explanation.
+ assert.equal(await root.locator('.chart-toolbar').isVisible(),false,
+  'homepage chart toolbar is intentionally hidden by design');
+ const message=await root.locator('[data-chart-message]').textContent();
+ assert.match(message??'',/Mezery označují chybějící měření/);
  assert.deepEqual(errors,[]);
  console.log('MOBILE HISTORY LAZY',JSON.stringify({aboveFoldInitially:false,paintedAfterScroll:true,historyRequests:historyRequests.length}));
  await context.close();
