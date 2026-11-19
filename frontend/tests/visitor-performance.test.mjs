@@ -8,6 +8,14 @@ test('dev smoke records passive anonymous navigation and API evidence',async()=>
  assert.match(source,/performance\.getEntriesByType\('paint'\)/);
  assert.match(source,/navigationDurationMs/);
  assert.match(source,/apiFetchP95Ms/);
+ assert.match(source,/largest-contentful-paint/);
+ assert.match(source,/layout-shift/);
+ assert.match(source,/hadRecentInput/);
+ assert.match(source,/longtask/);
+ assert.match(source,/lcpCandidateMs/);
+ assert.match(source,/clsSessionMaxSoFar/);
+ assert.match(source,/resourceBottlenecks/);
+ assert.match(source,/scope:entry\.name\.startsWith\(location\.origin/);
  assert.match(source,/visitor-performance\.json/);
  assert.match(source,/noExtraRequests:true/);
  assert.match(source,/notFieldWebVitals:true/);

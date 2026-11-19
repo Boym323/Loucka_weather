@@ -85,6 +85,39 @@ try{
   const page=await browser.newPage({viewport:{width:size.width,height:size.height},deviceScaleFactor:1});
   // Screenshot baseline is intentionally light; auto day/night has its own tests.
   await page.addInitScript(()=>localStorage.setItem('loucka-theme','light'));
+  // CI-only lab observers: initialized before each navigation and read locally.
+  // This code is injected by Playwright; it is NOT included in Astro bundles.
+  await page.addInitScript(()=>{
+   const lab={lcpCandidateMs:null,clsSessionMax:0,longTaskCount:0,longTaskDurationMs:0};
+   window.__louckaVisitorLab=lab;
+   try{
+    new PerformanceObserver(list=>{
+     for(const entry of list.getEntries())lab.lcpCandidateMs=entry.startTime;
+    }).observe({type:'largest-contentful-paint',buffered:true});
+   }catch{/* Unsupported entry type: leave null. */}
+   try{
+    let sessionStart=-1,previous=-1,sessionValue=0;
+    new PerformanceObserver(list=>{
+     for(const entry of list.getEntries()){
+      if(entry.hadRecentInput)continue;
+      const now=entry.startTime;
+      if(sessionStart<0||now-previous>1000||now-sessionStart>5000){
+       sessionStart=now;sessionValue=0;
+      }
+      previous=now;sessionValue+=entry.value;
+      lab.clsSessionMax=Math.max(lab.clsSessionMax,sessionValue);
+     }
+    }).observe({type:'layout-shift',buffered:true});
+   }catch{/* Unsupported entry type: leave zero. */}
+   try{
+    new PerformanceObserver(list=>{
+     for(const entry of list.getEntries()){
+      lab.longTaskCount++;
+      lab.longTaskDurationMs+=entry.duration;
+     }
+    }).observe({type:'longtask',buffered:true});
+   }catch{/* Unsupported entry type: leave zero. */}
+  });
 
   page.on('pageerror',error=>errors.push(size.name+': JavaScript exception: '+error.message));
   for(const [name,path] of routes){
@@ -656,11 +689,28 @@ try{
      const round=n=>Number.isFinite(n)&&n>=0?Math.round(n*100)/100:null;
      const elapsed=api.map(entry=>entry.duration).filter(n=>Number.isFinite(n)&&n>=0)
       .sort((a,b)=>a-b);
+     const lab=window.__louckaVisitorLab;
+     // Only resource categories and elapsed times are saved, never resource URLs
+     // (which can contain IPs, access tokens or personal query parameters).
+     const resourceBottlenecks=performance.getEntriesByType('resource')
+      .filter(entry=>Number.isFinite(entry.duration)&&entry.duration>0&&entry.responseEnd>0)
+      .sort((a,b)=>b.duration-a.duration).slice(0,5)
+      .map(entry=>({
+       category:['img','script','link','css','fetch','xmlhttprequest','iframe'].includes(entry.initiatorType)
+        ?entry.initiatorType:'other',
+       scope:entry.name.startsWith(location.origin+'/')?'same-origin':'external',
+       durationMs:round(entry.duration)
+      }));
      return {
       ttfbMs:nav?round(nav.responseStart-nav.requestStart):null,
       domContentLoadedMs:nav?round(nav.domContentLoadedEventEnd-nav.startTime):null,
       navigationDurationMs:nav?round(nav.duration):null,
       firstContentfulPaintMs:fcp?round(fcp.startTime):null,
+      lcpCandidateMs:lab?.lcpCandidateMs==null?null:round(lab.lcpCandidateMs),
+      clsSessionMaxSoFar:lab?Math.round(lab.clsSessionMax*10000)/10000:null,
+      longTaskCount:lab?.longTaskCount??null,
+      longTaskDurationMs:lab?round(lab.longTaskDurationMs):null,
+      resourceBottlenecks,
       navigationTransferBytes:nav?.transferSize??null,
       apiFetchCount:elapsed.length,
       climateDashboardFetchCount:api.filter(entry=>
@@ -792,7 +842,7 @@ await writeFile(out+'/visitor-performance.json',JSON.stringify({
  expectedDevCommit:expectedCommit||null,environment:'headless-chromium-single-visit',
  scope:'public-dev-existing-visual-smoke',notFieldWebVitals:true,noExtraRequests:true,
  incomplete:errors.length>0,
- limitations:'One lab navigation per route/viewport; resource timings may omit cache/buffered entries. Not a cold SQL, load, or field-percentile measurement.',
+ limitations:'One lab navigation per route/viewport. LCP is an interim candidate at snapshot time, CLS is an observed session-window maximum so far, INP is not measured; resource timings can omit cache/buffered entries. Neither field Core Web Vitals, real-user p75 nor backend/SQL timings.',
  samples:visitorPerformance
 },null,2)+'\n','utf8');
 console.log('VISITOR LAB TIMINGS saved:',visitorPerformance.length,'page samples');

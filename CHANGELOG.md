@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-19 – Přesnější laboratorní diagnostika pomalého načítání
+- Veřejný DEV prohlížečový smoke ukládá vedle TTFB/FCP také průběžného kandidáta LCP, dosud pozorované posuny rozložení, dlouhé úlohy a pět nejpomalejších kategorií zdrojů.
+- Report obsahuje pouze kategorie same-origin/externí a časy. Nikdy URL, parametry, IP, tokeny ani samotná meteorologická měření; nepřidává se žádný požadavek pro běžného návštěvníka.
+- Výslovně jde o jednotlivá laboratorní pozorování v headless Chromium, nikoli o field CWV nebo reprezentativní p75. Viz `docs/VISITOR_PERFORMANCE_AND_RELEASE_GATES_2026-11-17.md`.
+
+
 ## 2026-11-19 – Ovládání časové osy historického grafu také klávesnicí
 - Podrobný historický graf umožňuje přiblížit, oddálit a obnovit celé období pomocí nativních tlačítek, nejen posuvníkem ECharts.
 - Ovládání nevolá znovu API a nemění měřená data, rozlišení, časovou zónu ani kvalitu; při chybě/prázdném grafu jsou tlačítka vypnuta.
