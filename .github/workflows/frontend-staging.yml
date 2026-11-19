@@ -33,6 +33,7 @@ jobs:
       - name: Validate browser smoke test syntax
         run: |
           node --check scripts/preview-visual-check.mjs
+          node --check scripts/mobile-slow4g-lab.mjs
           node --check scripts/live-browser-check.mjs
           node --check scripts/accessibility-audit.mjs
           node --check scripts/theme-browser-check.mjs

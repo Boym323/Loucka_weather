@@ -5,6 +5,11 @@
 - Regresní Chromium test ověřuje skutečně aplikovaný CSS token na homepage a nepřítomnost této sady pravidel na `/aktualne/` po Astro build. Existující layout testy pokrývají 320–1440 px, světlé/tmavé barvy, grafy a kameru.
 - Změna neodstraňuje žádné meteorologické hodnoty ani JS funkcionalitu. Přenesená velikost CSS a přínos k PageSpeed mobile LCP je nutné ověřit samostatně, nikoli vyvozovat z velikosti zdrojového souboru.
 
+## 2026-11-19 – Syntetický test mobilu s pomalou sítí a procesorem
+- Po PageSpeed Insights mobile 59/100 a LCP 8,6 s přidán k veřejnému DEV smoke dobrovolný, pouze laboratorní test úvodu: Chromium 390×844, síť 1,6 Mbit/s / RTT 150 ms, CPU zpomalený 4×, tři izolované návštěvy bez cache.
+- Test vyžaduje skutečně nasazený `deployment.json` SHA a `readyz`, nesmí míchat revize. Ukládá jednotlivé FCP, kandidát LCP, dosud pozorované CLS, úspěšnost stažení hlavního snímku a anonymizované kategorie pomalých zdrojů; ukládá i medián tří běhů.
+- Export pouze do GitHub Actions artefaktu `preview-screenshots/mobile-slow4g-lab.json`, ne do návštěvnického webu; bez URL požadavků, IP, počasí, osobních údajů či SQL. Jde o CDP aproximaci, nikoliv Lighthouse skóre, INP, p75 nebo návštěvnická Core Web Vitals. Zatím pouze informační, nikoliv blokující performance budget.
+
 ## 2026-11-19 – Klimatologické styly jen na klimatologických stránkách
 - PageSpeed ukázal na DEV mobilu 59/100, FCP 5,1 s a LCP 8,6 s v simulované pomalé síti; uvádí 124 KiB nepoužitého CSS a render-blocking potenciál 870 ms. Jde o jednorázové laboratorní hodnoty, nikoli data návštěvníků.
 - CSS `climate-atlas.css` (~18,8 kB před kompresí) se již nenačítá na všech trasách přes BaseLayout, ale jen na pěti stránkách klimatologického atlasu; sdílená pravidla pro tisk zůstávají v globálním přístupnostním CSS.
