@@ -29,10 +29,69 @@ async function request(path: string, signal?: AbortSignal): Promise<unknown> {
  }
  throw new Error('API retry exhausted');
 }
-export async function getCurrent(signal?:AbortSignal):Promise<CurrentResponse>{
- const data=await request('/api/v1/current?units=metricwx&dataset=original',signal);
- if(!isCurrentResponse(data))throw new Error('Neplatný formát aktuálních dat');
- return data;
+// Share only concurrent requests: do not cache weather across separate refreshes.
+// A generation change starts a fresh request even while an older one is pending.
+interface PendingCurrent {
+ promise:Promise<CurrentResponse>;
+ controller:AbortController;
+ subscribers:number;
+ finished:boolean;
+ generation:number;
+}
+let currentGeneration=0;
+let pendingCurrent:PendingCurrent|undefined;
+
+/** Call on a real archive revision / live-to-archive transition, never on a timer. */
+export function invalidateCurrentRequest():void{
+ currentGeneration++;
+ pendingCurrent=undefined;
+}
+function subscribeCurrent(entry:PendingCurrent,signal?:AbortSignal):Promise<CurrentResponse>{
+ entry.subscribers++;
+ return new Promise<CurrentResponse>((resolve,reject)=>{
+  let completed=false;
+  const release=(value:CurrentResponse|unknown,failed:boolean)=>{
+   if(completed)return;
+   completed=true;
+   signal?.removeEventListener('abort',onAbort);
+   entry.subscribers--;
+   if(entry.subscribers===0&&!entry.finished){
+    // Only stop the underlying fetch after *all* subscribers have left.
+    entry.controller.abort();
+    if(pendingCurrent===entry)pendingCurrent=undefined;
+   }
+   if(failed)reject(value);
+   else resolve(value as CurrentResponse);
+  };
+  const onAbort=()=>release(new DOMException('Požadavek přerušen','AbortError'),true);
+  if(signal?.aborted){onAbort();return;}
+  signal?.addEventListener('abort',onAbort,{once:true});
+  entry.promise.then(value=>release(value,false),error=>release(error,true));
+ });
+}
+export function getCurrent(signal?:AbortSignal):Promise<CurrentResponse>{
+ if(signal?.aborted)return Promise.reject(new DOMException('Požadavek přerušen','AbortError'));
+ let entry=pendingCurrent;
+ if(!entry||entry.finished||entry.generation!==currentGeneration){
+  const controller=new AbortController();
+  const pending:PendingCurrent={
+   controller,subscribers:0,finished:false,generation:currentGeneration,
+   promise:Promise.resolve(null as unknown as CurrentResponse)
+  };
+  pending.promise=request('/api/v1/current?units=metricwx&dataset=original',controller.signal).then(data=>{
+   if(!isCurrentResponse(data))throw new Error('Neplatný formát aktuálních dat');
+   return data;
+  }).finally(()=>{
+   pending.finished=true;
+   if(pendingCurrent===pending)pendingCurrent=undefined;
+  });
+  // A generation change may leave an old request with no active subscribers.
+  // Keep its rejection observed even when every individual caller has aborted.
+  void pending.promise.catch(()=>undefined);
+  pendingCurrent=pending;
+  entry=pending;
+ }
+ return subscribeCurrent(entry,signal);
 }
 export async function getHistoryRange(metric:string,hours:number,signal?:AbortSignal):Promise<HistoryResponse>{
  if(!getMetric(metric))throw new Error('Nepodporovaná veličina');
