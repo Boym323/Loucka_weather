@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-19 – Syntetický test mobilu s pomalou sítí a procesorem
+- Po PageSpeed Insights mobile 59/100 a LCP 8,6 s přidán k veřejnému DEV smoke dobrovolný, pouze laboratorní test úvodu: Chromium 390×844, síť 1,6 Mbit/s / RTT 150 ms, CPU zpomalený 4×, tři izolované návštěvy bez cache.
+- Test vyžaduje skutečně nasazený `deployment.json` SHA a `readyz`, nesmí míchat revize. Ukládá jednotlivé FCP, kandidát LCP, dosud pozorované CLS, úspěšnost stažení hlavního snímku a anonymizované kategorie pomalých zdrojů; ukládá i medián tří běhů.
+- Export pouze do GitHub Actions artefaktu `preview-screenshots/mobile-slow4g-lab.json`, ne do návštěvnického webu; bez URL požadavků, IP, počasí, osobních údajů či SQL. Jde o CDP aproximaci, nikoliv Lighthouse skóre, INP, p75 nebo návštěvnická Core Web Vitals. Zatím pouze informační, nikoliv blokující performance budget.
+
 ## 2026-11-19 – Volitelný test kompaktního mobilního přehledu
 - Mobilní úvod může návštěvník porovnat s alternativou `/?mobile=compact` bez změny standardního zobrazení.
 - Testovací varianta zmenšuje dekorativní kamerovou krajinu a ponechá vítr a historický graf dostupné pod nativním tlačítkem; hodnoty, varování, zdroj a rychlé odkazy jsou zachované.
