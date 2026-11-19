@@ -1,0 +1,85 @@
+/** Browser-only integration: real date semantics, synthetic readings never sent to API. */
+import {chromium} from 'playwright';
+import assert from 'node:assert/strict';
+import {mkdir} from 'node:fs/promises';
+
+const origin=process.env.LOCAL_PREVIEW_URL||'http://127.0.0.1:4321/';
+const capture=process.env.UX_CAPTURE==='1';
+if(capture)await mkdir('test-results/ux-media-history',{recursive:true});
+const browser=await chromium.launch({headless:true});
+const validVideo='/api/v1/camera/timelapse/2026-11-19.mp4';
+const frame='/api/v1/camera/frames/20261119T043000Z.jpg';
+try{
+ for(const width of [320,390,1440]){
+  for(const theme of ['light','dark']){
+   const ctx=await browser.newContext({viewport:{width,height:900}});
+   await ctx.addInitScript(selected=>localStorage.setItem('loucka-theme',selected),theme);
+   let historyRequests=0;
+   await ctx.route('**/api/v1/**',async route=>{
+    const url=new URL(route.request().url());
+    if(url.pathname==='/api/v1/history'){
+     historyRequests++;
+     const metric=url.searchParams.get('metric')||'outTemp';
+     const resolution=url.searchParams.get('resolution')||'hourly';
+     return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+      schemaVersion:'1',metric,unit:'°C',resolution,dataRevision:'browser-only',
+      points:[
+       {startTime:'2026-11-18T09:00:00Z',endTime:'2026-11-18T10:00:00Z',value:10.5,quality:'measured',source:'weewx_archive',provenance:null},
+       {startTime:'2026-11-18T10:00:00Z',endTime:'2026-11-18T11:00:00Z',value:null,quality:'missing',source:'weewx_archive',provenance:null},
+       {startTime:'2026-11-18T11:00:00Z',endTime:'2026-11-18T12:00:00Z',value:999,quality:'suspect',source:'weewx_archive',provenance:null},
+       {startTime:'2026-11-18T12:00:00Z',endTime:'2026-11-18T13:00:00Z',value:11.2,quality:'reconstructed',source:'weewx_archive',provenance:'historical-qc'}
+      ]})});
+    }
+    if(url.pathname==='/api/v1/camera/archive')
+     return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+      status:'ok',frames:[{fetchedAt:'2026-11-19T04:30:00Z',url:frame}],
+      videos:[{date:'2026-11-19',url:validVideo,state:'live'},
+       {date:'2026-11-18',url:'/api/v1/camera/timelapse/2026-11-18.mp4',state:'complete'}]
+     })});
+    if(url.pathname==='/api/v1/station')
+     return route.fulfill({status:200,contentType:'application/json',body:'{"schemaVersion":"1","capabilities":[]}'});
+    return route.fulfill({status:503,contentType:'application/json',body:'{"error":"test-only"}'});
+   });
+   const page=await ctx.newPage();
+   const errors=[];
+   page.on('pageerror',error=>errors.push(error.message));
+   await page.goto(new URL('grafy/',origin).href,{waitUntil:'domcontentloaded',timeout:30000});
+   await page.waitForFunction(()=>document.querySelector('[data-advanced-status]')?.textContent?.includes('Zobrazeno'),null,{timeout:20000});
+   const before=historyRequests;
+   await page.locator('[data-advanced-table] > summary').click();
+   await page.waitForFunction(()=>document.querySelectorAll('[data-advanced-table-body] tr').length===4,null,{timeout:5000});
+   const table=await page.evaluate(()=>({
+    rows:[...document.querySelectorAll('[data-advanced-table-body] tr')].map(row=>[...row.cells].map(cell=>cell.textContent?.trim())),
+    source:document.querySelector('[data-advanced-table-body]')?.textContent?.includes('historical-qc'),
+    quality:[...document.querySelectorAll('[data-advanced-table-body] td[data-quality]')].map(cell=>cell.dataset.quality)
+   }));
+   assert.equal(historyRequests,before,'Opening data table must not refetch');
+   assert.deepEqual(table.quality,['measured','missing','suspect','reconstructed']);
+   assert.equal(table.rows[1][2],'—');
+   assert.equal(table.rows[2][2],'—');
+   assert.equal(table.source,true);
+   if(capture)await page.screenshot({path:'test-results/ux-media-history/history-'+width+'-'+theme+'.png',fullPage:false});
+   await page.goto(new URL('kamera/',origin).href,{waitUntil:'domcontentloaded',timeout:30000});
+   await page.waitForFunction(()=>Boolean(document.querySelector('[data-archive-player]')?.getAttribute('poster')),null,{timeout:12000});
+   assert.equal(await page.locator('[data-archive-player]').getAttribute('poster'),frame);
+   assert.equal(await page.locator('[data-archive-poster-note]').isVisible(),true);
+   await page.locator('[data-archive-video]').selectOption('/api/v1/camera/timelapse/2026-11-18.mp4');
+   assert.equal(await page.locator('[data-archive-player]').getAttribute('poster'),null);
+   assert.equal(await page.locator('[data-archive-poster-note]').isVisible(),false);
+   const nav=await page.evaluate(()=>({
+    top:getComputedStyle(document.querySelector('.site-header .mobile-nav')).display,
+    dock:getComputedStyle(document.querySelector('.mobile-dock')).display,
+    width:document.documentElement.scrollWidth,
+    theme:document.documentElement.dataset.theme
+   }));
+   assert.equal(nav.theme,theme);
+   assert.ok(nav.width<=width+1);
+   if(width<=390){assert.equal(nav.top,'none');assert.notEqual(nav.dock,'none');}
+   else assert.equal(nav.dock,'none');
+   if(capture)await page.screenshot({path:'test-results/ux-media-history/camera-'+width+'-'+theme+'.png',fullPage:false});
+   assert.deepEqual(errors,[]);
+   console.log('UX MEDIA HISTORY',width,theme,'table=4 rows poster=real, nav='+nav.top+'/'+nav.dock);
+   await ctx.close();
+  }
+ }
+}finally{await browser.close();}
