@@ -11,6 +11,7 @@
     </div>
    </div>
    <video controls preload="none" playsinline data-archive-player hidden aria-label="Časosběr z kamerových archivních fotografií"></video>
+   <p class="source-note" data-archive-poster-note hidden>Autentický archivní snímek z vybraného dne. Nejde o ověřený okamžik přímo z videa.</p>
    <p class="source-note" data-archive-video-note role="status">Dnešní časosběr se průběžně doplňuje. Hotové video dne vzniká po půlnoci.</p>
    <a class="panel-link" data-archive-video-download hidden download>Stáhnout vybraný časosběr MP4</a>
   </section>
@@ -52,6 +53,7 @@
   const select=root.querySelector<HTMLSelectElement>('[data-archive-video]');
   const player=root.querySelector<HTMLVideoElement>('[data-archive-player]');
   const videoNote=root.querySelector<HTMLElement>('[data-archive-video-note]');
+  const posterNote=root.querySelector<HTMLElement>('[data-archive-poster-note]');
   const download=root.querySelector<HTMLAnchorElement>('[data-archive-video-download]');
   const videoRefresh=root.querySelector<HTMLButtonElement>('[data-archive-video-refresh]');
   const ctrl=new AbortController();
@@ -116,6 +118,26 @@
   type Frame={fetchedAt:string;url:string};
   type Video={date:string;url:string;state?:'live'|'complete'};
   let listedVideos:Video[]=[];
+  let posterFrames:Frame[]=[];
+  const validFrame=(frame:Frame)=>typeof frame?.url==='string'&&
+   /^\/api\/v1\/camera\/frames\/\d{8}T\d{6}Z\.jpg$/.test(frame.url)&&
+   Number.isFinite(Date.parse(frame.fetchedAt));
+  const dayFormat=new Intl.DateTimeFormat('en-US',{
+   timeZone:'Europe/Prague',year:'numeric',month:'2-digit',day:'2-digit'
+  });
+  const localDay=(iso:string)=>{
+   const parts=dayFormat.formatToParts(new Date(iso));
+   const part=(kind:string)=>parts.find(p=>p.type===kind)?.value??'';
+   return part('year')+'-'+part('month')+'-'+part('day');
+  };
+  const updatePoster=(url:string)=>{
+   if(!player)return;
+   const day=listedVideos.find(video=>video.url===url)?.date;
+   const match=day&&posterFrames.find(frame=>validFrame(frame)&&localDay(frame.fetchedAt)===day);
+   if(match)player.poster=match.url;
+   else player.removeAttribute('poster');
+   if(posterNote)posterNote.hidden=!match;
+  };
   const validVideo=(video:Video)=>typeof video.url==='string'&&
    /^\/api\/v1\/camera\/timelapse\/\d{4}-\d{2}-\d{2}(?:-v\d{10})?\.mp4$/.test(video.url);
   const choose=(url:string,userSelected=false)=>{
@@ -124,6 +146,7 @@
    // Avoid immediate MP4 downloads on initial load. A user-requested switch
    // can load the selected URL and its HTTP Range data.
    player.src=url;
+   updatePoster(url);
    if(userSelected)player.load();
    if(download){download.hidden=false;download.href=url;}
    const isLive=listedVideos.find(v=>v.url===url)?.state==='live';
@@ -155,11 +178,14 @@
      // A refresh without a new MP4 must not interrupt current playback.
      if(player.getAttribute('src')!==previous)choose(previous);
      else if(videoNote)videoNote.textContent='Přehráváš nejnovější dostupnou verzi vybraného časosběru.';
+     updatePoster(previous);
     }
    }else{
     select.replaceChildren();
     const option=document.createElement('option');option.textContent='Žádné video';select.append(option);
     select.disabled=true;player.pause();player.hidden=true;
+    player.removeAttribute('poster');
+    if(posterNote)posterNote.hidden=true;
     if(download)download.hidden=true;
     if(videoNote)videoNote.textContent='Časosběr zatím není připravený. Objeví se zde po uložení alespoň šesti různých fotografií; dokončené video pak bude dostupné po půlnoci.';
    }
@@ -186,6 +212,7 @@
   void fetch('/api/v1/camera/archive',{signal:ctrl.signal}).then(r=>r.json() as Promise<{status:string;frames:Frame[];videos:Video[]}>).then(data=>{
    if(ctrl.signal.aborted||!frames)return;
    frames.replaceChildren();
+   posterFrames=Array.isArray(data.frames)?data.frames.filter(validFrame):[];
    if(data.status!=='ok'||!data.frames.length){
     const empty=document.createElement('div');empty.className='empty-state';
     empty.textContent='V archivu zatím nejsou uložené fotografie. Zkus to prosím později.';
