@@ -49,7 +49,16 @@
   <button type="button" class="chart-retry" data-advanced-retry>Zkusit znovu</button>
  </div>
  <div class="chart-summary" data-advanced-summary aria-live="polite"></div>
- <p class="source-note" data-history-quality-note>Mezery znamenají chybějící nebo nejistá měření. Podrobnosti o každém bodu uvidíš po najetí nebo klepnutí.</p>
+ <p class="source-note" data-history-quality-note>Mezery znamenají chybějící nebo nejistá měření. Podrobnosti o každém bodu uvidíš po najetí nebo klepnutí; dostupná je i kompletní tabulka hodnot.</p>
+ <details class="history-table-alternative" data-advanced-table>
+  <summary>Zobrazit hodnoty grafu v tabulce</summary>
+  <div class="table-scroll" role="region" aria-label="Hodnoty historického grafu v tabulce" tabindex="0">
+   <table class="history-table">
+    <thead><tr><th scope="col">Konec intervalu</th><th scope="col">Veličina</th><th scope="col">Hodnota</th><th scope="col">Kvalita</th><th scope="col">Zdroj</th></tr></thead>
+    <tbody data-advanced-table-body><tr><td colspan="5">Hodnoty se zobrazí po načtení grafu.</td></tr></tbody>
+   </table>
+  </div>
+ </details>
  <details class="history-data-details">
   <summary>Jak číst graf a odkud údaje pocházejí?</summary>
   <p class="source-note">Rozlišujeme naměřené, odvozené a rekonstruované hodnoty. Údaje zobrazujeme v místním čase včetně změn letního a zimního času. U delších období používáme hodinové nebo denní souhrny; CSV obsahuje skutečně vrácené hodnoty včetně označení kvality.</p>
@@ -77,12 +86,17 @@
   const retry=root.querySelector<HTMLButtonElement>('[data-advanced-retry]');
   const qualitySummary=root.querySelector<HTMLElement>('[data-history-quality-summary]');
   const exportButton=root.querySelector<HTMLButtonElement>('[data-history-export]');
+  const tableDetails=root.querySelector<HTMLDetailsElement>('[data-advanced-table]');
+  const tableBody=root.querySelector<HTMLTableSectionElement>('[data-advanced-table-body]');
   const chart=echarts.init(canvas,undefined,{renderer:'svg'});
   const observer=new ResizeObserver(()=>chart.resize());observer.observe(canvas);
   const formatter=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Prague',year:'numeric',month:'2-digit',day:'2-digit'});
   const localDate=(date:Date)=>formatter.format(date);
   let activeRange='7d',controller:AbortController|undefined,results:HistoryResponse[]=[];
   const valid=(p:HistoryPoint)=>p.value!==null&&Number.isFinite(p.value)&&p.quality!=='missing'&&p.quality!=='suspect';
+  const tableTimeFormat=new Intl.DateTimeFormat('cs-CZ',{
+   dateStyle:'short',timeStyle:'short',timeZone:'Europe/Prague'
+  });
   const qualityName=(quality:HistoryPoint['quality'])=>({measured:'měřeno',derived:'odvozeno',reconstructed:'rekonstruováno',suspect:'podezřelé',missing:'chybí'}[quality]);
   const escapeHtml=(value:string)=>value.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]??c));
   const names:Record<string,string>={
@@ -94,6 +108,38 @@
    outTemp:'°C',outHumidity:'%',barometer:'hPa',windSpeed:'m/s',
    windGust:'m/s',rain:'mm',rainRate:'mm/h',radiation:'W/m²',pm25_1:'µg/m³'
   };
+  // Render exact API points lazily; never interpolate missing / suspect data.
+  function renderDataTable(){
+   if(!tableBody||!tableDetails?.open)return;
+   const fragment=document.createDocumentFragment();
+   for(const result of results){
+    for(const point of result.points){
+     const row=document.createElement('tr');
+     const end=Date.parse(point.endTime);
+     const fields=[
+      Number.isFinite(end)?tableTimeFormat.format(new Date(end)):'Neznámý čas',
+      names[result.metric]??result.metric,
+      valid(point)?formatValue(point.value as number,2)+' '+(units[result.metric]??result.unit):'—',
+      qualityName(point.quality),
+      point.provenance??point.source??'Neurčený'
+     ];
+     fields.forEach((text,index)=>{
+      const cell=row.insertCell();cell.textContent=text;
+      if(index===3)cell.dataset.quality=point.quality;
+     });
+     fragment.append(row);
+    }
+   }
+   if(!fragment.childNodes.length){
+    const row=document.createElement('tr'),cell=row.insertCell();
+    cell.colSpan=5;cell.textContent='Pro vybrané období nejsou dostupné žádné záznamy.';
+    fragment.append(row);
+   }
+   tableBody.replaceChildren(fragment);
+  }
+  tableDetails?.addEventListener('toggle',()=>{
+   if(tableDetails.open)renderDataTable();
+  });
   // Consistent semantically grouped chart palette for both design themes.
   const lightColors:Record<string,string>={
    outTemp:'#176878',outHumidity:'#386e96',barometer:'#665d83',
@@ -140,6 +186,11 @@
   async function refresh(){
    controller?.abort();controller=new AbortController();
    const signal=controller.signal;results=[];
+   if(tableBody&&tableDetails?.open){
+    tableBody.replaceChildren();
+    const row=tableBody.insertRow(),cell=row.insertCell();
+    cell.colSpan=5;cell.textContent='Načítám aktuální výběr grafu…';
+   }
    if(exportButton)exportButton.disabled=true;
    if(summary)summary.replaceChildren();
    if(feedback)feedback.hidden=true;
@@ -250,6 +301,7 @@
      }
     }
     if(exportButton)exportButton.disabled=!total;
+    renderDataTable();
     if(!total){
      canvas.hidden=true;
      if(feedback)feedback.hidden=false;
@@ -267,6 +319,7 @@
     if(feedbackText)feedbackText.textContent=e instanceof Error&&e.message.startsWith('Vyber období')?
      e.message:'Údaje se nepodařilo načíst. Můžeš opakovat požadavek.';
     if(summary)summary.textContent='Zobrazené hodnoty nebyly aktualizovány.';
+    renderDataTable();
    }
   }
   retry?.addEventListener('click',()=>void refresh());

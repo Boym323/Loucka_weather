@@ -40,6 +40,7 @@ jobs:
           node --check scripts/wind-compass-browser-check.mjs
           node --check scripts/current-failover-race-browser-check.mjs
           node --check scripts/current-coalesce-browser-check.mjs
+          node --check scripts/ux-media-history-browser-check.mjs
       - name: Unit tests
         run: npm test
       - name: Build static website
@@ -57,6 +58,7 @@ jobs:
           node scripts/wind-compass-browser-check.mjs
           node scripts/current-failover-race-browser-check.mjs
           node scripts/current-coalesce-browser-check.mjs
+          node scripts/ux-media-history-browser-check.mjs
           node scripts/climate-firstfold-review.mjs
       - uses: actions/upload-artifact@v7
         if: always()
