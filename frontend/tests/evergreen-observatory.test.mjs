@@ -46,12 +46,16 @@ test('hero current temperature and dewpoint are only displayed from source readi
 test('responsive photo composition and dark mode have explicit rules',async()=>{
  const css=await source('src/styles/observatory-evergreen.css');
  const base=await source('src/layouts/BaseLayout.astro');
- assert.match(base,/observatory-evergreen\.css/);
+ const page=await source('src/pages/index.astro');
+ assert.doesNotMatch(base,/observatory-evergreen\.css/);
+ assert.match(page,/import '\.\.\/styles\/observatory-evergreen\.css'/);
  assert.match(css,/\.evergreen-landscape img/);
  assert.match(css,/backdrop-filter:blur/);
  assert.match(css,/grid-template-areas:"core wind chart"/);
  assert.match(css,/grid-template-areas:"core" "daily" "wind" "chart"/);
  assert.match(css,/:root\[data-theme="dark"\] \.evergreen-home/);
+ assert.match(css,/:root\[data-theme="dark"\] \.evergreen-hero \.wind-hero \.wind-gauge:not\(\.wind-gauge-v2\)/);
+ assert.doesNotMatch(css,/:root\[data-theme="dark"\] \.evergreen-hero \.wind-hero \.wind-gauge\s*\{/);
  assert.match(css,/@media\(max-width:760px\)/);
  assert.match(css,/prefers-reduced-motion/);
 });

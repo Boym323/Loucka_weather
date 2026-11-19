@@ -220,13 +220,13 @@
  display:flex;align-items:center;justify-content:center;gap:11px;
  margin:8px 0 14px;min-height:0;flex:1
 }
-.evergreen-hero .wind-hero .wind-gauge{
+.evergreen-hero .wind-hero .wind-gauge:not(.wind-gauge-v2){
  width:134px;height:134px;max-width:45%;
  background:radial-gradient(circle,#f9fefd,#ebf5f5 85%)!important;
  border:1.5px solid #86bac4!important;
  box-shadow:none!important;flex-shrink:0
 }
-.evergreen-hero .wind-hero .wind-gauge::before,.evergreen-hero .wind-hero .wind-gauge::after{
+.evergreen-hero .wind-hero .wind-gauge:not(.wind-gauge-v2)::before,.evergreen-hero .wind-hero .wind-gauge:not(.wind-gauge-v2)::after{
  background:#a7c9ce!important
 }
 .evergreen-hero .wind-hero .wind-north,
@@ -502,7 +502,7 @@
 :root[data-theme="dark"] .evergreen-hero .evergreen-daily .daily-brief-item strong{
  color:#f0f8f5!important
 }
-:root[data-theme="dark"] .evergreen-hero .wind-hero .wind-gauge{
+:root[data-theme="dark"] .evergreen-hero .wind-hero .wind-gauge:not(.wind-gauge-v2){
  background:radial-gradient(circle,#e7f3f1,#bad6d4)!important
 }
 :root[data-theme="dark"] .evergreen-spotlight .observatory-sky{
@@ -555,7 +555,7 @@
  .evergreen-hero .evergreen-daily{padding:3px 15px 14px}
  .evergreen-hero .evergreen-wind{padding:16px 12px}
  .evergreen-hero .wind-hero .wind-layout{gap:9px}
- .evergreen-hero .wind-hero .wind-gauge{width:114px;height:114px}
+ .evergreen-hero .wind-hero .wind-gauge:not(.wind-gauge-v2){width:114px;height:114px}
  .evergreen-hero .current-panel .metric-grid{
   grid-template-columns:minmax(150px,1.1fr) minmax(130px,.82fr)!important
  }
@@ -615,7 +615,7 @@
   display:grid;grid-template-columns:110px minmax(0,1fr);
   justify-content:start;align-items:center;gap:17px;margin:6px 0
  }
- .evergreen-hero .wind-hero .wind-gauge{
+ .evergreen-hero .wind-hero .wind-gauge:not(.wind-gauge-v2){
   width:110px;height:110px;max-width:none
  }
  .evergreen-hero .wind-hero .observatory-wind-readout{
@@ -661,7 +661,7 @@
  .evergreen-hero .current-panel .metric-card.featured .metric-number{font-size:55px!important}
  .evergreen-hero .current-panel .metric-card:not(.featured) .metric-number{font-size:16px!important}
  .evergreen-hero .wind-hero .wind-layout{gap:10px}
- .evergreen-hero .wind-hero .wind-gauge{width:100px;height:100px}
+ .evergreen-hero .wind-hero .wind-gauge:not(.wind-gauge-v2){width:100px;height:100px}
  .evergreen-hero .wind-speed-pair strong{font-size:16px}
 }
 @media(prefers-reduced-motion:reduce){
