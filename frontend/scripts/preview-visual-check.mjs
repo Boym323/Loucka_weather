@@ -88,11 +88,17 @@ try{
   // CI-only lab observers: initialized before each navigation and read locally.
   // This code is injected by Playwright; it is NOT included in Astro bundles.
   await page.addInitScript(()=>{
-   const lab={lcpCandidateMs:null,clsSessionMax:0,longTaskCount:0,longTaskDurationMs:0};
+   const lab={lcpCandidateMs:null,lcpCandidateType:null,clsSessionMax:0,longTaskCount:0,longTaskDurationMs:0};
    window.__louckaVisitorLab=lab;
    try{
     new PerformanceObserver(list=>{
-     for(const entry of list.getEntries())lab.lcpCandidateMs=entry.startTime;
+     for(const entry of list.getEntries()){
+      lab.lcpCandidateMs=entry.startTime;
+      const tag=entry.element?.tagName?.toLowerCase();
+      lab.lcpCandidateType=tag==='img'?'image':
+       tag==='h1'||tag==='h2'?'heading':
+       tag==='p'||tag==='span'||tag==='div'?'text-or-container':'other';
+     }
     }).observe({type:'largest-contentful-paint',buffered:true});
    }catch{/* Unsupported entry type: leave null. */}
    try{
@@ -707,6 +713,7 @@ try{
       navigationDurationMs:nav?round(nav.duration):null,
       firstContentfulPaintMs:fcp?round(fcp.startTime):null,
       lcpCandidateMs:lab?.lcpCandidateMs==null?null:round(lab.lcpCandidateMs),
+      lcpCandidateType:lab?.lcpCandidateType??null,
       clsSessionMaxSoFar:lab?Math.round(lab.clsSessionMax*10000)/10000:null,
       longTaskCount:lab?.longTaskCount??null,
       longTaskDurationMs:lab?round(lab.longTaskDurationMs):null,

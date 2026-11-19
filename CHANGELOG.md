@@ -6,6 +6,11 @@
 - Testovací označení a návrat na běžnou verzi jsou viditelné jen v mobilní experimentální variantě; bez ukládání preferencí, analytics či dalších API požadavků.
 - Izolovaný Chromium screenshot test ověřuje 320/390/1440 a oba motivy. Před výchozím přepnutím je nutné skutečné uživatelské porovnání; viz `docs/MOBILE_FIRSTFOLD_TRIAL_2026-11-19.md`.
 
+## 2026-11-19 – První cílená optimalizace kritické cesty domovské stránky
+- Po DEV laboratorním smoke `44488456029` (deployed `019623c`) byl externí kamerový obrázek mezi nejpomalejšími zdroji (~689 ms). Domovská stránka v záhlaví včas otevírá spojení k tomuto zdroji a přednačítá stejnou skutečnou fotografii jako prioritní obrázek; ostatní stránky nejsou dotčeny.
+- Laboratorní report nově uvádí jen anonymní kategorii LCP kandidáta (obrázek, nadpis, text/kontejner, ostatní). Nezaznamenává URL, identitu návštěvníka, obsah snímku ani meteorologická data.
+- Jde o hypotézu zrychlení, nikoli změřený přínos. Po merge nutný porovnávací DEV smoke a případné odstranění hintu, pokud se neprokáže přínos. Bez databáze, WeeWX či produkce.
+
 
 ## 2026-11-19 – Přesnější laboratorní diagnostika pomalého načítání
 - Veřejný DEV prohlížečový smoke ukládá vedle TTFB/FCP také průběžného kandidáta LCP, dosud pozorované posuny rozložení, dlouhé úlohy a pět nejpomalejších kategorií zdrojů.
