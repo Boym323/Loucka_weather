@@ -52,7 +52,9 @@ jobs:
       - name: Verify responsive layout and legibility in Chromium
         run: |
           npm install --no-save --no-audit --no-fund playwright@1.56.1 axe-core@4.14.0
-          npx playwright install --with-deps chromium
+          # Ubuntu security apt mirror returned HTTP 503 on 19 Nov: use the
+          # runner's provisioned browser libraries; install only pinned Chromium.
+          npx playwright install chromium
           npm run preview -- --host 127.0.0.1 --port 4321 > /tmp/loucka-layout-preview.log 2>&1 &
           node scripts/evergreen-layout-audit.mjs
           node scripts/year-comparison-browser-check.mjs
