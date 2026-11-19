@@ -46,6 +46,15 @@ try{
    await page.goto(new URL('grafy/',origin).href,{waitUntil:'domcontentloaded',timeout:30000});
    await page.waitForFunction(()=>document.querySelector('[data-advanced-status]')?.textContent?.includes('Zobrazeno'),null,{timeout:20000});
    const before=historyRequests;
+   const zoomIn=page.locator('[data-history-zoom="in"]');
+   assert.equal(await zoomIn.isEnabled(),true,'Zoom becomes available for valid points');
+   await zoomIn.focus();
+   await page.keyboard.press('Enter');
+   await page.waitForFunction(()=>document.querySelector('[data-history-zoom-status]')?.textContent?.includes('50 %'));
+   await page.locator('[data-history-zoom="reset"]').focus();
+   await page.keyboard.press('Space');
+   await page.waitForFunction(()=>document.querySelector('[data-history-zoom-status]')?.textContent?.includes('celé zvolené období'));
+   assert.equal(historyRequests,before,'Keyboard zoom must not refetch history');
    await page.locator('[data-advanced-table] > summary').click();
    await page.waitForFunction(()=>document.querySelectorAll('[data-advanced-table-body] tr').length===4,null,{timeout:5000});
    const table=await page.evaluate(()=>({
@@ -78,7 +87,7 @@ try{
    else assert.equal(nav.dock,'none');
    if(capture)await page.screenshot({path:'test-results/ux-media-history/camera-'+width+'-'+theme+'.png',fullPage:false});
    assert.deepEqual(errors,[]);
-   console.log('UX MEDIA HISTORY',width,theme,'table=4 rows poster=real, nav='+nav.top+'/'+nav.dock);
+   console.log('UX MEDIA HISTORY',width,theme,'keyboard zoom OK, table=4 rows poster=real, nav='+nav.top+'/'+nav.dock);
    await ctx.close();
   }
  }

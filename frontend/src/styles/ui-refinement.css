@@ -625,3 +625,13 @@
 @media(max-width:650px){
  .history-table-alternative .history-table{min-width:520px}
 }
+
+/* History time-axis controls remain usable by keyboard and touch. */
+.advanced-history .history-zoom-controls{
+ display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0 6px
+}
+.advanced-history .history-zoom-controls .chart-tab{min-height:44px}
+.advanced-history .history-zoom-controls .chart-tab:disabled{
+ opacity:.55;cursor:not-allowed
+}
+.advanced-history .history-zoom-hint{margin:0 0 10px}

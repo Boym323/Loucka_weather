@@ -43,6 +43,13 @@
   <button class="history-apply" type="submit">Zobrazit</button>
   <button class="history-export" type="button" data-history-export disabled>Stáhnout CSV</button>
  </form>
+ <div class="history-zoom-controls" role="group" aria-label="Přiblížení časové osy grafu">
+  <button type="button" class="chart-tab" data-history-zoom="in" disabled>Přiblížit</button>
+  <button type="button" class="chart-tab" data-history-zoom="out" disabled>Oddálit</button>
+  <button type="button" class="chart-tab" data-history-zoom="reset" disabled>Celé období</button>
+ </div>
+ <p class="source-note history-zoom-hint">Časovou osu upravíš tlačítky nebo posuvníkem pod grafem. Tlačítka lze ovládat i klávesnicí; všechny hodnoty najdeš v tabulce níže.</p>
+ <p class="sr-only" data-history-zoom-status role="status">Časová osa zatím není dostupná.</p>
  <div class="advanced-history-chart" data-advanced-canvas role="img" aria-label="Dynamický časový graf archivních měření"></div>
  <div class="advanced-history-feedback" data-advanced-feedback hidden role="status">
   <span data-advanced-feedback-text>Graf není dostupný.</span>
@@ -94,6 +101,42 @@
   const localDate=(date:Date)=>formatter.format(date);
   let activeRange='7d',controller:AbortController|undefined,results:HistoryResponse[]=[];
   const valid=(p:HistoryPoint)=>p.value!==null&&Number.isFinite(p.value)&&p.quality!=='missing'&&p.quality!=='suspect';
+  const zoomButtons=[...root.querySelectorAll<HTMLButtonElement>('[data-history-zoom]')];
+  const zoomStatus=root.querySelector<HTMLElement>('[data-history-zoom-status]');
+  const setZoomEnabled=(enabled:boolean)=>{
+   for(const button of zoomButtons)button.disabled=!enabled;
+  };
+  // The ECharts slider and the native buttons operate on the same time-axis
+  // percentage window. No fetched or reconstructed measurement is modified.
+  const zoomWindow=()=>{
+   const options=chart.getOption() as {dataZoom?:Array<{start?:number;end?:number}>};
+   const window=options.dataZoom?.[0];
+   return {
+    start:typeof window?.start==='number'?window.start:0,
+    end:typeof window?.end==='number'?window.end:100
+   };
+  };
+  const updateZoomStatus=()=>{
+   if(!zoomStatus)return;
+   const {start,end}=zoomWindow();
+   const share=Math.max(0,Math.min(100,Math.round(end-start)));
+   zoomStatus.textContent=share>=99?'Časová osa zobrazuje celé zvolené období.':
+    'Časová osa zobrazuje přibližně '+share+' % zvoleného období.';
+  };
+  const zoomBy=(action:string)=>{
+   const {start,end}=zoomWindow();
+   const width=Math.max(2,Math.min(100,end-start));
+   const nextWidth=action==='in'?Math.max(2,width/2):
+    action==='out'?Math.min(100,width*2):100;
+   const nextStart=action==='reset'?0:
+    Math.max(0,Math.min(100-nextWidth,(start+end-nextWidth)/2));
+   chart.dispatchAction({type:'dataZoom',start:nextStart,end:nextStart+nextWidth});
+   updateZoomStatus();
+  };
+  chart.on('datazoom',updateZoomStatus);
+  for(const button of zoomButtons){
+   button.addEventListener('click',()=>zoomBy(button.dataset.historyZoom??'reset'));
+  }
   const tableTimeFormat=new Intl.DateTimeFormat('cs-CZ',{
    dateStyle:'short',timeStyle:'short',timeZone:'Europe/Prague'
   });
@@ -192,6 +235,8 @@
     cell.colSpan=5;cell.textContent='Načítám aktuální výběr grafu…';
    }
    if(exportButton)exportButton.disabled=true;
+   setZoomEnabled(false);
+   if(zoomStatus)zoomStatus.textContent='Časová osa se načítá.';
    if(summary)summary.replaceChildren();
    if(feedback)feedback.hidden=true;
    canvas.hidden=false;
@@ -301,6 +346,9 @@
      }
     }
     if(exportButton)exportButton.disabled=!total;
+    setZoomEnabled(total>1);
+    if(total>1)updateZoomStatus();
+    else if(zoomStatus)zoomStatus.textContent='Pro přiblížení není dostatek platných hodnot.';
     renderDataTable();
     if(!total){
      canvas.hidden=true;
@@ -312,6 +360,8 @@
    }catch(e){
     if(signal.aborted)return;
     chart.clear();
+    setZoomEnabled(false);
+    if(zoomStatus)zoomStatus.textContent='Časovou osu teď nelze přiblížit.';
     if(status){status.textContent='Historie nedostupná';status.className='status-chip error';}
     canvas.hidden=true;
     if(feedback)feedback.hidden=false;
