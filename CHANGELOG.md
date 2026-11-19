@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-19 – Oprava vyvážení desktopové observatoře podle uživatelského PDF
+- Jednostránkový screenshot úvodu při 1328 px odhalil chybu: starší Atlas pravidlo pro historii mezi 761–1330 px vytlačilo kartu historických měření na celý samostatný řádek a kartu stanice osamoceně doleva; vpravo zůstávaly nevyužité plochy.
+- V Evergreen homepage lokálně rušíme pouze `grid-column:1/-1` historické karty. Desktop ≥1271 px ukazuje čtyři přístroje v jednom řádku, tablet 761–1270 px ve dvou vyvážených dvojicích, mobil do 760 px zůstává pod sebou v původním pořadí.
+- Chromium layout gate rozšířen na 5 tras × 320/390/1024/1328/1440 px × light/dark (50 kombinací) s kontrolou skutečných pozic a screenshotem celé homepage při 1328 px. Žádné změny API, meteorologických hodnot, WeeWX, DB ani produkce.
+
 ## 2026-11-19 – Finální vizuální sjednocení návštěvnických stránek
 - Společný rytmus titulků a úvodních popisů na 15 trasách, čitelnější mobilní popisky a zdroje měření; jednotné dotykové cíle alespoň 44 px u grafů, kamerového ovládání a rozbalovacích částí.
 - Téma zůstává založené na stávajících proměnných Atlas, obsah živých a archivních dat se nemění; úvodní stránka a klimatologické rozložení zůstávají stejné. Volitelná mobilní varianta `?mobile=compact` **není nastavena jako výchozí** bez uživatelského testu.
