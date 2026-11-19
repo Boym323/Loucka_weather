@@ -79,13 +79,13 @@ try{
     cacheControl.includes('no-cache')?'no-cache':
     cacheControl.includes('private')?'private':
     cacheControl.includes('public')?'public':'unspecified';
-   const age=cacheControl.match(/(?:^|,)\\s*max-age\\s*=\\s*(\\d+)/);
+   const age=cacheControl.match(/(?:^|,)\s*max-age\s*=\s*(\d+)/);
    c.cacheMaxAgeSeconds=age?Math.min(Number(age[1]),31536000):null;
    c.etagPresent=!!header(resp.headers,'etag');
    c.lastModifiedPresent=!!header(resp.headers,'last-modified');
-   c.contentType=/^image\\/jpeg/i.test(resp.mimeType)?'jpeg':
-    /^image\\/webp/i.test(resp.mimeType)?'webp':
-    /^image\\/avif/i.test(resp.mimeType)?'avif':'other';
+   c.contentType=/^image\/jpeg/i.test(resp.mimeType)?'jpeg':
+    /^image\/webp/i.test(resp.mimeType)?'webp':
+    /^image\/avif/i.test(resp.mimeType)?'avif':'other';
    c.servedFromCache=!!(resp.fromDiskCache||resp.fromServiceWorker);
   });
   session.on('Network.loadingFinished',event=>{
