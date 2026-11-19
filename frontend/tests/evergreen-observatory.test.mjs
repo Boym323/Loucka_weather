@@ -54,6 +54,8 @@ test('responsive photo composition and dark mode have explicit rules',async()=>{
  assert.match(css,/grid-template-areas:"core wind chart"/);
  assert.match(css,/grid-template-areas:"core" "daily" "wind" "chart"/);
  assert.match(css,/:root\[data-theme="dark"\] \.evergreen-home/);
+ assert.match(css,/:root\[data-theme="dark"\] \.evergreen-hero \.wind-hero \.wind-gauge:not\(\.wind-gauge-v2\)/);
+ assert.doesNotMatch(css,/:root\[data-theme="dark"\] \.evergreen-hero \.wind-hero \.wind-gauge\s*\{/);
  assert.match(css,/@media\(max-width:760px\)/);
  assert.match(css,/prefers-reduced-motion/);
 });
