@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-19 – Velikost kamery a CSS z již běžících mobilních testů
+- Do 3× slow-4G/CPU veřejného DEV smoke doplněno čtení **existujících** CDP odpovědí hlavního JPEG a vlastních CSS: přenesené bajty včetně HTTP overhead, stav odpovědi, typ obrázku, nativní rozměry, případná hodnota Content-Length, cache max-age/typ politiky a přítomnost ETag/Last-Modified.
+- Jde jen o anonymní souhrny a kategorie. Neukládají se URL zdrojů, hlavičky jako text, obsah obrázků, IP, osobní údaje, hodnoty počasí ani identifikátory návštěvníků; nevytvářejí se žádné nové požadavky na server či DB.
+- Test rozlišuje chybějící hlavičku od nuly. CDP `encodedDataLength` je orientační síťový přenos včetně overhead, nikoli přesná velikost samotného JPEG; jedna cold odpověď neprokazuje chování při znovunačtení.
+- Získané hodnoty slouží jako podklad pro navazující malou optimalizaci; bez změny fotografie, API, archivů, produkce a WeeWX.
+
 ## 2026-11-19 – Styly úvodní meteorologické observatoře jen na úvodní stránce
 - Dlouhá stránkově specifická sada `observatory-evergreen.css` (35 747 B nekomprimovaného zdrojového CSS) už není globálním importem `BaseLayout.astro`. Načítá se pouze z `src/pages/index.astro`, kde jsou všechny její prvky.
 - Regresní Chromium test ověřuje skutečně aplikovaný CSS token na homepage a nepřítomnost této sady pravidel na `/aktualne/` po Astro build. Existující layout testy pokrývají 320–1440 px, světlé/tmavé barvy, grafy a kameru.
