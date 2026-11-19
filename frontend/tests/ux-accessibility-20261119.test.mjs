@@ -33,7 +33,7 @@ test('MP4 poster is from a real same-day archive JPEG or is absent',async()=>{
  assert.match(archive,/data-archive-poster-note hidden/);
  assert.match(archive,/posterFrames=Array\.isArray\(data\.frames\)/);
  assert.match(archive,/localDay\(frame\.fetchedAt\)===day/);
- assert.match(archive,/^/);
+ assert.match(archive,/const validFrame=\(frame:Frame\)/);
  assert.match(archive,/if\(match\)player\.poster=match\.url/);
  assert.match(archive,/else player\.removeAttribute\('poster'\)/);
  assert.match(archive,/preload="none" playsinline/);
