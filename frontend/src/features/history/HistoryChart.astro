@@ -43,7 +43,7 @@ const tabs = [
  let departed=false;
  document.addEventListener('astro:before-swap',()=>{departed=true;},{once:true});
  // For mobile homepage only, avoid competing with the above-the-fold
- // camera/CSS critical path. Render immediately if the chart is near view;
+ // camera/CSS critical path. Render immediately if the chart is in view;
  // otherwise import when near view, with a bounded fallback so the default
  // visible page still paints the authentic chart without user interaction.
  // The opt-in collapsed layout has no fallback until the chart is revealed.
@@ -54,14 +54,14 @@ const tabs = [
     window.matchMedia('(max-width:760px)').matches&&
     'IntersectionObserver' in window){
    if(visibilityGateInstalled)return;
-   const nearTop=homeChart.getBoundingClientRect().top<=window.innerHeight+180;
+   const nearTop=homeChart.getBoundingClientRect().top<=window.innerHeight-40;
    const isHiddenPreview=document.documentElement.dataset.mobileHomeVariant==='compact';
    if(!nearTop||isHiddenPreview){
     visibilityGateInstalled=true;
     let fallback:number|undefined;
     const observer=new IntersectionObserver(entries=>{
      if(entries.some(entry=>entry.isIntersecting))release();
-    },{rootMargin:'180px 0px'});
+    },{rootMargin:'0px 0px -40px 0px'});
     const release=()=>{
      if(visibilityGateReleased||departed)return;
      visibilityGateReleased=true;
