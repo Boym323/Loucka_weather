@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-19 – Klimatologické styly jen na klimatologických stránkách
+- PageSpeed ukázal na DEV mobilu 59/100, FCP 5,1 s a LCP 8,6 s v simulované pomalé síti; uvádí 124 KiB nepoužitého CSS a render-blocking potenciál 870 ms. Jde o jednorázové laboratorní hodnoty, nikoli data návštěvníků.
+- CSS `climate-atlas.css` (~18,8 kB před kompresí) se již nenačítá na všech trasách přes BaseLayout, ale jen na pěti stránkách klimatologického atlasu; sdílená pravidla pro tisk zůstávají v globálním přístupnostním CSS.
+- Regresní testy střeží kompletní seznam atlasových tras, přítomnost lokálního importu a oddělení pravidel pro tisk. Úsporu v přenosu a LCP je potřeba teprve změřit na veřejném DEV ve zpomaleném režimu.
+
 ## 2026-11-19 – První cílená optimalizace kritické cesty domovské stránky
 - Po DEV laboratorním smoke `44488456029` (deployed `019623c`) byl externí kamerový obrázek mezi nejpomalejšími zdroji (~689 ms). Domovská stránka v záhlaví včas otevírá spojení k tomuto zdroji a přednačítá stejnou skutečnou fotografii jako prioritní obrázek; ostatní stránky nejsou dotčeny.
 - Laboratorní report nově uvádí jen anonymní kategorii LCP kandidáta (obrázek, nadpis, text/kontejner, ostatní). Nezaznamenává URL, identitu návštěvníka, obsah snímku ani meteorologická data.
