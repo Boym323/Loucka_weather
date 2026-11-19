@@ -23,6 +23,11 @@ test('slow mobile lab uses isolated, bounded cold runs with no visitor instrumen
  assert.match(lab,/Network\.loadingFailed/);
  assert.match(lab,/cameraTransfer:evidence\.camera/);
  assert.match(lab,/stylesheetTransfer:evidence\.styles/);
+ assert.match(lab,/gzipEncodedResponses/);
+ assert.match(lab,/brEncodedResponses/);
+ assert.match(lab,/varyAcceptEncodingResponses/);
+ assert.match(lab,/immutableCacheResponses/);
+ assert.match(lab,/accept-encoding/);
  assert.match(lab,/cacheMaxAgeSeconds/);
  assert.match(lab,/contentLengthBytes/);
  assert.match(lab,/etagPresent/);
