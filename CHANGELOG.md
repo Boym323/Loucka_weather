@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-19 – Finální vizuální sjednocení návštěvnických stránek
+- Společný rytmus titulků a úvodních popisů na 15 trasách, čitelnější mobilní popisky a zdroje měření; jednotné dotykové cíle alespoň 44 px u grafů, kamerového ovládání a rozbalovacích částí.
+- Téma zůstává založené na stávajících proměnných Atlas, obsah živých a archivních dat se nemění; úvodní stránka a klimatologické rozložení zůstávají stejné. Volitelná mobilní varianta `?mobile=compact` **není nastavena jako výchozí** bez uživatelského testu.
+- Přidána samostatná krátká Chromium vizuální brána s 320/390/1440 px, světlem/tmou, popisky, navigací, textovým zvětšením a screenshoty bez osobních údajů. Z GitHub Actions byly odstraněny závislosti na apt mirroru `security.ubuntu.com` při instalaci prohlížeče, protože 19. 11. vracel HTTP 503. Nezaručuje to dostupnost CDN ani stav DEV.
+- Původní meteorologické hodnoty, databáze, WeeWX a produkční web zůstávají beze změny. Skutečné iPhone/Safari/VoiceOver/TalkBack ověření je samostatná nepokrytá ruční kontrola.
+
 ## 2026-11-19 – Mobilní ECharts až při přiblížení k historickému grafu
 - Na běžné homepage při mobilní šířce se objemná knihovna ECharts načítá až po skutečném vstupu grafu do viewportu (IntersectionObserver, spodní okraj −40 px), nejpozději po 3,5 s. Tím může uvolnit síť/CPU pro hlavní kamerový obrázek a měření.
 - Na desktopu a specializovaných stránkách zůstává původní automatické vykreslení. U dobrovolně sbalené kompaktní varianty se skrytý graf nepřipravuje, dokud není zobrazen.
