@@ -675,6 +675,6 @@
  }
  :root[data-mobile-home-variant="compact"] .evergreen-hero[data-expert-open="true"] .evergreen-wind,
  :root[data-mobile-home-variant="compact"] .evergreen-hero[data-expert-open="true"] .evergreen-chart{
-  display:block
+  display:flex
  }
 }
