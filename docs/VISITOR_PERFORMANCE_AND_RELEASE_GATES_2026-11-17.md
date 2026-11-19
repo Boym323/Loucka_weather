@@ -47,3 +47,12 @@ Veřejný DEV smoke #44488456029 potvrdil přesnou revizi `019623c1b8635a7bfd565
 Žádné dlouhé úlohy nebyly tímto laboratorním pozorováním zachyceny, což **není** důkaz nulového INP. Jednotlivá navigace neprokazuje statistickou významnost ani kauzalitu. Vysoká doba stahování externího obrázku je konkrétní hypotéza pro zlepšení načítání a pro kontrolu spojení v prohlížeči; nelze ji zaměňovat za laboratorní LCP.
 
 Navazující úzká změna používá jen na úvodu `preconnect` na kamerový hostitel a prioritní `preload` totožného JPEG. Původní čas pořízení snímku zůstává neověřený. Laboratorní observer nově označí element kandidáta LCP pouze jako `image`, `heading`, `text-or-container` nebo `other`; žádné URL/selektory/obsah ani návštěvnické vstupy se neukládají. V novém smoke porovnat FCP/LCP a externí obrázek, případně změnu vrátit bez dalších přístupů k API/DB.
+
+### Doplnění 19. 11. 2026 – pomalý mobilní profil po PageSpeed
+Provozovatel dodal PSI desktop 99 vs. mobil 59, mobil FCP 5,1 s a LCP 8,6 s na emulovaném Moto G Power / pomalé 4G (19. 11. 2026 09:52 SEČ). Rychlé jednotlivé DEV vizuální smoke bez omezení sítě nejsou adekvátní prediktor pomalého mobilu.
+
+Nový `frontend/scripts/mobile-slow4g-lab.mjs` je **izolovaný Playwright + CDP test** spouštěný až po běžném veřejném smoke a kontrole přesného veřejného SHA, nikoliv přímo na návštěvnických stránkách. Profil: viewport 390×844, 4× CPU throttle, 1,6 Mbit/s down, 0,75 Mbit/s up, 150 ms latence, tři nové browser contexts se zakázanou cache; maximálně tři sekvenční návštěvy homepage, nikoli zátěžový test API. Poslední kandidát LCP a dosud nasbírané CLS se odečtou až po načtení kamerového snímku nebo po omezeném čekání.
+
+JSON `frontend/test-results/preview-screenshots/mobile-slow4g-lab.json` ukládá jednotlivé vzorky, mediány a pouze anonymní kategorie pomalých zdrojů. URL konkrétních zdrojů, jejich obsah, interní hosty, IP návštěvníků ani weather readings neukládá. Perf test je zatím v workflow `continue-on-error`: neznámý výchozí výkon se nesmí vydávat za vynutitelný budget a nestabilní externí webcam nesmí způsobovat falešný FAIL bezpečnostní brány. Každý běh má být přezkoumán.
+
+**Nelze numericky srovnávat skóre PageSpeed s těmito časy:** profil CDP používá skutečně emulované síťové podmínky na runneru, nikoli identický Lighthouse throttling a skórovací model. Jsou to synthetic, nikoli field data, neobsahuje INP, nevytváří se analytics endpoint a nevzniká žádné SQL.
