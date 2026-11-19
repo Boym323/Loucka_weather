@@ -29,7 +29,7 @@ test('browser design QA runs as a real CI gate at 320/390/1440 light/dark',async
  assert.match(script,/scrollWidth<=width\+2/);
  assert.match(script,/style\.fontSize='200%'/);
  assert.match(script,/\.camera-view-navigation/);
- assert.match(script,/fullPage:false/);
+ assert.match(script,/fullPage:width===1328/);
 });
 
 test('desktop observatory grid cancels old Atlas historical full-row spanning',async()=>{
