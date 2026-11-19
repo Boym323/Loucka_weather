@@ -46,3 +46,16 @@
 :root[data-theme="dark"] .evergreen-spotlight .observatory-history .observatory-kicker{
  color:#ddb68b;
 }
+
+
+/* The previous global climate CSS also contained page-wide print defaults.
+   Preserve those rules for non-climate pages when routing atlas styles. */
+@media print{
+ @page{size:A4;margin:15mm}
+ :root{color-scheme:light!important}
+ .site-header,.site-footer,.mobile-dock,.skip-link{display:none!important}
+ html,body,.content,.wrap{
+  background:#fff!important;color:#162b2b!important;
+  width:auto!important;max-width:none!important;margin:0!important;padding:0!important
+ }
+}

@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-19 – Klimatologické styly jen na klimatologických stránkách
+- PageSpeed ukázal na DEV mobilu 59/100, FCP 5,1 s a LCP 8,6 s v simulované pomalé síti; uvádí 124 KiB nepoužitého CSS a render-blocking potenciál 870 ms. Jde o jednorázové laboratorní hodnoty, nikoli data návštěvníků.
+- CSS `climate-atlas.css` (~18,8 kB před kompresí) se již nenačítá na všech trasách přes BaseLayout, ale jen na pěti stránkách klimatologického atlasu; sdílená pravidla pro tisk zůstávají v globálním přístupnostním CSS.
+- Regresní testy střeží kompletní seznam atlasových tras, přítomnost lokálního importu a oddělení pravidel pro tisk. Úsporu v přenosu a LCP je potřeba teprve změřit na veřejném DEV ve zpomaleném režimu.
+
 ## 2026-11-19 – Volitelný test kompaktního mobilního přehledu
 - Mobilní úvod může návštěvník porovnat s alternativou `/?mobile=compact` bez změny standardního zobrazení.
 - Testovací varianta zmenšuje dekorativní kamerovou krajinu a ponechá vítr a historický graf dostupné pod nativním tlačítkem; hodnoty, varování, zdroj a rychlé odkazy jsou zachované.
