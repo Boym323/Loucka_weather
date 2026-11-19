@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-19 – Mobilní ECharts až při přiblížení k historickému grafu
+- Na běžné homepage při mobilní šířce se objemná knihovna ECharts načítá až po vstupu grafu do přibližné zóny viditelnosti (IntersectionObserver + 180 px), nejpozději po 3,5 s. Tím může uvolnit síť/CPU pro hlavní kamerový obrázek a měření.
+- Na desktopu a specializovaných stránkách zůstává původní automatické vykreslení. U dobrovolně sbalené kompaktní varianty se skrytý graf nepřipravuje, dokud není zobrazen.
+- Žádná změna výsledků historie, jednotek, mezery NULL/suspect, čtení API ani zdroje dat. Regresní browser test používá jen izolované syntetické API fixture a ověřuje skutečné SVG po scrollu a možnost změny veličiny.
+- Účinek na FCP/LCP musí potvrdit 3× veřejný DEV slow4G/CPU smoke a nové PageSpeed; tato implementace sama o sobě neprokazuje zrychlení. Produkce a databáze beze změn.
+
 ## 2026-11-19 – Styly úvodní meteorologické observatoře jen na úvodní stránce
 - Dlouhá stránkově specifická sada `observatory-evergreen.css` (35 747 B nekomprimovaného zdrojového CSS) už není globálním importem `BaseLayout.astro`. Načítá se pouze z `src/pages/index.astro`, kde jsou všechny její prvky.
 - Regresní Chromium test ověřuje skutečně aplikovaný CSS token na homepage a nepřítomnost této sady pravidel na `/aktualne/` po Astro build. Existující layout testy pokrývají 320–1440 px, světlé/tmavé barvy, grafy a kameru.
