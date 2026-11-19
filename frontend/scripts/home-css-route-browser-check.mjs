@@ -9,7 +9,7 @@ const browser=await chromium.launch({headless:true});
 try{
  for(const path of ['/','/aktualne/','/grafy/']){
   const page=await browser.newPage({viewport:{width:390,height:844}});
-  const response=await page.goto(new URL(path,base).href,{waitUntil:'load'});
+  const response=await page.goto(new URL(path,base).href,{waitUntil:'domcontentloaded',timeout:25000});
   assert.equal(response?.status(),200,path+' must be available');
   const result=await page.evaluate(()=>({
    hasStyles:(()=>{
