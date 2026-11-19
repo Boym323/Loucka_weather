@@ -35,3 +35,15 @@ Bezpečný existující postup na DEV LXC: `python3 /home/loucka/Loucka_weather/
 | Produkce | Oddělená produkční akceptace, žádný automatický cutover z dev | Nepovoleno |
 
 Před ověřením všech bran je **release verdict NO-GO**. Nikdy neměnit původní `pocasi-loucka.eu.archive`, rekonstrukční kopii, WeeWX ani MariaDB prostřednictvím těchto testů. Nepřepínat produkční Nginx. Skript `deploy/lxc/site-readiness-audit.sh` je pouze čtecí; jeho úspěch necertifikuje externí firewall, zálohy nebo restore.
+
+### Aktualizace 19. 11. 2026 – kandidáti na omezení kritické cesty
+Veřejný DEV smoke #44488456029 potvrdil přesnou revizi `019623c1b8635a7bfd5651b442705b3d54f7183e` a 30 vzorků. Při jedné návštěvě úvodu v Chromium:
+
+| Viewport | FCP (ms) | LCP kandidát (ms) | dosud pozorovaný CLS | 5 nejdelších kategorií |
+|---|---:|---:|---:|---|
+| Desktop 1440 | 928 | 1192 | 0,034 | stejný web: skript 719; externí obrázek 689; další skripty ~514 |
+| Mobil 390 | 892 | 1156 | 0,0495 | stejný web: skript 720; externí obrázek 683; další skripty ~512 |
+
+Žádné dlouhé úlohy nebyly tímto laboratorním pozorováním zachyceny, což **není** důkaz nulového INP. Jednotlivá navigace neprokazuje statistickou významnost ani kauzalitu. Vysoká doba stahování externího obrázku je konkrétní hypotéza pro zlepšení načítání a pro kontrolu spojení v prohlížeči; nelze ji zaměňovat za laboratorní LCP.
+
+Navazující úzká změna používá jen na úvodu `preconnect` na kamerový hostitel a prioritní `preload` totožného JPEG. Původní čas pořízení snímku zůstává neověřený. Laboratorní observer nově označí element kandidáta LCP pouze jako `image`, `heading`, `text-or-container` nebo `other`; žádné URL/selektory/obsah ani návštěvnické vstupy se neukládají. V novém smoke porovnat FCP/LCP a externí obrázek, případně změnu vrátit bez dalších přístupů k API/DB.

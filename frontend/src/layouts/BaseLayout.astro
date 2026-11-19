@@ -39,6 +39,10 @@ const active = Astro.url.pathname;
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content={description} />
   <meta name="theme-color" content="#F6F9FB" />
+  {Astro.url.pathname==='/' && <>
+   <link rel="preconnect" href="https://webcam.pocasi-loucka.eu" />
+   <link rel="preload" href="https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg" as="image" fetchpriority="high" />
+  </>}
   <title>{title} | Počasí Loučka</title>
   <script is:inline>
    // Early bootstrap preserves manual choices before the theme module evaluates.

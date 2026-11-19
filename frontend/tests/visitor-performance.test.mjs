@@ -13,6 +13,7 @@ test('dev smoke records passive anonymous navigation and API evidence',async()=>
  assert.match(source,/hadRecentInput/);
  assert.match(source,/longtask/);
  assert.match(source,/lcpCandidateMs/);
+ assert.match(source,/lcpCandidateType/);
  assert.match(source,/clsSessionMaxSoFar/);
  assert.match(source,/resourceBottlenecks/);
  assert.match(source,/scope:entry\.name\.startsWith\(location\.origin/);
@@ -51,4 +52,13 @@ test('homepage does not block DOMContentLoaded on the ECharts history engine',as
  assert.match(engine,/echarts\.use\(\[LineChart,BarChart,GridComponent,TooltipComponent,DataZoomComponent,SVGRenderer\]\)/);
  assert.match(smoke,/deferred homepage history chart did not paint a real archive SVG/);
  assert.match(smoke,/\[data-chart-canvas\] svg/);
+});
+
+test('only homepage hints the real camera image in head without changing image URL',async()=>{
+ const layout=await readFile(new URL('../src/layouts/BaseLayout.astro',import.meta.url),'utf8');
+ const home=await readFile(new URL('../src/pages/index.astro',import.meta.url),'utf8');
+ assert.match(layout,/Astro\.url\.pathname==='\/'/);
+ assert.match(layout,/<link rel="preconnect" href="https:\/\/webcam\.pocasi-loucka\.eu" \/>/);
+ assert.match(layout,/<link rel="preload" href="https:\/\/webcam\.pocasi-loucka\.eu\/zapadni_kamera\.jpg" as="image" fetchpriority="high" \/>/);
+ assert.match(home,/src="https:\/\/webcam\.pocasi-loucka\.eu\/zapadni_kamera\.jpg" alt="" fetchpriority="high"/);
 });
