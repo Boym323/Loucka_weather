@@ -7,7 +7,7 @@ test('compact mobile firstfold is explicitly opt-in and does not change weather 
  const home=await read('src/pages/index.astro');
  const css=await read('src/styles/ui-refinement.css');
  assert.match(home,/get\('mobile'\)==='compact'/);
- assert.match(home,/data-mobile-home-variant/);
+ assert.match(home,/dataset\.mobileHomeVariant/);
  assert.match(home,/aria-controls="home-wind home-history" aria-expanded="false"/);
  assert.match(home,/Zpět na běžné zobrazení/);
  assert.match(home,/<CurrentPanel variant="observatory" \/>/);
