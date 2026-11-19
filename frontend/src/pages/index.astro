@@ -14,6 +14,26 @@ import LocalWarnings from '../features/alerts/LocalWarnings.astro';
 import SiteIcon from '../shared/ui/SiteIcon.astro';
 ---
 <BaseLayout title="Přehled" description="Aktuální počasí v Loučce, teplota, vítr, srážky, kamera a grafy měření od roku 2009.">
+ <script is:inline>
+  // Opt-in visitor evaluation only: the default homepage is unchanged.
+  // No storage, tracking or additional API requests.
+  if(new URLSearchParams(location.search).get('mobile')==='compact'){
+   document.documentElement.dataset.mobileHomeVariant='compact';
+   const attach=()=>{
+    const hero=document.querySelector('[data-home-hero]');
+    const toggle=hero?.querySelector('[data-home-expert-toggle]');
+    if(!hero||!toggle)return;
+    toggle.addEventListener('click',()=>{
+     const open=hero.dataset.expertOpen!=='true';
+     hero.dataset.expertOpen=String(open);
+     toggle.setAttribute('aria-expanded',String(open));
+     toggle.textContent=open?'Skrýt vítr a historický graf':'Zobrazit vítr a historický graf';
+    });
+   };
+   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',attach,{once:true});
+   else attach();
+  }
+ </script>
  <div class="atlas-home evergreen-home">
   <section class="evergreen-scene" aria-labelledby="evergreen-title">
    <div class="evergreen-landscape" aria-hidden="true">
@@ -28,7 +48,8 @@ import SiteIcon from '../shared/ui/SiteIcon.astro';
     <a class="atlas-intro-link" href="/aktualne/">Podrobná měření <span aria-hidden="true">↗</span></a>
    </header>
 
-   <section class="atlas-hero observatory-hero evergreen-hero" aria-label="Aktuální měření, anemometr a historický průběh">
+   <p class="mobile-home-preview-note">Test kompaktního mobilního přehledu · <a href="/">Zpět na běžné zobrazení</a>. Měření se nijak nemění.</p>
+   <section class="atlas-hero observatory-hero evergreen-hero" data-home-hero data-expert-open="false" aria-label="Aktuální měření, anemometr a historický průběh">
     <div class="atlas-hero-top evergreen-core">
      <CurrentPanel variant="observatory" />
     </div>
@@ -40,10 +61,12 @@ import SiteIcon from '../shared/ui/SiteIcon.astro';
     <div class="atlas-hero-daily evergreen-daily">
      <DailySummaryStrip />
     </div>
-    <div class="observatory-wind evergreen-wind">
+    <button class="mobile-home-expert-toggle" type="button" data-home-expert-toggle
+     aria-controls="home-wind home-history" aria-expanded="false">Zobrazit vítr a historický graf</button>
+    <div class="observatory-wind evergreen-wind" id="home-wind">
      <WindCompass variant="hero" />
     </div>
-    <div class="atlas-main-history evergreen-chart">
+    <div class="atlas-main-history evergreen-chart" id="home-history">
      <HistoryChart compact hero />
     </div>
    </section>
