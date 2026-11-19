@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-19 – Mobilní ECharts až při přiblížení k historickému grafu
+- Na běžné homepage při mobilní šířce se objemná knihovna ECharts načítá až po skutečném vstupu grafu do viewportu (IntersectionObserver, spodní okraj −40 px), nejpozději po 3,5 s. Tím může uvolnit síť/CPU pro hlavní kamerový obrázek a měření.
+- Na desktopu a specializovaných stránkách zůstává původní automatické vykreslení. U dobrovolně sbalené kompaktní varianty se skrytý graf nepřipravuje, dokud není zobrazen.
+- Žádná změna výsledků historie, jednotek, mezery NULL/suspect, čtení API ani zdroje dat. Regresní browser test používá jen izolované syntetické API fixture a ověřuje autentické SVG a stav archivního měření po scrollu; panel ovládání se na úvodu záměrně nezobrazuje.
+- Účinek na FCP/LCP musí potvrdit 3× veřejný DEV slow4G/CPU smoke a nové PageSpeed; tato implementace sama o sobě neprokazuje zrychlení. Produkce a databáze beze změn.
+
+
+
 ## 2026-11-19 – Návrh gzip pro fingerprintované soubory DEV Nginxu
 - Konfigurace interního DEV Nginxu nově zapíná gzip **pouze** ve statické cestě `/_astro/` (CSS/JS/SVG nad 1024 B), s `Vary: Accept-Encoding`, úrovní 4 a dosavadní roční immutable cache; API, HTML, kamera, produkce a DB nedotčeny.
 - Předchozí 3× cold mobile lab ukázal dva CSS requesty ~195 916 B přenosu a hlavní autentický JPEG ~110 736 B včetně CDP overhead; nutno po ručním ověření gzip proti stejnému profilu znovu změřit. Nezaměňovat přenos s přesnou velikostí zdroje.

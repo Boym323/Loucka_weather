@@ -47,6 +47,11 @@ test('homepage does not block DOMContentLoaded on the ECharts history engine',as
  const smoke=await readFile(new URL('../scripts/preview-visual-check.mjs',import.meta.url),'utf8');
  assert.doesNotMatch(component,/import \* as echarts from 'echarts\/core'/);
  assert.match(component,/document\.addEventListener\('DOMContentLoaded',start,\{once:true\}\)/);
+ assert.match(component,/IntersectionObserver/);
+ assert.match(component,/rootMargin:'0px 0px -40px 0px'/);
+ assert.match(component,/setTimeout\(release,3500\)/);
+ assert.match(component,/dataset\.mobileHomeVariant==='compact'/);
+ assert.match(component,/visibilityGateReleased/);
  assert.match(component,/import\('\.\.\/\.\.\/shared\/charts\/history-engine'\)/);
  assert.match(component,/if\(departed\)return/);
  assert.match(engine,/echarts\.use\(\[LineChart,BarChart,GridComponent,TooltipComponent,DataZoomComponent,SVGRenderer\]\)/);
