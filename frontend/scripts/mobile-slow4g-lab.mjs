@@ -130,8 +130,13 @@ try{
    samples.push(record);
    console.log('MOBILE SLOW4G LAB',JSON.stringify(record));
   }catch(e){
-   failures.push({run,error:e instanceof Error?e.message:'unknown synthetic-lab failure'});
-   console.error('MOBILE SLOW4G LAB FAILED',run);
+   // Error strings from browsers may include full request URLs. Report only
+   // a safe category, never the raw exception or request destination.
+   const category=e instanceof Error&&/timeout/i.test(e.message)?'timeout':
+    e instanceof Error&&/homepage http/i.test(e.message)?'homepage-http':
+    'synthetic-browser-failure';
+   failures.push({run,category});
+   console.error('MOBILE SLOW4G LAB FAILED',run,category);
   }finally{await context.close();}
  }
 }finally{await browser.close();}
