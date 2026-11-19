@@ -307,6 +307,14 @@
  display:grid;grid-template-columns:1.18fr 1fr .96fr 1fr;gap:15px;
  align-items:stretch;min-width:0
 }
+/* Atlas's 761–1330px rule expands .observatory-history across the grid.
+   Override only inside the homepage observatory: every instrument owns
+   exactly one cell at desktop/tablet widths (4-across or 2×2).
+   Without this, the station card is orphaned on a third row and the
+   screenshot shows a huge empty area beside the camera and solar cards. */
+.evergreen-home .observatory-instruments.evergreen-spotlight > .observatory-history{
+ grid-column:auto;
+}
 .evergreen-spotlight>*{min-width:0}
 .evergreen-spotlight .atlas-media-card,
 .evergreen-spotlight .observatory-sky,
