@@ -15,7 +15,8 @@ try{
    hasStyles:(()=>{
     const walk=rules=>{
      for(const rule of rules){
-      if(rule.selectorText?.split(',').some(s=>s.trim()==='.evergreen-home'))return true;
+      if(rule.selectorText?.split(',').some(s=>s.trim()==='.evergreen-home') &&
+       rule.style?.getPropertyValue('--evergreen-ink')?.trim())return true;
       if(rule.cssRules&&walk(rule.cssRules))return true;
      }
      return false;
