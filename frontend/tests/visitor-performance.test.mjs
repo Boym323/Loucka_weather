@@ -48,7 +48,7 @@ test('homepage does not block DOMContentLoaded on the ECharts history engine',as
  assert.doesNotMatch(component,/import \* as echarts from 'echarts\/core'/);
  assert.match(component,/document\.addEventListener\('DOMContentLoaded',start,\{once:true\}\)/);
  assert.match(component,/IntersectionObserver/);
- assert.match(component,/rootMargin:'180px 0px'/);
+ assert.match(component,/rootMargin:'0px 0px -40px 0px'/);
  assert.match(component,/setTimeout\(release,3500\)/);
  assert.match(component,/dataset\.mobileHomeVariant==='compact'/);
  assert.match(component,/visibilityGateReleased/);
