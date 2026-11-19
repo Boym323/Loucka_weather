@@ -40,6 +40,13 @@ jobs:
         run: node scripts/live-browser-check.mjs
         env:
           LOUCKA_PREVIEW_URL: https://dev.pocasi-loucka.eu
+      - name: Mobile cold-load 4G/CPU lab (advisory, exact deployed SHA)
+        working-directory: frontend
+        continue-on-error: true
+        run: node scripts/mobile-slow4g-lab.mjs
+        env:
+          LOUCKA_PREVIEW_URL: https://dev.pocasi-loucka.eu
+          LOUCKA_EXPECT_COMMIT: ${{ github.event_name == 'push' && github.sha || '' }}
       - uses: actions/upload-artifact@v7
         if: always()
         with:
