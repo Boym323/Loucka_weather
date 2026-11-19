@@ -46,7 +46,9 @@ test('hero current temperature and dewpoint are only displayed from source readi
 test('responsive photo composition and dark mode have explicit rules',async()=>{
  const css=await source('src/styles/observatory-evergreen.css');
  const base=await source('src/layouts/BaseLayout.astro');
- assert.match(base,/observatory-evergreen\.css/);
+ const page=await source('src/pages/index.astro');
+ assert.doesNotMatch(base,/observatory-evergreen\.css/);
+ assert.match(page,/import '\.\.\/styles\/observatory-evergreen\.css'/);
  assert.match(css,/\.evergreen-landscape img/);
  assert.match(css,/backdrop-filter:blur/);
  assert.match(css,/grid-template-areas:"core wind chart"/);
