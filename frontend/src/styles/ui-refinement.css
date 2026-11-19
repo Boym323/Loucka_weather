@@ -654,7 +654,7 @@
  :root[data-mobile-home-variant="compact"] .mobile-home-preview-note a{
   text-decoration:underline;text-underline-offset:3px;color:var(--text)
  }
- :root[data-mobile-home-variant="compact"] .evergreen-hero{
+ :root[data-mobile-home-variant="compact"] .evergreen-scene .atlas-hero.observatory-hero.evergreen-hero{
   grid-template-areas:"core" "quick" "daily" "expert"
  }
  :root[data-mobile-home-variant="compact"] .evergreen-hero .mobile-home-expert-toggle{
@@ -670,7 +670,7 @@
  :root[data-mobile-home-variant="compact"] .evergreen-hero .evergreen-chart{
   display:none
  }
- :root[data-mobile-home-variant="compact"] .evergreen-hero[data-expert-open="true"]{
+ :root[data-mobile-home-variant="compact"] .evergreen-scene .atlas-hero.observatory-hero.evergreen-hero[data-expert-open="true"]{
   grid-template-areas:"core" "quick" "daily" "expert" "wind" "chart"
  }
  :root[data-mobile-home-variant="compact"] .evergreen-hero[data-expert-open="true"] .evergreen-wind,
