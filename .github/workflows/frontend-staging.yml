@@ -41,6 +41,7 @@ jobs:
           node --check scripts/current-failover-race-browser-check.mjs
           node --check scripts/current-coalesce-browser-check.mjs
           node --check scripts/ux-media-history-browser-check.mjs
+          node --check scripts/mobile-home-variant-browser-check.mjs
       - name: Unit tests
         run: npm test
       - name: Build static website
@@ -59,6 +60,7 @@ jobs:
           node scripts/current-failover-race-browser-check.mjs
           node scripts/current-coalesce-browser-check.mjs
           node scripts/ux-media-history-browser-check.mjs
+          node scripts/mobile-home-variant-browser-check.mjs
           node scripts/climate-firstfold-review.mjs
       - uses: actions/upload-artifact@v7
         if: always()
@@ -67,6 +69,7 @@ jobs:
           path: |
             frontend/test-results/layout-audit
             frontend/test-results/climate-firstfold-review
+            frontend/test-results/mobile-home-variant
           retention-days: 7
           if-no-files-found: ignore
       - uses: actions/upload-artifact@v7
