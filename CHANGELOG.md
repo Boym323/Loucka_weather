@@ -1,7 +1,7 @@
 # Changelog
 
 ## 2026-11-19 – Mobilní ECharts až při přiblížení k historickému grafu
-- Na běžné homepage při mobilní šířce se objemná knihovna ECharts načítá až po vstupu grafu do přibližné zóny viditelnosti (IntersectionObserver + 180 px), nejpozději po 3,5 s. Tím může uvolnit síť/CPU pro hlavní kamerový obrázek a měření.
+- Na běžné homepage při mobilní šířce se objemná knihovna ECharts načítá až až po skutečném vstupu grafu do viewportu (IntersectionObserver, spodní okraj −40 px), nejpozději po 3,5 s. Tím může uvolnit síť/CPU pro hlavní kamerový obrázek a měření.
 - Na desktopu a specializovaných stránkách zůstává původní automatické vykreslení. U dobrovolně sbalené kompaktní varianty se skrytý graf nepřipravuje, dokud není zobrazen.
 - Žádná změna výsledků historie, jednotek, mezery NULL/suspect, čtení API ani zdroje dat. Regresní browser test používá jen izolované syntetické API fixture a ověřuje skutečné SVG po scrollu a možnost změny veličiny.
 - Účinek na FCP/LCP musí potvrdit 3× veřejný DEV slow4G/CPU smoke a nové PageSpeed; tato implementace sama o sobě neprokazuje zrychlení. Produkce a databáze beze změn.
