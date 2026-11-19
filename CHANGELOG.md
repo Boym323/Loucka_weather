@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-19 – Důkaz nasazení komprese statických souborů na DEV
+- Laboratorní měření 3× cold mobile nově anonymně počítá CSS odpovědi podle `Content-Encoding: gzip/br/identity`, přítomnosti `Vary: Accept-Encoding` a `Cache-Control: immutable` s jednoletým max-age. Neukládá URL zdrojů, obsah ani všechny hlavičky a neposílá nové požadavky.
+- Tím odlišíme připravenou GitHub šablonu gzip (`deploy/lxc/nginx-preview.conf`) od skutečně aktivní konfigurace na interním LXC / veřejné NPM hraně. Nemění Nginx, DB ani produkci. Následná interpretace zohlední, že NPM může obsahové hlavičky měnit.
+
 ## 2026-11-19 – Mobilní ECharts až při přiblížení k historickému grafu
 - Na běžné homepage při mobilní šířce se objemná knihovna ECharts načítá až po skutečném vstupu grafu do viewportu (IntersectionObserver, spodní okraj −40 px), nejpozději po 3,5 s. Tím může uvolnit síť/CPU pro hlavní kamerový obrázek a měření.
 - Na desktopu a specializovaných stránkách zůstává původní automatické vykreslení. U dobrovolně sbalené kompaktní varianty se skrytý graf nepřipravuje, dokud není zobrazen.
