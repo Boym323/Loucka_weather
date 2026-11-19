@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-19 – Volitelný test kompaktního mobilního přehledu
+- Mobilní úvod může návštěvník porovnat s alternativou `/?mobile=compact` bez změny standardního zobrazení.
+- Testovací varianta zmenšuje dekorativní kamerovou krajinu a ponechá vítr a historický graf dostupné pod nativním tlačítkem; hodnoty, varování, zdroj a rychlé odkazy jsou zachované.
+- Testovací označení a návrat na běžnou verzi jsou viditelné jen v mobilní experimentální variantě; bez ukládání preferencí, analytics či dalších API požadavků.
+- Izolovaný Chromium screenshot test ověřuje 320/390/1440 a oba motivy. Před výchozím přepnutím je nutné skutečné uživatelské porovnání; viz `docs/MOBILE_FIRSTFOLD_TRIAL_2026-11-19.md`.
+
 ## 2026-11-19 – První cílená optimalizace kritické cesty domovské stránky
 - Po DEV laboratorním smoke `44488456029` (deployed `019623c`) byl externí kamerový obrázek mezi nejpomalejšími zdroji (~689 ms). Domovská stránka v záhlaví včas otevírá spojení k tomuto zdroji a přednačítá stejnou skutečnou fotografii jako prioritní obrázek; ostatní stránky nejsou dotčeny.
 - Laboratorní report nově uvádí jen anonymní kategorii LCP kandidáta (obrázek, nadpis, text/kontejner, ostatní). Nezaznamenává URL, identitu návštěvníka, obsah snímku ani meteorologická data.
