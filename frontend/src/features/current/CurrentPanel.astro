@@ -34,7 +34,7 @@ const quickReadings = [
  <p class="source-note source-note-bottom" data-current-provenance>Měření přímo ze stanice nebo poslední uložené údaje. Chybějící hodnoty nezaměňujeme za nulu.</p>
 </section>
 <script>
- import { getCurrent } from '../../shared/api/client';
+ import { getCurrent, invalidateCurrentRequest } from '../../shared/api/client';
  import { formatValue, metrics } from '../../shared/domain/metrics';
  import { formatTimestamp } from '../../shared/domain/weather';
  const section=document.querySelector<HTMLElement>('[data-current-panel]')!;
@@ -155,12 +155,20 @@ const quickReadings = [
    formatTimestamp(data.observedAt);
  };
  const restoreArchive=()=>{
+  // The live collector expired; never reuse a pending archive GET from
+  // before that transition, even if another component still awaits it.
+  invalidateCurrentRequest();
   lastLiveEvent=undefined;
   archiveRetryCount=0;
   if(archiveRetryTimer){clearTimeout(archiveRetryTimer);archiveRetryTimer=undefined;}
   if(!controller.signal.aborted)void refresh();
  };
- const archiveUpdated=()=>{if(!controller.signal.aborted)void refresh();};
+ const archiveUpdated=()=>{
+  if(controller.signal.aborted)return;
+  // A published archive revision must start a new GET, not join an older one.
+  invalidateCurrentRequest();
+  void refresh();
+ };
  if(section){
   void refresh();
   window.addEventListener('loucka:archive-updated',archiveUpdated);

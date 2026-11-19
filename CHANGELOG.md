@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-19 – Rychlejší načítání aktuálních meteorologických údajů
+- Aktuální archivní hodnoty se při souběžném načítání sdílí mezi panely; počáteční požadavek není třikrát odeslán do API.
+- Rozlišení živé GW3000 a původní WeeWX zůstává zachované. Po změně archivního záznamu a při zániku live se data znovu načítají.
+- Přerušení jedné komponenty nepoškodí ostatní; po dokončení se archivní odpověď neuchovává v nové cache.
+- Prohlížečové regresní kontroly a snímky 320/390/1440 px light/dark, dokumentace v `docs/CURRENT_FETCH_COALESCING_2026-11-19.md`.
+
+
 ## 2026-11-18 – Zpřehlednění klimatologického atlasu
 - Kapitoly Extrémy, Trendy, Srovnání sezón a Meteorologická ročenka se nově zobrazují před historickými rekordy, aby se návštěvník dostal rychleji k cíli.
 - Výraznější nadpis, kompaktnější mobilní karty, sjednocená typografie, přístupný focus a zachované barvy obou motivů.
