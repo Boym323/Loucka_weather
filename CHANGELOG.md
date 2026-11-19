@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-19 – Ovládání časové osy historického grafu také klávesnicí
+- Podrobný historický graf umožňuje přiblížit, oddálit a obnovit celé období pomocí nativních tlačítek, nejen posuvníkem ECharts.
+- Ovládání nevolá znovu API a nemění měřená data, rozlišení, časovou zónu ani kvalitu; při chybě/prázdném grafu jsou tlačítka vypnuta.
+- Prohlížečový regresní test ověřuje Enter a mezerník na šířkách 320/390/1440 px ve světlém a tmavém motivu. Dokumentace: `docs/HISTORY_KEYBOARD_ZOOM_2026-11-19.md`.
+
 ## 2026-11-19 – Jednodušší mobilní navigace a přístupnější historické grafy
 - Na telefonech již horní Menu neduplikuje spodní navigaci s panelem Více.
 - Podrobný graf umožňuje otevřít tabulkovou alternativu přesně vrácených hodnot, kvality a zdroje bez dalšího API požadavku; CSV export zůstává.
