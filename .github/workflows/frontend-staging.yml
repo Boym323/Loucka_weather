@@ -79,6 +79,7 @@ jobs:
             frontend/test-results/layout-audit
             frontend/test-results/climate-firstfold-review
             frontend/test-results/mobile-home-variant
+            frontend/test-results/design-final
           retention-days: 7
           if-no-files-found: ignore
       - uses: actions/upload-artifact@v7
