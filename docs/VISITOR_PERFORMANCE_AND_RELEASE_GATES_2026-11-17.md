@@ -8,7 +8,15 @@ Po sloučení změny spouští existující veřejný vizuální smoke kontrolu 
 
 Žádné další požadavky na DB/API. Report je anonymní a neobsahuje parametry URL, počasí, IP, žádné přihlášení ani adresy interních hostů. Vždy ověřit shodu testovaného commitu s `deployment.json` a dostupnost `readyz`. Pokud smoke selže, report může být neúplný.
 
-**Nejde o Core Web Vitals skutečných uživatelů**, pole LCP/INP/CLS se netvrdí; jde o jeden laboratorní běh z runneru GitHub Actions. P95 několika resource entries není P95 Fastify/API ani SQL. Jeden běh není důkaz výkonové regrese či zlepšení.
+**Nejde o Core Web Vitals skutečných uživatelů**; jde o jeden laboratorní běh z runneru GitHub Actions. P95 několika resource entries není P95 Fastify/API ani SQL. Jeden běh není důkaz výkonové regrese či zlepšení.
+
+### Doplnění 19. 11. 2026: laboratorní kritická cesta
+- Od prvního vykreslení se v izolovaném prohlížeči při každé navigaci sleduje poslední kandidát `largest-contentful-paint`, dosud pozorované maximum CLS session-window (bez posunů po bezprostředním vstupu) a počet/celkové trvání dlouhých úloh.
+- Z Performance Resource Timing se vybírá maximálně pět nejpomalejších zdrojů, uloží se **jen kategorie** (např. `img`, `script`, `fetch`), zda pochází ze stejného webu nebo externě, a jejich trvání v ms. **Žádné URL zdroje, parametry, IP, identifikátory, uživatelské chování ani počasí se neukládají.**
+- Observery se spouštějí pouze ve skriptu Playwright, nejsou součástí distribuovaného frontend kódu; na DEV nevzniká nový telemetry endpoint a není žádný dodatečný síťový požadavek.
+- `lcpCandidateMs` nemusí být konečné LCP, `clsSessionMaxSoFar` je dosavadní laboratorní odhad, `longTaskDurationMs` **není** Total Blocking Time. **INP ani field p75 nejsou změřeny.** Neplatí při nepodporovaném typu PerformanceObserver, který se zaznamená jako null/zero.
+- Stávající baseline ze skutečně nasazeného commitu `35504d9`, workflow `44475961329`: jeden desktop/mobilní přechod na úvodu FCP 1 716 / 1 644 ms, DCL 2 105 / 2 062 ms, a v obou případech 10 pozorovaných API fetchů. Tyto jednotlivé vzorky nejsou prokazatelná regrese a neprokazují příčinu. V novém běhu korelovat typy nejpomalejších zdrojů s reálným vykreslením.
+- Pro skutečné LCP/INP/CLS návštěvníků je nutné samostatně schválit soukromí, příjem dat, retention, rate-limit, oddělení DEV/produkce a reprezentativní velikost vzorku. Tato změna to **nenahrazuje**.
 
 ## Současný skutečný API výkon
 
