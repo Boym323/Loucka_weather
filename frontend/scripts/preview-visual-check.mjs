@@ -415,7 +415,7 @@ try{
       const svg=root?.querySelector('[data-temperature-chart] svg');
       const years=root?.querySelectorAll('[data-temperature-year]').length??0;
       const summary=root?.querySelector('[data-temperature-summary]')?.textContent??'';
-      return status.startsWith('Předběžná historická data')&&svg!==null&&years>=5&&summary.includes('Historická měření');
+      return status.startsWith('Předběžná historická data')&&svg!==null&&years>=5&&summary.includes('Zobrazeno');
      },null,{timeout:45000}).then(()=>true).catch(()=>false);
      if(!allYearsReady){
       const state=await page.evaluate(()=>({
@@ -437,7 +437,7 @@ try{
       const first=root?.querySelectorAll('[data-heatmap-cells="first"] .year-heatmap-day').length??0;
       const second=root?.querySelectorAll('[data-heatmap-cells="second"] .year-heatmap-day').length??0;
       const svg=root?.querySelector('[data-compare-chart] svg');
-      return status.startsWith('Původní archiv')&&first>=365&&second>=365&&svg!==null;
+      return status.startsWith('Historické údaje · předběžné')&&first>=365&&second>=365&&svg!==null;
      },null,{timeout:45000}).then(()=>true).catch(()=>false);
      if(!comparisonReady){
       const state=await page.evaluate(()=>({
@@ -594,7 +594,7 @@ try{
      else{
       await radarLayer.uncheck();
       const hidden=await page.locator('[data-radar-message]').first().textContent();
-      if(!hidden?.includes('vypnutá'))errors.push(size.name+': radar layer toggle did not hide imagery');
+      if(!hidden?.includes('vypnuté'))errors.push(size.name+': radar layer toggle did not hide imagery');
       await radarLayer.check();
      }
     }
