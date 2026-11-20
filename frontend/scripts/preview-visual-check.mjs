@@ -360,17 +360,17 @@ try{
       if(await page.locator('[data-climate-trend="'+metric+'"] svg').count()!==1)
        errors.push(size.name+': missing six-year '+metric+' trend chart');
      }
-     if(!climate.overall.startsWith('Archivní souhrny'))
+     if(!climate.overall.startsWith('Rok '))
       errors.push(size.name+': climatology API failed: '+climate.overall);
      for(const [metric,status] of Object.entries(climate.statuses)){
-      if(status!=='Archivní souhrny')
+      if(status!=='12 z 12 měsíců')
        errors.push(size.name+': '+metric+' climate chart missing data: '+status);
       if(!climate.svgs[metric])
        errors.push(size.name+': '+metric+' chart SVG not rendered');
       if(climate.validMonths[metric]!==12)
        errors.push(size.name+': '+metric+' missing months '+climate.validMonths[metric]+'/12 for complete year 2025');
      }
-     if(climate.annual!=='Souhrny WeeWX')
+     if(climate.annual!=='Údaje dostupné')
       errors.push(size.name+': annual climate table not ready: '+climate.annual);
      for(const [metric,value] of Object.entries(climate.summary)){
       if(!/[0-9]/.test(value)||value==='—')

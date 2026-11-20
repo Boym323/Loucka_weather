@@ -269,7 +269,7 @@ try{
     }
     if(path.endsWith('/sezony/')){
      await page.waitForFunction(()=>
-      document.querySelector('[data-season-status]')?.textContent?.includes('Srovnání originálního')
+      document.querySelector('[data-season-status]')?.textContent?.includes('Předběžné srovnání')
       ,null,{timeout:20000});
      assert.ok(await page.locator('[data-season-chart] svg').count()>0);
      assert.match(await page.locator('[data-season-matched]').textContent()??'',/\d+ \/ \d+/);
@@ -286,7 +286,7 @@ try{
      await page.locator('[data-season-form] button').click();
      await page.waitForFunction(()=>
       document.querySelector('[data-season-title="second"]')?.textContent?.includes('Zima')
-      &&document.querySelector('[data-season-status]')?.textContent?.includes('Srovnání originálního')
+      &&document.querySelector('[data-season-status]')?.textContent?.includes('Předběžné srovnání')
       ,null,{timeout:20000});
      await page.waitForFunction(()=>
       document.querySelector('[data-ranking-rows]')?.textContent?.includes('Zima 2024/2025')

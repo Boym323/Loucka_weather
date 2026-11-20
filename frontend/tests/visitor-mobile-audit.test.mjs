@@ -21,7 +21,7 @@ test('live browser smoke recognizes visitor language without weakening source ch
  assert.match(smoke,/hasLiveStatus/);
  assert.match(smoke,/Živá měření/);
  assert.match(smoke,/Poslední měření/);
- assert.match(smoke,/Část údajů přichází živě/);
+ assert.match(smoke,/Některá měření se aktualizují živě/);
  assert.match(smoke,/gw3000_live/);
  assert.match(smoke,/live-expired/);
  assert.match(smoke,/stale event displaced a fresh live reading/);

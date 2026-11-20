@@ -12,7 +12,7 @@ const fmt=(n,d)=>new Intl.NumberFormat('cs-CZ',{minimumFractionDigits:d,maximumF
 // Verify stable source semantics, not changeable explanatory wording.
 const hasLiveSourceLabel=text=>Boolean(
  (text?.includes('Živá data GW3000')&&text.includes('WeeWX'))||
- (text?.includes('Část údajů přichází živě')&&text.includes('posledního uloženého měření'))
+ (text?.includes('Některá měření se aktualizují živě')&&text.includes('posledního záznamu'))
 );
 const hasLiveStatus=text=>Boolean(text?.includes('Živá měření')||text?.includes('GW3000'));
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
@@ -41,7 +41,7 @@ try{
     const chip=document.querySelector('[data-current-status]')?.textContent??'';
     const provenance=document.querySelector('[data-current-provenance]')?.textContent??'';
     return (chip.includes('Živá měření')||chip.includes('GW3000'))&&
-     (provenance.includes('Část údajů přichází živě')||
+     (provenance.includes('Některá měření se aktualizují živě')||
       provenance.includes('Živá data GW3000'));
    },null,{timeout:30000});
    const before=await page.evaluate(()=>{
