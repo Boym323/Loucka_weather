@@ -39,7 +39,7 @@ import '../../styles/all-years-temperature.css';
  <div class="all-years-temp-plot" data-temperature-chart role="img"
   aria-label="Načítá se graf denních teplot za všechny dostupné roky."></div>
  <div class="all-years-temp-footer">
-  <span data-temperature-summary>Data z originálního archivu WeeWX. Chybějící měření zůstávají prázdná.</span>
+  <span data-temperature-summary>Historická měření · chybějící dny zůstávají prázdné</span>
   <span data-temperature-selected-coverage></span>
  </div>
  <details class="all-years-temp-filter" data-temperature-filter>
@@ -241,7 +241,7 @@ import '../../styles/all-years-temperature.css';
   const load=async()=>{
    if(requestStarted)return;
    requestStarted=true;
-   message('Načítám archivní denní teploty…','warning');
+   message('Načítám teploty…','warning');
    try{
     loaded=await getTemperatureYears(abort.signal);
     if(abort.signal.aborted)return;
@@ -250,11 +250,11 @@ import '../../styles/all-years-temperature.css';
     visible=new Set(recentCompletedYears());
     if(!visible.size&&selectedYear!==null)visible.add(selectedYear);
     buildYearControls();syncCheckboxes();render();
-    message('Archiv WeeWX · bez finální QC','warning');
+    message('Předběžná historická data','warning');
    }catch{
     if(abort.signal.aborted)return;
     message('Teplotní archiv není nyní dostupný','error');
-    plot.textContent='Graf nelze načíst. Je potřeba dostupné API denních teplot; žádné náhradní hodnoty se nevykreslují.';
+    plot.textContent='Graf se nepodařilo načíst. Zkuste to prosím později.';
     plot.classList.add('is-unavailable');
    }
   };

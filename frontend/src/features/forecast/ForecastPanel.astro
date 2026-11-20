@@ -27,9 +27,9 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
     <span class="forecast-rain" data-forecast-rain={i}>—</span>
   </div>)}
  </div>
- <p class="forecast-context" data-forecast-message>Modelová předpověď je oddělená od naměřených dat stanice.</p>
+ <p class="forecast-context" data-forecast-message>Předpověď se může změnit; stanice zobrazuje skutečná měření.</p>
  <div class="preview-footer">
-  <span class="source-note">Modelová předpověď · nikoli měření</span>
+  <span class="source-note">Předpověď, nikoli měření</span>
   <a class="panel-link" href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Zdroj: Open-Meteo (CC BY 4.0) ↗</a>
  </div>
 </section>
@@ -77,7 +77,7 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
     put('rain',fmt(d.precipitation_sum[i])+' mm');
    }
    if(status){status.textContent='Předpověď dostupná';status.classList.add('ok');}
-   if(msg)msg.textContent='Předpověď počasí pro oblast Loučky, okres Zlín. Změny mohou nastat při aktualizaci modelu.';
+   if(msg)msg.textContent='Předpověď pro Loučku a okolí. S každou aktualizací se může změnit.';
   }).catch(()=>{
    if(controller.signal.aborted)return;
    if(status){status.textContent='Předpověď nedostupná';status.classList.add('warning');}

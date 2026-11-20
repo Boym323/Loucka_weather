@@ -4,9 +4,9 @@ const {compact=false}=Astro.props;
 import SiteIcon from '../../shared/ui/SiteIcon.astro';
 ---
 <section class:list={['section','local-warnings',{compact}]} data-local-warnings aria-label="Výstrahy ČHMÚ pro Loučku">
- <div class="section-heading"><div class="panel-title"><SiteIcon name="alert" size={17}/><h2>Výstrahy ČHMÚ</h2></div><span class="status-chip" data-alert-status role="status">Ověřuji ORP 7209</span></div>
- <div data-alert-body class="source-note">Načítám oficiální CAP pro ORP Valašské Klobouky…</div>
- <p class="source-note">Obec Loučka (okres Zlín) · ORP Valašské Klobouky. Zdroj <a href="https://vystrahy-cr.chmi.cz/" target="_blank" rel="noopener noreferrer">ČHMÚ</a> · nezávislé zpracování. V nebezpečí sledujte přímo pokyny ČHMÚ.</p>
+ <div class="section-heading"><div class="panel-title"><SiteIcon name="alert" size={17}/><h2>Výstrahy ČHMÚ</h2></div><span class="status-chip" data-alert-status role="status">Kontroluji výstrahy</span></div>
+ <div data-alert-body class="source-note">Načítám aktuální výstrahy…</div>
+ <p class="source-note">Přehled pro Loučku a okolí · zdroj <a href="https://vystrahy-cr.chmi.cz/" target="_blank" rel="noopener noreferrer">ČHMÚ</a>. V nebezpečí se řiďte pokyny ČHMÚ.</p>
 </section>
 <script>
  const root=document.querySelector<HTMLElement>('[data-local-warnings]');
@@ -20,14 +20,14 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
    body.replaceChildren();
    if(data.status!=='verified'){
     if(status){status.textContent='Stav nelze ověřit';status.className='status-chip warning';}
-    body.textContent='Ověřená lokální výstraha není k dispozici. To neznamená, že žádná výstraha neplatí.';
+    body.textContent='Aktuální výstrahy se nepodařilo ověřit. Podívejte se přímo na web ČHMÚ.';
     return;
    }
    if(!data.alerts.length){
-    if(status){status.textContent='Bez aktuální výstrahy pro ORP';status.className='status-chip ok';}
-    body.textContent='Poslední ověřený CAP neobsahuje platnou výstrahu pro ORP Valašské Klobouky.';
+    if(status){status.textContent='Bez platné výstrahy';status.className='status-chip ok';}
+    body.textContent='ČHMÚ pro okolí Loučky neuvádí žádnou platnou výstrahu.';
    }else{
-    if(status){status.textContent=data.alerts.length+' výstrah pro ORP';status.className='status-chip warning';}
+    if(status){status.textContent=data.alerts.length+' výstrah v okolí';status.className='status-chip warning';}
     for(const alert of data.alerts){
      const article=document.createElement('article');article.className='local-alert-entry';
      const h=document.createElement('strong');h.textContent=alert.headline||alert.event;article.append(h);

@@ -3,16 +3,16 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 <BaseLayout title="Půda a ovzduší">
  <div class="page-intro">
-  <span class="eyebrow">Senzory · půda · ovzduší</span>
-  <h1>Půdní měření a kvalita ovzduší</h1>
+  <span class="eyebrow">Počasí kolem nás</span>
+  <h1>Půda, vzduch a slunce</h1>
   <p>Co právě měří čidla v půdě a okolním vzduchu? Pod aktuálními hodnotami najdeš také dostupné grafy z minulých dní.</p>
  </div>
  <section class="section" data-soil-air>
   <div class="section-heading"><h2>Aktuální měření</h2><span class="status-chip" data-soil-live-status role="status">Zjišťuji živá data</span></div>
   <div class="climate-summary-strip records-grid">
    {[
-    {key:'soilMoisture1',title:'Půdní vlhkost · kanál 1',unit:'%'},
-    {key:'pm25_1',title:'PM2,5 · kanál 1',unit:'µg/m³'},
+    {key:'soilMoisture1',title:'Vlhkost půdy',unit:'%'},
+    {key:'pm25_1',title:'Jemné částice PM2,5',unit:'µg/m³'},
     {key:'radiation',title:'Sluneční záření',unit:'W/m²'},
     {key:'UV',title:'UV index',unit:''}
    ].map(item=><div class="climate-summary-metric">
@@ -22,21 +22,21 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   </div>
   <p class="source-note" data-soil-time>Zjišťuji čas posledních údajů ze stanice.</p>
   <h2>Jak se údaje měnily</h2>
-  <p class="source-note">Podle dostupnosti měření zobrazujeme posledních sedm dokončených dní nebo posledních 24 hodin.</p>
+  <p class="source-note">Zobrazujeme poslední dostupná měření.</p>
   <div class="soil-air-grid">
    {[
-    {key:'pm25_1',title:'PM2,5 · archivní kanál',unit:'µg/m³'},
-    {key:'soilTemp1',title:'Teplota půdy · archivní kanál 1',unit:'°C'},
-    {key:'soilTemp2',title:'Teplota půdy · archivní kanál 2',unit:'°C'},
-    {key:'soilTemp3',title:'Teplota půdy · archivní kanál 3',unit:'°C'},
-    {key:'soilTemp4',title:'Teplota půdy · archivní kanál 4',unit:'°C'}
+    {key:'pm25_1',title:'Jemné částice PM2,5',unit:'µg/m³'},
+    {key:'soilTemp1',title:'Teplota půdy 1',unit:'°C'},
+    {key:'soilTemp2',title:'Teplota půdy 2',unit:'°C'},
+    {key:'soilTemp3',title:'Teplota půdy 3',unit:'°C'},
+    {key:'soilTemp4',title:'Teplota půdy 4',unit:'°C'}
    ].map(item=><article class="section soil-air-card">
     <div class="section-heading"><h3>{item.title}</h3><span class="status-chip" data-soil-trend-status={item.key}>Načítám</span></div>
     <div class="sensor-mini-trend" data-soil-trend={item.key} role="img" aria-label={'Archivní průběh '+item.title+' za 7 dní nebo posledních 24 hodin'}></div>
     <p class="source-note" data-soil-summary={item.key}>Archivní hodnoty se připravují · {item.unit}</p>
    </article>)}
   </div>
-  <p class="source-note">Některá čidla mohou mít v historii mezery. Chybějící hodnoty neodhadujeme a bez ověření neuvádíme hloubku umístění čidla.</p>
+  <p class="source-note">V některých obdobích měření chybí. Neznámé údaje nedoplňujeme odhadem.</p>
   <details class="source-note">
    <summary>Jak poznáme, odkud údaje pocházejí?</summary>
    <p>Půdní vlhkost kanálu 1 čteme přímo z GW3000. Historii půdní vlhkosti zatím z archivu spolehlivě nezobrazujeme a neodvozujeme ji z teploty půdy. Půdní teplotní kanál 2 může mít výpadky nezávisle na ostatních. Neověřené fyzické umístění čidel ani stav baterií nedoplňujeme odhadem.</p>
@@ -62,20 +62,20 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     const isFresh=data.state==='live'&&data.source==='gw3000_live'&&
      Number.isFinite(Date.parse(data.receivedAt??''))&&Date.now()-Date.parse(data.receivedAt??'')<=120000;
     const status=root?.querySelector<HTMLElement>('[data-soil-live-status]');
-    if(status){status.textContent=isFresh?'GW3000 · živě':'Archivní režim';status.className='status-chip '+(isFresh?'ok':'warning');}
+    if(status){status.textContent=isFresh?'Živá data':'Poslední dostupná měření';status.className='status-chip '+(isFresh?'ok':'warning');}
     for(const [key,meta] of Object.entries(live)){
      const node=root?.querySelector<HTMLElement>('[data-soil-live="'+key+'"]');
      const detail=root?.querySelector<HTMLElement>('[data-soil-live-quality="'+key+'"]');
      const reading=isFresh?data.readings?.[key]:undefined;
      const valid=reading?.source==='gw3000_live'&&reading.quality==='measured'&&Number.isFinite(reading.value);
      if(node)node.textContent=valid?formatValue(reading!.value,meta.digits):'—';
-     if(detail)detail.textContent=valid?meta.unit+' · čerstvé měření GW3000':meta.unit+' · bez platného živého údaje';
+     if(detail)detail.textContent=valid?meta.unit+' · živé měření':meta.unit+' · údaj není dostupný';
     }
     const time=root?.querySelector<HTMLElement>('[data-soil-time]');
     if(time)time.textContent=isFresh&&data.receivedAt?
-     'Přečteno z brány: '+new Intl.DateTimeFormat('cs-CZ',{dateStyle:'medium',timeStyle:'medium',timeZone:'Europe/Prague'}).format(new Date(data.receivedAt))+
-     ' · není to potvrzený okamžik měření senzoru.':
-     'GW3000 momentálně neposkytuje čerstvá data. Žádné hodnoty nenahrazujeme nulami.';
+     'Stanice předala údaje v '+new Intl.DateTimeFormat('cs-CZ',{dateStyle:'medium',timeStyle:'short',timeZone:'Europe/Prague'}).format(new Date(data.receivedAt))+
+     '. Čas měření se může mírně lišit.':
+     'Nové údaje teď nejsou k dispozici.';
    }catch{
     if(ctrl.signal.aborted)return;
     const status=root?.querySelector<HTMLElement>('[data-soil-live-status]');
@@ -95,7 +95,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     // scanning irregular legacy hourly intervals (which may return 503).
     // Read-only fallback preserves recent 24h source data and its own label.
     let response;
-    let shownRange='7 dokončených dní · denní souhrny';
+   let shownRange='posledních 7 dní';
     try{
      const localDay=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Prague',
       year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
@@ -107,7 +107,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       error instanceof Error?error.message:'API error');
      const rawEnd=new Date(),rawFrom=new Date(rawEnd.getTime()-86400000);
      response=await getHistoryInterval(metric.key,rawFrom.toISOString(),rawEnd.toISOString(),'raw',ctrl.signal);
-     shownRange='24 hodin · původní intervaly';
+     shownRange='posledních 24 hodin';
     }
     if(ctrl.signal.aborted||!panel)return;
     const values=response.points.map(p=>({
@@ -117,12 +117,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     panel.replaceChildren();
     if(good.length<2){
      if(status){status.textContent='Málo dat';status.className='status-chip warning';}
-     if(description)description.textContent='Pro '+shownRange+' nejsou dostatečná platná archivní měření; chybějící hodnoty nenahrazujeme.';
+     if(description)description.textContent='Pro '+shownRange+' není dost měření k zobrazení průběhu.';
      return;
     }
     const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg'),path=document.createElementNS(ns,'path');
     svg.setAttribute('viewBox','0 0 600 120');svg.setAttribute('role','img');
-    svg.setAttribute('aria-label',metric.key+' · '+good.length+' platných archivních bodů · '+shownRange);
+    const metricNames:Record<string,string>={pm25_1:'Jemné částice PM2,5',soilTemp1:'Teplota půdy 1',soilTemp2:'Teplota půdy 2',soilTemp3:'Teplota půdy 3',soilTemp4:'Teplota půdy 4',soilMoisture1:'Vlhkost půdy',radiation:'Sluneční záření',UV:'UV index'};
+    svg.setAttribute('aria-label',(metricNames[metric.key]??'Měření')+' · '+good.length+' měření · '+shownRange);
     const min=Math.min(...good.map(p=>p.y)),max=Math.max(...good.map(p=>p.y)),span=max-min||1;
     let d='',pen=false;
     const plotStart=Date.parse(response.points[0]?.startTime??from);
@@ -136,10 +137,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     path.setAttribute('d',d);path.setAttribute('fill','none');path.setAttribute('stroke','currentColor');
     path.setAttribute('stroke-width','2.4');path.setAttribute('stroke-linejoin','round');
     svg.append(path);panel.append(svg);
-    if(status){status.textContent=good.length+' platných bodů · '+shownRange;status.className='status-chip ok';}
-    if(description)description.textContent='Rozsah '+shownRange+' · minimum '+formatValue(min,metric.digits)+
-     ' · maximum '+formatValue(max,metric.digits)+' '+metric.unit+
-     ' · mezery v datech nejsou propojovány.';
+    if(status){status.textContent=good.length+' měření · '+shownRange;status.className='status-chip ok';}
+    if(description)description.textContent='Rozmezí '+formatValue(min,metric.digits)+
+     '–'+formatValue(max,metric.digits)+' '+metric.unit+'. Čára nepřekračuje chybějící měření.';
    }catch{
     if(ctrl.signal.aborted)return;
     if(status){status.textContent='Nedostupné';status.className='status-chip warning';}

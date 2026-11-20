@@ -23,7 +23,7 @@ test('technical deployment details remain available only on demand',async()=>{
  const station=await source('src/features/current/StationSummary.astro');
  assert.doesNotMatch(layout,/<DeploymentInfo\s*\/>/);
  assert.match(about,/<details>[\s\S]*?<DeploymentInfo detailed \/>/);
- assert.match(station,/<summary>Technické vybavení stanice<\/summary>/);
+ assert.match(station,/<summary>Jak stanice měří<\/summary>/);
 });
 
 test('plain-language copy still warns about gaps and uncertain records',async()=>{

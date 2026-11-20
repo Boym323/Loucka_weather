@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-20 – Srozumitelnější texty pro návštěvníky
+- Zkráceny opakované technické popisy na aktuálním počasí, klimatologii, výstrahách, radaru a měřeních půdy a ovzduší; interní názvy služeb a zkratek byly nahrazeny běžným jazykem.
+- Podrobnosti o původu a omezeních historických údajů jsou dostupné po rozkliknutí. Upozornění na chybějící a předběžná data zůstávají zachována.
+- Bez změny výpočtů, API, databáze, meteorologických dat a nasazení.
+
 ## 2026-11-19 – Oprava vyvážení desktopové observatoře podle uživatelského PDF
 - Jednostránkový screenshot úvodu při 1328 px odhalil chybu: starší Atlas pravidlo pro historii mezi 761–1330 px vytlačilo kartu historických měření na celý samostatný řádek a kartu stanice osamoceně doleva; vpravo zůstávaly nevyužité plochy.
 - V Evergreen homepage lokálně rušíme pouze `grid-column:1/-1` historické karty. Desktop ≥1271 px ukazuje čtyři přístroje v jednom řádku, tablet 761–1270 px ve dvou vyvážených dvojicích, mobil do 760 px zůstává pod sebou v původním pořadí.

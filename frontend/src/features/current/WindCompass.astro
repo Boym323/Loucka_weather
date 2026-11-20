@@ -4,7 +4,7 @@ const {variant='default'}=Astro.props;
 ---
 <section class:list={['section','wind-compass-panel',{'wind-hero':variant==='hero'}]} data-wind-compass aria-labelledby="wind-compass-title">
  <div class="section-heading">
-  <div><span class="eyebrow">Směr větru · anemometr</span><h2 id="wind-compass-title">Větrná růžice</h2></div>
+  <div><span class="eyebrow">Směr a síla větru</span><h2 id="wind-compass-title">Směr větru</h2></div>
   <span class="status-chip" data-wind-status role="status">Načítám</span>
  </div>
  <div class="wind-layout wind-layout-v2">
@@ -32,14 +32,14 @@ const {variant='default'}=Astro.props;
   </div>
   <div class="observatory-wind-readout wind-readout-v2">
    <p class="observatory-wind-direction" data-wind-sector>Směr se načítá</p>
-   <p class="source-note" data-wind-description>Čeká na ověřený archivní směr větru.</p>
+   <p class="source-note" data-wind-description>Načítám směr větru.</p>
    <div class="wind-speed-pair wind-metrics-v2" aria-label="Rychlost a nárazy větru">
     <div class="wind-metric-v2"><span>Rychlost</span><strong><span data-wind-value="windSpeed">—</span> <small>m/s</small></strong><small data-wind-source="windSpeed">Načítám</small></div>
     <div class="wind-metric-v2"><span>Nárazy</span><strong><span data-wind-value="windGust">—</span> <small>m/s</small></strong><small data-wind-source="windGust">Načítám</small></div>
    </div>
   </div>
  </div>
- <p class="observatory-source-note">Ukazatel na kružnici označuje, odkud vítr vane. U každé hodnoty uvádíme její zdroj.</p>
+ <p class="observatory-source-note">Šipka ukazuje, odkud vítr vane.</p>
 </section>
 <script>
  import {getCurrent} from '../../shared/api/client';
@@ -57,13 +57,17 @@ const {variant='default'}=Astro.props;
   const gauge=root.querySelector<HTMLElement>('[data-wind-valid]');
   let lastRotation:number|null=null;
 
+  const sourceLabel=(source:string)=>source==='Živě · GW3000'?'Živé měření':
+   source==='Archiv WeeWX'?'Uložené měření':
+   source==='Starší archiv WeeWX'?'Starší měření':
+   source==='API nedostupné'?'Data nedostupná':source;
   const setWind=(id:'windSpeed'|'windGust',value:number|null,source:string)=>{
    const reading=root.querySelector<HTMLElement>('[data-wind-value="'+id+'"]');
    const note=root.querySelector<HTMLElement>('[data-wind-source="'+id+'"]');
    if(reading)reading.textContent=value===null?'—':new Intl.NumberFormat('cs-CZ',{
     minimumFractionDigits:1,maximumFractionDigits:1
    }).format(value);
-   if(note)note.textContent=source;
+   if(note)note.textContent=sourceLabel(source);
   };
 
   const clearDirection=(reason:string)=>{
@@ -92,8 +96,8 @@ const {variant='default'}=Astro.props;
     gauge.dataset.windValid='true';
     gauge.setAttribute('aria-label','Vítr přichází z '+wind.rounded+' stupňů, '+wind.long);
    }
-   if(status){status.textContent=source;status.className='status-chip '+(stale?'warning':'ok');}
-   if(description)description.textContent=stale?'Starší archivní směr větru':'Směr odkud vítr vane · '+source;
+   if(status){status.textContent=sourceLabel(source);status.className='status-chip '+(stale?'warning':'ok');}
+   if(description)description.textContent=stale?'Zobrazené je starší měření.':'Směr, odkud vítr vane.';
   };
 
   const load=()=>{
@@ -117,7 +121,7 @@ const {variant='default'}=Astro.props;
    }).catch(()=>{
     if(controller.signal.aborted)return;
     clearDirection('Směr větru se nepodařilo načíst.');
-    if(status){status.textContent='API nedostupné';status.className='status-chip error';}
+   if(status){status.textContent='Data nedostupná';status.className='status-chip error';}
     setWind('windSpeed',null,'API nedostupné');
     setWind('windGust',null,'API nedostupné');
    });

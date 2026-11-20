@@ -29,7 +29,7 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
   <span class="source-note" data-radar-frame></span>
  </div>
  <div class="preview-footer">
-  <span class="source-note">Historická radarová pozorování · nikoli předpověď</span>
+  <span class="source-note">Radar ukazuje zaznamenané srážky, nikoli předpověď.</span>
   <span class="source-note">Mapy © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> · radar <a href="https://www.rainviewer.com/" target="_blank" rel="noopener noreferrer">RainViewer</a></span>
  </div>
 </section>
@@ -86,7 +86,7 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
    const detail=(event as CustomEvent<{visible:boolean}>).detail;
    radarVisible=detail?.visible!==false;
    if(image)image.hidden=!radarVisible||!image.complete||image.naturalWidth===0;
-   if(message&&!radarVisible){message.hidden=false;message.textContent='Radarová vrstva je vypnutá – podkladová mapa zůstává viditelná.';}
+   if(message&&!radarVisible){message.hidden=false;message.textContent='Zobrazení radaru je vypnuté. Mapa zůstává viditelná.';}
    else if(message&&image.complete&&image.naturalWidth)message.hidden=true;
    if(status&&frames.length)status.textContent=radarVisible?(isStale?'Zastaralý radarový snímek':'Radar dostupný'):'Radarová vrstva skrytá';
   };
@@ -130,7 +130,7 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
    render();
   }).catch(()=>{
    if(controller.signal.aborted)return;
-   if(message){message.hidden=false;message.textContent='Radarový zdroj není dostupný. Podkladová mapa zůstává pouze orientační.';}
+   if(message){message.hidden=false;message.textContent='Radarové snímky nejsou dostupné. Mapa zůstává viditelná.';}
    if(status){status.textContent='Radar nedostupný';status.classList.add('warning');}
   });
   scrub?.addEventListener('input',()=>{if(!frames.length)return;stop();i=Math.max(0,Math.min(frames.length-1,Number(scrub.value)));render();});

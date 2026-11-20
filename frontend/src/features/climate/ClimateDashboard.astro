@@ -19,9 +19,9 @@ const climateSections=[
 ---
 <div class="climate-page" data-climate-dashboard data-current-year={currentYear}>
  <div class="page-intro climate-intro">
-  <span class="eyebrow">Klimatologie · archiv od roku 2009</span>
-  <div class="section-heading"><div><h2>Datový přehled Loučky</h2><p>Roční a měsíční přehled ze skutečných denních souhrnů WeeWX.</p></div>
-   <span class="status-chip" data-climate-status role="status">Ověřuji statistické API</span>
+  <span class="eyebrow">Počasí v Loučce · historie od roku 2009</span>
+  <div class="section-heading"><div><h2>Jak se měnilo počasí</h2><p>Prohlédněte si vývoj teplot, srážek a větru v Loučce.</p></div>
+   <span class="status-chip" data-climate-status role="status">Načítám přehled</span>
   </div>
  </div>
  <nav class="climate-tabs" aria-label="Kategorie klimatologie">
@@ -34,18 +34,18 @@ const climateSections=[
   </nav>
  </details>
  <div class="climate-filter section" id="prehled">
-  <div><span class="eyebrow">Historický archiv</span><strong>2009–{currentYear}</strong><span class="source-note">Pouze existující měření, bez doplňování mezer</span></div>
+  <div><span class="eyebrow">Dostupné roky</span><strong>2009–{currentYear}</strong><span class="source-note">Zobrazujeme dochovaná měření</span></div>
   <label for="climate-year">Rok</label>
   <select id="climate-year" data-climate-year>
    {years.map(year=><option value={year} selected={year===defaultYear}>{year}{year===currentYear?' (probíhající)':''}</option>)}
   </select>
-  <button type="button" class="chart-tab" data-climate-reload>Načíst statistiky</button>
+  <button type="button" class="chart-tab" data-climate-reload>Zobrazit rok</button>
  </div>
  <div class="climate-summary-strip" aria-label="Roční shrnutí">
-  <div class="climate-summary-metric"><span>Průměrná teplota</span><strong data-summary="temperature">—</strong><small>°C · roční průměr WeeWX</small></div>
-  <div class="climate-summary-metric"><span>Roční srážky</span><strong data-summary="rain">—</strong><small>mm · součet intervalových úhrnů</small></div>
-  <div class="climate-summary-metric"><span>Průměrný vítr</span><strong data-summary="wind">—</strong><small>m/s · časově vážený průměr</small></div>
-  <div class="climate-summary-metric"><span>Nejvyšší teplota</span><strong data-summary="max">—</strong><small>°C · denní souhrny, zatím bez QC</small></div>
+  <div class="climate-summary-metric"><span>Průměrná teplota</span><strong data-summary="temperature">—</strong><small>°C · průměr za rok</small></div>
+  <div class="climate-summary-metric"><span>Roční srážky</span><strong data-summary="rain">—</strong><small>mm · součet za rok</small></div>
+  <div class="climate-summary-metric"><span>Průměrný vítr</span><strong data-summary="wind">—</strong><small>m/s · průměr za rok</small></div>
+  <div class="climate-summary-metric"><span>Nejvyšší teplota</span><strong data-summary="max">—</strong><small>°C · předběžný údaj</small></div>
  </div>
  <div class="climate-grid">
   <section class="section climate-card" aria-labelledby="climate-years-title">
@@ -54,28 +54,28 @@ const climateSections=[
     <thead><tr><th scope="col">Rok</th><th scope="col">Teplota °C</th><th scope="col">Srážky mm</th><th scope="col">Pokrytí</th></tr></thead>
     <tbody data-year-table><tr><td colspan="4">Načítám roční souhrny…</td></tr></tbody>
    </table></div>
-   <p class="source-note">Posledních šest dokončených let. Chybějící údaje zůstávají nevyplněné. Pokrytí znamená časový podíl platných archivních měření teploty podle souhrnů WeeWX; nevypovídá o kvalitě srážek ani o opravách historických chyb.</p>
+   <p class="source-note">Chybějící měření mohou ovlivnit roční průměry. Pokrytí ukazuje, jak velká část měření je dochována.</p>
   </section>
   <section class="section climate-card" id="teploty" aria-labelledby="climate-temp-title">
    <div class="section-heading"><div><span class="eyebrow">Měsíční průběh</span><h2 id="climate-temp-title">Průměrné měsíční teploty</h2></div><span class="status-chip" data-chart-status="temperature">Načítám</span></div>
    <div class="climate-real-chart" data-chart="temperature" role="img" aria-label="Měsíční průměrné teploty ze souhrnů WeeWX"></div>
    <div class="climate-legend"><span><i class="legend-dot mean"></i>Průměr</span><span><i class="legend-dot min"></i>Denní minimum*</span><span><i class="legend-dot max"></i>Denní maximum*</span></div>
-   <p class="source-note">* Minima a maxima pocházejí z denních souhrnů a nejsou považována za definitivně ověřené rekordy.</p>
+   <p class="source-note">* V neúplných dnech nemusí minima a maxima zachytit skutečný extrém.</p>
   </section>
   <section class="section climate-card" id="srazky" aria-labelledby="climate-rain-title">
    <div class="section-heading"><div><span class="eyebrow">Měsíční úhrny</span><h2 id="climate-rain-title">Srážky</h2></div><span class="status-chip" data-chart-status="rain">Načítám</span></div>
    <div class="climate-real-chart" data-chart="rain" role="img" aria-label="Měsíční souhrny srážek"></div>
-   <p class="source-note">Úhrny jsou agregace původních dat. Dosud nepotvrzené historické chyby srážkoměru mohou ovlivnit některé hodnoty.</p>
+   <p class="source-note">Některé historické úhrny srážek se ještě ověřují.</p>
   </section>
   <section class="section climate-card" id="vitr" aria-labelledby="climate-wind-title">
    <div class="section-heading"><div><span class="eyebrow">Měsíční průměr</span><h2 id="climate-wind-title">Větrné podmínky</h2></div><span class="status-chip" data-chart-status="wind">Načítám</span></div>
    <div class="climate-real-chart" data-chart="wind" role="img" aria-label="Měsíční průměrná rychlost větru"></div>
-   <p class="source-note">Časově vážená měsíční rychlost větru. Směr větru nelze počítat aritmetickým průměrem stupňů.</p>
+   <p class="source-note">Měsíční průměr z dostupných měření.</p>
   </section>
   <section class="section climate-card climate-records" id="extremy">
    <div class="section-heading"><div><span class="eyebrow">Roční extrémy</span><h2>Minima a maxima</h2></div><span class="status-chip" data-extremes-status>Čeká na zdroj</span></div>
    <div class="climate-extreme-values"><div>Nejnižší denní minimum <strong data-extreme="min">—</strong></div><div>Nejvyšší denní maximum <strong data-extreme="max">—</strong></div></div>
-   <p class="source-note">Orientační hodnoty z původních denních souhrnů WeeWX. Nejde o definitivní rekordy po forenzní kontrole historických měření.</p>
+   <p class="source-note">Předběžné hodnoty; některé dny nemusí mít úplná měření.</p>
   </section>
  </div>
  <div class="climate-trend-row" aria-label="Roční klimatologické trendy">
@@ -84,7 +84,10 @@ const climateSections=[
   <section class="section climate-trend-card"><div class="section-heading"><h2>Průměrná rychlost větru</h2><span class="source-note">m/s</span></div><div class="climate-trend-canvas" data-climate-trend="wind" role="img" aria-label="Roční vítr za posledních šest let"></div></section>
  </div>
  <SolarSnowEvidence />
- <p class="source-note climate-footnote">Zdroj: původní denní souhrny WeeWX. Časové hranice: Europe/Prague včetně CET/CEST. Výpočty neodstraňují historické pochybné záznamy.</p>
+ <details class="source-note climate-footnote">
+  <summary>O zdrojích a přesnosti historických údajů</summary>
+  <p>Grafy vycházejí z dochovaných měření místní stanice. Chybějící hodnoty nedoplňujeme odhadem; neúplné dny proto nemusí zachytit skutečná minima a maxima. U některých starších srážek se ještě ověřuje správnost měření. Časy odpovídají místnímu času v Loučce.</p>
+ </details>
 </div>
 <script>
  import {getClimateDashboard} from '../../shared/api/client';
@@ -204,7 +207,7 @@ const climateSections=[
     display('[data-summary="max"]',data.summary.maxTemp,1,'°C');
     if(Object.values(data.summary).every(v=>v===null))
      throw new Error('Chybí platné archivní souhrny pro vybraný rok');
-    badge('[data-climate-status]','Archivní souhrny · '+year,'ok');
+   badge('[data-climate-status]','Rok '+year,'ok');
     const body=root.querySelector<HTMLTableSectionElement>('[data-year-table]');
     const yrs=data.annualYears;
     if(body){
@@ -222,7 +225,7 @@ const climateSections=[
       cell.title='Pokrytí času platnými měřeními venkovní teploty; neznamená kvalitu nebo úplnost srážek.';
      });
     }
-    badge('[data-years-status]','Souhrny WeeWX','ok');
+    badge('[data-years-status]','Údaje dostupné','ok');
     const orderedYears=[...yrs].reverse();
     for(const [name,color] of [['temperature','#176878'],['rain','#2879a3'],['wind','#27785e']] as const)
      setAnnualChart(name,orderedYears,[...data.annual[name]].reverse(),color);
@@ -231,7 +234,7 @@ const climateSections=[
     const validHighs=highs.filter((v):v is number=>v!==null);
     display('[data-extreme="min"]',validLows.length?Math.min(...validLows):null,1,'°C');
     display('[data-extreme="max"]',validHighs.length?Math.max(...validHighs):null,1,'°C');
-    badge('[data-extremes-status]',validHighs.length?'Původní archiv – bez QC':'Bez platných dat',
+    badge('[data-extremes-status]',validHighs.length?'Předběžné údaje':'Bez dat',
      validHighs.length?'warning':'error');
     setGraph('temperature',temps,'#176878','°C',lows,highs);
     setGraph('rain',rain,'#2879a3','mm');
@@ -240,17 +243,17 @@ const climateSections=[
      const values=data.monthly[name],validMonths=values.filter(v=>v!==null).length;
      const plot=root.querySelector<HTMLElement>('[data-chart="'+name+'"]');
      if(plot)plot.dataset.validMonths=String(validMonths);
-     badge('[data-chart-status="'+name+'"]',validMonths===12?'Archivní souhrny':validMonths?
-      'Dostupné '+validMonths+'/12 měsíců':'Bez měření',validMonths===12?'ok':'warning');
+     badge('[data-chart-status="'+name+'"]',validMonths===12?'12 z 12 měsíců':validMonths?
+      validMonths+' z 12 měsíců':'Bez dat',validMonths===12?'ok':'warning');
     });
-   }catch(error){
+   }catch{
     if(signal.aborted)return;
     badge('[data-climate-status]','Statistiky nedostupné','error');
     const body=root.querySelector<HTMLTableSectionElement>('[data-year-table]');
     if(body){
      body.replaceChildren();const tr=body.insertRow(),td=tr.insertCell();
      td.colSpan=4;
-     td.textContent=error instanceof Error?error.message:'Statistické API neodpovídá';
+     td.textContent='Údaje pro tento rok se nepodařilo načíst.';
     }
     for(const name of ['temperature','rain','wind'])
      badge('[data-chart-status="'+name+'"]','Nedostupné','error');

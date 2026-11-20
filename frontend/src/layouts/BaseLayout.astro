@@ -86,7 +86,7 @@ const active = Astro.url.pathname;
   </header>
   <main id="obsah" class="wrap content"><slot /></main>
   <MobileDock />
-  <footer class="site-footer"><div class="wrap footer-inner"><span>© Počasí Loučka · vývojový náhled</span><a href="/o-stanici/">O stanici a měření</a></div></footer>
+  <footer class="site-footer"><div class="wrap footer-inner"><span>© Počasí Loučka · Loučka, Zlínský kraj</span><a href="/o-stanici/">O stanici a měření</a></div></footer>
   <script>
    const clock=document.querySelector<HTMLElement>('[data-prague-clock]');
    const tick=()=>{if(clock)clock.textContent=new Intl.DateTimeFormat('cs-CZ',{dateStyle:'short',timeStyle:'short',timeZone:'Europe/Prague'}).format(new Date());};

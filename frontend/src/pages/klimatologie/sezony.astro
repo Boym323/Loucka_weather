@@ -61,7 +61,7 @@ const years=Array.from({length:Math.max(1,currentYear-2008)},(_,i)=>currentYear-
    <h2 id="season-chart-head">Denní teplotní průběhy</h2>
    <p>Dvě sezóny zarovnané podle měsíce a dne; 29. února se nezaměňuje s 1. březnem. Přerušení čáry představuje chybějící údaj.</p>
    <div class="atlas-chart" data-season-chart role="img" aria-label="Dvě křivky dostupných denních teplot vybraných sezón"></div>
-   <p class="source-note">Porovnáváme pouze dostupná měření z obou období. Historické srážkové záznamy ještě nejsou úplně prověřené.</p>
+   <p class="source-note">Porovnáváme jen dny, pro které máme měření v obou obdobích. Starší údaje o srážkách se ještě ověřují.</p>
    <details class="source-note">
     <summary>Jak počítáme sezónní rozdíly?</summary>
     <p>Zdrojem jsou původní denní souhrny WeeWX v místním čase Europe/Prague. Denní průměry použité ke srovnání nejsou totéž jako časově vážený průměr celé sezóny. Rozdíl počítáme pouze ze stejných kalendářních dnů s platnými údaji u obou sezón. Srážková historie zatím nemá dokončenou odbornou kontrolu.</p>
@@ -206,7 +206,7 @@ const years=Array.from({length:Math.max(1,currentYear-2008)},(_,i)=>currentYear-
      'Rozdíly používají výhradně společné platné kalendářní dny. Nejde o plné klimatologické normály.':
      'Některá veličina nemá alespoň 80 % společných dní. Její rozdíl neuvádíme; chybějící hodnoty nejsou nuly.');
     draw(leftData.temperature,rightData.temperature);
-    status.textContent='Srovnání originálního archivu · bez definitivní QC';
+    status.textContent='Předběžné srovnání';
     status.dataset.state=(temps.sufficient&&rain.sufficient)?'':'warning';
    }catch{
     if(ctrl.signal.aborted||ticket!==generation)return;

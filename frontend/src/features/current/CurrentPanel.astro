@@ -31,7 +31,7 @@ const quickReadings = [
    <span class="sr-only" data-quick-quality={metric.id}>Čeká na měření</span>
   </div>)}
  </div>}
- <p class="source-note source-note-bottom" data-current-provenance>Měření přímo ze stanice nebo poslední uložené údaje. Chybějící hodnoty nezaměňujeme za nulu.</p>
+ <p class="source-note source-note-bottom" data-current-provenance>Některá měření se aktualizují živě, ostatní podle posledního záznamu. Pomlčka znamená, že údaj není dostupný.</p>
 </section>
 <script>
  import { getCurrent, invalidateCurrentRequest } from '../../shared/api/client';
@@ -67,7 +67,7 @@ const quickReadings = [
   lastArchiveObservedAt=response.observedAt;
   section.dataset.currentState=response.stale?'stale':'archive';
   if(updated)updated.textContent='Naměřeno '+formatTimestamp(response.observedAt);
-  if(provenance)provenance.textContent='Zobrazeno poslední uložené měření. Nedostupné údaje necháváme prázdné.';
+  if(provenance)provenance.textContent='Hodnoty odpovídají poslednímu dostupnému měření.';
   for(const metric of activeMetrics){
    const node=section.querySelector<HTMLElement>('[data-metric-value="'+metric.id+'"]');
    const quality=section.querySelector<HTMLElement>('[data-metric-quality="'+metric.id+'"]');
@@ -109,8 +109,8 @@ const quickReadings = [
   if(updated)updated.textContent=lastArchiveObservedAt?
    'Poslední známé měření: '+formatTimestamp(lastArchiveObservedAt):'Čas posledního měření není dostupný.';
   if(provenance)provenance.textContent=lastArchiveObservedAt?
-   'Zobrazené hodnoty jsou poslední dostupné údaje, jejich aktuálnost nyní nelze ověřit.':
-   'Údaje se nepodařilo načíst. Nezobrazujeme odhadované hodnoty.';
+   'Zobrazené hodnoty mohou být starší. Nové měření se nepodařilo načíst.':
+   'Údaje se nepodařilo načíst. Zkuste stránku obnovit.';
   }
   if(archiveRetryCount<3&&!archiveRetryTimer){
    const delay=4000*(++archiveRetryCount);
@@ -150,7 +150,7 @@ const quickReadings = [
   }
   section.dataset.currentState='live';
   if(status){status.textContent='Živá měření';status.className='status-chip ok';}
-  if(provenance)provenance.textContent='Část údajů přichází živě, ostatní pocházejí z posledního uloženého měření.';
+  if(provenance)provenance.textContent='Některá měření se aktualizují živě, ostatní podle posledního záznamu.';
   if(updated)updated.textContent=(data.timestampMeaning==='gateway_polled_at'?'Přečteno ':'Naměřeno ')+
    formatTimestamp(data.observedAt);
  };

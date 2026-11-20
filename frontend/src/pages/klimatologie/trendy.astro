@@ -41,7 +41,7 @@ import RainfallArchive from '../../features/climate/RainfallArchive.astro';
   </section>
   <section class="atlas-panel" aria-labelledby="trend-table-title">
    <h2 id="trend-table-title">Přehled všech dostupných roků</h2>
-   <p>Roční průměry jsou časově vážené podle dostupného archivu, srážky součtem intervalů. Chybějící hodnoty nejsou dosazeny jako nula.</p>
+   <p>Roční výsledky vycházejí z dostupných měření. Chybějící hodnoty se nezapočítávají jako nula.</p>
    <div class="atlas-table-scroll" role="region" aria-label="Roční klimatologické hodnoty" tabindex="0">
     <table class="atlas-table">
      <thead><tr><th scope="col">Rok</th><th scope="col">Hodnota</th><th scope="col">Dny s daty</th><th scope="col">Časové pokrytí</th><th scope="col">Hodnocení</th></tr></thead>
@@ -170,7 +170,7 @@ import RainfallArchive from '../../features/climate/RainfallArchive.astro';
      ])tr.insertCell().textContent=value;
     }
     draw(rows,metric);
-    status.textContent='Originální roční souhrny · bez konečné QC';
+    status.textContent='Předběžná historická data';
     status.dataset.state='warning';
    }catch{
     if(controller.signal.aborted||ticket!==epoch)return;

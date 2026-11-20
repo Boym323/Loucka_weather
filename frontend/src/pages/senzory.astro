@@ -8,7 +8,7 @@ import ChannelAvailability from '../features/sensors/ChannelAvailability.astro';
 <BaseLayout title="Senzory">
  <div class="page-intro">
   <span class="eyebrow">Co naše stanice sleduje</span>
-  <h1>Senzory a měření</h1>
+  <h1>Co stanice měří</h1>
   <p>Prohlédni si teplotu půdy, další čidla a jejich poslední naměřené hodnoty. U každého údaje najdeš také graf.</p>
  </div>
  <nav class="sensor-page-shortcuts" aria-label="Související podrobnosti">
@@ -18,13 +18,13 @@ import ChannelAvailability from '../features/sensors/ChannelAvailability.astro';
  <SensorChannels />
  <section class="sensor-advanced-section" aria-label="Odborné informace o senzorech">
   <h2>Více o čidlech a měření</h2>
-  <p>Podrobné informace o dostupnosti, vybavení a stavu čidel najdeš v následujících sekcích.</p>
+  <p>Další informace o historii měření a vybavení stanice.</p>
   <details class="sensor-advanced-group">
-   <summary><span><strong>Dostupnost archivních kanálů</strong><small>Kdy byla měření dostupná a kolik jich máme</small></span><span class="sensor-expand-indicator" aria-hidden="true">⌄</span></summary>
+   <summary><span><strong>Historie měření</strong><small>Kdy jsou údaje k dispozici</small></span><span class="sensor-expand-indicator" aria-hidden="true">⌄</span></summary>
    <div class="sensor-advanced-content"><ChannelAvailability /></div>
   </details>
   <details class="sensor-advanced-group">
-   <summary><span><strong>Fyzické senzory stanice</strong><small>Co o vybavení stanice skutečně víme</small></span><span class="sensor-expand-indicator" aria-hidden="true">⌄</span></summary>
+   <summary><span><strong>Vybavení stanice</strong><small>Známé informace o čidlech</small></span><span class="sensor-expand-indicator" aria-hidden="true">⌄</span></summary>
    <div class="sensor-advanced-content"><AuditedSensorRegistry /></div>
   </details>
   <details class="sensor-advanced-group">

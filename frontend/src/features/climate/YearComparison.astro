@@ -26,13 +26,16 @@ const beforePrevious=todayYear-2;
   </label>
   <button class="year-compare-submit" type="submit">Porovnat roky</button>
  </form>
- <p class="source-note year-compare-disclaimer">Podklad: původní denní souhrny WeeWX / MariaDB, čas Europe/Prague. Ještě neproběhla kompletní historická QC. Neplatná a chybějící měření nejsou nuly, neznamenají ani den bez srážek.</p>
+ <details class="source-note year-compare-disclaimer">
+  <summary>O zdrojích a chybějících údajích</summary>
+  <p>Porovnání vychází z dostupných původních měření v místním čase. Historická kontrola není dokončená. Chybějící nebo nejistý údaj neznamená nulu ani den bez srážek.</p>
+ </details>
  <div class="year-compare-kpis" aria-label="Porovnání společně změřených dní">
   <div><span data-comparison-label="first">První rok</span><strong data-comparison-value="first">—</strong><small data-comparison-coverage="first">Čeká na zdroj</small></div>
   <div><span data-comparison-label="second">Druhý rok</span><strong data-comparison-value="second">—</strong><small data-comparison-coverage="second">Čeká na zdroj</small></div>
   <div><span>Rozdíl (druhý − první)</span><strong data-comparison-value="difference">—</strong><small data-comparison-coverage="matched">Pouze společné platné dny</small></div>
  </div>
- <p class="year-compare-meaning" data-comparison-meaning>U teploty, vlhkosti a větru porovnáváme průměr denních hodnot ve stejných dostupných datech, u srážek jejich součet. Nejde o úplné roční klimatologické normály.</p>
+ <p class="year-compare-meaning" data-comparison-meaning>Porovnání vychází jen ze dnů, pro které máme údaje v obou letech. Nejde o úplný klimatický normál.</p>
  <div class="year-heatmaps" aria-label="Dvě kalendářní heatmapy se stejnou stupnicí">
   <section class="year-heatmap-card" aria-labelledby="heatmap-a-title">
    <div class="year-heatmap-heading"><h3 id="heatmap-a-title" data-compare-year-title="first">První rok</h3><span data-heatmap-count="first">—</span></div>
@@ -69,7 +72,10 @@ const beforePrevious=todayYear-2;
     <tbody data-annual-rows><tr><td colspan="6">Roční souhrny se načtou po otevření sekce…</td></tr></tbody>
    </table>
   </div>
-  <p class="source-note year-annual-notice">Roční průměry jsou časově vážené souhrny WeeWX. U součtů používáme skutečné naměřené intervaly; chybějící dny nedoplňujeme nulou. Pokrytí času není totéž co schválení kvality a porovnání dvou let výše zahrnuje pouze společné kalendářní dny.</p>
+  <details class="source-note year-annual-notice">
+   <summary>Jak číst roční přehled?</summary>
+   <p>Roční průměry vycházejí z dostupných měření, srážky z naměřených úhrnů. Chybějící dny nedoplňujeme odhadem. U srovnání dvou let používáme jen společné dny s údaji.</p>
+  </details>
  </section>
  <p class="source-note year-compare-footer" data-comparison-provenance>Údaje zůstávají orientační až do dokončení rekonstrukce. Barevná stupnice je stálá pro všechny roky a stejnou veličinu; hodnoty nad či pod krajní mezí sdílí krajní barvu.</p>
 </section>
@@ -267,8 +273,8 @@ const beforePrevious=todayYear-2;
     const yearFraction=year.completenessFraction;
     state.textContent=year.value===null?'Bez dat':
      year.periodStatus==='in_progress'?'Probíhá':
-     year.invalidDays>0?'Neplatné dny':
-     yearFraction!==null&&yearFraction<.9?'Neúplný':'Bez finální QC';
+     year.invalidDays>0?'Nejisté údaje':
+     yearFraction!==null&&yearFraction<.9?'Neúplný':'Předběžný';
     state.title='Původní archiv WeeWX; historická rekonstrukce a okolní stanice nejsou schválená součást této hodnoty.';
     const cell=line.insertCell();
     const button=document.createElement('button');button.type='button';
@@ -278,7 +284,7 @@ const beforePrevious=todayYear-2;
     button.setAttribute('aria-label','Vybrat rok '+year.year+' pro srovnání');
     cell.append(button);
    }
-   annualStatus.textContent=rows.length+' let · původní archiv';
+   annualStatus.textContent=rows.length+' let v přehledu';
    annualStatus.className='status-chip warning';
   };
   async function loadAnnual(kind:ComparisonMetric,signal:AbortSignal){
@@ -310,14 +316,14 @@ const beforePrevious=todayYear-2;
    set('[data-comparison-value="second"]',compare.second===null?'—':format(compare.second)+' '+unit);
    set('[data-comparison-value="difference"]',compare.difference===null?'—':
     (compare.difference>0?'+':'')+format(compare.difference)+' '+unit);
-   set('[data-comparison-coverage="first"]','Platné dny v roce: '+countOf(firstValues)+' / '+yearDays(years[0]));
-   set('[data-comparison-coverage="second"]','Platné dny v roce: '+countOf(secondValues)+' / '+yearDays(years[1]));
-   set('[data-comparison-coverage="matched"]','Společné platné kalendářní dny: '+compare.days);
+   set('[data-comparison-coverage="first"]','Údaje za '+countOf(firstValues)+' z '+yearDays(years[0])+' dní');
+   set('[data-comparison-coverage="second"]','Údaje za '+countOf(secondValues)+' z '+yearDays(years[1])+' dní');
+   set('[data-comparison-coverage="matched"]','Společných dní: '+compare.days);
    set('[data-comparison-meaning]',comparisonMetrics[metric].kind==='sum'
-    ?'Součet z '+compare.days+' společných platných kalendářních dnů, ne nutně celoroční úhrn. Původní data nejsou po finální historické QC.'
+    ?'Součet z '+compare.days+' společných dnů s údaji; nemusí jít o celý rok.'
     :comparisonMetrics[metric].kind==='max'
-    ?'Maximum na '+compare.days+' společných dnech. Dny bez měření nejsou započteny a nejde o ověřený rekord.'
-    :'Nevážený průměr '+compare.days+' denních agregátů na shodných kalendářních dnech; není to časově vážený roční průměr z tabulky níže.');
+    ?'Maximum z '+compare.days+' společných dnů s údaji; nejde o potvrzený rekord.'
+    :'Průměr z '+compare.days+' společných dnů s údaji.');
   };
   const redraw=()=>{
    heatmap('first',years[0],firstValues);heatmap('second',years[1],secondValues);
@@ -332,7 +338,7 @@ const beforePrevious=todayYear-2;
    metric=chosen;
    years=[Number(firstSelect.value),Number(secondSelect.value)];
    if(years[0]===years[1]){setStatus('Vyber dva různé roky','warning');return;}
-   setStatus('Načítám denní souhrny WeeWX…','warning');
+   setStatus('Načítám porovnání…','warning');
    void loadAnnual(metric,signal);
    const responses=await Promise.allSettled(years.map(y=>sourceFromYear(y,metric,signal)));
    if(signal.aborted)return;
@@ -340,9 +346,9 @@ const beforePrevious=todayYear-2;
    secondValues=responses[1].status==='fulfilled'?dailyValues(years[1],responses[1].value.points):new Map();
    selectedDay=alignedCalendarDays.find(d=>isPresent(firstValues,d)!==null&&isPresent(secondValues,d)!==null)??'01-01';
    redraw();
-   if(responses.every(r=>r.status==='rejected'))setStatus('Archivní denní API je nedostupné','error');
+   if(responses.every(r=>r.status==='rejected'))setStatus('Údaje se nepodařilo načíst','error');
    else if(responses.some(r=>r.status==='rejected'))setStatus('Jeden z roků nelze načíst','warning');
-   else setStatus('Původní archiv · bez finální QC','ok');
+   else setStatus('Historické údaje · předběžné','ok');
   }
   form.addEventListener('submit',event=>{event.preventDefault();void load();});
   annualBody.addEventListener('click',event=>{

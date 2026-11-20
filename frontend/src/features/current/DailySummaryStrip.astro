@@ -1,8 +1,8 @@
-<section class="daily-brief" data-daily-brief aria-label="Dnešní archivní souhrn">
+<section class="daily-brief" data-daily-brief aria-label="Dnešní přehled">
  <div class="daily-brief-item"><span>Minimum dnes</span><strong data-daily-stat="low">—</strong><small>°C</small></div>
  <div class="daily-brief-item"><span>Maximum dnes</span><strong data-daily-stat="high">—</strong><small>°C</small></div>
  <div class="daily-brief-item"><span>Dnešní srážky</span><strong data-daily-stat="rain">—</strong><small>mm</small></div>
- <span class="daily-brief-status" data-daily-status role="status">Denní archivní souhrny</span>
+ <span class="daily-brief-status" data-daily-status role="status">Dnešní přehled</span>
 </section>
 <script>
  import {getStatistics} from '../../shared/api/client';
@@ -29,7 +29,7 @@
      node.textContent=formatValue(result.value.value,requests[index].digits);
      valid++;
     });
-    if(status)status.textContent=valid?'Souhrny WeeWX · '+day:'Denní souhrny zatím nejsou dostupné';
+    if(status)status.textContent=valid?'Souhrn za dnešek':'Dnešní hodnoty zatím nejsou dostupné';
    });
   document.addEventListener('astro:before-swap',()=>controller.abort(),{once:true});
  }

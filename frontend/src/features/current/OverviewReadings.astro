@@ -10,7 +10,7 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
   <div><dt>Vnitřní vlhkost</dt><dd data-overview-value="inHumidity">—</dd></div>
   <div><dt>Směr větru</dt><dd data-overview-value="windDir">—</dd></div>
  </dl>
- <p class="source-note">Naměřené nebo odvozené veličiny z posledního archivního záznamu. Nejde o samostatně ověřený stav fyzických čidel.</p>
+ <p class="source-note">Další údaje podle posledního dostupného měření.</p>
 </section>
 <script>
  import {getCurrent} from '../../shared/api/client';
@@ -27,7 +27,7 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
    {id:'windDir',unit:'°',digits:0}
   ];
   void getCurrent(controller.signal).then(response=>{
-   if(status){status.textContent=response.stale?'Zastaralé':'Archiv';status.classList.add(response.stale?'warning':'ok');}
+   if(status){status.textContent=response.stale?'Starší měření':'Uloženo';status.classList.add(response.stale?'warning':'ok');}
    for(const item of items){
     const node=root.querySelector<HTMLElement>('[data-overview-value="'+item.id+'"]');
     const reading=response.readings[item.id];

@@ -1,14 +1,14 @@
 <section class="observatory-history" data-day-history aria-labelledby="day-history-title">
  <div class="observatory-module-head">
   <div><span class="observatory-kicker">LOUČKA V ČASE</span><h2 id="day-history-title">Před rokem ve stejný den</h2></div>
-  <span class="observatory-small-tag" data-history-year>WeeWX · archiv</span>
+  <span class="observatory-small-tag" data-history-year>Minulý rok</span>
  </div>
  <p class="observatory-history-intro">Jaké bylo počasí v Loučce v tento kalendářní den minulého roku?</p>
  <div class="observatory-history-stats" aria-label="Archivní denní minimum a maximum">
-  <div><span>Nejnižší zachycená</span><strong data-day-history-min>—</strong></div>
-  <div><span>Nejvyšší zachycená</span><strong data-day-history-max>—</strong></div>
+  <div><span>Nejnižší teplota</span><strong data-day-history-min>—</strong></div>
+  <div><span>Nejvyšší teplota</span><strong data-day-history-max>—</strong></div>
  </div>
- <p class="observatory-source-note" data-day-history-status role="status">Ověřuji úplnost historického dne v původním archivu.</p>
+ <p class="observatory-source-note" data-day-history-status role="status">Načítám počasí pro tento den.</p>
  <a href="/grafy/" class="observatory-text-link">Prozkoumat archiv od roku 2009 <span aria-hidden="true">↗</span></a>
 </section>
 <script>
@@ -24,7 +24,7 @@
   const year=Number(current.year)-1;
   const date=year+'-'+current.month+'-'+current.day;
   const yearNode=root.querySelector<HTMLElement>('[data-history-year]');
-  if(yearNode)yearNode.textContent=year+' · původní archiv';
+  if(yearNode)yearNode.textContent='Rok '+year;
   const status=root.querySelector<HTMLElement>('[data-day-history-status]');
   const set=(k:string,v:string)=>{const node=root.querySelector<HTMLElement>('[data-day-history-'+k+']');if(node)node.textContent=v;};
   // Leap day has no matching civil date in a non-leap year.
@@ -46,12 +46,12 @@
      const complete=coverage>=.8;
      root.dataset.historyCompleteness=complete?'sufficient':'incomplete';
      if(status)status.textContent=complete
-      ?'Původní archiv WeeWX · '+date+' · pokrytí '+Math.round(coverage*100)+
-       ' %. Zachycená minima a maxima, nikoli ověřené rekordy.'
-      :'Neúplný den · '+date+' · '+(coverage>0
-       ?'pokrytí jen '+Math.round(coverage*100)+' %'
-       :'pokrytí času nelze potvrdit')+
-       '. Zobrazujeme pouze rozsah dochovaných měření, nikoli jisté celodenní extrémy.';
+      ?'Dochovaná měření · '+date+' · '+Math.round(coverage*100)+
+       ' % dne. Nejde o potvrzené rekordy.'
+      :'Část měření chybí · '+date+' · '+(coverage>0
+       ?'dochováno '+Math.round(coverage*100)+' % dne'
+       :'rozsah nelze potvrdit')+
+       '. Zobrazujeme jen známé hodnoty, ne celodenní extrémy.';
     }else if(status){
      root.dataset.historyCompleteness='missing';
      status.textContent='V původním archivu chybí platné teplotní měření pro tento den.';
