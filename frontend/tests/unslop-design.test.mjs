@@ -23,7 +23,7 @@ test('weather forecast uses iconography and describes model provenance',async()=
  }
  assert.match(forecast,/data-forecast-description/);
  assert.match(forecast,/Předpověď se nepodařilo načíst/);
- assert.match(forecast,/Modelová předpověď · nikoli měření/);
+ assert.match(forecast,/Předpověď, nikoli měření/);
  assert.doesNotMatch(forecast,/☀️|⛅|🌫️|🌧️|🌨️|🌦️|❄️|⛈️|☁️/u);
 });
 

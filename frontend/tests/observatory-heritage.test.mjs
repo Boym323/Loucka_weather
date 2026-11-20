@@ -57,8 +57,8 @@ test('astronomical values and historical comparison declare their limits',async(
  assert.match(history,/getStatistics\('daily','outTemp','min'/);
  assert.match(history,/getStatistics\('daily','outTemp','max'/);
  assert.match(history,/coverage>=\.8/);
- assert.match(history,/Neúplný den/);
- assert.match(history,/nikoli jisté celodenní extrémy/);
+ assert.match(history,/Část měření chybí/);
+ assert.match(history,/ne celodenní extrémy/);
  assert.match(history,/historyCompleteness/);
 });
 

@@ -10,8 +10,8 @@ test('unavailable API cannot masquerade as fresh measurements and preserves a kn
  assert.match(source,/section\.dataset\.currentState='error'/);
  assert.match(source,/lastArchiveObservedAt\?'Aktualizace selhala':'Měření nedostupné'/);
  assert.match(source,/Poslední známé měření:/);
- assert.match(source,/Zobrazené hodnoty jsou poslední dostupné údaje/);
- assert.match(source,/Nezobrazujeme odhadované hodnoty/);
+ assert.match(source,/Zobrazené hodnoty mohou být starší/);
+ assert.match(source,/Údaje se nepodařilo načíst/);
  assert.match(source,/section\.dataset\.currentState='live'/);
 });
 
