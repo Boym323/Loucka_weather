@@ -193,7 +193,7 @@ try{
      // preserving 12 month values and preliminary extrema after lazy scroll.
      await page.locator('[data-climate-dashboard]').scrollIntoViewIfNeeded();
      await page.waitForFunction(()=>document.querySelector('[data-climate-status]')
-      ?.textContent?.includes('Archivní souhrny'),null,{timeout:12000});
+      ?.textContent?.includes('Rok 2025'),null,{timeout:12000});
      assert.equal((await page.locator('[data-climate-year]').inputValue()),'2025');
      assert.equal(await page.locator('[data-year-table] tr').count(),6);
      assert.equal(await page.locator('[data-chart="temperature"] svg').count(),1);
