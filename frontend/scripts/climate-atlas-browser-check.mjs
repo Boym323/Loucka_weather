@@ -237,7 +237,7 @@ try{
      await page.locator('[data-trend-metric]').selectOption('rain');
      await page.locator('[data-trend-form] button').click();
      await page.waitForFunction(()=>
-      document.querySelector('[data-trend-status]')?.textContent?.includes('Originální')
+      document.querySelector('[data-trend-status]')?.textContent?.includes('Předběžná')
       &&document.querySelector('[data-trend-rows]')?.textContent?.includes('mm')
       ,null,{timeout:12000});
      const rainYearRow=page.locator('[data-trend-rows] tr').filter({has:page.getByRole('cell',{name:'2021',exact:true})});
