@@ -147,8 +147,7 @@ try{
      const chip=document.querySelector('[data-current-status]')?.textContent??'';
      const provenance=document.querySelector('[data-current-provenance]')?.textContent??'';
      const archive=/Poslední měření|Starší měření|Archivní měření|Zastaralé měření/.test(chip);
-     const restored=provenance.includes('Zobrazeno poslední uložené měření')||
-      provenance.includes('Archiv WeeWX');
+     const restored=provenance.includes('Hodnoty odpovídají poslednímu dostupnému měření.');
      return archive&&restored&&
       !provenance.includes('Živá data GW3000')&&!provenance.includes('přichází živě');
     },null,{timeout:35000});

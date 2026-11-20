@@ -92,7 +92,7 @@ try{
      'rotate(370deg)','must cross north by 20 degrees, not spin backwards');
     assert.equal(await compass.locator('[data-wind-value="windSpeed"]').textContent(),'5,3');
     assert.equal(await compass.locator('[data-wind-value="windGust"]').textContent(),'8,6');
-    assert.match(await compass.locator('[data-wind-source="windGust"]').textContent()??'',/GW3000/);
+    assert.match(await compass.locator('[data-wind-source="windGust"]').textContent()??'',/Živé měření/);
 
     await page.evaluate(data=>{
      data.receivedAt=new Date(Date.now()-240000).toISOString();
@@ -108,7 +108,7 @@ try{
     await page.evaluate(()=>window.dispatchEvent(new Event('loucka:live-expired')));
     await page.waitForFunction(()=>document.querySelector('[data-wind-degrees]')?.textContent==='350',
      null,{timeout:12000});
-    assert.match(await compass.locator('[data-wind-status]').textContent()??'',/WeeWX/);
+    assert.match(await compass.locator('[data-wind-status]').textContent()??'',/Uložené měření/);
 
     fixture={...fixture,readings:{
      ...fixture.readings,windDir:{...fixture.readings.windDir,value:null,quality:'missing'}

@@ -415,7 +415,7 @@ try{
       const svg=root?.querySelector('[data-temperature-chart] svg');
       const years=root?.querySelectorAll('[data-temperature-year]').length??0;
       const summary=root?.querySelector('[data-temperature-summary]')?.textContent??'';
-      return status.startsWith('Archiv WeeWX')&&svg!==null&&years>=5&&summary.includes('Zobrazeno');
+      return status.startsWith('Předběžná historická data')&&svg!==null&&years>=5&&summary.includes('Historická měření');
      },null,{timeout:45000}).then(()=>true).catch(()=>false);
      if(!allYearsReady){
       const state=await page.evaluate(()=>({
