@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-20 – Jednotky u hodnot a horizontální posuvník homepage
+- Jednotky dnešního minima, maxima a srážek jsou vedle čísla, stejně jako jednotky ostatních hlavních měření; styly telefonu už je nevysouvají na samostatný řádek.
+- Zúžený přesah celoplošné fotografie o šířku svislého posuvníku už nevytváří vodorovné rolování stránky.
+- Bez změny hodnot, API, databáze nebo výpočtů.
+
 ## 2026-11-20 – Srozumitelnější texty pro návštěvníky
 - Zkráceny opakované technické popisy na aktuálním počasí, klimatologii, výstrahách, radaru a měřeních půdy a ovzduší; interní názvy služeb a zkratek byly nahrazeny běžným jazykem.
 - Podrobnosti o původu a omezeních historických údajů jsou dostupné po rozkliknutí. Upozornění na chybějící a předběžná data zůstávají zachována.

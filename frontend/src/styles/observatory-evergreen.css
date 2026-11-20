@@ -180,7 +180,12 @@
 }
 .evergreen-hero .evergreen-daily .daily-brief-item{
  border:0!important;border-radius:0;padding:4px 6px!important;
- background:none!important;min-width:0
+ background:none!important;min-width:0;
+ display:flex!important;flex-direction:row!important;flex-wrap:wrap;
+ align-items:baseline;justify-content:flex-start;column-gap:5px;row-gap:3px
+}
+.evergreen-hero .evergreen-daily .daily-brief-item>span{
+ flex:0 0 100%;width:100%;min-height:0!important
 }
 .evergreen-hero .evergreen-daily .daily-brief-item:nth-child(3){
  grid-column:auto!important;border-top:0!important
@@ -192,7 +197,7 @@
  color:#153e4e!important;font-size:20px!important;font-weight:600
 }
 .evergreen-hero .evergreen-daily .daily-brief-item small{
- color:#466873!important;font-size:12px
+ color:#466873!important;font-size:11px;white-space:nowrap
 }
 .evergreen-hero .evergreen-daily .daily-brief-status{
  grid-column:1/-1!important;color:#5b7478!important;
@@ -804,9 +809,13 @@
   padding-left:7px!important
  }
  .evergreen-hero .current-panel .metric-card:not(.featured) .metric-unit{
-  display:block!important;margin-left:0!important;margin-top:2px
+  display:inline!important;white-space:nowrap;margin-top:0
  }
 }
+
+/* The full-bleed landscape is wider than the content column by design.
+   Clip its scrollbar-width overhang at the viewport instead of scrolling the page. */
+html.homepage-layout{overflow-x:clip}
 /* The photograph is optional; the meteorological information must work without blur. */
 @media(prefers-reduced-transparency:reduce){
  .atlas-hero.observatory-hero.evergreen-hero{

@@ -31,7 +31,7 @@ const secondaryNavigation = [
 const active = Astro.url.pathname;
 ---
 <!doctype html>
-<html lang="cs" data-theme="light">
+<html lang="cs" data-theme="light" class={Astro.url.pathname==='/'?'homepage-layout':undefined}>
  <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />

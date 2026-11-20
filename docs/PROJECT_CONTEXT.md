@@ -1,5 +1,7 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**20. 11. 2026 – homepage: jednotky a vodorovný posuvník:** Jednotky denních souhrnů i úzkých mobilních měření zůstávají vedle čísla; celoplošný obrázkový pás nepřidává vodorovné rolování. Změna se týká jen zobrazení.
+
 **20. 11. 2026 – srozumitelnost návštěvnického webu:** Zkráceny opakované technické texty na stránkách aktuálního počasí, klimatologie, výstrah, radaru a senzorů. Interní názvy systémů a stavů byly nahrazeny běžnými popisky; metodika, původ a omezení historických dat zůstávají dostupné v rozbalovacích vysvětleních. Zachována upozornění na neúplná a předběžná měření. Bez změny výpočtů, API, DB, dat a nasazení.
 
 **17. 11. 2026 – kamera / časosběr:** Oprava chybějící HTTP Range 206 pro `/api/v1/camera/timelapse/:file`, 416 pro neplatné rozsahy a kontrola 32 B přes public dev smoke, když v indexu existuje skutečné MP4. Frontend nabízí stažení a chybovou zprávu při selhání videa. Collector nyní publikuje index JPEG i po neúspěšném FFmpeg běhu. Reálnou příčinu na LXC (existence MP4/FFmpeg/codec/oprávnění) musí potvrdit provozní diagnostika; data ani databáze se nemění.
