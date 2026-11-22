@@ -805,6 +805,7 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
    const common={schemaVersion:'1',metric,aggregation,unit:result.unit,units,value:result.value,
     quality:result.value===null?'missing':'derived',source:'weewx_daily',
     provenance:result.value===null?null:`weewx-daily-${aggregation}`,dataset,
+     qcStatus:'original_unverified',extremaVerified:false,
     dataRevision:`daily-${fingerprint}`,completeness:{expected:null,valid:result.valid,fraction:null},
     // WeeWX day_<metric>.sumtime is the time-weighted number of VALID
     // observation seconds. Do not infer this from row counts or assume 5 min.
@@ -899,7 +900,7 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
    const fingerprint=createHash('sha256').update(JSON.stringify(row)).digest('hex').slice(0,16);
    return conditional(req,reply,{schemaVersion:'1',observedAt:utcIso(row.dateTime),
     stale:now().getTime()/1000-row.dateTime>900,archiveIntervalMinutes:row.interval,
-    readings,units,dataset,dataRevision:`archive-${revisionAtStart??'unobserved'}-${fingerprint}`});
+    readings,units,dataset,qcStatus:'original_unverified',extremaVerified:false,dataRevision:`archive-${revisionAtStart??'unobserved'}-${fingerprint}`});
   }catch{return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Unsupported archived observation',503);}
  });
  // Independent, bounded per-variable QC view of the ORIGINAL archive.
@@ -973,6 +974,7 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
     range:{from:utcIso(start),to:utcIso(end),boundary:'(start,end]',calendarTimezone:'Europe/Prague'},
     resolution:selectedResolution,points,count:points.length,
     completeness:{expected:null,valid,fraction:null},units,dataset,
+    qcStatus:'original_unverified',extremaVerified:false,
     dataRevision:`archive-${revisionAtStart??'unobserved'}-${fingerprint}`,aggregation,truncated:false,gapPolicy:'explicit-null'});
   };
   if(resolution==='raw'&&overRawRange)return bad(reply,req.id,'LIMIT_EXCEEDED','Raw history is limited to 31 days',422);
