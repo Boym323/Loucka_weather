@@ -18,6 +18,7 @@ import {DayScopedCache} from './records-cache.js';
 import {consolidateAnnualSummaries} from './climate-consolidation.js';
 import {buildTemperatureDays} from './temperature-years.js';
 import {sensorChannels} from './sensor-evidence.js';
+import {originalQualityWindow} from './original-quality.js';
 import type {Metric} from './metrics.js';
 import type {OutputUnits} from './units.js';
 
@@ -28,6 +29,8 @@ type HistoryQuery={metric?:string;from?:string;to?:string;resolution?:'auto'|'ra
 type StatisticsQuery={metric?:string;aggregation?:string;date?:string;month?:string;year?:string;
   units?:OutputUnits;dataset?:Dataset};
 type LiveQuery={units?:OutputUnits};
+type QualityObservationsQuery={metric?:string;from?:string;to?:string;units?:OutputUnits;
+ limit?:string;dataset?:Dataset};
 const datePattern=/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
 const source= {source:'weewx_archive',provenance:null} as const;
 const commonQuery={
@@ -898,6 +901,157 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
     stale:now().getTime()/1000-row.dateTime>900,archiveIntervalMinutes:row.interval,
     readings,units,dataset,dataRevision:`archive-${revisionAtStart??'unobserved'}-${fingerprint}`});
   }catch{return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Unsupported archived observation',503);}
+ });
+ // Independent, bounded per-variable QC view of the ORIGINAL archive.
+ // This is not an approved dataset and never auto-assigns MEASURED.
+ app.get<{Querystring:QualityObservationsQuery}>('/api/v1/quality/observations',{
+  schema:{querystring:{...commonQuery,required:['metric','from','to'],
+   properties:{...commonQuery.properties,metric:{type:'string'},
+    from:{type:'string'},to:{type:'string'},limit:{type:'string',pattern:'^[0-9]{1,4}
+  schema:{querystring:{...commonQuery,required:['metric','from','to'],
+   properties:{...commonQuery.properties,
+    metric:{type:'string'},from:{type:'string'},to:{type:'string'},
+    resolution:{type:'string',enum:['auto','raw','hourly','daily']},
+     limit:{type:'string',pattern:'^[0-9]{1,5}$'}}}}
+ },async(req,reply)=>{
+  const {metric,from,to,resolution='auto',limit:limitText,units='metricwx',dataset='original'}=req.query;
+  const limit=limitText===undefined?2000:Number(limitText);
+  if(!Number.isSafeInteger(limit)||limit<1||limit>10000)
+   return bad(reply,req.id,'BAD_REQUEST','limit must be an integer from 1 to 10000');
+  if(dataset==='approved')return bad(reply,req.id,'DATASET_UNAVAILABLE','No approved dataset published',503);
+  if(!metric||!isMetric(metric))return bad(reply,req.id,'UNKNOWN_METRIC','Unsupported public metric');
+   if(hasUnverifiedLightningMapping(metric))return bad(reply,req.id,'UNVERIFIED_FIELD_MAPPING','Original lightning counter mapping is unverified',503);
+  const start=from?epoch(from):null,end=to?epoch(to):null;
+  if(start===null||end===null||end<=start)return bad(reply,req.id,'INVALID_RANGE','Invalid UTC time range',422);
+  const policy=historyPolicy(metric);
+  const overRawRange=end-start>31*86400;
+  const overHourlyRange=end-start>2*366*86400;
+  const rawCandidate=resolution==='raw'||resolution==='auto'&&!overRawRange;
+  const revisionAtStart=liveHub?.dataRevision;
+  const makeResponse=(selectedResolution:'raw'|'hourly'|'daily',aggregation:string,points:any[],valid:number,fingerprint:string)=>{
+   if(points.length>limit)return bad(reply,req.id,'LIMIT_EXCEEDED','Too many points for requested limit',422);
+   if(liveHub&&revisionAtStart!==liveHub.dataRevision)
+    return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Archive changed during history request; retry',503);
+   const unit=aggregation==='count'?'count':aggregation==='vecdir'||aggregation==='dir_at_max'?'degree':outputUnit(metric,units);
+   return conditional(req,reply,{schemaVersion:'1',metric,unit,
+    range:{from:utcIso(start),to:utcIso(end),boundary:'(start,end]',calendarTimezone:'Europe/Prague'},
+    resolution:selectedResolution,points,count:points.length,
+    completeness:{expected:null,valid,fraction:null},units,dataset,
+    dataRevision:`archive-${revisionAtStart??'unobserved'}-${fingerprint}`,aggregation,truncated:false,gapPolicy:'explicit-null'});
+  };
+  if(resolution==='raw'&&overRawRange)return bad(reply,req.id,'LIMIT_EXCEEDED','Raw history is limited to 31 days',422);
+  if(rawCandidate){
+   let rows:ArchiveRow[];
+   try{rows=await reader.history(metric,start,end,Math.min(limit+1,10001));}
+   catch{return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Archive unavailable',503);}
+   if(rows.length<=limit){
+    try{
+     const result=rawHistoryPoints(metric,rows,start,end,units);
+     if(resolution==='raw'||result.points.length<=limit){
+      const digest=createHash('sha256').update(JSON.stringify(rows)).digest('hex').slice(0,20);
+      return makeResponse('raw','sample',result.points,result.valid,digest);
+     }
+    }catch{return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Unsupported archived observation',503);}
+   }else if(resolution==='raw')return bad(reply,req.id,'LIMIT_EXCEEDED','Too many archive points for requested limit',422);
+  }
+  const autoDailyAligned=localDayAligned(start,end);
+  let selectedResolution:'raw'|'hourly'|'daily';
+  if(resolution==='auto'){
+   const hourlyFits=!overHourlyRange&&hourlyBucketCount(start,end)<=limit;
+   const dailyFits=autoDailyAligned&&dailyBucketCount(start,end)<=limit;
+   selectedResolution=hourlyFits?'hourly':'daily';
+   if(!hourlyFits&&!dailyFits)
+    return bad(reply,req.id,'LIMIT_EXCEEDED','No safe history resolution fits this limit and range',422);
+  }else selectedResolution=resolution;
+  if(!policy.enabled)return bad(reply,req.id,'INVALID_AGGREGATION','No verified aggregate policy for this metric',422);
+  if(selectedResolution==='hourly'){
+   if(overHourlyRange)return bad(reply,req.id,'LIMIT_EXCEEDED','Hourly history is limited to two years',422);
+   const bucketCount=hourlyBucketCount(start,end);
+   if(bucketCount>limit)return bad(reply,req.id,'LIMIT_EXCEEDED','Hourly bucket count exceeds limit',422);
+   const aggregation=policy.aggregation;
+   const selectedMetrics:Metric[]=metric==='windDir'?['windSpeed','windDir']:
+    metric==='windGustDir'?['windGust','windGustDir']:[metric];
+   const buckets=new Map<number,HourBucket>(),digest=createHash('sha256');
+   let cursor=start,previousEnd:number|null=null,scanned=0;
+   try{
+    for(let page=0;page<300;page++){
+     const rows=reader.historyPage?await reader.historyPage(selectedMetrics,start,end,cursor,5000):
+      await reader.history(metric,start,end,500001);
+     for(const row of rows){
+      if(row.dateTime<=cursor||row.dateTime>end)throw new Error('Invalid archive page ordering');
+      rowIsValid(row,previousEnd);
+      digest.update(JSON.stringify(row)).update('\n');
+      addHourlyRow(buckets,metric,aggregation,row,units,start,end);
+      cursor=row.dateTime;previousEnd=row.dateTime;scanned++;
+      if(scanned>500000)throw new Error('Hourly input row limit exceeded');
+     }
+     if(!reader.historyPage||rows.length<5000)break;
+     if(page===299)throw new Error('Hourly input paging limit exceeded');
+    }
+    const result=hourlyHistoryPoints(metric,aggregation,buckets,start,end,units);
+    return makeResponse('hourly',aggregation,result.points,result.valid,digest.digest('hex').slice(0,20));
+   }catch(error){
+    const message=error instanceof Error?error.message:'';
+    if(message.includes('limit exceeded'))return bad(reply,req.id,'LIMIT_EXCEEDED','Hourly archive scan exceeds its safety limit',422);
+    return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Hourly archive unavailable or invalid',503);
+   }
+  }
+  if(selectedResolution!=='daily')return bad(reply,req.id,'BAD_REQUEST','Unknown history resolution');
+  if(resolution==='daily'&&!policy.enabled)return bad(reply,req.id,'INVALID_AGGREGATION','No verified aggregate policy for this metric',422);
+  const fromDate=localDateAt(start),toDate=localDateAt(end);
+  const dailyStart=localMidnight(fromDate),dailyEnd=localMidnight(toDate);
+  if(dailyStart!==start||dailyEnd!==end||dailyStart===null||dailyEnd===null)
+   return bad(reply,req.id,'INVALID_RANGE','Daily resolution requires Europe/Prague midnight boundaries',422);
+  let dayCount=0;for(let date=fromDate;date<toDate;date=nextLocalDate(date))dayCount++;
+  if(dayCount>limit)return bad(reply,req.id,'LIMIT_EXCEEDED','Daily bucket count exceeds limit',422);
+  if(!reader.dailySummaries)return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Daily summaries are unavailable',503);
+  try{
+   const rows=await reader.dailySummaries(metric,start,end,dayCount+1);
+   if(rows.length>dayCount)return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Daily summary range returned extra rows',503);
+   const result=dailyHistoryPoints(metric,policy.aggregation,rows,fromDate,toDate,units);
+   const digest=createHash('sha256').update(JSON.stringify(rows)).digest('hex').slice(0,20);
+   return makeResponse('daily',policy.aggregation,result.points,result.valid,digest);
+  }catch{return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Daily summaries unavailable or invalid',503);}
+ });
+ registerExtras(app,reader,sourceFiles);
+ registerDevRhPreview(app,reader,devRhPreview);
+ return app;
+}
+}}}}
+ },async(req,reply)=>{
+  const {metric,from,to,units='metricwx',limit:rawLimit,dataset='original'}=req.query;
+  if(dataset==='approved')return bad(reply,req.id,'DATASET_UNAVAILABLE','No approved dataset published',503);
+  if(!metric||!isMetric(metric))return bad(reply,req.id,'UNKNOWN_METRIC','Unsupported quality metric',400);
+  const start=from?epoch(from):null,end=to?epoch(to):null;
+  if(start===null||end===null||end<=start||end-start>48*3600)
+   return bad(reply,req.id,'INVALID_RANGE','Quality window must be valid UTC/offset RFC3339 and at most 48 hours',422);
+  const limit=rawLimit===undefined?750:Number(rawLimit);
+  if(!Number.isSafeInteger(limit)||limit<1||limit>2000)
+   return bad(reply,req.id,'LIMIT_EXCEEDED','Quality limit must be 1..2000',422);
+  let rows:ArchiveRow[];
+  try{rows=await reader.history(metric,start,end,limit+1);}
+  catch{return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Original archive unavailable',503);}
+  if(rows.length>limit)
+   return bad(reply,req.id,'LIMIT_EXCEEDED','Quality observations are not silently truncated',422);
+  try{
+   const data=originalQualityWindow(rows,metric,units,start,end);
+   const fingerprint=createHash('sha256').update(JSON.stringify(rows)).digest('hex').slice(0,20);
+   return conditional(req,reply,{
+    schemaVersion:'1',qualitySchema:'loucka-field-qc-v1',
+    metric,unit:outputUnit(metric,units),units,dataset:'original',
+    source:'weewx_original_archive',
+    provenanceStatus:'not_independently_validated',
+    interpretedAs:'archival_field_value_not_original_sensor_proof',
+    range:{from:utcIso(start),to:utcIso(end),boundary:'(start,end]',
+     calendarTimezone:'Europe/Prague'},
+    observations:data.observations,gaps:data.gaps,summary:data.summary,
+    count:data.observations.length,extremaPolicy:'none_eligible_until_per_field_provenance',
+    gapPolicy:'explicit_null_spans_no_interpolation',
+    dataRevision:'original-qc-'+fingerprint
+   });
+  }catch{
+   return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Invalid archive quality input',503);
+  }
  });
  app.get<{Querystring:HistoryQuery}>('/api/v1/history',{
   schema:{querystring:{...commonQuery,required:['metric','from','to'],
