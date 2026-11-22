@@ -18,6 +18,7 @@ import {DayScopedCache} from './records-cache.js';
 import {consolidateAnnualSummaries} from './climate-consolidation.js';
 import {buildTemperatureDays} from './temperature-years.js';
 import {sensorChannels} from './sensor-evidence.js';
+import {originalQualityWindow} from './original-quality.js';
 import type {Metric} from './metrics.js';
 import type {OutputUnits} from './units.js';
 
@@ -28,6 +29,8 @@ type HistoryQuery={metric?:string;from?:string;to?:string;resolution?:'auto'|'ra
 type StatisticsQuery={metric?:string;aggregation?:string;date?:string;month?:string;year?:string;
   units?:OutputUnits;dataset?:Dataset};
 type LiveQuery={units?:OutputUnits};
+type QualityObservationsQuery={metric?:string;from?:string;to?:string;units?:OutputUnits;
+ limit?:string;dataset?:Dataset};
 const datePattern=/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
 const source= {source:'weewx_archive',provenance:null} as const;
 const commonQuery={
@@ -898,6 +901,47 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
     stale:now().getTime()/1000-row.dateTime>900,archiveIntervalMinutes:row.interval,
     readings,units,dataset,dataRevision:`archive-${revisionAtStart??'unobserved'}-${fingerprint}`});
   }catch{return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Unsupported archived observation',503);}
+ });
+ // Independent, bounded per-variable QC view of the ORIGINAL archive.
+ // This is not an approved dataset and never auto-assigns MEASURED.
+ app.get<{Querystring:QualityObservationsQuery}>('/api/v1/quality/observations',{
+  schema:{querystring:{...commonQuery,required:['metric','from','to'],
+   properties:{...commonQuery.properties,metric:{type:'string'},
+    from:{type:'string'},to:{type:'string'},limit:{type:'string',pattern:'^[0-9]{1,4}$'}}}}
+ },async(req,reply)=>{
+  const {metric,from,to,units='metricwx',limit:rawLimit,dataset='original'}=req.query;
+  if(dataset==='approved')return bad(reply,req.id,'DATASET_UNAVAILABLE','No approved dataset published',503);
+  if(!metric||!isMetric(metric))return bad(reply,req.id,'UNKNOWN_METRIC','Unsupported quality metric',400);
+  const start=from?epoch(from):null,end=to?epoch(to):null;
+  if(start===null||end===null||end<=start||end-start>48*3600)
+   return bad(reply,req.id,'INVALID_RANGE','Quality window must be valid UTC/offset RFC3339 and at most 48 hours',422);
+  const limit=rawLimit===undefined?750:Number(rawLimit);
+  if(!Number.isSafeInteger(limit)||limit<1||limit>2000)
+   return bad(reply,req.id,'LIMIT_EXCEEDED','Quality limit must be 1..2000',422);
+  let rows:ArchiveRow[];
+  try{rows=await reader.history(metric,start,end,limit+1);}
+  catch{return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Original archive unavailable',503);}
+  if(rows.length>limit)
+   return bad(reply,req.id,'LIMIT_EXCEEDED','Quality observations are not silently truncated',422);
+  try{
+   const data=originalQualityWindow(rows,metric,units,start,end);
+   const fingerprint=createHash('sha256').update(JSON.stringify(rows)).digest('hex').slice(0,20);
+   return conditional(req,reply,{
+    schemaVersion:'1',qualitySchema:'loucka-field-qc-v1',
+    metric,unit:outputUnit(metric,units),units,dataset:'original',
+    source:'weewx_original_archive',
+    provenanceStatus:'not_independently_validated',
+    interpretedAs:'archival_field_value_not_original_sensor_proof',
+    range:{from:utcIso(start),to:utcIso(end),boundary:'(start,end]',
+     calendarTimezone:'Europe/Prague'},
+    observations:data.observations,gaps:data.gaps,summary:data.summary,
+    count:data.observations.length,extremaPolicy:'none_eligible_until_per_field_provenance',
+    gapPolicy:'explicit_null_spans_no_interpolation',
+    dataRevision:'original-qc-'+fingerprint
+   });
+  }catch{
+   return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Invalid archive quality input',503);
+  }
  });
  app.get<{Querystring:HistoryQuery}>('/api/v1/history',{
   schema:{querystring:{...commonQuery,required:['metric','from','to'],
