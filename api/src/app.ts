@@ -9,7 +9,8 @@ import {isMetric,metrics} from './metrics.js';
 import {aggregationPolicy} from './aggregation.js';
 import type {Aggregation} from './aggregation.js';
 import {LiveHub,serializeSse} from './live.js';
-import {readingsFromRow,converted,outputUnit} from './units.js';
+import {readingsFromRow,converted,outputUnit,publiclySafeReading} from './units.js';
+import {hasUnverifiedLightningMapping} from './lightning-publication.js';
 import {gatewayReadings} from './gateway.js';
 import {readFile} from 'node:fs/promises';
 import {climateRecordsFromDaily} from './records.js';
@@ -126,7 +127,7 @@ function rawHistoryPoints(metric:Metric,rows:ArchiveRow[],from:number,to:number,
   const rowStart=rowIsValid(row,lastEnd);
   if(rowStart>previous)points.push({startTime:utcIso(previous),endTime:utcIso(rowStart),value:null,
    quality:'missing',source:'derived',provenance:null,sourceUsUnits:null});
-  const reading=converted(metric,row[metric],row.usUnits,units);
+  const reading=publiclySafeReading(metric,row[metric],row.usUnits,units);
   points.push({startTime:utcIso(Math.max(rowStart,from)),endTime:utcIso(row.dateTime),value:reading.value,
    quality:reading.quality,...source,sourceUsUnits:reading.sourceUsUnits});
   if(reading.value!==null)valid++;
@@ -503,6 +504,7 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
   const {metric,units='metricwx',dataset='original'}=req.query;
   if(dataset==='approved')return bad(reply,req.id,'DATASET_UNAVAILABLE','No approved dataset published',503);
   if(!metric||!isMetric(metric))return bad(reply,req.id,'UNKNOWN_METRIC','Unknown metric',400);
+   if(hasUnverifiedLightningMapping(metric))return bad(reply,req.id,'UNVERIFIED_FIELD_MAPPING','Original lightning counter mapping is unverified',503);
   const policy=historyPolicy(metric),aggregation=policy.aggregation;
   if(!policy.enabled||!['mean','sum','min','max'].includes(aggregation))
    return bad(reply,req.id,'INVALID_AGGREGATION','No safe annual aggregation',422);
@@ -762,6 +764,7 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
    (req.query as StatisticsQuery).month!:(req.query as StatisticsQuery).year!;
   if(dataset==='approved')return bad(reply,req.id,'DATASET_UNAVAILABLE','No approved dataset published',503);
   if(!metric||!isMetric(metric))return bad(reply,req.id,'UNKNOWN_METRIC','Unsupported public metric');
+   if(hasUnverifiedLightningMapping(metric))return bad(reply,req.id,'UNVERIFIED_FIELD_MAPPING','Original lightning counter mapping is unverified',503);
   if(!aggregation||!statsAggregationAllowed(metric,aggregation))
    return bad(reply,req.id,'INVALID_AGGREGATION','Unsupported metric and aggregation combination',422);
   let localStart:string,localEnd:string;
@@ -909,6 +912,7 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
    return bad(reply,req.id,'BAD_REQUEST','limit must be an integer from 1 to 10000');
   if(dataset==='approved')return bad(reply,req.id,'DATASET_UNAVAILABLE','No approved dataset published',503);
   if(!metric||!isMetric(metric))return bad(reply,req.id,'UNKNOWN_METRIC','Unsupported public metric');
+   if(hasUnverifiedLightningMapping(metric))return bad(reply,req.id,'UNVERIFIED_FIELD_MAPPING','Original lightning counter mapping is unverified',503);
   const start=from?epoch(from):null,end=to?epoch(to):null;
   if(start===null||end===null||end<=start)return bad(reply,req.id,'INVALID_RANGE','Invalid UTC time range',422);
   const policy=historyPolicy(metric);
