@@ -36,7 +36,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
      <span>{title}</span><strong data-daycount={key}>—</strong><small>{description}</small>
     </div>)}
   </div>
-  <p class="source-note" data-records-coverage>Počet dní s důvěryhodným zdrojem se zjišťuje.</p>
+  <p class="source-note" data-records-coverage>Zjišťujeme počet dní s dostupnými archivními údaji.</p>
   <h2>Pro dnešní kalendářní datum</h2>
   <div class="climate-extreme-values records-today">
    <div>Nejnižší teplota <strong data-today-value="minTemp">—</strong></div>
@@ -87,7 +87,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
    }
    const today=root.querySelector<HTMLElement>('[data-today-coverage]');
    if(today)today.textContent='Den '+data.todayCalendar.monthDay+
-    ' · potvrzené denní souhrny '+data.todayCalendar.sampleYears+
+    ' · dostupné denní souhrny '+data.todayCalendar.sampleYears+
     ' předchozích roků. Údaje jsou orientační.';
    const status=root.querySelector<HTMLElement>('[data-records-status]');
    if(status){status.textContent='Orientační rekordy';status.className='status-chip warning';}
