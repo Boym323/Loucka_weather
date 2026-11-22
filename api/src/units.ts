@@ -18,6 +18,7 @@ const factors:Record<string,Record<string,number>>={
 export type Reading={
  value:number|null; unit:string; quality:'measured'|'missing'|'sensor_error';
  qcFlags?:readonly string[];
+ verificationStatus:'original_unverified'; extremaEligible:false;
  source:'weewx_archive'; provenance:null; sourceUsUnits:Source;
 };
 export class UnsupportedSourceError extends Error {}
@@ -45,7 +46,8 @@ export function converted(metric:Metric,value:number|null|undefined,source:numbe
    if(!Number.isFinite(number))throw new UnsupportedSourceError('Numeric overflow');
  }
  return {value:number,unit,quality:number===null?'missing':'measured',
-   source:'weewx_archive',provenance:null,sourceUsUnits:source};
+   source:'weewx_archive',provenance:null,sourceUsUnits:source,
+   verificationStatus:'original_unverified',extremaEligible:false};
 }
 export function publiclySafeReading(metric:Metric,value:number|null|undefined,source:number,target:OutputUnits):Reading{
  const reading=converted(metric,value,source,target);
