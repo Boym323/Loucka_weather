@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-22 – Diagnostika komprese CSS na veřejném DEV
+- Při dosavadních třech mobilních návštěvách test pouze anonymně počítá CSS odpovědi podle `Content-Encoding`, `Vary: Accept-Encoding` a jednoleté `immutable` cache. Neukládá jednotlivé URL ani citlivé hlavičky, nepřidává další požadavky a sám gzip/br nezapíná.
+- Před převzetím výsledku se ověřuje skutečně nasazený commit; proxy může hlavičky upravovat. Bez ručního testu `nginx -t` a bezpečného rollbacku se nastavení Nginxu nemění.
+
 ## 2026-11-20 – Jednotky u hodnot a horizontální posuvník homepage
 - Jednotky dnešního minima, maxima a srážek jsou vedle čísla, stejně jako jednotky ostatních hlavních měření; styly telefonu už je nevysouvají na samostatný řádek.
 - Zúžený přesah celoplošné fotografie o šířku svislého posuvníku už nevytváří vodorovné rolování stránky.
