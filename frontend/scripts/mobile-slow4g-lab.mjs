@@ -56,7 +56,10 @@ try{
     cdpWireBytesApprox:null,cacheMaxAgeSeconds:null,cachePolicy:'unspecified',
     etagPresent:false,lastModifiedPresent:false,contentType:'unknown',
     servedFromCache:false,width:null,height:null},
-   styles:{responseCount:0,cdpWireBytesApprox:0,failedCount:0}
+   styles:{responseCount:0,cdpWireBytesApprox:0,failedCount:0,
+    gzipEncodedResponses:0,brEncodedResponses:0,identityOrUnknownResponses:0,
+    varyAcceptEncodingResponses:0,immutableCacheResponses:0,
+    encodedHeaderMissingCount:0}
   };
   const header=(raw,name)=>{
    const entry=Object.entries(raw??{}).find(([key])=>key.toLowerCase()===name);
@@ -68,7 +71,24 @@ try{
    if(!camera&&!css)return;
    const kind=camera?'camera':'style';
    tracked.set(event.requestId,kind);
-   if(kind==='style'){evidence.styles.responseCount++;return;}
+   if(kind==='style'){
+    const styles=evidence.styles,headers=event.response?.headers??{};
+    styles.responseCount++;
+    const encoding=header(headers,'content-encoding').trim().toLowerCase();
+    if(encoding==='gzip')styles.gzipEncodedResponses++;
+    else if(encoding==='br')styles.brEncodedResponses++;
+    else{
+     styles.identityOrUnknownResponses++;
+     if(!encoding)styles.encodedHeaderMissingCount++;
+    }
+    const vary=header(headers,'vary').toLowerCase();
+    if(vary.split(',').map(v=>v.trim()).includes('accept-encoding'))
+     styles.varyAcceptEncodingResponses++;
+    const cache=header(headers,'cache-control').toLowerCase();
+    if(cache.includes('immutable')&&/max-age\s*=\s*31536000/.test(cache))
+     styles.immutableCacheResponses++;
+    return;
+   }
    const c=evidence.camera,resp=event.response;
    c.responseCount++;
    c.status=Number.isInteger(resp.status)?resp.status:null;
@@ -219,7 +239,7 @@ const report={
   lcpCandidateMs:median(samples.map(s=>s.lcpCandidateMs))
  },
  samples,failures,
- notes:'Synthetic CDP CPU/network emulation, not Lighthouse scoring or real-user p75. LCP candidate measured after camera image load or bounded timeout; CLS is observed-so-far. No INP/CrUX. CDP encodedDataLength includes transfer overhead; camera Content-Length may be absent. Cache headers describe one cold response, not a validated warm reload. No source URLs, bodies, identities or readings are retained.'
+ notes:'Synthetic CDP CPU/network emulation, not Lighthouse scoring or real-user p75. LCP candidate measured after camera image load or bounded timeout; CLS is observed-so-far. No INP/CrUX. CDP encodedDataLength includes transfer overhead; camera Content-Length may be absent. Per-CSS response Content-Encoding/Vary/immutable are observed only in-memory and summarized by counts, not by asset URL. Cache headers describe one cold response, not a validated warm reload. No source URLs, bodies, identities or readings are retained.'
 };
 await mkdir('test-results/preview-screenshots',{recursive:true});
 await writeFile(out,JSON.stringify(report,null,2)+'\n');
