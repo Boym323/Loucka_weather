@@ -41,8 +41,14 @@ export function originalSensorHold(
   return {flag:'IMPOSSIBLE_EXTRA_TEMPERATURE',status:'sensor_error'};
  if(metric==='soilTemp1'&&originalValue< -20)
   return {flag:'IMPLAUSIBLE_SOIL_SENSOR_OUTLIER',status:'sensor_error'};
- if((metric==='soilTemp5'||metric==='soilTemp6')&&originalValue< -40)
-  return {flag:'IMPLAUSIBLE_SOIL_SENSOR_OUTLIER',status:'sensor_error'};
+ if(metric==='soilTemp5'||metric==='soilTemp6'){
+  if(originalValue< -40)return {flag:'IMPLAUSIBLE_SOIL_SENSOR_OUTLIER',status:'sensor_error'};
+  // This second band is NOT a confirmed error. During the 2026 warm-season
+  // sensor-mapping transition thousands of source values <-10 coexist with
+  // positive outdoor and neighboring soil probes. Hold from public extremes.
+  if(t>=1772972100&&t<1795415701&&originalValue< -10)
+   return {flag:'SUSPECT_2026_SOIL_SENSOR_NEGATIVE_SPIKE',status:'unverified'};
+ }
  return null;
 }
 
