@@ -56,6 +56,13 @@ test('2022 extraTemp2 has unverified sensor identity; 822.4 C and soil spikes ar
  }
  assert.equal(publiclySafeReading('soilTemp3',23,16,'metricwx',1782728400).value,23);
  assert.equal(publiclySafeReading('soilTemp5',18,16,'metricwx',1782728400).value,18);
+ const unconfirmed=publiclySafeReading('soilTemp5',-21.4,16,'metricwx',1772983500);
+ assert.equal(unconfirmed.value,null);
+ assert.equal(unconfirmed.quality,'unverified');
+ assert.deepEqual(unconfirmed.qcFlags,['SUSPECT_2026_SOIL_SENSOR_NEGATIVE_SPIKE']);
+ const october=publiclySafeReading('soilTemp6',-17,16,'metricwx',1792440000);
+ assert.equal(october.value,null);
+ assert.equal(october.quality,'unverified');
  assert.equal(publiclySafeReading('extraTemp2',29,16,'metricwx',1686000000).value,29);
  assert.equal(originalSensorHold('soilTemp1',null,16,1782728400),null);
 });
