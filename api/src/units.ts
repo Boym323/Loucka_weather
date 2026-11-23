@@ -2,6 +2,7 @@ import { metrics,metricNames } from './metrics.js';
 import type { Metric } from './metrics.js';
 import type { ArchiveRow } from './store.js';
 import {hasUnverifiedLightningMapping,LIGHTNING_QC_FLAG} from './lightning-publication.js';
+import {originalSensorHold} from './sensor-publication-qc.js';
 
 export type OutputUnits='us'|'metric'|'metricwx';
 export const outputModes=['us','metric','metricwx'] as const;
@@ -16,7 +17,7 @@ const factors:Record<string,Record<string,number>>={
  distance:{mi:1.609344,km:1}
 };
 export type Reading={
- value:number|null; unit:string; quality:'measured'|'missing'|'sensor_error';
+ value:number|null; unit:string; quality:'measured'|'missing'|'sensor_error'|'unverified';
  qcFlags?:readonly string[];
  verificationStatus:'original_unverified'; extremaEligible:false;
  source:'weewx_archive'; provenance:null; sourceUsUnits:Source;
@@ -49,16 +50,20 @@ export function converted(metric:Metric,value:number|null|undefined,source:numbe
    source:'weewx_archive',provenance:null,sourceUsUnits:source,
    verificationStatus:'original_unverified',extremaEligible:false};
 }
-export function publiclySafeReading(metric:Metric,value:number|null|undefined,source:number,target:OutputUnits):Reading{
+export function publiclySafeReading(metric:Metric,value:number|null|undefined,source:number,target:OutputUnits,dateTime?:number):Reading{
  const reading=converted(metric,value,source,target);
  if(reading.value!==null&&hasUnverifiedLightningMapping(metric)){
   return {...reading,value:null,quality:'sensor_error',qcFlags:[LIGHTNING_QC_FLAG]};
+ }
+ const hold=originalSensorHold(metric,value,source,dateTime);
+ if(reading.value!==null&&hold){
+  return {...reading,value:null,quality:hold.status,qcFlags:[hold.flag]};
  }
  return reading;
 }
 export function readingsFromRow(row:ArchiveRow,target:OutputUnits){
  const readings:Partial<Record<Metric,Reading>>={};
- for(const name of metricNames)readings[name]=publiclySafeReading(name,row[name],row.usUnits,target);
+ for(const name of metricNames)readings[name]=publiclySafeReading(name,row[name],row.usUnits,target,row.dateTime);
  return readings;
 }
 export function outputUnit(metric:Metric,output:OutputUnits):string {return metrics[metric].outputs[output];}
