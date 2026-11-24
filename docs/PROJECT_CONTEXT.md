@@ -1,5 +1,7 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**24. 11. 2026 – historický tlak:** Připraven izolovaný soukromý náhled nad třemi vrstvami z Meteo_audit PR #99; viz [PRESSURE_HISTORY_PREVIEW.md](PRESSURE_HISTORY_PREVIEW.md). Diagnostické vrstvy nejsou schválené pro veřejná měření, statistiky nebo SQL přepis. Provoz na LXC zatím neověřen.
+
 **20. 11. 2026 – homepage: jednotky a vodorovný posuvník:** Jednotky denních souhrnů i úzkých mobilních měření zůstávají vedle čísla; celoplošný obrázkový pás nepřidává vodorovné rolování. Změna se týká jen zobrazení.
 
 **20. 11. 2026 – srozumitelnost návštěvnického webu:** Zkráceny opakované technické texty na stránkách aktuálního počasí, klimatologie, výstrah, radaru a senzorů. Interní názvy systémů a stavů byly nahrazeny běžnými popisky; metodika, původ a omezení historických dat zůstávají dostupné v rozbalovacích vysvětleních. Zachována upozornění na neúplná a předběžná měření. Bez změny výpočtů, API, DB, dat a nasazení.
