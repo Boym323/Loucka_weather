@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-24 – Soukromý náhled rekonstrukce tlaku
+- Přidán samostatný DEV náhled tří tlakových vrstev nad SHA-256 ověřeným snapshotem Meteo_audit #99. Omezené UTC výřezy, tři přepínače a tabulka, bez slučování vrstev.
+- Import a HTTP proces jsou oddělené od veřejného API, MariaDB a WeeWX; ruční aktivace, pouze loopback a token. Skutečný import a nasazení na DEV LXC zatím neověřeny.
+
 ## 2026-11-22 – Diagnostika komprese CSS na veřejném DEV
 - Při dosavadních třech mobilních návštěvách test pouze anonymně počítá CSS odpovědi podle `Content-Encoding`, `Vary: Accept-Encoding` a jednoleté `immutable` cache. Neukládá jednotlivé URL ani citlivé hlavičky, nepřidává další požadavky a sám gzip/br nezapíná.
 - Před převzetím výsledku se ověřuje skutečně nasazený commit; proxy může hlavičky upravovat. Bez ručního testu `nginx -t` a bezpečného rollbacku se nastavení Nginxu nemění.
