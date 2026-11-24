@@ -1,6 +1,6 @@
 # Soukromý náhled historického staničního tlaku (2026-11-24)
 
-Stav: kandidát pro izolovaný DEV preview, nikoli nasazená veřejná funkce. Navazuje na [Meteo_audit PR #99](https://github.com/Boym323/Meteo_audit/pull/99), merge `2116f753c1b37e09c47998b10292f3772f38ccc7`.
+Stav: ověřený soukromý DEV preview na loopbacku LXC; nejde o veřejnou funkci. Navazuje na [Meteo_audit PR #99](https://github.com/Boym323/Meteo_audit/pull/99), merge `2116f753c1b37e09c47998b10292f3772f38ccc7`.
 
 Zdroj: `pressure-layers-three-way-v1.csv.gz`, 1 697 621 timestampů, SHA-256 `2c111a5f4e597ba1bc7133cfab62b394294eff903368ecd02cd9808f481b9122`. Jednotka hPa, UTC konce intervalů WeeWX. Jde o immutable snapshot, nikoli živá data. Jeho hodnoty nejsou uloženy do tohoto veřejného repozitáře.
 
@@ -37,4 +37,11 @@ Přístup pouze přes zabezpečený SSH tunel nebo existující soukromý DEV pr
 
 Smoke test: 2018-10-01 porovnej rozdíl mezi archivem a referencí, Q1 2018 nesmí obsahovat odhady, 2019-04-26 nesmí spojovat zdrojový zlom, 2026 nesmí zobrazit regionální reference. Chybějící a neplatný token musí dát 401, rozsah >7 dní 422, neexistující nebo změněný denní soubor 503. Ověř UI na mobilním viewportu, přepínače, prázdné dny a přístupnost. Zastavení procesu je rollback; původní API a web zůstanou nedotčené.
 
-Před publikací: samostatně ověř skutečný lokální gzip a browser smoke. V tomto PR není tvrzeno ověření živého nasazení ani schválení diagnostických hodnot; databázová náhrada zůstává NO-GO.
+## Ověření na DEV LXC (2026-11-24)
+
+- SHA-256 skutečného `pressure-layers-three-way-v1.csv.gz` v `final-layers-v1/final-three-layers`: `2c111a5f4e597ba1bc7133cfab62b394294eff903368ecd02cd9808f481b9122`; odpovídá pinu. Streaming import vytvořil 1 697 621 řádků a 6 157 denních JSON balíčků. Index i balíčky jsou v `/var/lib/loucka-pressure-preview/release-v1`, vlastník `loucka`, režim adresáře 0700; surový soubor nebyl kopírován do webového rootu ani repozitáře.
+- Preview běží odděleně pod účtem `loucka` na `127.0.0.1:3102`. Nezměnil se Nginx, API, WeeWX, databáze ani produkční web. Přístup vyžaduje soukromý bearer token; neposílat jej v URL, PR ani logu. Prohlížeč se připojuje jen přes lokální loopback / schválený soukromý tunel. Není přidána veřejná proxy cesta.
+- Kontroly skutečných dat: 2018-01-01 až 07 obsahuje 2 016 časů a nula odhadů ve všech chráněných vrstvách; 2018-10-01 obsahuje 155 původních bodů, 133 rekonstrukcí, 288 regionálních referencí a 133 oddělených regionálních odhadů; 2026-11-24 nemá regionální referenci. U 2019-04-26 je zdokumentovaná hranice 14:45 UTC: původní tlak je před hranicí NULL a od 14:45 jsou hodnoty přítomné; vykreslení hranici nepřemosťuje.
+- Provedeny čtyři regresní testy. Headless Chromium ověřilo skutečný načtený graf a tabulku při 1365×900 i 390×844, všechny tři vrstvy, 288 řádků, SHA v UI, nulové horizontální přetečení a nulové chyby JavaScriptu. Neplatný token vrací 401 a rozsah 8 dní 422.
+
+Diagnostické hodnoty stále nejsou schválené pro databázovou náhradu, veřejné měření ani oficiální statistiky. Zastavení soukromé preview služby je rollback.

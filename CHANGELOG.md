@@ -1,8 +1,13 @@
 # Changelog
 
+## 2026-11-24 – Ověřený soukromý náhled historického tlaku
+- Na DEV LXC byl ověřen SHA-256 finálního třívrstvého gzipu a vytvořen soukromý denní index s 1 697 621 záznamy. Náhled běží odděleně na loopbacku portu 3102 pod účtem `loucka`; bez veřejné proxy.
+- Ověřeny chráněný Q1 2018, rozlišené vrstvy v říjnu 2018, zlom zdroje 26. 4. 2019 a absence regionální reference v roce 2026. Headless prohlížeč ověřil desktop i mobil.
+- Bez změny produkčního webu, WeeWX, databází, veřejného API a oficiálních statistik. Hodnoty zůstávají neschválené.
+
 ## 2026-11-24 – Soukromý náhled rekonstrukce tlaku
 - Přidán samostatný DEV náhled tří tlakových vrstev nad SHA-256 ověřeným snapshotem Meteo_audit #99. Omezené UTC výřezy, tři přepínače a tabulka, bez slučování vrstev.
-- Import a HTTP proces jsou oddělené od veřejného API, MariaDB a WeeWX; ruční aktivace, pouze loopback a token. Skutečný import a nasazení na DEV LXC zatím neověřeny.
+- Import a HTTP proces jsou oddělené od veřejného API, MariaDB a WeeWX; původní implementační záznam předcházel ověření na DEV LXC, které zaznamenává následující položka.
 
 ## 2026-11-22 – Diagnostika komprese CSS na veřejném DEV
 - Při dosavadních třech mobilních návštěvách test pouze anonymně počítá CSS odpovědi podle `Content-Encoding`, `Vary: Accept-Encoding` a jednoleté `immutable` cache. Neukládá jednotlivé URL ani citlivé hlavičky, nepřidává další požadavky a sám gzip/br nezapíná.
