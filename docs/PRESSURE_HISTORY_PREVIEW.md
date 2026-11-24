@@ -1,0 +1,40 @@
+# Soukromý náhled historického staničního tlaku (2026-11-24)
+
+Stav: kandidát pro izolovaný DEV preview, nikoli nasazená veřejná funkce. Navazuje na [Meteo_audit PR #99](https://github.com/Boym323/Meteo_audit/pull/99), merge `2116f753c1b37e09c47998b10292f3772f38ccc7`.
+
+Zdroj: `pressure-layers-three-way-v1.csv.gz`, 1 697 621 timestampů, SHA-256 `2c111a5f4e597ba1bc7133cfab62b394294eff903368ecd02cd9808f481b9122`. Jednotka hPa, UTC konce intervalů WeeWX. Jde o immutable snapshot, nikoli živá data. Jeho hodnoty nejsou uloženy do tohoto veřejného repozitáře.
+
+## Soukromá architektura
+
+- Jednorázový streaming import do nového lokálního adresáře: ověří gzip SHA, přesnou hlavičku, pořadí a unikátnost timestampů, počet řádků, Q1 2018, zdroj a časovou podporu; každý den má vlastní SHA-256. Při chybě se nepublikuje neúplný index. Import nemění vstup.
+- Samostatný proces Python 3.11+ na `127.0.0.1:3102`, explicitní opt-in, token alespoň 32 znaků; pouze pevně definované HTML/JS/CSS a GET `/dev/pressure-preview/data?from=YYYY-MM-DD&days=1..7`. Denní JSON soubory ověřuje před odesláním; žádné DB připojení. Token pouze v paměti stránky, žádná URL, storage ani cookies. Žádné automatické spuštění, Nginx změny, veřejný API kontrakt ani frontendová publikace.
+- Graf má tři nezávislé přepínače, UTC výběr, dostupnou tabulku, NULL mezery a zřetelný zdroj. Regionální reference je dostupná i na časech s původní hodnotou; samostatně se počítají odhady chybějících hodnot. Historický archiv není certifikovaně kalibrovaný; interpolace ČHMÚ není lokální měření. Superseded legacy V3 se nepoužívá. Žádné agregace pro oficiální rekordy.
+- Rozsah 1 až 7 UTC dní; očekávané 5min záznamy, hodinové ERA5 pouze na přesných hodinách. Mezery se nespojují a známý zlom 2019-04-26T14:45Z se vizuálně nepřemosťuje.
+
+## Manuální ověření na původním DEV LXC
+
+V čistém checkoutu této větve, bez zveřejnění datového adresáře:
+
+```sh
+python3 -m unittest discover -s deploy/lxc/tests -p test_pressure_preview.py
+python3 deploy/lxc/pressure_preview.py prepare \
+  --catalog /CESTA/K/OVERENEMU/pressure-layers-three-way-v1.csv.gz \
+  --out /var/lib/loucka-pressure-preview/release-v1
+```
+
+Vytvoř adresář pod existujícím oprávněným neprivilegovaným účtem s dostatkem volného místa; použij skutečnou cestu ke zdroji a soukromá oprávnění. Nespouštěj import na produkčním WeeWX. Pokud výpočet SHA neodpovídá pinovanému release, zastav se, nevypínej kontrolu.
+
+V shellu nepoužívej token v příkazové historii; načti jej interaktivně do prostředí:
+
+```sh
+read -rs WEATHER_PRESSURE_PREVIEW_TOKEN
+export WEATHER_PRESSURE_PREVIEW_TOKEN
+export WEATHER_PRESSURE_PREVIEW_ENABLED=YES
+python3 deploy/lxc/pressure_preview.py serve --index /var/lib/loucka-pressure-preview/release-v1
+```
+
+Přístup pouze přes zabezpečený SSH tunel nebo existující soukromý DEV proxy s vlastní autentizací (konfigurace proxy NENÍ součástí tohoto PR). Na klientovi otevři `http://127.0.0.1:3102/dev/pressure-preview` po přesměrování portu na DEV LXC. Nikdy nevystavuj endpoint přímo na veřejnou doménu bez samostatného schválení.
+
+Smoke test: 2018-10-01 porovnej rozdíl mezi archivem a referencí, Q1 2018 nesmí obsahovat odhady, 2019-04-26 nesmí spojovat zdrojový zlom, 2026 nesmí zobrazit regionální reference. Chybějící a neplatný token musí dát 401, rozsah >7 dní 422, neexistující nebo změněný denní soubor 503. Ověř UI na mobilním viewportu, přepínače, prázdné dny a přístupnost. Zastavení procesu je rollback; původní API a web zůstanou nedotčené.
+
+Před publikací: samostatně ověř skutečný lokální gzip a browser smoke. V tomto PR není tvrzeno ověření živého nasazení ani schválení diagnostických hodnot; databázová náhrada zůstává NO-GO.
