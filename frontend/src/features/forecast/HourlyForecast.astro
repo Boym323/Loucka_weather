@@ -36,7 +36,12 @@ const {compact=false}=Astro.props;
       }row.append(cell);
      }
     }
-    content.replaceChildren(drawMeteogram(points),scroll);
+    const diagram=drawMeteogram(points);
+    if(limit===12){
+     const detail=document.createElement('details');detail.className='portal-hour-details';
+     const summary=document.createElement('summary');summary.textContent='Hodinové hodnoty v tabulce';
+     detail.append(summary,scroll);content.replaceChildren(diagram,detail);
+    }else content.replaceChildren(diagram,scroll);
     status.textContent='Modelová předpověď';status.className='status-chip ok';
    }catch{if(controller.signal.aborted)return;status.textContent='Nedostupná';status.className='status-chip warning';content.textContent='Hodinovou předpověď se nepodařilo načíst.';}
   };

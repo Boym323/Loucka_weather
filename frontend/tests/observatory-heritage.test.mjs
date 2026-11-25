@@ -31,7 +31,7 @@ test('astronomy handles seasonal daylight and invalid civil dates',()=>{
 });
 
 test('observatory uses live station components, never invented weather measurements',async()=>{
- const home=await file('src/pages/index.astro');
+ const home=await file('src/pages/prehled-klasicky.astro');
  for(const name of ['CurrentPanel','DailySummaryStrip','WindCompass','SolarCycle',
   'SameDayLastYear','HistoryChart','ForecastPanel','RadarPanel']){
   assert.match(home,new RegExp('<'+name+'\\b'));

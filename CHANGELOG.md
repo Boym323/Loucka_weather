@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-25 – Vizuální audit kandidáta portálu
+- Zkráceny mezery v panelu výstrah a mobilním záhlaví; na homepage je přesná hodinová tabulka rozbalitelná pod meteogramem. Na samostatné předpovědi zůstává otevřená.
+- Opraveny tři zastaralé testovací kontrakty z přesunu klasického přehledu a rozšíření auditu z 15 na 18 tras. Doplněna funkční kontrola rozbalování tabulky a úplné výstrahy. PR stále vyžaduje zelené CI a potvrzené nasazení.
+
 ## 2026-11-25 – Kandidát přepnutí výchozího portálu
 - Nový portál jako výchozí `/`, alias `/prehled-novy/` používá stejnou komponentu. Původní přehled je zachován na `/prehled-klasicky/` včetně plného mobilního režimu.
 - Trendy přesunuty k větru, rychlé mobilní odkazy a úspornější karty. Nadcházející výstrahy na telefonu zobrazují nebezpečí, platnost a stručný popis; úplné doporučení v podrobnostech. Aktivní a extrémní výstrahy zachovávají doporučení přímo.

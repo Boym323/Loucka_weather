@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 
 test('mobile homepage has independent but connected real-data instrument surfaces',async()=>{
- const home=await read('src/pages/index.astro');
+ const home=await read('src/pages/prehled-klasicky.astro');
  const css=await read('src/styles/ui-refinement.css');
  const base=await read('src/layouts/BaseLayout.astro');
  assert.match(base,/import '\.\.\/styles\/ui-refinement\.css'/);

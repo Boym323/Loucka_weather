@@ -111,3 +111,28 @@
  .portal-preview .portal-meteogram svg{min-width:460px}
  .portal-preview .portal-meteogram{overflow-x:auto}
 }
+
+/* Render the most useful information before secondary detail. */
+.portal-preview .portal-heading{padding-block:0 4px}
+.portal-preview .portal-warning .local-warnings.condensed{padding:10px 12px;gap:6px}
+.portal-preview .portal-warning .local-warnings.condensed .section-heading{margin:0;align-items:center}
+.portal-preview .portal-warning .local-alert-entry{padding:8px 10px}
+.portal-preview .portal-warning .local-alert-entry h3{font-size:clamp(17px,1.5vw,20px);margin:4px 0}
+.portal-preview .portal-warning .local-alert-entry p{margin:3px 0;line-height:1.4}
+.portal-preview .portal-warning .local-alert-details{margin-top:4px;padding-top:2px}
+.portal-preview .portal-warning .local-alert-details summary{padding:6px 0}
+.portal-preview .portal-warning .local-alert-checked{font-size:11px}
+.portal-preview .portal-warning .source-note{font-size:11px;line-height:1.4}
+.portal-hour-details summary{cursor:pointer;min-height:44px;display:list-item;align-content:center;font-size:13px;font-weight:650;color:var(--text)}
+.portal-hour-details[open] summary{margin-bottom:8px}
+.portal-preview .portal-primary{align-items:start}
+@media(max-width:760px){
+ .portal-preview .portal-warning .local-warnings.condensed .section-heading h2{font-size:16px}
+ .portal-preview .portal-warning .local-alert-meta{font-size:12px}
+ .portal-preview .portal-warning .local-alert-entry .local-alert-time{font-size:12px}
+ .portal-preview .portal-warning .local-alert-entry .local-alert-summary{font-size:13px}
+ .portal-preview .portal-warning .local-alert-details summary{font-size:12px;min-height:44px}
+ .portal-preview .portal-warning .local-alert-state{padding:1px 4px;font-size:11px}
+ .portal-preview .portal-meteogram svg{min-width:0}
+ .portal-preview .portal-meteogram .meteogram-axis{font-size:17px}
+}
