@@ -1,5 +1,7 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**25. 11. 2026 – vizuální revize:** Předpověď a radar před kontextovými kartami, jednotky u hodnot, česká data rekordů, sjednocení mobilní navigace atlasu, grafů a map. Kompaktní homepage zůstává dostupnou volbou. Browser QA rozšířena na 15 tras × 7 šířek × 2 motivy; CI a DEV nasazení ověřovat odděleně.
+
 **25. 11. 2026 – výstrahy ČHMÚ:** Filtrování výslovných záznamů bez výstrahy a ukončených jevů v API, české časy, závažnost a stav platnosti na homepage. Originální text je dostupný v podrobnostech. Změna nevyžaduje reinstalaci collectoru; standardní preview sync sestaví API i frontend. Skutečné nasazení je nutné ověřit odděleně.
 
 **24. 11. 2026 – historický tlak:** Ověřený izolovaný soukromý náhled nad třemi vrstvami z Meteo_audit PR #99 běží na DEV LXC pouze na loopbacku portu 3102; viz [PRESSURE_HISTORY_PREVIEW.md](PRESSURE_HISTORY_PREVIEW.md). Diagnostické vrstvy nejsou schválené pro veřejná měření, statistiky nebo SQL přepis.

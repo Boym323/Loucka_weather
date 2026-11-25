@@ -52,6 +52,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 </BaseLayout>
 <script>
  import {formatValue} from '../shared/domain/metrics';
+ import {displayLocalDate,displayMonthDay} from '../shared/domain/display-date';
  const root=document.querySelector<HTMLElement>('[data-climate-records]');
  if(root){
   const ctrl=new AbortController();
@@ -70,7 +71,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     const value=root.querySelector<HTMLElement>('[data-record-value="'+key+'"]');
     const date=root.querySelector<HTMLElement>('[data-record-date="'+key+'"]');
     if(value)value.textContent=fmt(item);
-    if(date)date.textContent=item?'Zaznamenáno '+item.localDate+' · orientačně':'Bez spolehlivého údaje';
+    if(date)date.textContent=item?'Zaznamenáno '+displayLocalDate(item.localDate)+' · orientačně':'Bez spolehlivého údaje';
    }
    for(const [key,value] of Object.entries(data.dayTypes)){
     const target=root.querySelector<HTMLElement>('[data-daycount="'+key+'"]');
@@ -86,7 +87,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     if(target)target.textContent=fmt(item);
    }
    const today=root.querySelector<HTMLElement>('[data-today-coverage]');
-   if(today)today.textContent='Den '+data.todayCalendar.monthDay+
+   if(today)today.textContent='Den '+displayMonthDay(data.todayCalendar.monthDay)+
     ' · dostupné denní souhrny '+data.todayCalendar.sampleYears+
     ' předchozích roků. Údaje jsou orientační.';
    const status=root.querySelector<HTMLElement>('[data-records-status]');

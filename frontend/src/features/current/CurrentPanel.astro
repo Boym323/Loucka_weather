@@ -50,6 +50,12 @@ const quickReadings = [
  // Keep the latest request only; aborting the old GET is not always enough
  // (it may already have completed at the reverse proxy).
  let archiveRequestSerial=0;
+  const updateSharedSource=()=>{
+   const notes=[...section.querySelectorAll<HTMLElement>('[data-metric-quality]')];
+   const first=notes[0]?.textContent;
+   section.dataset.sharedReadingSource=notes.length>0&&notes.every(note=>note.dataset.readingState==='measured'&&note.textContent===first)&&
+    (first==='Živé měření'||first==='Archivní měření')?'true':'false';
+  };
  // Preserve provenance when an API retry fails after valid measurements were shown.
  let lastArchiveObservedAt:string|null=null;
  // Archive GET can transiently hit the public reverse-proxy rate limit during
@@ -68,6 +74,7 @@ const quickReadings = [
   section.dataset.currentState=response.stale?'stale':'archive';
   if(updated)updated.textContent='Naměřeno '+formatTimestamp(response.observedAt);
   if(provenance)provenance.textContent='Hodnoty odpovídají poslednímu dostupnému měření.';
+   section.dataset.sharedReadingSource='false';
   for(const metric of activeMetrics){
    const node=section.querySelector<HTMLElement>('[data-metric-value="'+metric.id+'"]');
    const quality=section.querySelector<HTMLElement>('[data-metric-quality="'+metric.id+'"]');
@@ -104,7 +111,8 @@ const quickReadings = [
    Number.isFinite(received)&&Date.now()-received<120000&&received<=Date.now()+60000;
   if(liveStillFresh&&lastLiveEvent)applyLive(lastLiveEvent);
   else{
-   section.dataset.currentState='error';
+   section.dataset.sharedReadingSource='false';
+    section.dataset.currentState='error';
    if(status){status.textContent=lastArchiveObservedAt?'Aktualizace selhala':'Měření nedostupné';status.className='status-chip error';}
   if(updated)updated.textContent=lastArchiveObservedAt?
    'Poslední známé měření: '+formatTimestamp(lastArchiveObservedAt):'Čas posledního měření není dostupný.';
@@ -148,7 +156,8 @@ const quickReadings = [
    if(node)node.textContent=formatValue(reading.value,metric.digits);
    if(quality){quality.textContent='Živé měření';quality.dataset.readingState='measured';}
   }
-  section.dataset.currentState='live';
+  updateSharedSource();
+   section.dataset.currentState='live';
   if(status){status.textContent='Živá měření';status.className='status-chip ok';}
   if(provenance)provenance.textContent='Některá měření se aktualizují živě, ostatní podle posledního záznamu.';
   if(updated)updated.textContent=(data.timestampMeaning==='gateway_polled_at'?'Přečteno ':'Naměřeno ')+

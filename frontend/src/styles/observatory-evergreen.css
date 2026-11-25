@@ -10,7 +10,7 @@
  --evergreen-soft:#eaf3f3;
  --evergreen-stroke:rgba(45,96,107,.16);
  --evergreen-glass:rgba(250,253,252,.94);
- --evergreen-deep-shadow:0 24px 60px rgba(20,48,53,.16),0 4px 14px rgba(29,59,62,.07);
+ --evergreen-deep-shadow:0 8px 22px rgba(20,48,53,.08),0 1px 4px rgba(29,59,62,.04);
  --evergreen-card-shadow:0 10px 27px rgba(25,57,63,.065),0 1px 3px rgba(25,57,63,.025);
  gap:23px;
 }
@@ -468,7 +468,7 @@
  --evergreen-stroke:rgba(174,214,218,.21);
  --evergreen-glass:rgba(24,43,48,.96);
  --evergreen-card-shadow:none;
- --evergreen-deep-shadow:0 18px 40px rgba(0,0,0,.22);
+ --evergreen-deep-shadow:0 5px 16px rgba(0,0,0,.14);
 }
 :root[data-theme="dark"] .evergreen-landscape::after{
  background:linear-gradient(90deg,rgba(19,34,40,.76),rgba(25,43,48,.45) 54%,rgba(26,44,49,.2)),
@@ -831,4 +831,17 @@ html.homepage-layout{overflow-x:clip}
  .evergreen-spotlight .evergreen-camera-tile .atlas-media-image img{
   transition:none!important;transform:none!important
  }
+}
+
+/* Weather first, less decorative depth. */
+.evergreen-home .evergreen-hero{border-radius:16px}
+.evergreen-home .evergreen-spotlight>*{box-shadow:none}
+.evergreen-home .mobile-home-compact-link{display:none}
+@media(max-width:760px){
+ .evergreen-home .mobile-home-compact-link{display:block;font-size:13px;margin:0 3px 8px}
+ .evergreen-home .mobile-home-compact-link a{display:inline-flex;align-items:center;min-height:44px;color:var(--text)}
+ :root[data-mobile-home-variant="compact"] .evergreen-home .mobile-home-compact-link{display:none}
+ .evergreen-home .evergreen-intro{min-height:0;margin-bottom:8px}
+ .evergreen-home .evergreen-landscape{height:180px}
+ :root[data-mobile-home-variant="compact"] .evergreen-home .evergreen-landscape{height:124px}
 }

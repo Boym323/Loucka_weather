@@ -40,8 +40,8 @@ const years=Array.from({length:Math.max(1,currentYear-2008)},(_,i)=>currentYear-
    </form>
    <p class="atlas-status" data-season-status role="status">Připravuji historické sezóny…</p>
    <div class="atlas-compare-grid" aria-label="Souhrny vybraných sezón">
-    {['first','second'].map(key=><section class="atlas-compare-box" aria-label={key==='first'?'První sezóna':'Druhá sezóna'}>
-     <h3 data-season-title={key}>—</h3>
+    {['first','second'].map(key=><section class="atlas-compare-box" data-season-series={key} aria-label={key==='first'?'První sezóna':'Druhá sezóna'}>
+     <span class="atlas-series-label">{key==='first'?'První období':'Druhé období'}</span><h3 data-season-title={key}>—</h3>
      <div class="atlas-reading"><span>Průměr dostupných denních teplot</span><strong data-season-temperature={key}>—</strong></div>
      <div class="atlas-reading"><span>Součet dostupných denních srážek</span><strong data-season-rain={key}>—</strong></div>
      <small data-season-coverage={key}>Zjišťuji úplnost…</small>
@@ -150,7 +150,7 @@ const years=Array.from({length:Math.max(1,currentYear-2008)},(_,i)=>currentYear-
     for(const [attr,value] of Object.entries({x1:36,x2:711,y1:level,y2:level}))grid.setAttribute(attr,String(value));
     svg.append(grid);
    }
-   for(const [map,color] of [[firstMap,'var(--teal)'],[secondMap,'var(--gold)']] as const){
+   for(const [map,color] of [[firstMap,'var(--teal)'],[secondMap,'var(--blue)']] as const){
     let points:string[]=[];
     const flush=()=>{
      if(!points.length)return;
@@ -168,7 +168,7 @@ const years=Array.from({length:Math.max(1,currentYear-2008)},(_,i)=>currentYear-
    }
    const labels=[
     {x:45,label:'První sezóna',color:'var(--teal)'},
-    {x:280,label:'Druhá sezóna',color:'var(--gold)'}
+    {x:280,label:'Druhá sezóna',color:'var(--blue)'}
    ];
    for(const legend of labels){
     const dash=el('line');dash.setAttribute('x1',String(legend.x));dash.setAttribute('x2',String(legend.x+24));
@@ -211,7 +211,13 @@ const years=Array.from({length:Math.max(1,currentYear-2008)},(_,i)=>currentYear-
    }catch{
     if(ctrl.signal.aborted||ticket!==generation)return;
     chart.replaceChildren();chart.textContent='Podkladová data se nepodařilo načíst.';
-    status.textContent='Sezónní souhrny nedostupné';status.dataset.state='error';
+    status.textContent='Sezónní souhrny nedostupné. Zkus znovu Porovnat sezóny.';status.dataset.state='error';
+    for(const key of ['first','second']){
+     set('[data-season-coverage="'+key+'"]','Údaje nejsou dostupné');
+     set('[data-season-title="'+key+'"]','—');
+     const bar=root.querySelector<HTMLElement>('[data-season-bar="'+key+'"]');
+     if(bar)bar.style.width='0%';
+    }
     for(const selector of [
      '[data-season-temp-diff]','[data-season-rain-diff]','[data-season-matched]',
      '[data-season-temperature="first"]','[data-season-temperature="second"]',

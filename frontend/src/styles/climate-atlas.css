@@ -383,3 +383,24 @@
   grid-column:1/-1;justify-self:start;margin-top:5px
  }
 }
+
+/* Route CSS loads after shared CSS: a single mobile chapter selector. */
+@media(max-width:760px){
+ .climate-atlas .climate-atlas-nav{display:none}
+ .climate-atlas .climate-mobile-chapters{display:grid}
+ .climate-atlas .atlas-edition-hero{padding:20px 16px}
+ .climate-atlas .atlas-chart{min-height:160px}
+}
+.climate-atlas .atlas-compare-box[data-season-series="first"]{border-inline-start:4px solid var(--teal)}
+.climate-atlas .atlas-compare-box[data-season-series="second"]{border-inline-start:4px solid var(--blue)}
+.climate-atlas .atlas-compare-box[data-season-series="second"] .atlas-coverage>span{background:var(--blue)}
+.climate-atlas .atlas-series-label{font-size:12px;color:var(--muted);font-weight:650}
+.climate-atlas .atlas-compare-box h3{font-size:22px;margin:5px 0 12px}
+.climate-atlas .atlas-compare-box .atlas-reading strong{font-size:clamp(17px,2vw,24px);white-space:nowrap}
+@media screen{
+ .climate-atlas .atlas-yearbook-header{border-block-start:4px solid var(--teal);padding-block-start:22px}
+ .climate-atlas .atlas-yearbook .chapter h3{font-size:clamp(19px,2vw,24px)}
+ .climate-atlas .atlas-yearbook table tbody tr:nth-child(even){background:var(--panel-2)}
+ .climate-atlas .atlas-yearbook .atlas-stat>strong{font-variant-numeric:tabular-nums}
+}
+@media print{.climate-mobile-chapters{display:none!important}}

@@ -16,8 +16,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     {key:'radiation',title:'Sluneční záření',unit:'W/m²'},
     {key:'UV',title:'UV index',unit:''}
    ].map(item=><div class="climate-summary-metric">
-    <span>{item.title}</span><strong data-soil-live={item.key}>—</strong>
-    <small data-soil-live-quality={item.key}>{item.unit} · čerstvé měření se zjišťuje</small>
+    <span>{item.title}</span><strong class="soil-live-number"><span data-soil-live={item.key}>—</span>{item.unit&&<span class="soil-live-unit">{item.unit}</span>}</strong>
+    <small data-soil-live-quality={item.key}>Načítám měření</small>
    </div>)}
   </div>
   <p class="source-note" data-soil-time>Zjišťuji čas posledních údajů ze stanice.</p>
@@ -69,7 +69,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
      const reading=isFresh?data.readings?.[key]:undefined;
      const valid=reading?.source==='gw3000_live'&&reading.quality==='measured'&&Number.isFinite(reading.value);
      if(node)node.textContent=valid?formatValue(reading!.value,meta.digits):'—';
-     if(detail)detail.textContent=valid?meta.unit+' · živé měření':meta.unit+' · údaj není dostupný';
+     if(detail){detail.textContent=valid?'Živé měření':'Údaj není dostupný';detail.dataset.readingState=valid?'measured':'missing';}
     }
     const time=root?.querySelector<HTMLElement>('[data-soil-time]');
     if(time)time.textContent=isFresh&&data.receivedAt?
@@ -80,6 +80,12 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     if(ctrl.signal.aborted)return;
     const status=root?.querySelector<HTMLElement>('[data-soil-live-status]');
     if(status){status.textContent='Živá data nedostupná';status.className='status-chip warning';}
+    for(const key of Object.keys(live)){
+     const value=root?.querySelector<HTMLElement>('[data-soil-live="'+key+'"]');
+     const detail=root?.querySelector<HTMLElement>('[data-soil-live-quality="'+key+'"]');
+     if(value)value.textContent='—';
+     if(detail){detail.textContent='Údaj není dostupný';detail.dataset.readingState='missing';}
+    }
    }
   }
   const now=new Date(),from=new Date(now.getTime()-7*86400000).toISOString(),to=now.toISOString();

@@ -5,16 +5,17 @@ import ModelWeatherLayer from '../features/maps/ModelWeatherLayer.astro';
 ---
 <BaseLayout title="Meteorologické mapy" description="Meteorologická mapa Loučky a okolí, radarové snímky s časovou osou.">
  <div class="page-intro"><span class="eyebrow">Meteorologické mapy a radar</span><h1>Meteorologické mapy</h1><p>Skutečné radarové snímky a volitelné modelové body teploty a větru, vždy jasně oddělené podle zdroje.</p></div>
- <div class="map-tabs" role="group" aria-label="Dostupné mapové vrstvy" tabindex="0"><span class="chart-tab is-active">Radarové srážky</span><span class="chart-tab muted">Satelit – nepřipojeno</span><span class="chart-tab muted">Blesky – nepřipojeno</span><span class="chart-tab">Teplota a vítr · model</span></div>
  <div class="map-page-layout">
   <div class="map-page-primary"><RadarPanel /></div>
   <aside class="map-page-sidebar">
    <section class="section map-layer-panel">
-    <div class="section-heading"><h2>Vrstvy</h2><span class="status-chip ok">1 aktivní zdroj</span></div>
+    <div class="section-heading"><h2>Vrstvy</h2><span class="status-chip">Radar a model</span></div>
     <label class="map-layer-option"><input type="checkbox" data-map-radar-visible checked /> Radarové srážky <small>RainViewer</small></label>
-    <label class="map-layer-option unavailable"><input type="checkbox" disabled /> Satelitní oblačnost <small>Zdroj není připojen</small></label>
-    <label class="map-layer-option unavailable"><input type="checkbox" disabled /> Blesky <small>Zdroj není připojen</small></label>
     <ModelWeatherLayer />
+    <details class="map-unavailable-layers">
+     <summary>Další vrstvy (zatím nedostupné)</summary>
+     <p>Satelitní oblačnost a blesky zatím nemají připojený zdroj.</p>
+    </details>
     <p class="source-note">Vypnutí radaru ponechá orientační podkladovou mapu. Nepřipojené vrstvy nelze vybrat.</p>
    </section>
    <section class="section">

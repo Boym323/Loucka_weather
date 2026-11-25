@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-25 – Sjednocení návštěvnického vizuálu
+- Předpověď a radar před kontextovými kartami, méně výrazné stíny, dostupný odkaz na kompaktní mobilní variantu (výchozí rozložení větru a grafu zachováno).
+- Jednotky půdy a ovzduší vedle hodnot, česká data rekordů, větší radar a graf, jedna mobilní navigace atlasu, rozlišení sezón a ročenka s jasným stavem načítání.
+- Shodný zdroj měření bez opakovaných vizuálních štítků; výjimky zůstávají viditelné. Browser QA rozšířena na 15 tras, 7 šířek a oba motivy. Výsledky CI a skutečné nasazení ověřovat zvlášť. Bez změn DB, WeeWX a produkce.
+
 ## 2026-11-25 – Výstrahy ČHMÚ na DEV
 - API odlišuje výslovná oznámení „Žádná výstraha…“ od skutečných výstrah, nevyřazuje samotnou závažnost Minor a nezobrazuje ukončené výstrahy. Neplatný snapshot není stav bez výstrah.
 - Přehled má české časy a závažnosti, barevné rozlišení, stav platnosti, čitelný jednosloupcový layout a rozbalitelné originální znění. Přidány regresní testy API a frontendových formátovacích funkcí.

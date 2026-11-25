@@ -68,6 +68,8 @@ const {variant='default'}=Astro.props;
     minimumFractionDigits:1,maximumFractionDigits:1
    }).format(value);
    if(note)note.textContent=sourceLabel(source);
+   const sources=[...root.querySelectorAll<HTMLElement>('[data-wind-source]')];
+   root.dataset.sharedWindSource=sources.length===2&&sources.every(item=>item.textContent==='Živé měření')?'true':'false';
   };
 
   const clearDirection=(reason:string)=>{

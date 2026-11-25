@@ -8,8 +8,9 @@ import assert from 'node:assert/strict';
 import {mkdir} from 'node:fs/promises';
 
 const base=process.env.LOCAL_PREVIEW_URL||'http://127.0.0.1:4321/';
-const routes=['/','/aktualne/','/grafy/','/kamera/','/klimatologie/'];
-const widths=[320,390,1024,1328,1440];
+const coreRoutes=['/','/aktualne/','/grafy/','/kamera/','/klimatologie/'];
+const routes=[...coreRoutes,'/rekordy/','/senzory/','/mapy/','/puda-ovzdusi/','/stav/','/o-stanici/','/klimatologie/extremy/','/klimatologie/trendy/','/klimatologie/sezony/','/klimatologie/rocenka/'];
+const widths=[320,390,768,1024,1328,1440,1920];
 const themes=['light','dark'];
 const out='test-results/design-final';
 await mkdir(out,{recursive:true});
@@ -73,10 +74,15 @@ try{
      assert.ok(result.h1Left>=-2&&result.h1Right<=width+2,'heading clipped: '+path);
      if(path!=='/'&&result.introTextSize!==null)
       assert.ok(result.introTextSize>=14,'intro copy too small: '+path);
-     for(const action of result.actions)
+     for(const action of coreRoutes.includes(path)?result.actions:[])
       assert.ok(action.height>=43,'touch control below 44px: '+path+' '+JSON.stringify(action));
      if(width<=390)assert.ok(result.dockVisible,'mobile dock missing');
+     if(path.startsWith('/klimatologie')&&width<=760){
+      assert.equal(await page.locator('.climate-atlas-nav').isVisible(),false,'duplicate mobile atlas navigation');
+      assert.equal(await page.locator('.climate-mobile-chapters').isVisible(),true,'mobile chapter selector missing');
+     }
      if(path==='/'){
+      assert.ok(await page.evaluate(()=>document.querySelector('#pocasi-predpoved').getBoundingClientRect().top<document.querySelector('#pocasi-kamera').getBoundingClientRect().top),'forecast should precede camera');
       const boxes=result.spotlight;
       assert.ok(boxes?.length===4&&boxes.every(Boolean),'four observatory cards are present');
       assert.ok(boxes.every(b=>b.width>140),'instrument cards are not squeezed');
@@ -96,6 +102,10 @@ try{
        path:out+'/'+(path==='/'?'home':'camera')+'-'+width+'-'+theme+'.png',
        fullPage:width===1328,animations:'disabled'
       });
+     }
+     if(width===390||width===1440){
+      const slug=path==='/'?'home':path.replace(/^\/|\/$/g,'').replaceAll('/','-');
+      await page.screenshot({path:out+'/route-'+slug+'-'+width+'-'+theme+'.png',fullPage:true,animations:'disabled'});
      }
      if(path==='/aktualne/'&&width===390){
       // Synthetic 200% root text sizing is a layout stress test,
@@ -122,5 +132,5 @@ if(failures.length){
  console.error('Design QA failures',JSON.stringify(failures));
  process.exitCode=1;
 }else{
- console.log('Design QA: 50 viewport/theme/route checks, balanced instrument grid, captions, controls and synthetic text stress PASS');
+ console.log('Design QA: '+routes.length*widths.length*themes.length+' viewport/theme/route checks PASS');
 }

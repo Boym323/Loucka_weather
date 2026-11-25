@@ -122,6 +122,17 @@ const months=['Leden','Únor','Březen','Duben','Květen','Červen','Červenec',
    }).format(new Date()));
    if(!Number.isInteger(year)||year<2009||year>=yearInLoucka)return;
    print.disabled=true;status.dataset.state='';status.textContent='Načítám originální podklady roku '+year+'…';
+    set('[data-yearbook-title]',String(year));
+    for(const id of ['temperature','rain','wind']){
+     set('[data-yearbook-summary="'+id+'"]','—');
+     set('[data-yearbook-coverage="'+id+'"]','Načítám podklady');
+    }
+    tbody.replaceChildren();
+    for(const name of names){const row=tbody.insertRow();for(const value of [name,'—','—','—','—'])row.insertCell().textContent=value;}
+    set('[data-yearbook-story]','Čekám na měsíční údaje.');
+    set('[data-yearbook-quality]','Úplnost a původ dat se ověřují.');
+    set('[data-yearbook-revision]','Čekám na zdrojové údaje.');
+    set('[data-yearbook-date]','');
    for(const selector of ['[data-yearbook-temp-chart]','[data-yearbook-rain-chart]']){
     const holder=root.querySelector<HTMLElement>(selector);
     if(holder)holder.textContent='Načítám měsíční souhrny…';
@@ -191,7 +202,9 @@ const months=['Leden','Únor','Březen','Duben','Květen','Červen','Červenec',
     status.dataset.state='warning';print.disabled=false;
    }catch{
     if(ctrl.signal.aborted||ticket!==generation)return;
-    status.textContent='Ročenku nelze sestavit: chybějí zdrojová data. PDF z neúplného načtení nevytváříme.';
+    status.textContent='Ročenku nelze sestavit: chybějí zdrojová data. Zkus znovu Sestavit ročenku. PDF z neúplného načtení nevytváříme.';
+     for(const id of ['temperature','rain','wind'])set('[data-yearbook-coverage="'+id+'"]','Zdrojová data nedostupná');
+     set('[data-yearbook-quality]','Zdrojové údaje se nepodařilo ověřit.');
     for(const selector of ['[data-yearbook-temp-chart]','[data-yearbook-rain-chart]']){
      const holder=root.querySelector<HTMLElement>(selector);
      if(holder)holder.textContent='Graf není bez zdrojových měření dostupný.';

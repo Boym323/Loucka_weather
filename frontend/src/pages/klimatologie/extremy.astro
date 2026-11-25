@@ -72,6 +72,7 @@ const records=[
 </BaseLayout>
 <script>
  import {formatValue} from '../../shared/domain/metrics';
+ import {displayLocalDate} from '../../shared/domain/display-date';
  import {rainDayRisk} from '../../shared/domain/rainfall-atlas';
  const root=document.querySelector<HTMLElement>('[data-atlas-extremes]');
  if(root){
@@ -106,7 +107,7 @@ const records=[
      const date=root.querySelector<HTMLElement>('[data-extreme-date="'+id+'"]');
      if(field)field.textContent=display;
      const risk=valid&&id==='maxDailyRain'?rainDayRisk(record.localDate):null;
-     if(date)date.textContent=valid?'Den '+record.localDate+(risk?' · známé omezení':' · předběžný údaj'):'Záznam nedostupný';
+     if(date)date.textContent=valid?'Den '+displayLocalDate(record.localDate)+(risk?' · známé omezení':' · předběžný údaj'):'Záznam nedostupný';
      if(valid)events.push({date:record.localDate,label,value:display,metric:id,risk});
     }
     const timeline=root.querySelector<HTMLTableSectionElement>('[data-extreme-timeline]');
@@ -118,7 +119,7 @@ const records=[
       row.cells[0].textContent='Bez doložených záznamů.';
      }else for(const event of events){
       const row=timeline.insertRow();
-      for(const value of [event.date,event.label,event.value])row.insertCell().textContent=value;
+      for(const value of [displayLocalDate(event.date),event.label,event.value])row.insertCell().textContent=value;
       const last=row.insertCell();
       last.append(document.createTextNode(event.risk?'Známé omezení: '+event.risk+' · ':'Předběžné · '));
       const button=document.createElement('button');
@@ -141,7 +142,7 @@ const records=[
      for(const event of events){
       const card=document.createElement('li');
       const date=document.createElement('time');
-      date.dateTime=event.date;date.textContent=event.date;
+      date.dateTime=event.date;date.textContent=displayLocalDate(event.date);
       const label=document.createElement('strong');label.textContent=event.label;
       const value=document.createElement('span');value.textContent=event.value;
       const note=document.createElement('small');

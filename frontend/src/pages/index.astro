@@ -49,6 +49,7 @@ import SiteIcon from '../shared/ui/SiteIcon.astro';
     <a class="atlas-intro-link" href="/aktualne/">Podrobná měření <span aria-hidden="true">↗</span></a>
    </header>
 
+   <p class="mobile-home-compact-link"><a href="/?mobile=compact">Kompaktní mobilní přehled</a></p>
    <p class="mobile-home-preview-note">Test kompaktního mobilního přehledu · <a href="/">Zpět na běžné zobrazení</a>. Měření se nijak nemění.</p>
    <section class="atlas-hero observatory-hero evergreen-hero" data-home-hero data-expert-open="false" aria-label="Aktuální měření, anemometr a historický průběh">
     <div class="atlas-hero-top evergreen-core">
@@ -77,6 +78,16 @@ import SiteIcon from '../shared/ui/SiteIcon.astro';
   <div class="atlas-alert-line"><LocalWarnings compact /></div>
 
 
+  <div class="evergreen-more-heading">
+   <div><h2>Předpověď a radar</h2></div>
+   <a href="/grafy/">Prozkoumat historická data <span aria-hidden="true">↗</span></a>
+  </div>
+  <div class="atlas-home-analytics evergreen-analytics">
+   <div class="atlas-forecast" id="pocasi-predpoved"><ForecastPanel compact /></div>
+   <div class="atlas-radar-tile" id="pocasi-radar"><RadarPanel compact /></div>
+   <div class="atlas-home-extras"><OverviewReadings /></div>
+  </div>
+
   <section class="observatory-instruments evergreen-spotlight" aria-label="Kamera, astronomický den, historické měření a stanice">
    <section id="pocasi-kamera" class="atlas-media-card atlas-camera-tile evergreen-camera-tile" aria-labelledby="atlas-camera-title">
     <header class="evergreen-card-header"><span class="evergreen-card-icon"><SiteIcon name="camera" size={21}/></span><h2 id="atlas-camera-title">Webkamera</h2></header>
@@ -90,16 +101,6 @@ import SiteIcon from '../shared/ui/SiteIcon.astro';
    <SameDayLastYear />
    <StationSummary />
   </section>
-
-  <div class="evergreen-more-heading">
-   <div><span class="observatory-kicker">VÍCE O POČASÍ</span><h2>Podrobnější pohled na Loučku</h2></div>
-   <a href="/grafy/">Prozkoumat historická data <span aria-hidden="true">↗</span></a>
-  </div>
-  <div class="atlas-home-analytics evergreen-analytics">
-   <div class="atlas-forecast" id="pocasi-predpoved"><ForecastPanel compact /></div>
-   <div class="atlas-radar-tile" id="pocasi-radar"><RadarPanel compact /></div>
-   <div class="atlas-home-extras"><OverviewReadings /></div>
-  </div>
 
   <nav class="atlas-home-destinations" aria-label="Prozkoumat meteorologická data">
    <a href="/aktualne/"><span class="atlas-dest-icon"><SiteIcon name="weather" size={20}/></span><span><strong>Detailní měření</strong><small>Všechny dostupné veličiny</small></span><span aria-hidden="true">↗</span></a>
