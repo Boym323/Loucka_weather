@@ -1,0 +1,48 @@
+/* Isolated portal layout experiment: no changes to the original homepage. */
+.portal-preview{display:grid;gap:16px;min-width:0}
+.portal-preview>*{min-width:0}
+.portal-heading{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.portal-primary,.portal-media,.portal-history,.portal-context{display:grid;gap:16px;align-items:start;min-width:0}
+.portal-primary{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+.portal-media{grid-template-columns:repeat(2,minmax(0,1fr))}
+.portal-history{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}
+.portal-context{grid-template-columns:repeat(3,minmax(0,1fr))}
+.portal-primary>div{display:grid;gap:10px;min-width:0}
+.portal-preview .section{padding:16px;border-radius:14px}
+.portal-preview .local-warnings{display:grid;gap:8px}
+.portal-preview .section-heading{flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.portal-preview .current-panel[data-variant="portal"] .metric-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
+.portal-preview .current-panel[data-variant="portal"] .metric-card{padding:12px;min-width:0}
+.portal-preview .current-panel[data-variant="portal"] .metric-card.featured{grid-column:1/-1;background:var(--panel-2)}
+.portal-preview .current-panel[data-variant="portal"] .metric-card.featured .metric-number{font-size:clamp(52px,5.5vw,80px);color:var(--text)}
+.portal-preview .metric-number{white-space:nowrap}
+.portal-preview .metric-label a{color:var(--text);text-underline-offset:3px}
+.portal-preview .daily-brief{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.portal-preview .daily-brief-item{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px;padding:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+.portal-preview .daily-brief-item>span{flex-basis:100%;font-size:12px}
+.portal-preview .daily-brief-item strong{font-size:22px}
+.portal-preview .daily-brief-status{grid-column:1/-1;color:var(--muted);font-size:12px}
+.portal-preview .forecast-tabs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}
+.portal-preview .forecast-day{padding:8px 3px;min-width:0;text-align:center}
+.portal-preview .forecast-day strong{font-size:12px}
+.portal-preview .forecast-temp{font-size:21px}
+.portal-preview .forecast-context{font-size:12px}
+.portal-link,.portal-destinations a{display:inline-flex;align-items:center;min-height:44px;font-size:14px;color:var(--teal);font-weight:650}
+.portal-camera img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:10px;display:block}
+.portal-preview .radar-map{height:clamp(220px,28vw,420px)}
+.portal-preview .chart-box.large{height:clamp(290px,30vw,440px)}
+.portal-preview .chart-toolbar{flex-wrap:wrap}
+.portal-preview .chart-tab{min-height:44px}
+.portal-context>section{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
+.portal-yesterday dl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
+.portal-yesterday dt{font-size:12px;color:var(--muted)}
+.portal-yesterday dd{margin:3px 0 0;font-size:17px;font-weight:650}
+.portal-hour-scroll{overflow-x:auto;max-width:100%;border:1px solid var(--line);border-radius:10px}
+.portal-hour-table{width:max-content;min-width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+.portal-hour-table th,.portal-hour-table td{padding:9px 10px;white-space:nowrap;text-align:center;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.portal-hour-table th:first-child{position:sticky;left:0;background:var(--panel-3);z-index:1;text-align:left}
+.portal-hour-table thead th{background:var(--panel-2);font-weight:650}
+.portal-hour-table tbody:nth-child(even) td{background:var(--panel-2)}
+.portal-destinations{display:flex;flex-wrap:wrap;gap:8px 20px}
+@media(max-width:1024px){.portal-preview .forecast-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}.portal-history{grid-template-columns:1fr}.portal-context{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.portal-primary,.portal-media,.portal-context{grid-template-columns:1fr}.portal-preview{gap:12px}.portal-preview .section{padding:12px}.portal-heading{flex-wrap:wrap}.portal-preview .metric-number{font-size:24px}.portal-preview .daily-brief-item strong{font-size:19px}.portal-preview .daily-brief-item{padding:8px 5px}.portal-yesterday dd{font-size:16px}}

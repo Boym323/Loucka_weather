@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-25 – Alternativní portálový přehled
+- Nová zkušební trasa `/prehled-novy/`, původní homepage zůstává výchozí. Měření a předpověď vedle sebe, radar a kamera, širší interaktivní graf, vítr a včerejší souhrn.
+- Samostatná `/predpoved/` s hodinovou tabulkou Open-Meteo a stávajícími denními údaji. Klikatelné názvy veličin otevřou odpovídající historický graf. Včerejší statistiky pouze při doloženém pokrytí alespoň 90 %.
+- Bez změny databáze, výpočtů, globální navigace nebo produkčního webu. Nové trasy zahrnuty do vizuálního QA; CI a nasazení ověřit samostatně.
+
 ## 2026-11-25 – Kompaktní záhlaví všech stránek
 - Homepage: nadpis nejvýše 40 px na desktopu, nižší fotografické pozadí a odstraněný redundantní popisek; měření se posouvá výše. Kompaktní úvod na všech ostatních veřejných trasách včetně atlasu.
 - Zkráceny úvodní texty při zachování informací o zdrojích a nejistotě dat; žádné změny měření.

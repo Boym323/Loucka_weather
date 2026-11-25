@@ -15,7 +15,7 @@ const routes=[
  ['atlas-extremy','/klimatologie/extremy/'],['atlas-trendy','/klimatologie/trendy/'],
  ['atlas-sezony','/klimatologie/sezony/'],['atlas-rocenka','/klimatologie/rocenka/'],
  ['kamera','/kamera/'],
- ['mapy','/mapy/'],['senzory','/senzory/'],['rekordy','/rekordy/'],['puda-ovzdusi','/puda-ovzdusi/'],['stav','/stav/'],['o-stanici','/o-stanici/']
+ ['mapy','/mapy/'],['senzory','/senzory/'],['rekordy','/rekordy/'],['puda-ovzdusi','/puda-ovzdusi/'],['stav','/stav/'],['o-stanici','/o-stanici/'],['prehled-novy','/prehled-novy/'],['predpoved','/predpoved/']
 ];
 const sizes=[
  {name:'desktop',width:1440,height:900},

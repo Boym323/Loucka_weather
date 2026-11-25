@@ -1,5 +1,7 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**25. 11. 2026 – portálová alternativa:** `/prehled-novy/` a `/predpoved/` jsou nové srovnávací trasy; původní `/` zůstává výchozí. Používají stávající API a model Open-Meteo, žádná změna DB. Další fáze: trendové indikátory, klimatologická srovnání na základě schválené metodiky, výstrahy u dnů, navigace po vizuálním schválení. CI a DEV nasazení ověřit.
+
 **25. 11. 2026 – kompaktní záhlaví:** Homepage má nižší titulní pás s fotografií, ostatní trasy menší nadpisy a mezery, atlas zachovává vlastní identitu. Vizuální test kontroluje výšku a velikost nadpisů i kontrast ze skutečných CSS tokenů. Předchozí CI selhala na chybné metodě odečtu kontrastu; nový výsledek a DEV nasazení je nutné ověřit.
 
 **25. 11. 2026 – mobilní a klimatologická revize:** Kompaktní homepage je výchozí na telefonu, `/?mobile=full` obnoví plné rozložení. Graf i vítr dostupné rozbalením, desktop zachován. Atlas: sjednocení grafů, tabulek, doplněné osy a rozlišení omezených dat; test kontrastu základních tokenů. CI a DEV nasazení nové revize ověřit.

@@ -1,0 +1,16 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import '../styles/portal-preview.css';
+import ForecastPanel from '../features/forecast/ForecastPanel.astro';
+import HourlyForecast from '../features/forecast/HourlyForecast.astro';
+import LocalWarnings from '../features/alerts/LocalWarnings.astro';
+---
+<BaseLayout title="Předpověď počasí">
+ <div class="portal-preview">
+  <header class="page-intro"><span class="eyebrow">Loučka · Zlínský kraj</span><h1>Předpověď počasí</h1><p>Modelová předpověď Open-Meteo, nikoliv měření stanice.</p></header>
+  <LocalWarnings />
+  <ForecastPanel />
+  <HourlyForecast />
+  <nav class="portal-destinations" aria-label="Další informace"><a href="/prehled-novy/">Přehled počasí ↗</a><a href="/mapy/">Srážkový radar ↗</a><a href="/aktualne/">Aktuální měření ↗</a></nav>
+ </div>
+</BaseLayout>

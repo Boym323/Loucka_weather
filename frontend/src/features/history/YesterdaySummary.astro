@@ -1,0 +1,39 @@
+<section class="section portal-yesterday" data-yesterday aria-labelledby="yesterday-title">
+ <div class="section-heading"><h2 id="yesterday-title">Jak bylo včera</h2><span class="status-chip" data-yesterday-status role="status">Načítám</span></div>
+ <dl><div><dt>Minimum</dt><dd data-yesterday-value="min">—</dd></div><div><dt>Maximum</dt><dd data-yesterday-value="max">—</dd></div><div><dt>Srážky</dt><dd data-yesterday-value="rain">—</dd></div></dl>
+ <p class="source-note" data-yesterday-note>Archivní denní souhrn.</p>
+ <a class="panel-link" href="/grafy/">Historie měření ↗</a>
+</section>
+<script>
+ import {getStatistics} from '../../shared/api/client';
+ import {nextDate,qualitySupported} from '../../shared/domain/statistics';
+ import {formatValue} from '../../shared/domain/metrics';
+ import {displayLocalDate} from '../../shared/domain/display-date';
+ const root=document.querySelector<HTMLElement>('[data-yesterday]');
+ if(root){
+  const day=nextDate(new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Prague',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()),-1);
+  const status=root.querySelector<HTMLElement>('[data-yesterday-status]')!;
+  const note=root.querySelector<HTMLElement>('[data-yesterday-note]')!;
+  const controller=new AbortController();
+  const queries=[{id:'min',metric:'outTemp',aggregation:'min',unit:'°C'},{id:'max',metric:'outTemp',aggregation:'max',unit:'°C'},{id:'rain',metric:'rain',aggregation:'sum',unit:'mm'}] as const;
+  const load=async()=>{
+   const results=await Promise.allSettled(queries.map(q=>getStatistics('daily',q.metric,q.aggregation,day,controller.signal)));
+   if(controller.signal.aborted)return;
+   let count=0;
+   results.forEach((r,i)=>{
+    const q=queries[i]!;
+    const target=root.querySelector<HTMLElement>('[data-yesterday-value="'+q.id+'"]');
+    if(!target||r.status!=='fulfilled'||!qualitySupported(r.value))return;
+    const coverage=r.value.timeCoverage?.fraction??r.value.completeness.fraction;
+    if(coverage===null||coverage<.9)return;
+    target.textContent=formatValue(r.value.value,1)+' '+q.unit;count++;
+   });
+   status.textContent=count===3?'Archivní souhrn':count?'Neúplné údaje':'Nedostupné údaje';
+   status.className='status-chip '+(count===3?'ok':'warning');
+   note.textContent=displayLocalDate(day)+' · původní archiv; pouze hodnoty s pokrytím alespoň 90 %.';
+  };
+  const observer=new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting)){observer.disconnect();void load();}},{rootMargin:'200px'});
+  observer.observe(root);
+  document.addEventListener('astro:before-swap',()=>{observer.disconnect();controller.abort();},{once:true});
+ }
+</script>

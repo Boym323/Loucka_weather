@@ -393,6 +393,8 @@
    controller?.abort();observer.disconnect();chart.dispose();
    window.removeEventListener('loucka:theme-change',themeChanged);
   },{once:true});
+  const requestedMetric=new URLSearchParams(location.search).get('metric');
+  if(requestedMetric&&[...metricInput('metric').options].some(option=>option.value===requestedMetric))metricInput('metric').value=requestedMetric;
   setPreset(activeRange);
  }
 </script>

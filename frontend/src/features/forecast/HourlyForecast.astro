@@ -1,0 +1,45 @@
+---
+interface Props {compact?:boolean}
+const {compact=false}=Astro.props;
+---
+<section class:list={['section','portal-hourly',{'portal-hourly-compact':compact}]} data-hourly-forecast data-limit={compact?12:24} aria-labelledby="hourly-title">
+ <div class="section-heading"><h2 id="hourly-title">Nejbližší hodiny</h2><span class="status-chip" data-hourly-status role="status">Načítám</span></div>
+ <div data-hourly-content></div>
+ <p class="source-note">Model Open-Meteo (CC BY 4.0) · místní čas · hodinový úhrn srážek, nikoli měření.</p>
+</section>
+<script>
+ import {parseHourlyForecast} from '../../shared/domain/hourly-forecast';
+ import {formatValue} from '../../shared/domain/metrics';
+ const root=document.querySelector<HTMLElement>('[data-hourly-forecast]');
+ if(root){
+  const content=root.querySelector<HTMLElement>('[data-hourly-content]')!;
+  const status=root.querySelector<HTMLElement>('[data-hourly-status]')!;
+  const limit=Number(root.dataset.limit)||24;
+  const controller=new AbortController();
+  const url='https://api.open-meteo.com/v1/forecast?latitude=49.170035&longitude=17.876076&hourly=temperature_2m,precipitation,precipitation_probability,wind_speed_10m&wind_speed_unit=ms&timeformat=unixtime&timezone=GMT&forecast_days=3';
+  const clock=new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'});
+  const load=async()=>{
+   try{
+    const res=await fetch(url,{signal:controller.signal});if(!res.ok)throw Error('forecast');
+    const points=parseHourlyForecast(await res.json(),Date.now(),limit);
+    if(!points.length||!points.some(p=>p.temperature!==null||p.precipitation!==null))throw Error('empty');
+    if(controller.signal.aborted)return;
+    const scroll=document.createElement('div');scroll.className='portal-hour-scroll';scroll.tabIndex=0;scroll.setAttribute('role','region');scroll.setAttribute('aria-label','Hodinová předpověď, posun vodorovně');
+    const table=document.createElement('table');table.className='portal-hour-table';scroll.append(table);
+    const head=table.createTHead().insertRow();
+    for(const label of ['Čas','Teplota','Srážky','Pravd. srážek','Vítr']){const th=document.createElement('th');th.scope='row';th.textContent=label;const row=label==='Čas'?head:table.createTBody().insertRow();row.append(th);
+     for(const point of points){const cell=label==='Čas'?document.createElement('th'):document.createElement('td');
+      if(label==='Čas'){cell.setAttribute('scope','col');cell.textContent=clock.format(point.time);}
+      else {const v=label==='Teplota'?point.temperature:label==='Srážky'?point.precipitation:label==='Pravd. srážek'?point.probability:point.wind;
+       const unit=label==='Teplota'?' °C':label==='Srážky'?' mm':label==='Pravd. srážek'?' %':' m/s';cell.textContent=v===null?'—':formatValue(v,label==='Pravd. srážek'?0:1)+unit;
+      }row.append(cell);
+     }
+    }
+    content.replaceChildren(scroll);
+    status.textContent='Modelová předpověď';status.className='status-chip ok';
+   }catch{if(controller.signal.aborted)return;status.textContent='Nedostupná';status.className='status-chip warning';content.textContent='Hodinovou předpověď se nepodařilo načíst.';}
+  };
+  void load();
+  document.addEventListener('astro:before-swap',()=>controller.abort(),{once:true});
+ }
+</script>

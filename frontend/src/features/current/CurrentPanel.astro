@@ -1,13 +1,13 @@
 ---
 import MetricCard from '../../shared/ui/MetricCard.astro';
 import { metrics } from '../../shared/domain/metrics';
-interface Props { variant?: 'dashboard' | 'detail' | 'observatory' }
+interface Props { variant?: 'dashboard' | 'detail' | 'observatory' | 'portal' }
 const { variant = 'detail' } = Astro.props;
 // Homepage: 6 compact cards plus a separate row of contextual readings.
 // Detail page keeps the full public selection.
 const observatoryMetrics = [metrics[0], metrics[1], metrics[2],
  {id:'dewpoint',label:'Rosný bod',unit:'°C',digits:1}];
-const view = variant === 'observatory' ? observatoryMetrics : variant === 'dashboard' ? metrics.slice(0, 6) : metrics;
+const view = variant === 'portal' ? [metrics[0],metrics[1],metrics[2],metrics[3],metrics[4]] : variant === 'observatory' ? observatoryMetrics : variant === 'dashboard' ? metrics.slice(0, 6) : metrics;
 const quickReadings = [
  { id:'radiation', label:'Sluneční záření', unit:'W/m²', digits:0 },
  { id:'UV', label:'UV index', unit:'', digits:1 },
@@ -22,7 +22,7 @@ const quickReadings = [
  </div>
  <p class="source-note" data-current-updated>Čekám na poslední archivní záznam.</p>
  <div class="metric-grid">
-  {view.map((metric,index)=><MetricCard id={metric.id} label={metric.label} unit={metric.unit} featured={index===0} />)}
+  {view.map((metric,index)=><MetricCard id={metric.id} label={metric.label} unit={metric.unit} featured={index===0} graphLink={variant==='portal'} />)}
  </div>
  {variant==='dashboard' && <div class="quick-reading-grid" aria-label="Doplňková měření">
   {quickReadings.map(metric => <div class="quick-reading">
