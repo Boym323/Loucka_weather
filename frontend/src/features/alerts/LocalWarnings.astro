@@ -77,7 +77,7 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
       const severity=severityDisplay(alert.severity);
       const article=document.createElement('article');
       article.className='local-alert-entry';
-      article.dataset.level=severity.level;
+      article.dataset.level=severity.level;article.dataset.validity=state;
       const meta=document.createElement('div');meta.className='local-alert-meta';article.append(meta);
       appendText(meta,'span',severity.label,'local-alert-severity');
       appendText(meta,'span',state==='active'?'Právě platí':state==='upcoming'?'Nadcházející':'Platnost neupřesněna','local-alert-state');
@@ -88,7 +88,7 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
       if(root.dataset.condensed==='true'||(alert.description&&warningSummary(alert.description)!==alert.description.trim())||
          (alert.instruction&&warningSummary(alert.instruction)!==alert.instruction.trim())){
        const details=document.createElement('details');details.className='local-alert-details';
-       appendText(details,'summary','Úplné znění výstrahy ČHMÚ');
+       appendText(details,'summary',root.dataset.condensed==='true'?'Doporučení a úplné znění ČHMÚ':'Úplné znění výstrahy ČHMÚ');
        if(alert.description)appendText(details,'p',alert.description);
        if(alert.instruction)appendText(details,'p','Doporučení ČHMÚ: '+alert.instruction);
        article.append(details);
@@ -144,5 +144,14 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
  .local-warnings.condensed .local-alert-time{font-size:12px}
  .local-warnings.condensed .local-alert-summary{font-size:13px}
  .local-warnings.condensed .local-alert-details summary{min-height:44px;display:flex;align-items:center}
+}
+</style>
+
+<style is:global>
+@media(max-width:760px){
+ /* A future warning still shows severity, time and hazard. Its full advice is one tap away. Active/unknown warnings retain their advice inline. */
+ .local-warnings.condensed .local-alert-entry[data-validity="upcoming"]:not([data-level="extreme"])>.local-alert-instruction{display:none}
+ .local-warnings.condensed .local-alert-entry[data-validity="upcoming"] .local-alert-details{margin-top:3px}
+ .local-warnings.condensed .local-alert-checked{font-size:11px}
 }
 </style>

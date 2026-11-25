@@ -1,5 +1,7 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**25. 11. 2026 – kandidát přepnutí:** Nový portál na `/` a sdíleném aliasu `/prehled-novy/`, klasická verze na `/prehled-klasicky/`. Změna vyžaduje úspěšné CI před sloučením; po nasazení ověřit veřejný smoke a případný návrat na předchozí commit. Produkce a DB nedotčeny.
+
 **25. 11. 2026 – portálová etapa 2:** Trend teploty/tlaku z archivu, meteogram a denní indikace výstrah, klimatologické porovnání shodných dní s kontrolou pokrytí, `/historie-den/` a upravená navigace. Původní homepage je stále výchozí. Srážkové odchylky odloženy kvůli známým problémům originálu; bez zásahu do DB. Ověřit nové CI a deploy.
 
 **25. 11. 2026 – portálová alternativa:** `/prehled-novy/` a `/predpoved/` jsou nové srovnávací trasy; původní `/` zůstává výchozí. Používají stávající API a model Open-Meteo, žádná změna DB. Další fáze: trendové indikátory, klimatologická srovnání na základě schválené metodiky, výstrahy u dnů, navigace po vizuálním schválení. CI a DEV nasazení ověřit.

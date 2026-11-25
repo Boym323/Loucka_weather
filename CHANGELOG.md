@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-25 – Kandidát přepnutí výchozího portálu
+- Nový portál jako výchozí `/`, alias `/prehled-novy/` používá stejnou komponentu. Původní přehled je zachován na `/prehled-klasicky/` včetně plného mobilního režimu.
+- Trendy přesunuty k větru, rychlé mobilní odkazy a úspornější karty. Nadcházející výstrahy na telefonu zobrazují nebezpečí, platnost a stručný popis; úplné doporučení v podrobnostech. Aktivní a extrémní výstrahy zachovávají doporučení přímo.
+- Kandidát v samostatné větvi, bez DB nebo produkčních změn. Přepnutí až po průchodu CI; veřejný smoke po nasazení musí potvrdit nový commit.
+
 ## 2026-11-25 – Dotažení portálu podle nasazených screenshotů
 - Kompaktnější blok výstrah, kontrastní nadpis, jednotky denních údajů vedle hodnot, desetinné srážky v modelu a odstranění záporné nuly u předpovědi.
 - Opraven typ navigace po přesunu klimatologie do mobilního menu (předchozí CI TS2367). Nové testy a nasazení ověřit samostatně.
