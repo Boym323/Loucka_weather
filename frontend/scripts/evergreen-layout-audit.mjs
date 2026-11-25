@@ -36,7 +36,7 @@ try{
   let loaded=false;
   for(let attempt=0;attempt<20;attempt++){
    try{
-    const response=await page.goto(new URL('/?mobile=full',url).href,{waitUntil:'domcontentloaded',timeout:5000});
+    const response=await page.goto(new URL('/prehled-klasicky/?mobile=full',url).href,{waitUntil:'domcontentloaded',timeout:5000});
     if(response?.ok()){loaded=true;break;}
    }catch{}
    await new Promise(resolve=>setTimeout(resolve,500));

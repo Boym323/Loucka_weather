@@ -171,10 +171,13 @@ try{
    });
    if(response?.status()!==200)throw new Error('Homepage HTTP is not 200');
    // Never assume a camera screenshot is live: only test binary load state.
-   const imageReady=await page.waitForFunction(()=>{
-    const img=document.querySelector('.evergreen-landscape img');
-    return !!img?.complete&&img.naturalWidth>0;
-   },null,{timeout:18000}).then(()=>true).catch(()=>false);
+   await page.waitForFunction(()=>{
+    const status=document.querySelector('[data-current-status]')?.textContent??'';
+    return status.length>0&&!status.includes('Načítám');
+   },null,{timeout:18000}).catch(()=>{});
+   const imageReady=await page.evaluate(()=>{
+    const img=document.querySelector('.portal-camera img');return !!img?.complete&&img.naturalWidth>0;
+   });
    await page.waitForTimeout(1400);
    const metric=await page.evaluate(()=>{
     const navigation=performance.getEntriesByType('navigation')[0];
@@ -198,7 +201,7 @@ try{
     };
    });
    const dimensions=await page.evaluate(()=>{
-    const img=document.querySelector('.evergreen-landscape img');
+    const img=document.querySelector('.portal-camera img');
     return img?.complete&&img.naturalWidth>0?
      {width:img.naturalWidth,height:img.naturalHeight}:null;
    });
@@ -239,7 +242,7 @@ const report={
   lcpCandidateMs:median(samples.map(s=>s.lcpCandidateMs))
  },
  samples,failures,
- notes:'Synthetic CDP CPU/network emulation, not Lighthouse scoring or real-user p75. LCP candidate measured after camera image load or bounded timeout; CLS is observed-so-far. No INP/CrUX. CDP encodedDataLength includes transfer overhead; camera Content-Length may be absent. Per-CSS response Content-Encoding/Vary/immutable are observed only in-memory and summarized by counts, not by asset URL. Cache headers describe one cold response, not a validated warm reload. No source URLs, bodies, identities or readings are retained.'
+ notes:'Synthetic CDP CPU/network emulation, not Lighthouse scoring or real-user p75. New portal LCP candidate measured after current-status settlement or bounded timeout; lazy offscreen camera may not load (not a failure), not directly comparable to the classic hero; CLS is observed-so-far. No INP/CrUX. CDP encodedDataLength includes transfer overhead; camera Content-Length may be absent. Per-CSS response Content-Encoding/Vary/immutable are observed only in-memory and summarized by counts, not by asset URL. Cache headers describe one cold response, not a validated warm reload. No source URLs, bodies, identities or readings are retained.'
 };
 await mkdir('test-results/preview-screenshots',{recursive:true});
 await writeFile(out,JSON.stringify(report,null,2)+'\n');

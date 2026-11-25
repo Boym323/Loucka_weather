@@ -15,7 +15,7 @@ const routes=[
  ['atlas-extremy','/klimatologie/extremy/'],['atlas-trendy','/klimatologie/trendy/'],
  ['atlas-sezony','/klimatologie/sezony/'],['atlas-rocenka','/klimatologie/rocenka/'],
  ['kamera','/kamera/'],
- ['mapy','/mapy/'],['senzory','/senzory/'],['rekordy','/rekordy/'],['puda-ovzdusi','/puda-ovzdusi/'],['stav','/stav/'],['o-stanici','/o-stanici/'],['prehled-novy','/prehled-novy/'],['predpoved','/predpoved/'],['historie-den','/historie-den/']
+ ['mapy','/mapy/'],['senzory','/senzory/'],['rekordy','/rekordy/'],['puda-ovzdusi','/puda-ovzdusi/'],['stav','/stav/'],['o-stanici','/o-stanici/'],['prehled-klasicky','/prehled-klasicky/'],['prehled-novy','/prehled-novy/'],['predpoved','/predpoved/'],['historie-den','/historie-den/']
 ];
 const sizes=[
  {name:'desktop',width:1440,height:900},
@@ -136,7 +136,7 @@ try{
     await page.waitForTimeout(900);
     // Geometry assertions prevent future desktop/mobile visual drift without
     // comparing live weather images or dynamic values pixel-by-pixel.
-    if(path==='/'){
+    if(path==='/prehled-klasicky/'){
      const layout=await page.evaluate(()=>{
       const columns=selector=>{
        const element=document.querySelector(selector);
@@ -174,7 +174,7 @@ try{
        hasDecorativeHero:document.querySelector('.atlas-hero-backdrop')!==null,
        heroBackground:getComputedStyle(document.querySelector('.atlas-hero')).backgroundImage,
        svgIcons:document.querySelectorAll('.mobile-dock > a svg, .atlas-mobile-more > summary svg').length,
-       moreLinks:document.querySelectorAll('.atlas-mobile-more-menu a').length,
+       moreLinks:[...document.querySelectorAll('.mobile-dock a')].map(a=>a.getAttribute('href')),
        mobileTargetHeight:firstNav?.getBoundingClientRect().height??0,
        chartHeight:document.querySelector('.atlas-main-history .chart-box')?.getBoundingClientRect().height??0
       };
@@ -236,7 +236,9 @@ try{
        errors.push(size.name+': mobile quick links or practical-information order regressed');
       if(layout.destinationColumns!==2)errors.push('Mobile destinations should use two columns at 390px');
       if(layout.svgIcons!==5)errors.push('Mobile dock must contain five SVG navigation icons');
-      if(layout.moreLinks!==7)errors.push('Mobile More menu must expose remaining seven pages');
+      for(const href of ['/','/predpoved/','/grafy/','/mapy/','/aktualne/','/klimatologie/','/historie-den/','/prehled-klasicky/','/rekordy/','/senzory/','/puda-ovzdusi/','/kamera/','/stav/','/o-stanici/']){
+       if(!layout.moreLinks.includes(href))errors.push('Mobile menu missing '+href);
+      }
       if(layout.mobileTargetHeight<44)errors.push('Mobile dock touch targets must be at least 44px');
      }else{
       if(layout.analyticsColumns!==3)errors.push('Desktop weather / forecast / context should show three columns');
@@ -245,6 +247,10 @@ try{
       if(layout.destinationColumns!==3)errors.push('Desktop destinations should use three columns');
       if(layout.chartHeight<145)errors.push('Desktop integrated 24h chart must remain legible');
      }
+    }
+    if(path==='/'||path==='/prehled-novy/'){
+     const layout=await page.evaluate(()=>({columns:getComputedStyle(document.querySelector('.portal-primary')).gridTemplateColumns.split(' ').length,measurement:!!document.querySelector('[data-current-panel][data-variant="portal"]'),forecast:!!document.querySelector('[data-forecast-panel]'),hourly:!!document.querySelector('[data-hourly-forecast]'),radar:!!document.querySelector('[data-radar-map]'),camera:!!document.querySelector('.portal-camera img'),history:!!document.querySelector('[data-history-chart]'),warnings:document.querySelectorAll('[data-local-warnings]').length,classic:!!document.querySelector('a[href="/prehled-klasicky/"]')}));
+     if(layout.columns!==(size.name==='mobil'?1:2)||!layout.measurement||!layout.forecast||!layout.hourly||!layout.radar||!layout.camera||!layout.history||layout.warnings!==1||!layout.classic)errors.push(size.name+' portal layout regression '+JSON.stringify(layout));
     }
     // A short climate landing page keeps expert analyses behind a disclosure.
     // Open it before checking the original rich charts and source data.
@@ -678,12 +684,12 @@ try{
       await page.locator('[data-snow-evidence]').count()!==1)
       errors.push(size.name+': missing solar energy and clearly-labelled frost data');
     }
-    if(path==='/'){
+    if(['/','/prehled-novy/','/prehled-klasicky/'].includes(path)){
      if(await page.locator('[data-local-warnings]').count()!==1)
       errors.push(size.name+': missing locality-filtered CHMI alert panel');
     }
     if(state.width>state.viewport+3)errors.push(size.name+' '+path+': horizontal overflow '+state.width+'px > '+state.viewport+'px');
-    if(path==='/'){
+    if(path==='/prehled-klasicky/'){
      await page.waitForFunction(()=>{
       const status=document.querySelector('[data-day-history-status]')?.textContent??'';
       return status.length>0&&!status.includes('Ověřuji úplnost');
@@ -752,7 +758,7 @@ try{
     await page.waitForTimeout(120);
     await page.screenshot({path:out+'/'+size.name+'-'+name+'.png',fullPage:true});
     console.log('OK',size.name,path,state.title,'scrollWidth='+state.width);
-    if(path==='/'){
+    if(path==='/prehled-klasicky/'){
      const modules=await page.evaluate(()=>({
       forecast:document.querySelector('[data-forecast-status]')?.textContent?.trim()??'missing',
       radar:document.querySelector('[data-radar-status]')?.textContent?.trim()??'missing'

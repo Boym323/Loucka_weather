@@ -30,6 +30,14 @@ try{
   });
   const page=await context.newPage();
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.goto(origin,{waitUntil:'domcontentloaded'});
+  await page.locator('.portal-meteogram svg').waitFor();
+  assert.equal(await page.locator('.portal-hour-table thead th').count(),13);
+  await page.locator('[data-forecast-warning="1"]').waitFor();
+  assert.equal(await page.locator('[data-local-warnings]').count(),1);
+  assert.equal(await page.locator('.portal-history-aside [data-archive-trends]').count(),1);
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
+  await page.screenshot({path:out+'/portal-'+width+'-'+theme+'.png',fullPage:true});
   await page.goto(new URL('predpoved/',origin).href,{waitUntil:'domcontentloaded'});
   await page.locator('.portal-meteogram svg').waitFor();
   assert.equal(await page.locator('.portal-hour-table thead th').count(),25);
