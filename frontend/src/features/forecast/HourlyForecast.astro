@@ -8,6 +8,7 @@ const {compact=false}=Astro.props;
  <p class="source-note">Model Open-Meteo (CC BY 4.0) · místní čas · hodinový úhrn srážek, nikoli měření.</p>
 </section>
 <script>
+ import {drawMeteogram} from './meteogram';
  import {parseHourlyForecast} from '../../shared/domain/hourly-forecast';
  import {formatValue} from '../../shared/domain/metrics';
  const root=document.querySelector<HTMLElement>('[data-hourly-forecast]');
@@ -35,7 +36,7 @@ const {compact=false}=Astro.props;
       }row.append(cell);
      }
     }
-    content.replaceChildren(scroll);
+    content.replaceChildren(drawMeteogram(points),scroll);
     status.textContent='Modelová předpověď';status.className='status-chip ok';
    }catch{if(controller.signal.aborted)return;status.textContent='Nedostupná';status.className='status-chip warning';content.textContent='Hodinovou předpověď se nepodařilo načíst.';}
   };

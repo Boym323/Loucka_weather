@@ -3,7 +3,7 @@ interface Props { compact?:boolean }
 const {compact=false}=Astro.props;
 import SiteIcon from '../../shared/ui/SiteIcon.astro';
 ---
-<section class:list={['section','local-warnings',{compact}]} data-local-warnings aria-label="Výstrahy ČHMÚ pro Loučku">
+<section id="vystrahy-chmu" class:list={['section','local-warnings',{compact}]} data-local-warnings aria-label="Výstrahy ČHMÚ pro Loučku">
  <div class="section-heading"><div class="panel-title"><SiteIcon name="alert" size={20}/><h2>Výstrahy ČHMÚ</h2></div><span class="status-chip" data-alert-status role="status">Kontroluji výstrahy</span></div>
  <div data-alert-body>Načítám aktuální výstrahy…</div>
  <p class="source-note">Přehled pro Loučku a okolí · zdroj <a href="https://vystrahy-cr.chmi.cz/" target="_blank" rel="noopener noreferrer">ČHMÚ</a>. V nebezpečí se řiďte pokyny ČHMÚ.</p>
@@ -28,7 +28,9 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
   const setStatus=(label:string,kind:string)=>{
    if(status){status.textContent=label;status.className='status-chip '+kind;}
   };
+  const publishAlerts=(alerts:LocalAlert[])=>{root.dataset.forecastAlerts=JSON.stringify(alerts);document.dispatchEvent(new Event('loucka:warning-update'));};
   const unavailable=()=>{
+   publishAlerts([]);
    setStatus('Stav nelze ověřit','warning');
    showShortcut('Stav výstrah ČHMÚ nelze ověřit','unknown');
    if(body)body.textContent='Aktuální výstrahy se nepodařilo ověřit. Podívejte se přímo na web ČHMÚ.';
@@ -55,6 +57,7 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
      .filter(item=>item.state!=='expired')
      .sort((a,b)=>Number(a.state==='upcoming')-Number(b.state==='upcoming')||
       (Date.parse(a.alert.onset)||0)-(Date.parse(b.alert.onset)||0));
+    publishAlerts(alerts.map(item=>item.alert));
     body.replaceChildren();
     if(!alerts.length){
      setStatus('Bez výstrahy','ok');

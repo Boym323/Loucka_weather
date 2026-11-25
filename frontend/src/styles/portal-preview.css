@@ -46,3 +46,23 @@
 .portal-destinations{display:flex;flex-wrap:wrap;gap:8px 20px}
 @media(max-width:1024px){.portal-preview .forecast-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}.portal-history{grid-template-columns:1fr}.portal-context{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){.portal-primary,.portal-media,.portal-context{grid-template-columns:1fr}.portal-preview{gap:12px}.portal-preview .section{padding:12px}.portal-heading{flex-wrap:wrap}.portal-preview .metric-number{font-size:24px}.portal-preview .daily-brief-item strong{font-size:19px}.portal-preview .daily-brief-item{padding:8px 5px}.portal-yesterday dd{font-size:16px}}
+
+.portal-preview .portal-trends dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0}
+.portal-trends dt,.portal-climate-grid small{color:var(--muted);font-size:12px}
+.portal-trends dd{margin:4px 0;font-size:20px;font-weight:650;font-variant-numeric:tabular-nums}
+.portal-meteogram{margin:0 0 12px}
+.portal-meteogram svg{width:100%;height:auto;display:block}
+.portal-meteogram figcaption{font-size:12px;color:var(--muted)}
+.meteogram-axis{fill:var(--text);font-size:13px}
+.meteogram-grid{stroke:var(--line)}
+.meteogram-line{stroke:var(--teal);stroke-width:2.5;stroke-linejoin:round}
+.meteogram-point{fill:var(--teal)}
+.meteogram-rain{fill:#4267a8}
+:root[data-theme="dark"] .meteogram-rain{fill:#9eb9ff}
+.forecast-day-warning:not([hidden]){display:inline-block;color:var(--text);font-size:11px;text-decoration:underline;text-underline-offset:2px;border-bottom:2px solid #c59510}
+.forecast-day-warning[data-level="severe"]{border-color:#d97706}.forecast-day-warning[data-level="extreme"]{border-color:#dc3947}
+.portal-climate-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0}
+.portal-climate-grid article{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0;overflow-wrap:anywhere}
+.portal-climate-grid h3{font-size:15px;margin:0 0 5px}.portal-climate-grid strong{display:block;font-size:clamp(22px,2.4vw,30px);font-variant-numeric:tabular-nums}.portal-climate-grid p{font-size:14px;margin:5px 0}
+.portal-calendar-form{display:flex;flex-wrap:wrap;align-items:end;gap:12px}.portal-calendar-form label{display:grid;gap:5px}.portal-calendar-form input,.portal-calendar-form button{min-height:44px}
+@media(max-width:760px){.portal-climate-grid{grid-template-columns:1fr}.portal-climate-grid article{padding:10px}.portal-preview .portal-trends dd{font-size:18px}}

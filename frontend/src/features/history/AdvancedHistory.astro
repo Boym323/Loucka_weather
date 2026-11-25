@@ -395,6 +395,13 @@
   },{once:true});
   const requestedMetric=new URLSearchParams(location.search).get('metric');
   if(requestedMetric&&[...metricInput('metric').options].some(option=>option.value===requestedMetric))metricInput('metric').value=requestedMetric;
-  setPreset(activeRange);
+  const requestedDate=new URLSearchParams(location.search).get('date');
+  const today=localDate(new Date());
+  let validDate=false;
+  if(requestedDate&&requestedDate>='2009-01-01'&&requestedDate<=today){try{pragueMidnightIso(requestedDate);validDate=true;}catch{}}
+  if(validDate&&requestedDate){
+   activeRange='custom';dateInput('from').value=requestedDate;dateInput('to').value=requestedDate;
+   root.querySelectorAll<HTMLButtonElement>('[data-period]').forEach(b=>b.setAttribute('aria-pressed','false'));void refresh();
+  }else setPreset(activeRange);
  }
 </script>

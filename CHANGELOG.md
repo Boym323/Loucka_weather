@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-25 – Trendy, meteogram, historický kalendář a navigace
+- Archivní hodinové změny teploty a tlaku pouze ze dvou blízkých platných měření, grafický meteogram s oddělenými osami, propojení výstrah s kalendářními dny bez druhého požadavku na ČHMÚ.
+- Srovnání měsíce, části sezóny a roku se shodnými dny starších let, nikoli klimatický normál; srážkové srovnání zatím nepřidáno kvůli známým omezením archivu. Historický kalendář s kontrolou pokrytí a odkazem na konkrétní den grafu.
+- Přístup k předpovědi, radaru a kameře v hlavní navigaci; původní homepage zůstává výchozí do vizuálního ověření alternativy. Bez změn DB, WeeWX a produkce.
+
 ## 2026-11-25 – Alternativní portálový přehled
 - Nová zkušební trasa `/prehled-novy/`, původní homepage zůstává výchozí. Měření a předpověď vedle sebe, radar a kamera, širší interaktivní graf, vítr a včerejší souhrn.
 - Samostatná `/predpoved/` s hodinovou tabulkou Open-Meteo a stávajícími denními údaji. Klikatelné názvy veličin otevřou odpovídající historický graf. Včerejší statistiky pouze při doloženém pokrytí alespoň 90 %.

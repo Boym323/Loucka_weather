@@ -1,0 +1,36 @@
+<section class="section portal-trends" data-archive-trends aria-labelledby="archive-trends-title">
+ <div class="section-heading"><h2 id="archive-trends-title">Změna za poslední hodinu</h2><span class="status-chip" data-trend-status role="status">Načítám</span></div>
+ <dl><div><dt>Teplota</dt><dd data-hour-change="outTemp">—</dd></div><div><dt>Tlak</dt><dd data-hour-change="barometer">—</dd></div></dl>
+ <p class="source-note">Dva platné archivní body přibližně 60 minut od sebe; nikoli změna živého čidla.</p>
+</section>
+<script>
+ import {getHistoryRange} from '../../shared/api/client';
+ import {archiveHourChange} from '../../shared/domain/archive-trend';
+ import {formatValue} from '../../shared/domain/metrics';
+ const root=document.querySelector<HTMLElement>('[data-archive-trends]');
+ if(root){
+  const ctrl=new AbortController(),status=root.querySelector<HTMLElement>('[data-trend-status]')!;
+  let running=false;
+  const load=async()=>{
+   if(running||ctrl.signal.aborted)return;running=true;
+   let count=0;
+   for(const [metric,unit] of [['outTemp','°C'],['barometer','hPa']]){
+    const target=root.querySelector<HTMLElement>('[data-hour-change="'+metric+'"]')!;
+    target.textContent='—';delete target.dataset.direction;
+    try{
+     const r=await getHistoryRange(metric,2,ctrl.signal);
+     if(ctrl.signal.aborted)return;
+     const change=archiveHourChange(r.points,Date.now());
+     if(!change)continue;
+     const d=Math.round(change.delta*10)/10;
+     target.textContent=(d>0?'↑ +':d<0?'↓ ':'→ ')+formatValue(d,1)+' '+unit;
+     target.dataset.direction=d>0?'up':d<0?'down':'steady';count++;
+    }catch{if(ctrl.signal.aborted)return;}
+   }
+   status.textContent=count===2?'Archivní měření':count?'Částečně dostupné':'Nedostupné';status.className='status-chip '+(count===2?'ok':'warning');running=false;
+  };
+  const timer=setTimeout(()=>void load(),3500);
+  const refresh=()=>void load();window.addEventListener('loucka:archive-updated',refresh,{signal:ctrl.signal});
+  document.addEventListener('astro:before-swap',()=>{clearTimeout(timer);ctrl.abort();},{once:true});
+ }
+</script>

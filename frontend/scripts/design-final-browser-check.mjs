@@ -9,7 +9,7 @@ import {mkdir} from 'node:fs/promises';
 
 const base=process.env.LOCAL_PREVIEW_URL||'http://127.0.0.1:4321/';
 const coreRoutes=['/','/aktualne/','/grafy/','/kamera/','/klimatologie/'];
-const routes=[...coreRoutes,'/rekordy/','/senzory/','/mapy/','/puda-ovzdusi/','/stav/','/o-stanici/','/klimatologie/extremy/','/klimatologie/trendy/','/klimatologie/sezony/','/klimatologie/rocenka/','/prehled-novy/','/predpoved/'];
+const routes=[...coreRoutes,'/rekordy/','/senzory/','/mapy/','/puda-ovzdusi/','/stav/','/o-stanici/','/klimatologie/extremy/','/klimatologie/trendy/','/klimatologie/sezony/','/klimatologie/rocenka/','/prehled-novy/','/predpoved/','/historie-den/'];
 const widths=[320,390,768,1024,1328,1440,1920];
 const themes=['light','dark'];
 const out='test-results/design-final';

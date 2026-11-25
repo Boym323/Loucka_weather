@@ -10,6 +10,8 @@ import RadarPanel from '../features/maps/RadarPanel.astro';
 import LocalWarnings from '../features/alerts/LocalWarnings.astro';
 import HistoryChart from '../features/history/HistoryChart.astro';
 import YesterdaySummary from '../features/history/YesterdaySummary.astro';
+import ArchiveTrends from '../features/history/ArchiveTrends.astro';
+import ClimateContext from '../features/climate/ClimateContext.astro';
 import SolarCycle from '../features/current/SolarCycle.astro';
 import SameDayLastYear from '../features/history/SameDayLastYear.astro';
 ---
@@ -24,6 +26,7 @@ import SameDayLastYear from '../features/history/SameDayLastYear.astro';
    <div class="portal-measurements">
     <CurrentPanel variant="portal" />
     <DailySummaryStrip />
+    <ArchiveTrends />
     <a class="portal-link" href="/aktualne/">Všechna měření ↗</a>
    </div>
    <div class="portal-forecast">
@@ -49,8 +52,9 @@ import SameDayLastYear from '../features/history/SameDayLastYear.astro';
    <SameDayLastYear />
    <SolarCycle />
   </div>
+  <ClimateContext />
   <nav class="portal-destinations" aria-label="Další meteorologické údaje">
-   <a href="/klimatologie/">Klimatologie a dlouhodobé trendy ↗</a><a href="/rekordy/">Rekordy ↗</a><a href="/senzory/">Senzory ↗</a><a href="/o-stanici/">O stanici ↗</a>
+   <a href="/historie-den/">Počasí v libovolný den ↗</a><a href="/klimatologie/">Klimatologie a dlouhodobé trendy ↗</a><a href="/rekordy/">Rekordy ↗</a><a href="/senzory/">Senzory ↗</a><a href="/o-stanici/">O stanici ↗</a>
   </nav>
  </div>
 </BaseLayout>
