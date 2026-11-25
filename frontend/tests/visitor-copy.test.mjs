@@ -9,7 +9,8 @@ test('visitor-facing sections lead with everyday weather language',async()=>{
  const current=await source('src/features/current/CurrentPanel.astro');
  const status=await source('src/pages/stav.astro');
  const history=await source('src/features/history/AdvancedHistory.astro');
- assert.match(home,/Teplota, vítr, déšť/);
+ assert.match(home,/<h1 id="evergreen-title">Aktuální počasí<\/h1>/);
+ assert.doesNotMatch(home,/<p>Teplota, vítr, déšť a vývoj počasí v naší obci\.<\/p>/);
  assert.doesNotMatch(current,/METRICWX/);
  assert.doesNotMatch(status,/Fastify API|CAP výstrahy|Archiv WeeWX/);
  assert.match(history,/Jak číst graf a odkud údaje pocházejí/);

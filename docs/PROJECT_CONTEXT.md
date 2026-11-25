@@ -1,5 +1,7 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**25. 11. 2026 – kompaktní záhlaví:** Homepage má nižší titulní pás s fotografií, ostatní trasy menší nadpisy a mezery, atlas zachovává vlastní identitu. Vizuální test kontroluje výšku a velikost nadpisů i kontrast ze skutečných CSS tokenů. Předchozí CI selhala na chybné metodě odečtu kontrastu; nový výsledek a DEV nasazení je nutné ověřit.
+
 **25. 11. 2026 – mobilní a klimatologická revize:** Kompaktní homepage je výchozí na telefonu, `/?mobile=full` obnoví plné rozložení. Graf i vítr dostupné rozbalením, desktop zachován. Atlas: sjednocení grafů, tabulek, doplněné osy a rozlišení omezených dat; test kontrastu základních tokenů. CI a DEV nasazení nové revize ověřit.
 
 **25. 11. 2026 – navazující screenshot revize:** Veřejné screenshoty commitu 9ab8378 ukázaly potřebu časnější mobilní výstrahy, jednotek u rekordů, sjednocení tlačítka kamery a skutečně odlišných barev sezón. Oprava nezasahuje do dat ani produkce; nové CI a nasazení ověřit.

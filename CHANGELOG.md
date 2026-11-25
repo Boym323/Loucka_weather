@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-25 – Kompaktní záhlaví všech stránek
+- Homepage: nadpis nejvýše 40 px na desktopu, nižší fotografické pozadí a odstraněný redundantní popisek; měření se posouvá výše. Kompaktní úvod na všech ostatních veřejných trasách včetně atlasu.
+- Zkráceny úvodní texty při zachování informací o zdrojích a nejistotě dat; žádné změny měření.
+- Opravena kontrola kontrastu CSS tokenů po chybě CI; přidány geometrické limity úvodů pro všech 15 tras, sedm šířek a oba motivy. Výsledky nové revize ověřit samostatně.
+
 ## 2026-11-25 – Mobilní přehled a klimatologická čitelnost
 - Kompaktní mobilní homepage je výchozí; plný přehled zůstává dostupný a vítr i graf lze rozbalit klávesnicí či dotykem. Desktop zůstává beze změny rozložení.
 - Sjednoceny plochy klimatologických grafů, tabulky, osy sezón, rozlišení omezených ročních bodů, jednotky historických hodnot a zkráceny nadbytečné texty.
