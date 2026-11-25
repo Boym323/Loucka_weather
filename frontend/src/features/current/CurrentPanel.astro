@@ -89,6 +89,7 @@ const quickReadings = [
     quality.textContent=reading.quality==='reconstructed'?'Rekonstruované měření':
     reading.quality==='derived'?'Odvozené měření':'Archivní měření';
     quality.dataset.readingState=reading.quality;
+    quality.dataset.readingSource='archive';
    }
   }
   updateSharedSource();
@@ -155,12 +156,12 @@ const quickReadings = [
    const quality=section.querySelector<HTMLElement>('[data-metric-quality="'+metric.id+'"]')??
     section.querySelector<HTMLElement>('[data-quick-quality="'+metric.id+'"]');
    if(node)node.textContent=formatValue(reading.value,metric.digits);
-   if(quality){quality.textContent='Živé měření';quality.dataset.readingState='measured';}
+   if(quality){quality.textContent='Živé měření';quality.dataset.readingState='measured';quality.dataset.readingSource='live';}
   }
   updateSharedSource();
    section.dataset.currentState='live';
   if(status){status.textContent='Živá měření';status.className='status-chip ok';}
-  if(provenance)provenance.textContent=section.dataset.sharedReadingSource==='true'?'Všechny zobrazené hodnoty jsou živá měření.':'Některá měření se aktualizují živě, ostatní podle posledního záznamu.';
+  if(provenance)provenance.textContent=section.dataset.sharedReadingSource==='true'?'Všechny zobrazené hodnoty jsou živá měření.':'Některá měření se aktualizují živě, ostatní podle posledního záznamu. Živé údaje nemají samostatný štítek.';
   if(updated)updated.textContent=(data.timestampMeaning==='gateway_polled_at'?'Přečteno ':'Naměřeno ')+
    formatTimestamp(data.observedAt);
  };

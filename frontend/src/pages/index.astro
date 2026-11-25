@@ -49,8 +49,8 @@ import SiteIcon from '../shared/ui/SiteIcon.astro';
     <a class="atlas-intro-link" href="/aktualne/">Podrobná měření <span aria-hidden="true">↗</span></a>
    </header>
 
-   <p class="mobile-home-compact-link"><a href="/?mobile=compact">Kompaktní mobilní přehled</a></p>
-   <p class="mobile-home-preview-note">Test kompaktního mobilního přehledu · <a href="/">Zpět na běžné zobrazení</a>. Měření se nijak nemění.</p>
+   <a class="mobile-alert-shortcut" href="#vystrahy-chmu" data-mobile-alert-shortcut hidden><SiteIcon name="alert" size={20}/><span data-mobile-alert-label>Výstrahy ČHMÚ</span><span aria-hidden="true">↓</span></a>
+   <p class="mobile-home-preview-note">Kompaktní přehled · <a href="/">Zpět na běžné zobrazení</a></p>
    <section class="atlas-hero observatory-hero evergreen-hero" data-home-hero data-expert-open="false" aria-label="Aktuální měření, anemometr a historický průběh">
     <div class="atlas-hero-top evergreen-core">
      <CurrentPanel variant="observatory" />
@@ -72,10 +72,11 @@ import SiteIcon from '../shared/ui/SiteIcon.astro';
      <HistoryChart compact hero />
     </div>
    </section>
+   <p class="mobile-home-compact-link"><a href="/?mobile=compact">Kompaktní mobilní přehled</a></p>
    <p class="evergreen-landscape-credit">Pohled na Loučku ze západní kamery · snímek nemusí být právě pořízený</p>
   </section>
 
-  <div class="atlas-alert-line"><LocalWarnings compact /></div>
+  <div id="vystrahy-chmu" class="atlas-alert-line"><LocalWarnings compact /></div>
 
 
   <div class="evergreen-more-heading">

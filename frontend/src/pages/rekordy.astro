@@ -52,6 +52,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 </BaseLayout>
 <script>
  import {formatValue} from '../shared/domain/metrics';
+ import {renderMetricDisplay} from '../shared/ui/metric-display';
  import {displayLocalDate,displayMonthDay} from '../shared/domain/display-date';
  const root=document.querySelector<HTMLElement>('[data-climate-records]');
  if(root){
@@ -70,7 +71,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
    for(const [key,item] of Object.entries(data.records)){
     const value=root.querySelector<HTMLElement>('[data-record-value="'+key+'"]');
     const date=root.querySelector<HTMLElement>('[data-record-date="'+key+'"]');
-    if(value)value.textContent=fmt(item);
+    if(value){
+      if(item&&Number.isFinite(item.value))renderMetricDisplay(value,formatValue(item.value,1),item.unit);
+      else value.textContent='—';
+     }
     if(date)date.textContent=item?'Zaznamenáno '+displayLocalDate(item.localDate)+' · orientačně':'Bez spolehlivého údaje';
    }
    for(const [key,value] of Object.entries(data.dayTypes)){

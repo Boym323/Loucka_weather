@@ -845,3 +845,19 @@ html.homepage-layout{overflow-x:clip}
  .evergreen-home .evergreen-landscape{height:180px}
  :root[data-mobile-home-variant="compact"] .evergreen-home .evergreen-landscape{height:124px}
 }
+
+/* A concise, truthful jump to the actual warning, without a second warning fetch. */
+.mobile-alert-shortcut{display:none}
+#vystrahy-chmu{scroll-margin-top:90px}
+@media(max-width:760px){
+ .evergreen-home .mobile-alert-shortcut:not([hidden]){
+  display:grid;grid-template-columns:20px minmax(0,1fr) auto;align-items:center;gap:9px;
+  padding:12px;margin:0 0 10px;min-height:44px;border:1px solid var(--line);
+  border-inline-start:4px solid var(--gold);background:var(--panel);color:var(--text);
+  border-radius:10px;font-size:13px;font-weight:650;text-decoration:none;
+ }
+ .evergreen-home .mobile-alert-shortcut[data-level="severe"]{border-inline-start-color:#d97706;background:color-mix(in srgb,#d97706 11%,var(--panel))}
+ .evergreen-home .mobile-alert-shortcut[data-level="extreme"]{border-inline-start-color:var(--red);background:color-mix(in srgb,var(--red) 11%,var(--panel))}
+ .evergreen-home .mobile-home-compact-link{margin:6px 0 0;text-align:right}
+ .evergreen-home .mobile-home-compact-link a{font-size:12px;color:var(--muted)}
+}

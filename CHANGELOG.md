@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-25 – Dotažení vizuálu po veřejném screenshot auditu
+- Mobilní zkratka skutečných výstrah ČHMÚ nad měřením, bez nových požadavků na API; stav nedostupnosti nezaměňuje za bezpečí.
+- Rekordní hodnoty s menší jednotkou na stejném řádku; kamera používá společný barevný token. Sezónní série mají samostatnou modrou barvu a přerušovanou druhou křivku i legendu.
+- Zkrácená opakovaná označení živých hodnot, archivní a nejisté hodnoty zůstávají rozlišeny. Kompaktní režim zůstává volitelný.
+- Kontroly a nasazení nového commitu ověřovat samostatně; bez zásahu do zdrojů meteorologických dat.
+
 ## 2026-11-25 – Sjednocení návštěvnického vizuálu
 - Předpověď a radar před kontextovými kartami, méně výrazné stíny, dostupný odkaz na kompaktní mobilní variantu (výchozí rozložení větru a grafu zachováno).
 - Jednotky půdy a ovzduší vedle hodnot, česká data rekordů, větší radar a graf, jedna mobilní navigace atlasu, rozlišení sezón a ročenka s jasným stavem načítání.

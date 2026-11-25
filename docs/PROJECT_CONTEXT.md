@@ -1,5 +1,7 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**25. 11. 2026 – navazující screenshot revize:** Veřejné screenshoty commitu 9ab8378 ukázaly potřebu časnější mobilní výstrahy, jednotek u rekordů, sjednocení tlačítka kamery a skutečně odlišných barev sezón. Oprava nezasahuje do dat ani produkce; nové CI a nasazení ověřit.
+
 **25. 11. 2026 – vizuální revize:** Předpověď a radar před kontextovými kartami, jednotky u hodnot, česká data rekordů, sjednocení mobilní navigace atlasu, grafů a map. Kompaktní homepage zůstává dostupnou volbou. Browser QA rozšířena na 15 tras × 7 šířek × 2 motivy; CI a DEV nasazení ověřovat odděleně.
 
 **25. 11. 2026 – výstrahy ČHMÚ:** Filtrování výslovných záznamů bez výstrahy a ukončených jevů v API, české časy, závažnost a stav platnosti na homepage. Originální text je dostupný v podrobnostech. Změna nevyžaduje reinstalaci collectoru; standardní preview sync sestaví API i frontend. Skutečné nasazení je nutné ověřit odděleně.

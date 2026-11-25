@@ -72,6 +72,7 @@ const records=[
 </BaseLayout>
 <script>
  import {formatValue} from '../../shared/domain/metrics';
+ import {renderMetricDisplay} from '../../shared/ui/metric-display';
  import {displayLocalDate} from '../../shared/domain/display-date';
  import {rainDayRisk} from '../../shared/domain/rainfall-atlas';
  const root=document.querySelector<HTMLElement>('[data-atlas-extremes]');
@@ -105,7 +106,10 @@ const records=[
      const display=valid?formatValue(record.value,1)+' '+record.unit:'—';
      const field=root.querySelector<HTMLElement>('[data-extreme-value="'+id+'"]');
      const date=root.querySelector<HTMLElement>('[data-extreme-date="'+id+'"]');
-     if(field)field.textContent=display;
+     if(field){
+      if(valid)renderMetricDisplay(field,formatValue(record.value,1),record.unit);
+      else field.textContent=display;
+     }
      const risk=valid&&id==='maxDailyRain'?rainDayRisk(record.localDate):null;
      if(date)date.textContent=valid?'Den '+displayLocalDate(record.localDate)+(risk?' · známé omezení':' · předběžný údaj'):'Záznam nedostupný';
      if(valid)events.push({date:record.localDate,label,value:display,metric:id,risk});

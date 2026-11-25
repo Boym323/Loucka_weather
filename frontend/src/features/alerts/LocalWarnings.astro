@@ -16,11 +16,21 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
   const status=root.querySelector<HTMLElement>('[data-alert-status]');
   const body=root.querySelector<HTMLElement>('[data-alert-body]');
   const controller=new AbortController();
+  const shortcut=document.querySelector<HTMLAnchorElement>('[data-mobile-alert-shortcut]');
+  const shortcutLabel=shortcut?.querySelector<HTMLElement>('[data-mobile-alert-label]');
+  const showShortcut=(label:string,level:string)=>{
+   if(!shortcut||!shortcutLabel)return;
+   shortcutLabel.textContent=label;
+   shortcut.dataset.level=level;
+   shortcut.hidden=false;
+  };
+  const hideShortcut=()=>{if(shortcut)shortcut.hidden=true;};
   const setStatus=(label:string,kind:string)=>{
    if(status){status.textContent=label;status.className='status-chip '+kind;}
   };
   const unavailable=()=>{
    setStatus('Stav nelze ověřit','warning');
+   showShortcut('Stav výstrah ČHMÚ nelze ověřit','unknown');
    if(body)body.textContent='Aktuální výstrahy se nepodařilo ověřit. Podívejte se přímo na web ČHMÚ.';
   };
   const appendText=(parent:HTMLElement,tag:string,value:string,className='')=>{
@@ -48,11 +58,18 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
     body.replaceChildren();
     if(!alerts.length){
      setStatus('Bez výstrahy','ok');
+     hideShortcut();
      appendText(body,'p','ČHMÚ pro okolí Loučky neuvádí žádnou aktuální ani nadcházející výstrahu.','local-alert-empty');
     }else{
      const active=alerts.filter(item=>item.state==='active').length;
      const upcoming=alerts.filter(item=>item.state==='upcoming').length;
      setStatus(warningCount(alerts.length)+(active?' · '+active+' právě platí':upcoming===alerts.length?' · nadcházející':''),'warning');
+     const ranked=['minor','moderate','severe','extreme'];
+     const level=alerts.map(({alert})=>severityDisplay(alert.severity).level)
+      .sort((a,b)=>ranked.indexOf(b)-ranked.indexOf(a))[0]||'unknown';
+     const first=alerts[0]!;
+     showShortcut(warningCount(alerts.length)+' · '+(first.alert.headline||first.alert.event||'ČHMÚ')+
+      (active?'':upcoming===alerts.length?' · nadcházející':''),level);
      for(const {alert,state} of alerts){
       const severity=severityDisplay(alert.severity);
       const article=document.createElement('article');
