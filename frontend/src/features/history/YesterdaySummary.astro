@@ -8,6 +8,7 @@
  import {getStatistics} from '../../shared/api/client';
  import {nextDate,qualitySupported} from '../../shared/domain/statistics';
  import {formatValue} from '../../shared/domain/metrics';
+ import {rainDayRisk} from '../../shared/domain/rainfall-atlas';
  import {displayLocalDate} from '../../shared/domain/display-date';
  const root=document.querySelector<HTMLElement>('[data-yesterday]');
  if(root){
@@ -24,13 +25,14 @@
     const q=queries[i]!;
     const target=root.querySelector<HTMLElement>('[data-yesterday-value="'+q.id+'"]');
     if(!target||r.status!=='fulfilled'||!qualitySupported(r.value))return;
-    const coverage=r.value.timeCoverage?.fraction??r.value.completeness.fraction;
+    const coverage=r.value.timeCoverage?.fraction??null;
+    if(q.id==='rain'&&rainDayRisk(day))return;
     if(coverage===null||coverage<.9)return;
     target.textContent=formatValue(r.value.value,1)+' '+q.unit;count++;
    });
    status.textContent=count===3?'Archivní souhrn':count?'Neúplné údaje':'Nedostupné údaje';
    status.className='status-chip '+(count===3?'ok':'warning');
-   note.textContent=displayLocalDate(day)+' · původní archiv; pouze hodnoty s pokrytím alespoň 90 %.';
+   note.textContent=displayLocalDate(day)+' · původní archiv; pouze hodnoty s časovým pokrytím alespoň 90 %; známé srážkové anomálie vynechány.';
   };
   const observer=new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting)){observer.disconnect();void load();}},{rootMargin:'200px'});
   observer.observe(root);

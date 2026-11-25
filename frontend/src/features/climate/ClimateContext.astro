@@ -29,7 +29,7 @@
      if(!c){put('coverage',i,'Nedostatečné srovnatelné údaje');return;}
      count++;put('current',i,formatValue(c.current,1)+' °C');
      put('delta',i,(c.delta>0?'+':'')+formatValue(c.delta,1)+' °C proti referenci');
-     put('coverage',i,c.days+'/'+c.expected+' dní · '+c.years.join(', '));
+     put('coverage',i,c.days+'/'+c.expected+' dní · '+c.years.length+' referenčních let ('+c.years.join(', ')+')');
     });
     if(month<=2||month===12){const h=root.querySelectorAll('h3')[1];if(h)h.textContent='Zima · část v tomto roce';}
     status.textContent=count?'Původní archiv · orientační':'Nedostatečné údaje';status.className='status-chip warning';

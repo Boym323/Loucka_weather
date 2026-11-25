@@ -27,8 +27,8 @@ const {compact=false}=Astro.props;
     if(controller.signal.aborted)return;
     const scroll=document.createElement('div');scroll.className='portal-hour-scroll';scroll.tabIndex=0;scroll.setAttribute('role','region');scroll.setAttribute('aria-label','Hodinová předpověď, posun vodorovně');
     const table=document.createElement('table');table.className='portal-hour-table';scroll.append(table);
-    const head=table.createTHead().insertRow();
-    for(const label of ['Čas','Teplota','Srážky','Pravd. srážek','Vítr']){const th=document.createElement('th');th.scope='row';th.textContent=label;const row=label==='Čas'?head:table.createTBody().insertRow();row.append(th);
+    const head=table.createTHead().insertRow();const tbody=table.createTBody();
+    for(const label of ['Čas','Teplota','Srážky','Pravd. srážek','Vítr']){const th=document.createElement('th');th.scope=label==='Čas'?'col':'row';th.textContent=label;const row=label==='Čas'?head:tbody.insertRow();row.append(th);
      for(const point of points){const cell=label==='Čas'?document.createElement('th'):document.createElement('td');
       if(label==='Čas'){cell.setAttribute('scope','col');cell.textContent=clock.format(point.time);}
       else {const v=label==='Teplota'?point.temperature:label==='Srážky'?point.precipitation:label==='Pravd. srážek'?point.probability:point.wind;
