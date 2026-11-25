@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-25 – Jednotná přesnost grafů
+- Formátování podle veličiny v historických, srážkových a klimatologických grafech, tooltipech, tabulkách a souhrnech; osy ECharts s minimálním krokem podle přesnosti. Teplota, tlak, vítr, srážky a UV na desetiny; vlhkost, směr a záření na celá čísla.
+- Česká desetinná čárka, chybějící hodnoty zůstávají pomlčkou, odstranění záporné nuly. Bez zaokrouhlení zdrojových dat či výpočtů. Doplněny regresní testy; CI a nasazení ověřit samostatně.
+
 ## 2026-11-25 – Rychlý přehled bez roztříštěných měření
 - Na homepage kompaktní rozbalitelný pruh výstrah s názvem, stupněm, platností a úplným zněním. Aktivní extrémní výstraha zůstává otevřená. Ostatní stránky zachovávají dosavadní režim.
 - Vítr, nárazy, směr, denní minima/maxima/srážky a hodinové trendy seskupeny k aktuálnímu měření; bez dvojího zobrazování rychlosti a nárazů. Předpověď vedle měření, radar a kamera potom, historický graf přes celou šířku. Klasický přehled zachován.

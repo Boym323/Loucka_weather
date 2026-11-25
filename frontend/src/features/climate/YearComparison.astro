@@ -80,6 +80,7 @@ const beforePrevious=todayYear-2;
  <p class="source-note year-compare-footer" data-comparison-provenance>Údaje zůstávají orientační až do dokončení rekonstrukce. Barevná stupnice je stálá pro všechny roky a stejnou veličinu; hodnoty nad či pod krajní mezí sdílí krajní barvu.</p>
 </section>
 <script>
+ import {formatMetricValue,metricAxisStep} from '../../shared/domain/metrics';
  import {getHistoryInterval,getAnnualMatrix} from '../../shared/api/client';
  import type {AnnualMatrix} from '../../shared/api/client';
  import {pragueMidnightIso} from '../../shared/domain/statistics';
@@ -115,7 +116,7 @@ const beforePrevious=todayYear-2;
   const countOf=(values:Map<string,number|null>)=>validDayCount(values);
   const format=(value:number|null)=>{
    if(value===null||!Number.isFinite(value))return '—';
-   return new Intl.NumberFormat('cs-CZ',{minimumFractionDigits:1,maximumFractionDigits:1}).format(value);
+   return formatMetricValue(value,metric,comparisonMetrics[metric].unit);
   };
   const set=(selector:string,value:string)=>{
    const element=root.querySelector<HTMLElement>(selector);
@@ -205,7 +206,7 @@ const beforePrevious=todayYear-2;
    const end=document.createElement('span');end.textContent='Vyšší';
    legend.append(end);
    const scale=document.createElement('small');
-   scale.textContent='Meze '+comparisonMetrics[metric].limits.join(' · ')+' '+comparisonMetrics[metric].unit;
+   scale.textContent='Meze '+comparisonMetrics[metric].limits.map(value=>format(value)).join(' · ')+' '+comparisonMetrics[metric].unit;
    legend.append(scale);
    const missing=document.createElement('span');missing.className='year-compare-legend-missing';
    missing.textContent='bez platného měření';legend.append(missing);
@@ -231,9 +232,9 @@ const beforePrevious=todayYear-2;
      axisLine:{lineStyle:{color:grid}},axisTick:{show:false},
      axisLabel:{color:ink,fontSize:compact?10:11,interval:0,hideOverlap:true,
       formatter:(key:string)=>key.endsWith('-01')?comparisonMonths[Number(key.slice(0,2))-1]:''}},
-    yAxis:{type:'value',scale:metric!=='rain',min:metric==='rain'?0:undefined,
+    yAxis:{type:'value',scale:metric!=='rain',minInterval:metricAxisStep(metric,comparisonMetrics[metric].unit),min:metric==='rain'?0:undefined,
      name:comparisonMetrics[metric].unit,nameTextStyle:{color:ink},
-     axisLabel:{color:ink,fontSize:11},axisLine:{show:false},axisTick:{show:false},
+     axisLabel:{color:ink,fontSize:11,formatter:(value:number)=>format(value)},axisLine:{show:false},axisTick:{show:false},
      splitLine:{lineStyle:{color:grid}}},
     series:[firstValues,secondValues].map((map,i)=>({
      name:String(years[i]),type:'line',data:alignedCalendarDays.map(key=>isPresent(map,key)),

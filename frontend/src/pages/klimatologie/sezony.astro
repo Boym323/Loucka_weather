@@ -151,7 +151,7 @@ const years=Array.from({length:Math.max(1,currentYear-2008)},(_,i)=>currentYear-
     svg.append(grid);
     const label=el('text');label.setAttribute('class','chart-axis');label.setAttribute('x','45');
     label.setAttribute('text-anchor','end');label.setAttribute('y',String(level+4));
-    label.textContent=formatValue(high-(high-low)*n/4,0)+' °';svg.append(label);
+    label.textContent=formatValue(high-(high-low)*n/4,1)+' °';svg.append(label);
    }
    for(const i of [...new Set([0,Math.floor((keys.length-1)/2),keys.length-1])]){
     const day=keys[i];if(!day)continue;

@@ -152,7 +152,7 @@ import RainfallArchive from '../../features/climate/RainfallArchive.astro';
     set('[data-trend-valid]',String(trendRows.length));
     set('[data-trend-samples]',String(rows.filter(r=>r.value!==null).length));
     set('[data-trend-slope]',slope===null?'Nelze určit':
-     (slope>0?'+':'')+formatValue(slope*10,2)+' '+unit);
+     (slope>0?'+':'')+formatValue(slope*10,1)+' '+unit);
     set('[data-trend-method]',(slope===null?
      'K popisnému sklonu chybí alespoň osm dostatečně pokrytých dokončených let v rozpětí 10 let. Chybějící souhrny nedoplňujeme.':
      'Orientační změna spočítaná z '+trendRows.length+' dokončených let. Stanice i její čidla se mohla během let změnit; výsledek sám o sobě neprokazuje změnu klimatu.')+

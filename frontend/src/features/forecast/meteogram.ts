@@ -16,7 +16,7 @@ export function drawMeteogram(points:HourlyPoint[]):HTMLElement{
  const x=(t:number)=>50+(t-start)/span*645;
  const y=(t:number)=>108-(t-lo)/Math.max(1,hi-lo)*80;
  add('text',{x:4,y:14,class:'meteogram-axis'},'°C');add('text',{x:4,y:132,class:'meteogram-axis'},'mm');
- for(const v of [lo,(lo+hi)/2,hi]){if(temp.length){add('line',{x1:45,x2:704,y1:y(v),y2:y(v),class:'meteogram-grid'});add('text',{x:39,y:y(v)+4,'text-anchor':'end',class:'meteogram-axis'},formatValue(v,0));}}
+ for(const v of [lo,(lo+hi)/2,hi]){if(temp.length){add('line',{x1:45,x2:704,y1:y(v),y2:y(v),class:'meteogram-grid'});add('text',{x:39,y:y(v)+4,'text-anchor':'end',class:'meteogram-axis'},formatValue(v,1));}}
  add('line',{x1:45,x2:704,y1:196,y2:196,class:'meteogram-grid'});
  if(rain.length)add('text',{x:39,y:147,'text-anchor':'end',class:'meteogram-axis'},formatValue(rainMax,1));
  let path='',last=-Infinity;
