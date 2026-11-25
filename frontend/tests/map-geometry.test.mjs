@@ -7,7 +7,7 @@ test('mercator round trip and viewport grid use actual view',()=>{
  assert.deepEqual(screenPosition(station,v),{x:512,y:300});
  const g=sampleGrid(v);assert.equal(g.points.length,35);assert.ok(g.points[0].lat>station.lat&&g.points[0].lon<station.lon);
  const close=sampleGrid({...v,zoom:9});assert.ok(Math.abs(close.points[0].lat-station.lat)<Math.abs(g.points[0].lat-station.lat));
- assert.deepEqual(screenPosition(screenGeo({x:0,y:0},v),v),{x:0,y:0});
+ const round=screenPosition(screenGeo({x:0,y:0},v),v);assert.ok(Math.abs(round.x)<1e-8&&Math.abs(round.y)<1e-8);
 });
 test('interpolation is bounded and missing samples stay transparent',()=>{
  assert.equal(interpolate([0,10,20,30],2,2,.5,.5),15);

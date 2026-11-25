@@ -174,7 +174,7 @@ try{
        hasDecorativeHero:document.querySelector('.atlas-hero-backdrop')!==null,
        heroBackground:getComputedStyle(document.querySelector('.atlas-hero')).backgroundImage,
        svgIcons:document.querySelectorAll('.mobile-dock > a svg, .atlas-mobile-more > summary svg').length,
-       moreLinks:document.querySelectorAll('.atlas-mobile-more-menu a').length,
+       moreLinks:[...document.querySelectorAll('.mobile-dock a')].map(a=>a.getAttribute('href')),
        mobileTargetHeight:firstNav?.getBoundingClientRect().height??0,
        chartHeight:document.querySelector('.atlas-main-history .chart-box')?.getBoundingClientRect().height??0
       };
@@ -236,7 +236,7 @@ try{
        errors.push(size.name+': mobile quick links or practical-information order regressed');
       if(layout.destinationColumns!==2)errors.push('Mobile destinations should use two columns at 390px');
       if(layout.svgIcons!==5)errors.push('Mobile dock must contain five SVG navigation icons');
-      if(layout.moreLinks!==7)errors.push('Mobile More menu must expose remaining seven pages');
+      for(const href of ['/','/predpoved/','/grafy/','/mapy/','/aktualne/','/klimatologie/','/historie-den/','/prehled-novy/','/rekordy/','/senzory/','/puda-ovzdusi/','/kamera/','/stav/','/o-stanici/'])if(!layout.moreLinks.includes(href))errors.push('Mobile menu missing '+href);
       if(layout.mobileTargetHeight<44)errors.push('Mobile dock touch targets must be at least 44px');
      }else{
       if(layout.analyticsColumns!==3)errors.push('Desktop weather / forecast / context should show three columns');

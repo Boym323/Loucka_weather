@@ -111,8 +111,8 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
     image.hidden=!radarVisible;
     if(message)message.hidden=radarVisible;
     if(status){
-     status.textContent=isStale?'Zastaralý radarový snímek':'Radar dostupný';
-     status.classList.add(isStale?'warning':'ok');
+     status.textContent=!radarVisible?'Radarová vrstva skrytá':isStale?'Zastaralý radarový snímek':'Radar dostupný';
+     status.classList.remove('ok','warning');status.classList.add(isStale?'warning':'ok');
     }
    };
    image.onerror=()=>{

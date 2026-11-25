@@ -935,4 +935,4 @@ h1,h2,h3,p{margin-top:0}h1{font-size:clamp(26px,3vw,42px);line-height:1.2;letter
 .map-zoom{display:flex;gap:4px}.map-pan{display:grid;grid-template-columns:repeat(3,36px);gap:3px}.map-pan button:first-child{grid-column:2}.map-pan button:nth-child(2){grid-column:1}.map-pan button:last-child{grid-column:2}
 .map-zoom-label{background:var(--panel);color:var(--text);padding:4px 6px;border-radius:4px;font-size:11px}
 .map-page-primary .radar-map{cursor:grab}.map-page-primary .radar-map:active{cursor:grabbing}.map-page-primary .radar-base img{user-select:none;pointer-events:none}
-@media(max-width:760px){.map-navigation{top:6px;left:6px}.map-navigation button{min-width:32px;min-height:32px}.map-pan{grid-template-columns:repeat(3,32px)}}
+@media(max-width:760px){.map-navigation{top:6px;left:6px}.map-navigation button{min-width:44px;min-height:44px}.map-pan{grid-template-columns:repeat(3,44px)}}

@@ -11,7 +11,7 @@
  <p class="source-note"><a href="https://opendata.chmi.cz/meteorology/climate/now/" target="_blank" rel="noopener noreferrer">Skutečná měření ČHMÚ – otevřená data ↗</a></p>
 </div>
 <script>
- import {sampleGrid,interpolate,temperatureColor,screenPosition,station,type View,type Geo} from './map-geometry';
+ import {sampleGrid,interpolate,temperatureColor,screenPosition,station,type View} from './map-geometry';
  import {getCurrent} from '../../shared/api/client';
  import {formatTimestamp} from '../../shared/domain/weather';
  const root=document.querySelector<HTMLElement>('[data-model-map]');
@@ -20,7 +20,7 @@
  const state=root?.querySelector<HTMLElement>('[data-model-status]'),detail=root?.querySelector<HTMLElement>('[data-model-detail]'),list=root?.querySelector<HTMLDetailsElement>('[data-model-list]');
  const valuesRoot=root?.querySelector<HTMLElement>('[data-model-values]'),refresh=root?.querySelector<HTMLButtonElement>('[data-model-refresh]'),key=root?.querySelector<HTMLElement>('[data-temperature-key]');
  const controller=new AbortController();
- let pending:AbortController|undefined,loadedKey='',lastRequest=0,timer:number|undefined;
+ let pending:AbortController|undefined,inflightKey='',loadedKey='',lastRequest=0,timer:number|undefined;
  type Sample={current?:{temperature_2m?:number;wind_speed_10m?:number;wind_direction_10m?:number;time?:string};current_units?:Record<string,string>};
  let model:Sample[]|undefined,grid:ReturnType<typeof sampleGrid>|undefined,view:View|undefined;
  const overlay=document.createElement('div');overlay.className='model-overlay';overlay.hidden=true;map?.append(overlay);
@@ -55,7 +55,7 @@
  function draw(){
   clear();if(!enabled()||!model||!grid||!view||loadedKey!==viewKey(readView()??view))return;
   overlay.hidden=false;const {cols,rows,points}=grid;
-  if(temp?.checked){
+  if(temp?.checked&&model.some(s=>temperature(s)!==null)){
    const canvas=document.createElement('canvas');canvas.className='model-temperature-canvas';canvas.width=160;canvas.height=Math.max(60,Math.min(160,Math.round(160*view.height/view.width)));canvas.setAttribute('aria-hidden','true');
    const ctx=canvas.getContext('2d');
    if(ctx){const img=ctx.createImageData(canvas.width,canvas.height),samples=model.map(temperature);
@@ -71,20 +71,23 @@
    const row=document.createElement('div');row.className='model-point-row';row.textContent=desc;valuesRoot?.append(row);
    if(!wind?.checked||w===null||d===null)return;
    const xy=screenPosition(p,view!),stationXY=screenPosition(station,view!);
-   if(xy.x<18||xy.y<18||xy.x>view!.width-18||xy.y>view!.height-18||Math.hypot(xy.x-stationXY.x,xy.y-stationXY.y)<40)return;
+   // Sample boundary vertices are rendered just inside the map; the list retains exact coordinates.
+   xy.x=Math.max(18,Math.min(view!.width-18,xy.x));xy.y=Math.max(18,Math.min(view!.height-58,xy.y));
+   if((xy.x<150&&xy.y<184)||Math.hypot(xy.x-stationXY.x,xy.y-stationXY.y)<48)return;
    const b=document.createElement('button');b.type='button';b.className='model-wind-arrow';b.dataset.modelPoint=String(i);b.style.left=xy.x+'px';b.style.top=xy.y+'px';b.title=desc;b.setAttribute('aria-label',desc);
    const arrow=document.createElement('span');arrow.textContent=w<0.5?'•':'↑';arrow.style.transform='rotate('+(d+180)+'deg)';b.append(arrow);
    b.addEventListener('click',()=>{if(detail){detail.hidden=false;detail.textContent=desc;}});overlay.append(b);
   });
   if(list)list.hidden=false;
-  if(state)state.textContent=grid.points.length+' vzorků · modelová interpolace'+(model[0]?.current?.time?' · '+model[0].current.time.replace('T',' '):'');
+  if(state)state.textContent=grid.points.length+' vzorků modelu'+(temp?.checked?' · interpolace teploty':'')+(model[0]?.current?.time?' · '+model[0].current.time.replace('T',' '):'')+(temp?.checked&&!model.some(s=>temperature(s)!==null)?' · teplota nedostupná':'')+(wind?.checked&&!model.some(s=>windValue(s)!==null&&direction(s)!==null)?' · vítr nedostupný':'');
   if(refresh)refresh.hidden=true;
  }
  async function load(){
   const v=readView();if(!v||!enabled())return;
   const id=viewKey(v);if(model&&loadedKey===id){draw();return;}
+  if(pending&&!pending.signal.aborted&&inflightKey===id)return;
   if(Date.now()-lastRequest<2500){window.clearTimeout(timer);timer=window.setTimeout(()=>void load(),2500-(Date.now()-lastRequest));return;}
-  pending?.abort();pending=new AbortController();const signal=pending.signal;lastRequest=Date.now();
+  pending?.abort();pending=new AbortController();const signal=pending.signal;inflightKey=id;lastRequest=Date.now();
   clear();if(state)state.textContent='Načítám model pro zobrazenou oblast…';
   const g=sampleGrid(v);
   const params=new URLSearchParams({latitude:g.points.map(p=>p.lat.toFixed(4)).join(','),longitude:g.points.map(p=>p.lon.toFixed(4)).join(','),current:'temperature_2m,wind_speed_10m,wind_direction_10m',wind_speed_unit:'kmh',timezone:'Europe/Prague'});
@@ -96,6 +99,7 @@
    const samples=data as Sample[];if(!samples.some(s=>temperature(s)!==null||windValue(s)!==null))throw Error('units');
    model=samples;grid=g;view=v;loadedKey=id;draw();
   }catch{if(!signal.aborted){if(state)state.textContent='Modelová data nedostupná. Radar a měření fungují nezávisle.';if(refresh)refresh.hidden=false;}}
+  finally{if(pending?.signal===signal){pending=undefined;inflightKey='';}}
  }
  function toggle(){
   if(!enabled()){pending?.abort();window.clearTimeout(timer);clear();if(state)state.textContent='Modelové vrstvy jsou vypnuté.';if(refresh)refresh.hidden=true;return;}
@@ -122,7 +126,7 @@
 .model-temperature-key{display:grid;grid-template-columns:1fr 1fr 1fr;font-size:11px;gap:4px;margin:10px 0}
 .model-temperature-key[hidden]{display:none}
 .model-temperature-key div{grid-column:1/-1;height:12px;border-radius:4px;background:linear-gradient(90deg,#411e91 0%,#354fb8 21.43%,#41b1da 42.86%,#4cb76a 57.14%,#f7da4f 71.43%,#f0762c 85.71%,#b52730 100%)}
-.model-temperature-key span:nth-of-type(2){text-align:center}.model-temperature-key span:last-child{text-align:right}
+ .model-temperature-key{position:relative}.model-temperature-key span:nth-of-type(2){position:absolute;top:16px;left:42.86%;transform:translateX(-50%);white-space:nowrap} .model-temperature-key span:last-child{grid-column:3;text-align:right}
 .model-point-detail,.model-station-card{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:10px;margin:8px 0;font-size:13px}
 .model-point-detail[hidden],.model-refresh[hidden],.model-point-list[hidden]{display:none}
 .model-station-card p{margin:6px 0;line-height:1.4}
