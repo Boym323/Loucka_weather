@@ -21,11 +21,13 @@ import SameDayLastYear from '../history/SameDayLastYear.astro';
    <div><span class="eyebrow">Loučka · Zlínský kraj · od roku 2009</span><h1>Počasí v Loučce</h1></div>
    <a class="panel-link" href="/prehled-klasicky/">Klasický přehled ↗</a>
   </header>
-  <div class="portal-warning"><LocalWarnings compact condensed /></div>
+  <div class="portal-warning"><LocalWarnings compact condensed strip /></div>
   <div class="portal-primary">
    <div class="portal-measurements">
     <CurrentPanel variant="portal" />
+    <WindCompass />
     <DailySummaryStrip />
+    <ArchiveTrends />
     <nav class="portal-quick-links" aria-label="Rychlý přístup"><a href="/aktualne/">Všechna měření ↗</a><a href="#pocasi-predpoved">Předpověď ↓</a><a href="#pocasi-radar">Radar ↓</a></nav>
    </div>
    <div class="portal-forecast" id="pocasi-predpoved">
@@ -44,7 +46,6 @@ import SameDayLastYear from '../history/SameDayLastYear.astro';
   </div>
   <div class="portal-history">
    <HistoryChart />
-   <div class="portal-history-aside"><WindCompass /><ArchiveTrends /></div>
   </div>
   <div class="portal-context">
    <YesterdaySummary />
@@ -53,7 +54,7 @@ import SameDayLastYear from '../history/SameDayLastYear.astro';
   </div>
   <ClimateContext />
   <nav class="portal-destinations" aria-label="Další meteorologické údaje">
-   <a href="/historie-den/">Počasí v libovolný den ↗</a><a href="/klimatologie/">Klimatologie a dlouhodobé trendy ↗</a><a href="/rekordy/">Rekordy ↗</a><a href="/senzory/">Senzory ↗</a><a href="/o-stanici/">O stanici ↗</a>
+   <a href="/historie-den/">Počasí v libovolný den ↗</a><a href="/rekordy/">Rekordy ↗</a>
   </nav>
  </div>
 </BaseLayout>

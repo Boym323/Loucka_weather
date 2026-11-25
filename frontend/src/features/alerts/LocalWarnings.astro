@@ -1,9 +1,9 @@
 ---
-interface Props { compact?:boolean; condensed?:boolean }
-const {compact=false,condensed=false}=Astro.props;
+interface Props { compact?:boolean; condensed?:boolean; strip?:boolean }
+const {compact=false,condensed=false,strip=false}=Astro.props;
 import SiteIcon from '../../shared/ui/SiteIcon.astro';
 ---
-<section id="vystrahy-chmu" class:list={['section','local-warnings',{compact,condensed}]} data-local-warnings data-condensed={String(condensed)} aria-label="Výstrahy ČHMÚ pro Loučku">
+<section id="vystrahy-chmu" class:list={['section','local-warnings',{compact,condensed,strip}]} data-local-warnings data-condensed={String(condensed)} data-strip={String(strip)} aria-label="Výstrahy ČHMÚ pro Loučku">
  <div class="section-heading"><div class="panel-title"><SiteIcon name="alert" size={20}/><h2>Výstrahy ČHMÚ</h2></div><span class="status-chip" data-alert-status role="status">Kontroluji výstrahy</span></div>
  <div data-alert-body>Načítám aktuální výstrahy…</div>
  <p class="source-note">Zdroj <a href="https://vystrahy-cr.chmi.cz/" target="_blank" rel="noopener noreferrer">ČHMÚ</a>. V nebezpečí se řiďte pokyny ČHMÚ.</p>
@@ -66,7 +66,7 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
     }else{
      const active=alerts.filter(item=>item.state==='active').length;
      const upcoming=alerts.filter(item=>item.state==='upcoming').length;
-     setStatus(warningCount(alerts.length)+(active?' · '+active+' právě platí':upcoming===alerts.length?' · nadcházející':''),'warning');
+     setStatus(root.dataset.strip==='true'?warningCount(alerts.length):warningCount(alerts.length)+(active?' · '+active+' právě platí':upcoming===alerts.length?' · nadcházející':''),'warning');
      const ranked=['minor','moderate','severe','extreme'];
      const highest=[...alerts].sort((a,b)=>ranked.indexOf(severityDisplay(b.alert.severity).level)-
       ranked.indexOf(severityDisplay(a.alert.severity).level))[0]!;
@@ -78,6 +78,21 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
       const article=document.createElement('article');
       article.className='local-alert-entry';
       article.dataset.level=severity.level;article.dataset.validity=state;
+      if(root.dataset.strip==='true'){
+       const details=document.createElement('details');details.className='local-alert-details alert-strip-details';
+       const summary=document.createElement('summary');
+       const headline=document.createElement('span');headline.className='alert-strip-headline';
+       appendText(headline,'strong',alert.headline||alert.event||'Výstraha ČHMÚ');
+       appendText(headline,'span',severity.label+' · '+(state==='active'?'Právě platí':state==='upcoming'?'Nadcházející':'Platnost neupřesněna'),'alert-strip-severity');
+       summary.append(headline);
+       appendText(summary,'span','Od '+warningDate(alert.onset)+' · do '+warningDate(alert.expires),'alert-strip-time');
+       appendText(summary,'span','Podrobnosti','alert-strip-open');
+       details.append(summary);
+       if(alert.description)appendText(details,'p',alert.description);
+       if(alert.instruction)appendText(details,'p','Doporučení ČHMÚ: '+alert.instruction);
+       if(state==='active'&&severity.level==='extreme')details.open=true;
+       article.append(details);body.append(article);continue;
+      }
       const meta=document.createElement('div');meta.className='local-alert-meta';article.append(meta);
       appendText(meta,'span',severity.label,'local-alert-severity');
       appendText(meta,'span',state==='active'?'Právě platí':state==='upcoming'?'Nadcházející':'Platnost neupřesněna','local-alert-state');

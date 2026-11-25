@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-25 – Rychlý přehled bez roztříštěných měření
+- Na homepage kompaktní rozbalitelný pruh výstrah s názvem, stupněm, platností a úplným zněním. Aktivní extrémní výstraha zůstává otevřená. Ostatní stránky zachovávají dosavadní režim.
+- Vítr, nárazy, směr, denní minima/maxima/srážky a hodinové trendy seskupeny k aktuálnímu měření; bez dvojího zobrazování rychlosti a nárazů. Předpověď vedle měření, radar a kamera potom, historický graf přes celou šířku. Klasický přehled zachován.
+- Doplněny kontroly pořadí, jedinečnosti větru a výšky výstrahy. CI a nasazení ověřit samostatně. Bez zásahu do DB, WeeWX a meteorologických výpočtů.
+
 ## 2026-11-25 – Sjednocení kandidáta s interaktivní mapou
 - Zachovány všechny změny mapy z main. Opraven kontrast astronomického štítku v tmavém režimu a dotyková plocha metodiky klimatologického srovnání. Přepnutí vyžaduje zelené CI a následný veřejný smoke.
 

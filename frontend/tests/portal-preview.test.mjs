@@ -19,6 +19,9 @@ test('portal layout reuses real components and preserves original homepage',asyn
  assert.match(portal,/<CurrentPanel variant="portal" \/>/);
  assert.match(portal,/<ForecastPanel compact \/>/);
  assert.ok(portal.indexOf('<ForecastPanel')<portal.indexOf('<RadarPanel'));
+ assert.ok(portal.indexOf('<WindCompass')<portal.indexOf('<ForecastPanel'));
+ assert.ok(portal.indexOf('<ArchiveTrends')<portal.indexOf('<RadarPanel'));
+ assert.match(portal,/<LocalWarnings compact condensed strip \/>/);
  assert.match(home,/<CurrentPanel variant="observatory" \/>/);
  assert.match(home,/href="\/prehled-novy\/"/);
 });

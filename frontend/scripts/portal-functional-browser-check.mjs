@@ -45,7 +45,16 @@ try{
   assert.ok(await warning.locator('details').evaluate(e=>e.open));
   assert.match(await warning.locator('details').textContent(),/Testovací údaj/);
   await warning.locator('summary').click();
-  assert.equal(await page.locator('.portal-history-aside [data-archive-trends]').count(),1);
+  assert.equal(await page.locator('.portal-measurements [data-archive-trends]').count(),1);
+  assert.equal(await page.locator('.portal-measurements [data-wind-compass]').count(),1);
+  assert.equal(await page.locator('[data-wind-compass]').count(),1);
+  assert.equal(await page.locator('.portal-measurements [data-metric-value="windSpeed"]').count(),0);
+  const quick=await page.evaluate(()=>{
+   const top=s=>document.querySelector(s).getBoundingClientRect().top;
+   return {wind:top('[data-wind-compass]'),radar:top('#pocasi-radar'),history:top('.portal-history'),alertHeight:document.querySelector('.portal-warning').getBoundingClientRect().height};
+  });
+  assert.ok(quick.wind<quick.radar&&quick.radar<quick.history,'quick-view order '+JSON.stringify(quick));
+  assert.ok(quick.alertHeight<200,'collapsed future warning dominates the page '+JSON.stringify(quick));
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
   await page.screenshot({path:out+'/portal-'+width+'-'+theme+'.png',fullPage:true});
   await page.goto(new URL('predpoved/',origin).href,{waitUntil:'domcontentloaded'});
