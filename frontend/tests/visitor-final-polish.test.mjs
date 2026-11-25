@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 const read=p=>readFile(new URL('../'+p,import.meta.url),'utf8');
 test('mobile alert shortcut uses verified warning state and a single full warning panel',async()=>{
- const home=await read('src/pages/index.astro'),alerts=await read('src/features/alerts/LocalWarnings.astro');
+ const home=await read('src/pages/prehled-klasicky.astro'),alerts=await read('src/features/alerts/LocalWarnings.astro');
  assert.ok(home.indexOf('data-mobile-alert-shortcut')<home.indexOf('data-home-hero data-expert-open'));
  assert.equal((home.match(/<LocalWarnings compact \/>/g)||[]).length,1);
  assert.match(alerts,/hideShortcut\(\)/);

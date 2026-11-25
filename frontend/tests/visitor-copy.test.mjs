@@ -5,7 +5,7 @@ import {readFile} from 'node:fs/promises';
 const source=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 
 test('visitor-facing sections lead with everyday weather language',async()=>{
- const home=await source('src/pages/index.astro');
+ const home=await source('src/pages/prehled-klasicky.astro');
  const current=await source('src/features/current/CurrentPanel.astro');
  const status=await source('src/pages/stav.astro');
  const history=await source('src/features/history/AdvancedHistory.astro');

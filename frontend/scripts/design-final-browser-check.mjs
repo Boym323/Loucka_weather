@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import {mkdir} from 'node:fs/promises';
 
 const base=process.env.LOCAL_PREVIEW_URL||'http://127.0.0.1:4321/';
-const coreRoutes=['/','/aktualne/','/grafy/','/kamera/','/klimatologie/'];
+const coreRoutes=['/','/prehled-klasicky/','/aktualne/','/grafy/','/kamera/','/klimatologie/'];
 const routes=[...coreRoutes,'/rekordy/','/senzory/','/mapy/','/puda-ovzdusi/','/stav/','/o-stanici/','/klimatologie/extremy/','/klimatologie/trendy/','/klimatologie/sezony/','/klimatologie/rocenka/','/prehled-novy/','/predpoved/','/historie-den/'];
 const widths=[320,390,768,1024,1328,1440,1920];
 const themes=['light','dark'];
@@ -89,7 +89,7 @@ try{
      assert.ok(result.scrollWidth<=width+2,'horizontal overflow at '+width+' '+path+': '+JSON.stringify(result));
      assert.ok(result.h1Text>0&&result.h1Font>=27,'missing or unreadable page heading');
      assert.ok(result.h1Font<=40,'page heading should not dominate the data: '+path);
-     if(path==='/')assert.ok(result.introHeight<=105,'homepage identity strip too tall: '+result.introHeight);
+     if(path==='/prehled-klasicky/')assert.ok(result.introHeight<=105,'homepage identity strip too tall: '+result.introHeight);
      if(width>=1024)assert.ok(result.introHeight<=145,'desktop introduction too tall: '+path+' '+result.introHeight);
      else assert.ok(result.introHeight<=240,'mobile introduction too tall: '+path+' '+result.introHeight);
      assert.ok(result.h1Left>=-2&&result.h1Right<=width+2,'heading clipped: '+path);
@@ -102,7 +102,7 @@ try{
       assert.equal(await page.locator('.climate-atlas-nav').isVisible(),false,'duplicate mobile atlas navigation');
       assert.equal(await page.locator('.climate-mobile-chapters').isVisible(),true,'mobile chapter selector missing');
      }
-     if(path==='/'){
+     if(path==='/prehled-klasicky/'){
       const shortcut=page.locator('[data-mobile-alert-shortcut]');
       if(width<=760){
        await shortcut.waitFor({state:'visible',timeout:10000});
@@ -125,6 +125,14 @@ try{
       }else{
        assert.ok(boxes.every((b,i)=>i===0||b.top>boxes[i-1].top+30),'mobile instruments stack in source order');
       }
+     }
+     if(path==='/'||path==='/prehled-novy/'){
+      assert.equal(await page.locator('.portal-preview').count(),1,'new overview missing');
+      assert.equal(await page.locator('[data-local-warnings]').count(),1,'single warning panel');
+      assert.equal(await page.locator('[data-current-panel][data-variant="portal"]').count(),1);
+      const layout=await page.evaluate(()=>({columns:getComputedStyle(document.querySelector('.portal-primary')).gridTemplateColumns.split(' ').length,forecast:document.querySelector('#pocasi-predpoved').getBoundingClientRect().top,radar:document.querySelector('#pocasi-radar').getBoundingClientRect().top}));
+      assert.equal(layout.columns,width<=760?1:2,'portal columns');
+      assert.ok(layout.forecast<layout.radar,'forecast precedes radar');
      }
      if((width===390&&(path==='/'||path==='/kamera/'))||(width===1328&&path==='/')){
       await page.screenshot({

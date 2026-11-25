@@ -36,7 +36,7 @@ try{
   const page=await ctx.newPage();
   const errors=[];
   page.on('pageerror',e=>errors.push(e.message));
-  const response=await page.goto(new URL('',origin).href,{
+  const response=await page.goto(new URL('prehled-klasicky/',origin).href,{
    waitUntil:'domcontentloaded',timeout:30000});
   assert.equal(response?.status(),200);
   await page.waitForFunction(()=>

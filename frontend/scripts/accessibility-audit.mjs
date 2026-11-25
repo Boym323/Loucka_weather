@@ -11,7 +11,7 @@ const routes = [
   '/', '/aktualne/', '/grafy/', '/klimatologie/', '/kamera/', '/mapy/',
   '/senzory/', '/rekordy/', '/puda-ovzdusi/', '/stav/', '/o-stanici/',
   '/klimatologie/extremy/', '/klimatologie/trendy/',
-  '/klimatologie/sezony/', '/klimatologie/rocenka/'
+  '/klimatologie/sezony/', '/klimatologie/rocenka/', '/prehled-klasicky/', '/predpoved/', '/historie-den/'
 ];
 const viewports = [
   { name: 'mobil-uzky', width: 320, height: 700 },

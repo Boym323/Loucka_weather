@@ -28,7 +28,7 @@ try{
   }));
   const page=await ctx.newPage();
   page.on('pageerror',error=>console.error('BROWSER ERROR',width,error.message));
-  for(const [name,path] of [['home','/'],['atlas','/klimatologie/'],['camera','/kamera/']]){
+  for(const [name,path] of [['home','/prehled-klasicky/'],['atlas','/klimatologie/'],['camera','/kamera/']]){
    const response=await page.goto(new URL(path.slice(1),origin).href,{
     waitUntil:'domcontentloaded',timeout:30000});
    if(!response?.ok())throw Error(name+' HTTP '+response?.status());

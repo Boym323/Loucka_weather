@@ -19,7 +19,7 @@ try{
       dewpoint:{value:7.4,quality:'derived',unit:'degC',source:'weewx_archive'}}})
    }));
    const page=await context.newPage();
-   const response=await page.goto('http://127.0.0.1:4321/',{waitUntil:'domcontentloaded',timeout:30000});
+   const response=await page.goto('http://127.0.0.1:4321/prehled-klasicky/',{waitUntil:'domcontentloaded',timeout:30000});
    assert.equal(response?.status(),200);
    await page.waitForFunction(()=>document.querySelector('.evergreen-hero [data-current-status]')?.textContent?.includes('Poslední měření'),null,{timeout:10000});
    await page.evaluate(()=>{

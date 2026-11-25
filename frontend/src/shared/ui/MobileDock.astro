@@ -9,7 +9,7 @@ const more=[
  {href:'/aktualne/',label:'Měření'},
  {href:'/klimatologie/',label:'Klimatologie'},
  {href:'/historie-den/',label:'Historický kalendář'},
- {href:'/prehled-novy/',label:'Nový přehled'},
+ {href:'/prehled-klasicky/',label:'Klasický přehled'},
  {href:'/rekordy/',label:'Rekordy'},
  {href:'/senzory/',label:'Senzory'},
  {href:'/puda-ovzdusi/',label:'Půda a ovzduší'},
@@ -17,7 +17,7 @@ const more=[
  {href:'/stav/',label:'Stav stanice'},
  {href:'/o-stanici/',label:'O projektu'}
 ];
-const active=Astro.url.pathname;
+const active=Astro.url.pathname==='/prehled-novy/'?'/':Astro.url.pathname;
 ---
 <nav class="mobile-dock" aria-label="Rychlá mobilní navigace">
  {links.map(link=><a href={link.href} aria-current={active===link.href?'page':undefined}>

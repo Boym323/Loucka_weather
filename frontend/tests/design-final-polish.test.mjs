@@ -5,7 +5,7 @@ const get=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 
 test('final design preserves existing two themes and the default compact mobile variant',async()=>{
  const css=await get('src/styles/ui-refinement.css');
- const home=await get('src/pages/index.astro');
+ const home=await get('src/pages/prehled-klasicky.astro');
  assert.match(css,/--ui-reading-line:1\.55/);
  assert.match(css,/--ui-touch-target:44px/);
  assert.match(css,/\.page-intro h1\s*\{/);
@@ -38,7 +38,7 @@ test('desktop observatory grid cancels old Atlas historical full-row spanning',a
  assert.match(atlas,/@media\(min-width:761px\) and \(max-width:1330px\)/);
  assert.match(atlas,/\.observatory-history\{grid-column:1\/-1\}/);
  assert.match(css,/\.evergreen-home \.observatory-instruments\.evergreen-spotlight > \.observatory-history\{\s*grid-column:auto;/);
- const home=await get('src/pages/index.astro');
+ const home=await get('src/pages/prehled-klasicky.astro');
  assert.match(home,/<SolarCycle \/>/);
  assert.match(home,/<SameDayLastYear \/>/);
  assert.match(home,/<StationSummary \/>/);

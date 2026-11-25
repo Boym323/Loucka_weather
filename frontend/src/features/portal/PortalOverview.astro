@@ -1,0 +1,59 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import '../../styles/portal-preview.css';
+import CurrentPanel from '../current/CurrentPanel.astro';
+import DailySummaryStrip from '../current/DailySummaryStrip.astro';
+import WindCompass from '../current/WindCompass.astro';
+import ForecastPanel from '../forecast/ForecastPanel.astro';
+import HourlyForecast from '../forecast/HourlyForecast.astro';
+import RadarPanel from '../maps/RadarPanel.astro';
+import LocalWarnings from '../alerts/LocalWarnings.astro';
+import HistoryChart from '../history/HistoryChart.astro';
+import YesterdaySummary from '../history/YesterdaySummary.astro';
+import ArchiveTrends from '../history/ArchiveTrends.astro';
+import ClimateContext from '../climate/ClimateContext.astro';
+import SolarCycle from '../current/SolarCycle.astro';
+import SameDayLastYear from '../history/SameDayLastYear.astro';
+---
+<BaseLayout title="Přehled" description="Aktuální měření, předpověď a radar v Loučce.">
+ <div class="portal-preview">
+  <header class="page-intro portal-heading">
+   <div><span class="eyebrow">Loučka · Zlínský kraj · od roku 2009</span><h1>Počasí v Loučce</h1></div>
+   <a class="panel-link" href="/prehled-klasicky/">Klasický přehled ↗</a>
+  </header>
+  <div class="portal-warning"><LocalWarnings compact condensed /></div>
+  <div class="portal-primary">
+   <div class="portal-measurements">
+    <CurrentPanel variant="portal" />
+    <DailySummaryStrip />
+    <nav class="portal-quick-links" aria-label="Rychlý přístup"><a href="/aktualne/">Všechna měření ↗</a><a href="#pocasi-predpoved">Předpověď ↓</a><a href="#pocasi-radar">Radar ↓</a></nav>
+   </div>
+   <div class="portal-forecast" id="pocasi-predpoved">
+    <ForecastPanel compact />
+    <HourlyForecast compact />
+    <a class="portal-link" href="/predpoved/">Podrobná předpověď ↗</a>
+   </div>
+  </div>
+  <div class="portal-media">
+   <div id="pocasi-radar"><RadarPanel compact /></div>
+   <section class="section portal-camera" id="pocasi-kamera">
+    <div class="section-heading"><h2>Webkamera Loučka</h2><a class="panel-link" href="/kamera/">Časosběr a archiv ↗</a></div>
+    <a href="/kamera/"><img src="https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg" alt="Západní pohled z webkamery Loučka" loading="lazy" decoding="async"/></a>
+    <p class="source-note">Západní kamera · čas pořízení snímku není ověřen.</p>
+   </section>
+  </div>
+  <div class="portal-history">
+   <HistoryChart />
+   <div class="portal-history-aside"><WindCompass /><ArchiveTrends /></div>
+  </div>
+  <div class="portal-context">
+   <YesterdaySummary />
+   <SameDayLastYear />
+   <SolarCycle />
+  </div>
+  <ClimateContext />
+  <nav class="portal-destinations" aria-label="Další meteorologické údaje">
+   <a href="/historie-den/">Počasí v libovolný den ↗</a><a href="/klimatologie/">Klimatologie a dlouhodobé trendy ↗</a><a href="/rekordy/">Rekordy ↗</a><a href="/senzory/">Senzory ↗</a><a href="/o-stanici/">O stanici ↗</a>
+  </nav>
+ </div>
+</BaseLayout>

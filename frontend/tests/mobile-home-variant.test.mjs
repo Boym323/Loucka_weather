@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 const read=p=>readFile(new URL('../'+p,import.meta.url),'utf8');
 
 test('compact mobile firstfold is default with full opt-out and does not change weather values',async()=>{
- const home=await read('src/pages/index.astro');
+ const home=await read('src/pages/prehled-klasicky.astro');
  const css=await read('src/styles/ui-refinement.css');
  assert.match(home,/get\('mobile'\)!=='full'/);
  assert.match(home,/dataset\.mobileHomeVariant/);

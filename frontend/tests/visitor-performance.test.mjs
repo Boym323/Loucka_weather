@@ -61,8 +61,8 @@ test('homepage does not block DOMContentLoaded on the ECharts history engine',as
 
 test('only homepage hints the real camera image in head without changing image URL',async()=>{
  const layout=await readFile(new URL('../src/layouts/BaseLayout.astro',import.meta.url),'utf8');
- const home=await readFile(new URL('../src/pages/index.astro',import.meta.url),'utf8');
- assert.match(layout,/Astro\.url\.pathname==='\/'/);
+ const home=await readFile(new URL('../src/pages/prehled-klasicky.astro',import.meta.url),'utf8');
+ assert.match(layout,/Astro\.url\.pathname==='\/prehled-klasicky\/'/);
  assert.match(layout,/<link rel="preconnect" href="https:\/\/webcam\.pocasi-loucka\.eu" \/>/);
  assert.match(layout,/<link rel="preload" href="https:\/\/webcam\.pocasi-loucka\.eu\/zapadni_kamera\.jpg" as="image" fetchpriority="high" \/>/);
  assert.match(home,/src="https:\/\/webcam\.pocasi-loucka\.eu\/zapadni_kamera\.jpg" alt="" fetchpriority="high"/);

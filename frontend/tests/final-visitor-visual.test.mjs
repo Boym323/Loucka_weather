@@ -10,7 +10,7 @@ test('calendar dates keep station local day',()=>{
  assert.equal(displayLocalDate('—'),'—');
 });
 test('forecast precedes context cards and mobile atlas has one chapter selector',async()=>{
- const home=await read('src/pages/index.astro');
+ const home=await read('src/pages/prehled-klasicky.astro');
  assert.ok(home.indexOf('id="pocasi-predpoved"')<home.indexOf('id="pocasi-kamera"'));
  assert.match(await read('src/styles/climate-atlas.css'),/\.climate-atlas \.climate-atlas-nav\{display:none\}/);
  assert.match(await read('src/pages/puda-ovzdusi.astro'),/class="soil-live-unit"/);
