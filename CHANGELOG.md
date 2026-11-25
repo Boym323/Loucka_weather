@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-25 – Výstrahy ČHMÚ na DEV
+- API odlišuje výslovná oznámení „Žádná výstraha…“ od skutečných výstrah, nevyřazuje samotnou závažnost Minor a nezobrazuje ukončené výstrahy. Neplatný snapshot není stav bez výstrah.
+- Přehled má české časy a závažnosti, barevné rozlišení, stav platnosti, čitelný jednosloupcový layout a rozbalitelné originální znění. Přidány regresní testy API a frontendových formátovacích funkcí.
+- Bez změny produkce, databáze a instalovaného collectoru; ověření nasazení vyžaduje DEV smoke.
+
 ## 2026-11-24 – Ověřený soukromý náhled historického tlaku
 - Na DEV LXC byl ověřen SHA-256 finálního třívrstvého gzipu a vytvořen soukromý denní index s 1 697 621 záznamy. Náhled běží odděleně na loopbacku portu 3102 pod účtem `loucka`; bez veřejné proxy.
 - Ověřeny chráněný Q1 2018, rozlišené vrstvy v říjnu 2018, zlom zdroje 26. 4. 2019 a absence regionální reference v roce 2026. Headless prohlížeč ověřil desktop i mobil.
