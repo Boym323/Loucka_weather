@@ -846,3 +846,6 @@
  [data-climate-records] .climate-summary-metric{padding:12px}
  [data-climate-records] .climate-summary-metric>strong{font-size:clamp(22px,6vw,29px)}
 }
+
+.wind-compass-panel .wind-shared-source{display:none}
+.wind-compass-panel[data-shared-wind-source="true"] .wind-shared-source{display:block;margin:6px 0 0;font-size:12px}

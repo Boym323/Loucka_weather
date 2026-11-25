@@ -74,7 +74,7 @@ try{
      assert.ok(result.h1Left>=-2&&result.h1Right<=width+2,'heading clipped: '+path);
      if(path!=='/'&&result.introTextSize!==null)
       assert.ok(result.introTextSize>=14,'intro copy too small: '+path);
-     for(const action of coreRoutes.includes(path)?result.actions:[])
+     for(const action of (coreRoutes.includes(path)?result.actions:[]))
       assert.ok(action.height>=43,'touch control below 44px: '+path+' '+JSON.stringify(action));
      if(width<=390)assert.ok(result.dockVisible,'mobile dock missing');
      if(path.startsWith('/klimatologie')&&width<=760){

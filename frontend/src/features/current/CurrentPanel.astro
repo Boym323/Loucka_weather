@@ -91,6 +91,7 @@ const quickReadings = [
     quality.dataset.readingState=reading.quality;
    }
   }
+  updateSharedSource();
   const quick=[{id:'radiation',digits:0},{id:'UV',digits:1},{id:'pm25_1',digits:1},{id:'rain',digits:1}];
   for(const metric of quick){
    const node=section.querySelector<HTMLElement>('[data-quick-value="'+metric.id+'"]');
@@ -111,8 +112,8 @@ const quickReadings = [
    Number.isFinite(received)&&Date.now()-received<120000&&received<=Date.now()+60000;
   if(liveStillFresh&&lastLiveEvent)applyLive(lastLiveEvent);
   else{
-   section.dataset.sharedReadingSource='false';
-    section.dataset.currentState='error';
+   section.dataset.currentState='error';
+    section.dataset.sharedReadingSource='false';
    if(status){status.textContent=lastArchiveObservedAt?'Aktualizace selhala':'Měření nedostupné';status.className='status-chip error';}
   if(updated)updated.textContent=lastArchiveObservedAt?
    'Poslední známé měření: '+formatTimestamp(lastArchiveObservedAt):'Čas posledního měření není dostupný.';
@@ -159,7 +160,7 @@ const quickReadings = [
   updateSharedSource();
    section.dataset.currentState='live';
   if(status){status.textContent='Živá měření';status.className='status-chip ok';}
-  if(provenance)provenance.textContent='Některá měření se aktualizují živě, ostatní podle posledního záznamu.';
+  if(provenance)provenance.textContent=section.dataset.sharedReadingSource==='true'?'Všechny zobrazené hodnoty jsou živá měření.':'Některá měření se aktualizují živě, ostatní podle posledního záznamu.';
   if(updated)updated.textContent=(data.timestampMeaning==='gateway_polled_at'?'Přečteno ':'Naměřeno ')+
    formatTimestamp(data.observedAt);
  };

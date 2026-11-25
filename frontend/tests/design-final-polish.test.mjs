@@ -22,7 +22,7 @@ test('browser design QA runs as a real CI gate at 320/390/1440 light/dark',async
  const workflow=await get('../.github/workflows/frontend-staging.yml');
  const script=await get('scripts/design-final-browser-check.mjs');
  assert.match(workflow,/node scripts\/design-final-browser-check\.mjs/);
- assert.match(script,/const widths=\[320,390,1024,1328,1440\]/);
+ assert.match(script,/const widths=\[320,390,768,1024,1328,1440,1920\]/);
  assert.match(script,/desktop must put all four instruments in one balanced row/);
  assert.match(script,/tablet must use balanced two-by-two cards/);
  assert.match(script,/const themes=\['light','dark'\]/);
