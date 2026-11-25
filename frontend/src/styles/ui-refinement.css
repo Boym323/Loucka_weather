@@ -636,8 +636,8 @@
 }
 .advanced-history .history-zoom-hint{margin:0 0 10px}
 
-/* Opt-in mobile layout comparison, not the default visitor layout.
-   The query ?mobile=compact only collapses expert modules; no measurement
+/* Compact mobile layout, with an explicit full-layout alternative.
+   The compact layout only collapses expert modules; no measurement
    or provenance text in the visible current summary is changed. */
 .mobile-home-preview-note,.mobile-home-expert-toggle{display:none}
 @media(max-width:760px){
@@ -855,3 +855,13 @@
 [data-record-value],[data-extreme-value]{white-space:nowrap;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 @media(max-width:430px){[data-climate-records] .climate-summary-metric>[data-record-value]{font-size:clamp(20px,6vw,26px)}}
 .current-panel[data-variant="detail"][data-current-state="live"] .metric-note[data-reading-source="live"][data-reading-state="measured"]{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+
+/* Compact landing: keep the disclosure, full mode and all readings accessible. */
+@media(max-width:760px){
+ :root[data-mobile-home-variant="compact"] .evergreen-home .mobile-home-preview-note{display:none}
+ :root[data-mobile-home-variant="compact"] .evergreen-hero .mobile-home-expert-toggle{margin:0;width:100%;min-height:44px;text-align:center}
+ :root[data-mobile-home-variant="compact"] .evergreen-home .mobile-home-compact-link{display:block;margin:0}
+ :root[data-mobile-home-variant="compact"] .evergreen-home .mobile-home-compact-link a{min-height:44px}
+ .evergreen-home .evergreen-more-heading{margin-block:0}
+ .evergreen-home .evergreen-more-heading h2{font-size:23px}
+}

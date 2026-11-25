@@ -30,10 +30,11 @@ try{
  const root=page.locator('.evergreen-hero [data-history-chart]');
  const geometry=await root.evaluate(el=>({top:el.getBoundingClientRect().top,height:innerHeight}));
  console.log('MOBILE HISTORY GEOMETRY',JSON.stringify(geometry));
- assert.ok(geometry.top>geometry.height-40,'mobile chart should initially be outside the ready-to-paint area: '+JSON.stringify(geometry));
+ assert.equal(await root.isVisible(),false,'mobile chart initially collapsed');
  await page.waitForTimeout(350);
  assert.equal(await root.locator('[data-chart-canvas] svg').count(),0,'ECharts must not paint before viewport entry');
  assert.equal(historyRequests.length,0,'offscreen homepage chart should not fetch history before viewport entry');
+ await page.locator('[data-home-expert-toggle]').click();
  await root.scrollIntoViewIfNeeded();
  await page.waitForFunction(()=>{
   const root=document.querySelector('.evergreen-hero [data-history-chart]');

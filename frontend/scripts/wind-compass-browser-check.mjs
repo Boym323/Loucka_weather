@@ -44,7 +44,7 @@ try{
    await page.addInitScript(mode=>localStorage.setItem('loucka-theme',mode),theme);
    for(const path of ['','aktualne/']){
     fixture=fixtureForArchive();
-    const response=await page.goto(new URL(path,origin).href,{
+    const response=await page.goto(new URL(path||'/?mobile=full',origin).href,{
      waitUntil:'domcontentloaded',timeout:25000
     });
     assert.equal(response?.status(),200,path+' HTTP 200');

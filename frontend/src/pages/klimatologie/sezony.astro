@@ -137,7 +137,7 @@ const years=Array.from({length:Math.max(1,currentYear-2008)},(_,i)=>currentYear-
     (v):v is number=>v!==null);
    if(!all.length){chart.textContent='Není dostupný platný teplotní průběh.';return;}
    const low=Math.min(...all)-2,high=Math.max(...all)+2;
-   const x=(index:number)=>36+index/Math.max(1,keys.length-1)*675;
+   const x=(index:number)=>52+index/Math.max(1,keys.length-1)*659;
    const y=(value:number)=>220-(value-low)/Math.max(1,high-low)*185;
    const ns='http://www.w3.org/2000/svg';
    const el=(tag:string)=>document.createElementNS(ns,tag);
@@ -147,8 +147,17 @@ const years=Array.from({length:Math.max(1,currentYear-2008)},(_,i)=>currentYear-
    for(let n=0;n<=4;n++){
     const grid=el('line');const level=35+185*n/4;
     grid.setAttribute('class','chart-grid');
-    for(const [attr,value] of Object.entries({x1:36,x2:711,y1:level,y2:level}))grid.setAttribute(attr,String(value));
+    for(const [attr,value] of Object.entries({x1:52,x2:711,y1:level,y2:level}))grid.setAttribute(attr,String(value));
     svg.append(grid);
+    const label=el('text');label.setAttribute('class','chart-axis');label.setAttribute('x','45');
+    label.setAttribute('text-anchor','end');label.setAttribute('y',String(level+4));
+    label.textContent=formatValue(high-(high-low)*n/4,0)+' °';svg.append(label);
+   }
+   for(const i of [...new Set([0,Math.floor((keys.length-1)/2),keys.length-1])]){
+    const day=keys[i];if(!day)continue;
+    const label=el('text');label.setAttribute('class','chart-axis');label.setAttribute('x',String(x(i)));
+    label.setAttribute('y','238');label.setAttribute('text-anchor','middle');
+    const [month,date]=day.split('-');label.textContent=Number(date)+'. '+Number(month)+'.';svg.append(label);
    }
    for(const [map,color] of [[firstMap,'var(--teal)'],[secondMap,'var(--season-secondary)']] as const){
     let points:string[]=[];

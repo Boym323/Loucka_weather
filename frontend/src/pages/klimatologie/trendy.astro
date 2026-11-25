@@ -28,6 +28,7 @@ import RainfallArchive from '../../features/climate/RainfallArchive.astro';
    </form>
    <p class="atlas-status" data-trend-status role="status">Načítám historický souhrn…</p>
    <div class="atlas-chart" data-trend-chart role="img" aria-label="Graf ročních hodnot s vyznačením skutečně dostupných let"></div>
+   <div class="atlas-chart-key"><span><i class="atlas-key-dot" aria-hidden="true"></i>Dostatečné pokrytí</span><span><i class="atlas-key-dot limited" aria-hidden="true"></i>Omezené nebo neúplné údaje</span></div>
    <div class="atlas-results">
     <div class="atlas-result"><span>Podložené dokončené roky</span><strong data-trend-valid>—</strong><small>Požadováno dostatečné pokrytí</small></div>
     <div class="atlas-result"><span>Orientační změna za 10 let</span><strong data-trend-slope>—</strong><small>Odhad směru vývoje, nikoliv jistý dlouhodobý trend</small></div>
@@ -127,7 +128,8 @@ import RainfallArchive from '../../features/climate/RainfallArchive.astro';
     else segment.push((segment.length?'L':'M')+x(r.year).toFixed(1)+' '+y(r.value).toFixed(1));
     const dot=el('circle');dot.setAttribute('class','chart-points');
     dot.setAttribute('cx',String(x(r.year)));dot.setAttribute('cy',String(y(r.value)));
-    dot.setAttribute('r',eligible(r,metric)?'4':'3');dot.setAttribute('opacity',eligible(r,metric)?'1':'.35');
+    dot.setAttribute('r',eligible(r,metric)?'4':'4');
+    if(!eligible(r,metric))dot.setAttribute('class','chart-points chart-point-limited');
     const tip=el('title');tip.textContent=r.year+' · '+formatValue(r.value,1)+' '+descriptions[metric].unit+
      ' · '+r.validDays+'/'+r.elapsedDays+' dnů'+
      (metric==='rain'&&rainYearRisk(r.year)?' · '+rainYearRisk(r.year):'');dot.append(tip);svg.append(dot);

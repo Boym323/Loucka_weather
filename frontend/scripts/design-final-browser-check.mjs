@@ -69,6 +69,15 @@ try{
       };
      });
      assert.equal(result.theme,theme,'theme selected');
+     const contrast=await page.evaluate(()=>{
+      const probe=document.createElement('span');document.body.append(probe);
+      const rgb=token=>{probe.style.color='var('+token+')';return getComputedStyle(probe).color.match(/[\d.]+/g).slice(0,3).map(Number);};
+      const lum=values=>values.map(v=>v/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4).reduce((n,v,i)=>n+v*[.2126,.7152,.0722][i],0);
+      const pairs=[['--text','--panel'],['--muted','--panel'],['--muted','--panel-2'],['--teal','--panel']];
+      const result=pairs.map(([a,b])=>{const x=lum(rgb(a)),y=lum(rgb(b));return {pair:a+'/'+b,ratio:(Math.max(x,y)+.05)/(Math.min(x,y)+.05)};});
+      probe.remove();return result;
+     });
+     for(const item of contrast)assert.ok(item.ratio>=4.5,'token contrast below 4.5:1 '+JSON.stringify(item));
      assert.ok(result.scrollWidth<=width+2,'horizontal overflow at '+width+' '+path+': '+JSON.stringify(result));
      assert.ok(result.h1Text>0&&result.h1Font>=27,'missing or unreadable page heading');
      assert.ok(result.h1Left>=-2&&result.h1Right<=width+2,'heading clipped: '+path);
@@ -86,6 +95,8 @@ try{
       if(width<=760){
        await shortcut.waitFor({state:'visible',timeout:10000});
        assert.match(await shortcut.textContent()??'',/Stav výstrah ČHMÚ nelze ověřit/);
+       assert.equal(await page.locator('[data-home-expert-toggle]').getAttribute('aria-expanded'),'false');
+       assert.equal(await page.locator('#home-history').isVisible(),false);
        assert.ok(await page.evaluate(()=>document.querySelector('[data-mobile-alert-shortcut]').getBoundingClientRect().bottom<document.querySelector('[data-home-hero]').getBoundingClientRect().top),'warning shortcut before instruments');
       }else assert.equal(await shortcut.isVisible(),false,'mobile-only warning shortcut on desktop');
       assert.ok(await page.evaluate(()=>document.querySelector('#pocasi-predpoved').getBoundingClientRect().top<document.querySelector('#pocasi-kamera').getBoundingClientRect().top),'forecast should precede camera');

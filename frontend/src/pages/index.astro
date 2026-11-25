@@ -16,9 +16,9 @@ import SiteIcon from '../shared/ui/SiteIcon.astro';
 ---
 <BaseLayout title="Přehled" description="Aktuální počasí v Loučce, teplota, vítr, srážky, kamera a grafy měření od roku 2009.">
  <script is:inline>
-  // Opt-in visitor evaluation only: the default homepage is unchanged.
+  // Compact mobile landing by default; full instruments remain one tap away.
   // No storage, tracking or additional API requests.
-  if(new URLSearchParams(location.search).get('mobile')==='compact'){
+  if(new URLSearchParams(location.search).get('mobile')!=='full'){
    document.documentElement.dataset.mobileHomeVariant='compact';
    const attach=()=>{
     const hero=document.querySelector('[data-home-hero]');
@@ -28,7 +28,7 @@ import SiteIcon from '../shared/ui/SiteIcon.astro';
      const open=hero.dataset.expertOpen!=='true';
      hero.dataset.expertOpen=String(open);
      toggle.setAttribute('aria-expanded',String(open));
-     toggle.textContent=open?'Skrýt vítr a historický graf':'Zobrazit vítr a historický graf';
+     toggle.textContent=open?'Skrýt vítr a graf':'Zobrazit vítr a graf za 24 hodin';
     });
    };
    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',attach,{once:true});
@@ -50,7 +50,7 @@ import SiteIcon from '../shared/ui/SiteIcon.astro';
    </header>
 
    <a class="mobile-alert-shortcut" href="#vystrahy-chmu" data-mobile-alert-shortcut hidden><SiteIcon name="alert" size={20}/><span data-mobile-alert-label>Výstrahy ČHMÚ</span><span aria-hidden="true">↓</span></a>
-   <p class="mobile-home-preview-note">Kompaktní přehled · <a href="/">Zpět na běžné zobrazení</a></p>
+   <p class="mobile-home-preview-note"><a href="/?mobile=full">Plný přehled měření</a></p>
    <section class="atlas-hero observatory-hero evergreen-hero" data-home-hero data-expert-open="false" aria-label="Aktuální měření, anemometr a historický průběh">
     <div class="atlas-hero-top evergreen-core">
      <CurrentPanel variant="observatory" />
@@ -64,7 +64,7 @@ import SiteIcon from '../shared/ui/SiteIcon.astro';
      <DailySummaryStrip />
     </div>
     <button class="mobile-home-expert-toggle" type="button" data-home-expert-toggle
-     aria-controls="home-wind home-history" aria-expanded="false">Zobrazit vítr a historický graf</button>
+     aria-controls="home-wind home-history" aria-expanded="false">Zobrazit vítr a graf za 24 hodin</button>
     <div class="observatory-wind evergreen-wind" id="home-wind">
      <WindCompass variant="hero" />
     </div>
@@ -72,7 +72,7 @@ import SiteIcon from '../shared/ui/SiteIcon.astro';
      <HistoryChart compact hero />
     </div>
    </section>
-   <p class="mobile-home-compact-link"><a href="/?mobile=compact">Kompaktní mobilní přehled</a></p>
+   <p class="mobile-home-compact-link"><a data-full-home-link href="/?mobile=full">Plný přehled měření</a><a data-compact-home-link href="/">Kompaktní přehled</a></p>
    <p class="evergreen-landscape-credit">Pohled na Loučku ze západní kamery · snímek nemusí být právě pořízený</p>
   </section>
 

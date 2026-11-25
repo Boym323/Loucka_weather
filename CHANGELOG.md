@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-25 – Mobilní přehled a klimatologická čitelnost
+- Kompaktní mobilní homepage je výchozí; plný přehled zůstává dostupný a vítr i graf lze rozbalit klávesnicí či dotykem. Desktop zůstává beze změny rozložení.
+- Sjednoceny plochy klimatologických grafů, tabulky, osy sezón, rozlišení omezených ročních bodů, jednotky historických hodnot a zkráceny nadbytečné texty.
+- Browser testy ověřují rozbalení grafu, plnou variantu a kontrast základních textových tokenů. Výsledky nové revize a DEV nasazení ověřovat samostatně. Bez změn meteorologických výpočtů a DB.
+
 ## 2026-11-25 – Dotažení vizuálu po veřejném screenshot auditu
 - Mobilní zkratka skutečných výstrah ČHMÚ nad měřením, bez nových požadavků na API; stav nedostupnosti nezaměňuje za bezpečí.
 - Rekordní hodnoty s menší jednotkou na stejném řádku; kamera používá společný barevný token. Sezónní série mají samostatnou modrou barvu a přerušovanou druhou křivku i legendu.

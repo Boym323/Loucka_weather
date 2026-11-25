@@ -188,6 +188,13 @@ try{
       errors.push(size.name+': real anemometer speed/gust or 24h archive chart missing from hero');
      // The chart engine loads only after DOMContentLoaded. Verify its SVG
      // and a real completed archive request, not merely placeholder markup.
+     const toggle=page.locator('[data-home-expert-toggle]');
+     const collapsed=await toggle.isVisible();
+     if(collapsed){
+      if(await toggle.getAttribute('aria-expanded')!=='false')errors.push(size.name+': compact home should start collapsed');
+      await toggle.click();
+      await page.locator('.evergreen-hero [data-history-chart]').scrollIntoViewIfNeeded();
+     }
      const chartPainted=await page.waitForFunction(()=>{
       const root=document.querySelector('.evergreen-hero [data-history-chart]');
       const status=root?.querySelector('[data-chart-status]')?.textContent??'';
@@ -196,6 +203,7 @@ try{
      },null,{timeout:16000}).then(()=>true).catch(()=>false);
      if(!chartPainted)
       errors.push(size.name+': deferred homepage history chart did not paint a real archive SVG');
+     if(collapsed){await toggle.click();await page.evaluate(()=>window.scrollTo(0,0));}
      // Source identity and freshness caution are the contract; the public
      // wording was simplified in PR #114 and must not fail on that copy edit.
      const sourceIdentified=layout.sourceLabel.includes('západní kamery');

@@ -1,4 +1,4 @@
-/** Opt-in firstfold comparison. Browser fixtures are synthetic and read-only. */
+/** Default compact firstfold comparison. Browser fixtures are synthetic and read-only. */
 import {chromium} from 'playwright';
 import assert from 'node:assert/strict';
 import {mkdir} from 'node:fs/promises';
@@ -13,7 +13,7 @@ try{
    status:503,contentType:'application/json',body:'{"error":"browser-fixture-only"}'
   }));
   const page=await context.newPage();
-  await page.goto(new URL('/',origin).href,{waitUntil:'domcontentloaded'});
+  await page.goto(new URL('/?mobile=full',origin).href,{waitUntil:'domcontentloaded'});
   const regular=await page.evaluate(()=>({
    height:document.querySelector('[data-home-hero]')?.getBoundingClientRect().height,
    toggle:getComputedStyle(document.querySelector('[data-home-expert-toggle]')).display,
@@ -23,7 +23,7 @@ try{
   assert.equal(regular.toggle,'none');
   assert.notEqual(regular.wind,'none');
   assert.notEqual(regular.chart,'none');
-  await page.goto(new URL('/?mobile=compact',origin).href,{waitUntil:'domcontentloaded'});
+  await page.goto(new URL('/',origin).href,{waitUntil:'domcontentloaded'});
   const compact=await page.evaluate(()=>({
    height:document.querySelector('[data-home-hero]')?.getBoundingClientRect().height,
    toggle:getComputedStyle(document.querySelector('[data-home-expert-toggle]')).display,

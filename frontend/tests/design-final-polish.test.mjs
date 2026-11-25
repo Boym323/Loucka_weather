@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 const get=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 
-test('final design preserves existing two themes and the opt-in compact mobile variant',async()=>{
+test('final design preserves existing two themes and the default compact mobile variant',async()=>{
  const css=await get('src/styles/ui-refinement.css');
  const home=await get('src/pages/index.astro');
  assert.match(css,/--ui-reading-line:1\.55/);
@@ -13,7 +13,7 @@ test('final design preserves existing two themes and the opt-in compact mobile v
  assert.match(css,/\.evergreen-hero \.current-panel \.metric-card \.metric-note/);
  assert.match(css,/:is\(a,button,input,select,textarea,summary,\[tabindex\]\):focus-visible/);
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
- assert.match(home,/new URLSearchParams\(location.search\)\.get\('mobile'\)==='compact'/);
+ assert.match(home,/new URLSearchParams\(location.search\)\.get\('mobile'\)!=='full'/);
  assert.match(home,/snímek nemusí být právě pořízený/);
  assert.doesNotMatch(css,/--fake-weather/);
 });
