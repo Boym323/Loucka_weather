@@ -1,12 +1,12 @@
 ---
-interface Props { compact?:boolean }
-const {compact=false}=Astro.props;
+interface Props { compact?:boolean; condensed?:boolean }
+const {compact=false,condensed=false}=Astro.props;
 import SiteIcon from '../../shared/ui/SiteIcon.astro';
 ---
-<section id="vystrahy-chmu" class:list={['section','local-warnings',{compact}]} data-local-warnings aria-label="Výstrahy ČHMÚ pro Loučku">
+<section id="vystrahy-chmu" class:list={['section','local-warnings',{compact,condensed}]} data-local-warnings data-condensed={String(condensed)} aria-label="Výstrahy ČHMÚ pro Loučku">
  <div class="section-heading"><div class="panel-title"><SiteIcon name="alert" size={20}/><h2>Výstrahy ČHMÚ</h2></div><span class="status-chip" data-alert-status role="status">Kontroluji výstrahy</span></div>
  <div data-alert-body>Načítám aktuální výstrahy…</div>
- <p class="source-note">Přehled pro Loučku a okolí · zdroj <a href="https://vystrahy-cr.chmi.cz/" target="_blank" rel="noopener noreferrer">ČHMÚ</a>. V nebezpečí se řiďte pokyny ČHMÚ.</p>
+ <p class="source-note">Zdroj <a href="https://vystrahy-cr.chmi.cz/" target="_blank" rel="noopener noreferrer">ČHMÚ</a>. V nebezpečí se řiďte pokyny ČHMÚ.</p>
 </section>
 <script>
  import {warningDate,warningState,severityDisplay,warningCount,warningSummary} from './warning-display';
@@ -84,8 +84,8 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
       appendText(article,'h3',alert.headline||alert.event||'Výstraha ČHMÚ');
       appendText(article,'p','Od '+warningDate(alert.onset)+' · Do '+warningDate(alert.expires),'local-alert-time');
       if(alert.description)appendText(article,'p',warningSummary(alert.description),'local-alert-summary');
-      if(alert.instruction)appendText(article,'p','Doporučení ČHMÚ: '+warningSummary(alert.instruction),'local-alert-summary');
-      if((alert.description&&warningSummary(alert.description)!==alert.description.trim())||
+      if(alert.instruction)appendText(article,'p','Doporučení ČHMÚ: '+warningSummary(alert.instruction),'local-alert-summary local-alert-instruction');
+      if(root.dataset.condensed==='true'||(alert.description&&warningSummary(alert.description)!==alert.description.trim())||
          (alert.instruction&&warningSummary(alert.instruction)!==alert.instruction.trim())){
        const details=document.createElement('details');details.className='local-alert-details';
        appendText(details,'summary','Úplné znění výstrahy ČHMÚ');
@@ -124,4 +124,25 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
  .local-warnings .local-alert-checked{color:var(--muted);font-size:12px}
  .local-warnings .local-alert-empty{margin:0;font-size:14px}
  @media(max-width:600px){.local-warnings .local-alert-entry{padding:12px}.local-warnings .local-alert-meta{justify-content:flex-start}.local-warnings .local-alert-time{overflow-wrap:anywhere}}
+</style>
+
+<style is:global>
+.local-warnings .panel-title{color:var(--text)}
+.local-warnings .panel-title svg{color:var(--muted)}
+.local-warnings.condensed{padding:12px}
+.local-warnings.condensed .section-heading{margin-bottom:0}
+.local-warnings.condensed .local-alert-entry{padding:10px 12px}
+.local-warnings.condensed .local-alert-entry h3{margin:5px 0 3px}
+.local-warnings.condensed .local-alert-entry p{margin:4px 0;line-height:1.45}
+.local-warnings.condensed .local-alert-details{margin-top:5px;padding-top:4px}
+.local-warnings.condensed .source-note{margin:0;font-size:12px}
+@media(max-width:760px){
+ .local-warnings.condensed .section-heading h2{font-size:16px}
+ .local-warnings.condensed .local-alert-entry h3{font-size:17px}
+ .local-warnings.condensed .local-alert-meta{gap:4px;font-size:12px}
+ .local-warnings.condensed .local-alert-state{font-size:11px;padding:2px 5px}
+ .local-warnings.condensed .local-alert-time{font-size:12px}
+ .local-warnings.condensed .local-alert-summary{font-size:13px}
+ .local-warnings.condensed .local-alert-details summary{min-height:44px;display:flex;align-items:center}
+}
 </style>

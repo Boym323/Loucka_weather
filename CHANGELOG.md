@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-25 – Dotažení portálu podle nasazených screenshotů
+- Kompaktnější blok výstrah, kontrastní nadpis, jednotky denních údajů vedle hodnot, desetinné srážky v modelu a odstranění záporné nuly u předpovědi.
+- Opraven typ navigace po přesunu klimatologie do mobilního menu (předchozí CI TS2367). Nové testy a nasazení ověřit samostatně.
+
 ## 2026-11-25 – Trendy, meteogram, historický kalendář a navigace
 - Archivní hodinové změny teploty a tlaku pouze ze dvou blízkých platných měření, grafický meteogram s oddělenými osami, propojení výstrah s kalendářními dny bez druhého požadavku na ČHMÚ.
 - Srovnání měsíce, části sezóny a roku se shodnými dny starších let, nikoli klimatický normál; srážkové srovnání zatím nepřidáno kvůli známým omezením archivu. Historický kalendář s kontrolou pokrytí a odkazem na konkrétní den grafu.

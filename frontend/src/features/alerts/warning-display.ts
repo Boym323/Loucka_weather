@@ -1,6 +1,6 @@
 export type LocalAlert={event:string;severity:string;onset:string;expires:string;headline:string;description:string;instruction:string};
 
-const formatter=new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',dateStyle:'medium',timeStyle:'short'});
+const formatter=new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',day:'numeric',month:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
 export function warningDate(value:string){
  const timestamp=Date.parse(value);
  return Number.isFinite(timestamp)?formatter.format(timestamp):'čas neuveden';

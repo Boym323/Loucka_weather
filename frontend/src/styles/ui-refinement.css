@@ -877,3 +877,6 @@
  .content .page-intro{padding-block:2px 10px}
  .content .page-intro h1{font-size:clamp(28px,6.8vw,32px)}
 }
+
+/* Larger mobile menu remains reachable on short screens. */
+.atlas-mobile-more-menu{max-height:min(70dvh,520px);overflow-y:auto;overscroll-behavior:contain}

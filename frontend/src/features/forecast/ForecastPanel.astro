@@ -51,7 +51,8 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
   if(code>=95)return {kind:'storm',description:'Bouřky'};
   return {kind:'cloud',description:'Oblačno'};
  };
- const fmt=(n:number)=>new Intl.NumberFormat('cs-CZ',{maximumFractionDigits:0}).format(n);
+ const fmt=(n:number)=>new Intl.NumberFormat('cs-CZ',{maximumFractionDigits:0}).format(Math.round(n)||0);
+ const rainFmt=(n:number)=>new Intl.NumberFormat('cs-CZ',{maximumFractionDigits:1}).format(n);
  const timeFmt=new Intl.DateTimeFormat('cs-CZ',{weekday:'short',day:'numeric',month:'numeric',timeZone:'Europe/Prague'});
  const url='https://api.open-meteo.com/v1/forecast?latitude=49.170035&longitude=17.876076&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Europe%2FPrague&forecast_days=6';
  document.querySelectorAll<HTMLElement>('[data-forecast-panel]').forEach(root=>{
@@ -96,7 +97,7 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
     put('description',weather.description);
     put('max',fmt(d.temperature_2m_max[i])+'°');
     put('min',fmt(d.temperature_2m_min[i])+'°');
-    put('rain',fmt(d.precipitation_sum[i])+' mm');
+    put('rain',rainFmt(d.precipitation_sum[i])+' mm');
    }
    dates=d.time.slice(0,6);paintWarnings();
    if(status){status.textContent='Předpověď dostupná';status.classList.add('ok');}

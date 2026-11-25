@@ -20,7 +20,7 @@ const more=[
 const active=Astro.url.pathname;
 ---
 <nav class="mobile-dock" aria-label="Rychlá mobilní navigace">
- {links.map(link=><a href={link.href} aria-current={active===link.href||(link.href==='/klimatologie/'&&active.startsWith('/klimatologie/'))?'page':undefined}>
+ {links.map(link=><a href={link.href} aria-current={active===link.href?'page':undefined}>
   <span class="mobile-dock-icon" aria-hidden="true">
    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
     {link.icon==='home'&&<><path d="m3 10 9-7 9 7"/><path d="M5 9v12h14V9"/><path d="M10 21v-7h4v7"/></>}
@@ -40,7 +40,7 @@ const active=Astro.url.pathname;
   </summary>
   <div class="atlas-mobile-more-menu">
    <strong>Další stránky</strong>
-   {more.map(link=><a href={link.href} aria-current={active===link.href?'page':undefined}>{link.label}</a>)}
+   {more.map(link=><a href={link.href} aria-current={active===link.href||(link.href==='/klimatologie/'&&active.startsWith('/klimatologie/'))?'page':undefined}>{link.label}</a>)}
   </div>
  </details>
 </nav>

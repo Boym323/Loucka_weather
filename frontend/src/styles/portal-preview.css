@@ -66,3 +66,20 @@
 .portal-climate-grid h3{font-size:15px;margin:0 0 5px}.portal-climate-grid strong{display:block;font-size:clamp(22px,2.4vw,30px);font-variant-numeric:tabular-nums}.portal-climate-grid p{font-size:14px;margin:5px 0}
 .portal-calendar-form{display:flex;flex-wrap:wrap;align-items:end;gap:12px}.portal-calendar-form label{display:grid;gap:5px}.portal-calendar-form input,.portal-calendar-form button{min-height:44px}
 @media(max-width:760px){.portal-climate-grid{grid-template-columns:1fr}.portal-climate-grid article{padding:10px}.portal-preview .portal-trends dd{font-size:18px}}
+
+/* Screenshot audit: tighter daily values, readable units and compact warning header. */
+.portal-preview .daily-brief-item{display:grid;grid-template-columns:max-content minmax(0,1fr);grid-template-rows:auto auto;align-items:baseline;gap:3px 4px}
+.portal-preview .daily-brief-item>span{grid-column:1/-1;min-height:0;width:auto}
+.portal-preview .daily-brief-item>strong{grid-column:1;white-space:nowrap}
+.portal-preview .daily-brief-item>small{grid-column:2;white-space:nowrap;display:inline;font-size:12px}
+.portal-preview .metric-number .metric-unit{margin-left:4px}
+.portal-preview .portal-warning .local-warnings{gap:6px}
+.portal-preview .portal-heading{margin-bottom:0}
+.portal-preview .portal-hour-table th,.portal-preview .portal-hour-table td{padding:8px}
+@media(max-width:760px){
+ .portal-preview .portal-heading{gap:4px}
+ .portal-preview .portal-heading>a{font-size:12px}
+ .portal-preview .daily-brief-item>strong{font-size:18px}
+ .portal-preview .daily-brief-item>small{font-size:11px}
+ .portal-preview .daily-brief-item>span{font-size:11px}
+}
