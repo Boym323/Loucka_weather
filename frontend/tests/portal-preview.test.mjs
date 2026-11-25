@@ -11,7 +11,11 @@ test('hourly model retains missing and zero values and rejects mismatched units'
  assert.deepEqual(parseHourlyForecast({...base,hourly_units:{...base.hourly_units,wind_speed_10m:'km/h'}},now),[]);
 });
 test('portal layout reuses real components and preserves original homepage',async()=>{
- const portal=await read('src/pages/prehled-novy.astro'),home=await read('src/pages/index.astro');
+ const portal=await read('src/features/portal/PortalOverview.astro'),home=await read('src/pages/prehled-klasicky.astro');
+ const landing=await read('src/pages/index.astro'),alias=await read('src/pages/prehled-novy.astro');
+ assert.match(landing,/<PortalOverview \/>/);
+ assert.equal(landing,alias);
+ assert.match(portal,/href="\/prehled-klasicky\/"/);
  assert.match(portal,/<CurrentPanel variant="portal" \/>/);
  assert.match(portal,/<ForecastPanel compact \/>/);
  assert.ok(portal.indexOf('<ForecastPanel')<portal.indexOf('<RadarPanel'));

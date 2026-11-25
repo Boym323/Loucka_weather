@@ -5,7 +5,7 @@ import {readFile} from 'node:fs/promises';
 const source=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 
 test('approved homepage places real measurements, wind and history in one glass panel',async()=>{
- const page=await source('src/pages/index.astro');
+ const page=await source('src/pages/prehled-klasicky.astro');
  const position=(value)=>page.indexOf(value);
  for(const tag of ['CurrentPanel variant="observatory"',
   'DailySummaryStrip','WindCompass variant="hero"',
@@ -46,7 +46,7 @@ test('hero current temperature and dewpoint are only displayed from source readi
 test('responsive photo composition and dark mode have explicit rules',async()=>{
  const css=await source('src/styles/observatory-evergreen.css');
  const base=await source('src/layouts/BaseLayout.astro');
- const page=await source('src/pages/index.astro');
+ const page=await source('src/pages/prehled-klasicky.astro');
  assert.doesNotMatch(base,/observatory-evergreen\.css/);
  assert.match(page,/import '\.\.\/styles\/observatory-evergreen\.css'/);
  assert.match(css,/\.evergreen-landscape img/);
