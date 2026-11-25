@@ -445,3 +445,18 @@
  .climate-atlas .atlas-chart svg{min-height:0}
  .climate-atlas .atlas-highlight-card [data-highlight-value]{font-size:clamp(20px,5.6vw,25px)}
 }
+
+/* Compact atlas masthead retains its editorial identity, but not a large decorative banner. */
+@media screen{
+ .climate-atlas .atlas-edition-hero{padding:16px 20px;margin-bottom:12px;border-radius:14px}
+ .climate-atlas .atlas-edition-hero .atlas-eyebrow{font-size:12px;letter-spacing:.06em;line-height:1.4}
+ .climate-atlas .atlas-edition-hero .atlas-title{font-size:clamp(30px,2.8vw,40px);line-height:1.15;letter-spacing:-.03em;font-weight:650;max-width:100%;margin:4px 0 6px}
+ .climate-atlas .atlas-edition-hero .atlas-subtitle{font-size:14px;line-height:1.5;max-width:90ch;margin:0}
+ .climate-atlas .atlas-edition-hero::after{width:180px;height:180px;opacity:.45}
+ .climate-atlas .climate-atlas-nav{margin-bottom:16px}
+ .climate-atlas .atlas-chapter-heading{margin-top:14px}
+}
+@media screen and (max-width:760px){
+ .climate-atlas .atlas-edition-hero{padding:13px 14px;margin-bottom:10px}
+ .climate-atlas .atlas-edition-hero .atlas-title{font-size:clamp(28px,7.2vw,34px)}
+}

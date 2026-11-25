@@ -16,9 +16,9 @@
 }
 .evergreen-home .atlas-location{font-size:12px;letter-spacing:.08em;color:#184456;font-weight:650}
 .evergreen-home .atlas-location svg{flex:none}
-.evergreen-scene{position:relative;isolation:isolate;padding:25px 0 4px}
+.evergreen-scene{position:relative;isolation:isolate;padding:12px 0 4px}
 .evergreen-landscape{
- position:absolute;top:-30px;left:50%;width:100vw;height:385px;
+ position:absolute;top:-30px;left:50%;width:100vw;height:240px;
  transform:translateX(-50%);overflow:hidden;z-index:-1;
  background:linear-gradient(110deg,#a9cad1,#deeee8 58%,#eacfae);
  pointer-events:none
@@ -34,13 +34,13 @@
  linear-gradient(0deg,var(--bg) 0%,rgba(248,250,249,.18) 28%,transparent 70%);
 }
 .evergreen-intro{
- padding:0 16px;margin:0 0 32px;align-items:end;
- min-height:130px;display:flex;justify-content:space-between
+ padding:0 16px;margin:0 0 16px;align-items:center;
+ min-height:0;display:flex;justify-content:space-between
 }
 .evergreen-home .evergreen-intro h1{
- font-size:clamp(38px,4.5vw,64px);font-weight:650;
- line-height:1.06;letter-spacing:-.055em;
- color:var(--evergreen-ink);margin:9px 0 7px
+ font-size:clamp(30px,2.6vw,40px);font-weight:650;
+ line-height:1.15;letter-spacing:-.035em;
+ color:var(--evergreen-ink);margin:5px 0 0
 }
 .evergreen-home .evergreen-intro p{color:#345969;font-size:14px;line-height:1.5;max-width:67ch}
 .evergreen-intro .atlas-intro-link{
@@ -870,4 +870,22 @@ html.homepage-layout{overflow-x:clip}
  :root[data-mobile-home-variant="compact"] .evergreen-home .mobile-home-compact-link [data-compact-home-link]{display:none}
  .evergreen-home .evergreen-intro{margin-bottom:10px}
  .evergreen-home .evergreen-intro p{font-size:13px}
+}
+
+/* Compact identity strip: measurement values, not the page title, dominate the fold. */
+.evergreen-home .evergreen-scene{padding-top:12px}
+.evergreen-home .evergreen-intro{min-height:0;margin:0 0 14px;padding:0 16px;align-items:center}
+.evergreen-home .evergreen-intro h1{font-size:clamp(30px,2.6vw,40px);margin:5px 0 0;line-height:1.15}
+.evergreen-home .evergreen-intro .atlas-intro-link{margin:0;min-height:44px;display:inline-flex;align-items:center;gap:6px}
+.evergreen-home .evergreen-landscape{height:240px}
+@media(max-width:850px){
+ .evergreen-home .evergreen-intro .atlas-intro-link{display:none}
+ .evergreen-home .evergreen-intro{padding-inline:4px}
+}
+@media(max-width:760px){
+ .evergreen-home .evergreen-scene{padding-top:4px}
+ .evergreen-home .evergreen-intro{margin-bottom:10px;padding:0 3px}
+ .evergreen-home .evergreen-intro h1{font-size:clamp(28px,7.5vw,34px)!important;margin:4px 0 0}
+ .evergreen-home .evergreen-landscape{height:140px}
+ :root[data-mobile-home-variant="compact"] .evergreen-home .evergreen-intro{margin-bottom:10px}
 }
