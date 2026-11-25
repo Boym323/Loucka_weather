@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-25 – Čitelné modelové body na mapě
+- Modelové značky jsou oddělené od transformovaného radarového podkladu; na široké mapě krátké hodnoty ve dvou řádcích, na menší mapě číslované body s detailem a přístupným seznamem všech hodnot.
+- Zjednodušené vrstvy a odkaz na samostatnou předpověď. Radar a model nadále nezávislé, výchozí modelové vrstvy vypnuté.
+- Přidán Chromium test s kontrolovanými modelovými údaji, pěti šířkami a oběma motivy. Výsledky CI a DEV nasazení ověřit samostatně.
+
 ## 2026-11-25 – Dotažení portálu podle nasazených screenshotů
 - Kompaktnější blok výstrah, kontrastní nadpis, jednotky denních údajů vedle hodnot, desetinné srážky v modelu a odstranění záporné nuly u předpovědi.
 - Opraven typ navigace po přesunu klimatologie do mobilního menu (předchozí CI TS2367). Nové testy a nasazení ověřit samostatně.

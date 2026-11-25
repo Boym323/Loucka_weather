@@ -668,10 +668,6 @@ h1,h2,h3,p{margin-top:0}h1{font-size:clamp(26px,3vw,42px);line-height:1.2;letter
 .frost-month-bar{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;justify-content:end;min-width:0}
 .frost-month-bar i{display:block;background:var(--blue);width:80%;min-width:4px;max-width:28px;border-radius:2px 2px 0 0}
 .frost-month-bar small{font-size:9px;color:var(--muted)}
-.model-overlay{position:absolute;inset:0;pointer-events:none;z-index:5}
-.model-overlay[hidden]{display:none}
-.model-map-marker{position:absolute;transform:translate(-50%,-50%);border:1px solid #62dabb;border-radius:5px;background:#07202be8;color:#edfafa;font-size:11px;font-weight:760;text-align:center;line-height:1.15;white-space:nowrap;padding:4px 6px;text-shadow:0 1px 3px #000;box-shadow:0 2px 7px #0008}
-.model-map-marker.model-temp{background:#1e4550ee;border-color:#ffe28f}
 .model-map-controls{border-top:1px solid var(--line);margin-top:11px;padding-top:9px}
 .model-map-controls .source-note{font-size:10px}
 @media(max-width:900px){
