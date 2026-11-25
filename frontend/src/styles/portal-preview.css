@@ -136,3 +136,17 @@
  .portal-preview .portal-meteogram svg{min-width:0}
  .portal-preview .portal-meteogram .meteogram-axis{font-size:17px}
 }
+
+/* Resolve actual axe blockers from the candidate audit, with shared theme tokens. */
+.portal-preview .portal-context .observatory-sky .observatory-small-tag{
+ color:var(--text);background:var(--panel);border-color:var(--line);
+}
+.portal-preview .portal-climate>details>summary{
+ cursor:pointer;min-height:44px;align-content:center;color:var(--text);
+ padding:8px 0;
+}
+/* Keep the astronomy card in the common palette; retain the amber arc as accent. */
+.portal-preview .portal-context .observatory-sky{background:var(--panel)}
+/* A chart-sized loading region reduces the shift when hourly data arrives. */
+.portal-preview [data-hourly-content]:empty{min-height:124px}
+@media(min-width:761px){.portal-preview [data-hourly-content]:empty{min-height:180px}}

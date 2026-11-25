@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-11-25 – Sjednocení kandidáta s interaktivní mapou
+- Zachovány všechny změny mapy z main. Opraven kontrast astronomického štítku v tmavém režimu a dotyková plocha metodiky klimatologického srovnání. Přepnutí vyžaduje zelené CI a následný veřejný smoke.
+
 ## 2026-11-25 – Vizuální audit kandidáta portálu
 - Zkráceny mezery v panelu výstrah a mobilním záhlaví; na homepage je přesná hodinová tabulka rozbalitelná pod meteogramem. Na samostatné předpovědi zůstává otevřená.
 - Opraveny tři zastaralé testovací kontrakty z přesunu klasického přehledu a rozšíření auditu z 15 na 18 tras. Doplněna funkční kontrola rozbalování tabulky a úplné výstrahy. PR stále vyžaduje zelené CI a potvrzené nasazení.
@@ -8,6 +11,16 @@
 - Nový portál jako výchozí `/`, alias `/prehled-novy/` používá stejnou komponentu. Původní přehled je zachován na `/prehled-klasicky/` včetně plného mobilního režimu.
 - Trendy přesunuty k větru, rychlé mobilní odkazy a úspornější karty. Nadcházející výstrahy na telefonu zobrazují nebezpečí, platnost a stručný popis; úplné doporučení v podrobnostech. Aktivní a extrémní výstrahy zachovávají doporučení přímo.
 - Kandidát v samostatné větvi, bez DB nebo produkčních změn. Přepnutí až po průchodu CI; veřejný smoke po nasazení musí potvrdit nový commit.
+
+## 2026-11-25 – Interaktivní radar a modelové vrstvy
+- Posun mapy, zoom 5–9, návrat na Loučku; radar nad zoomem 7 pouze zvětšen (limit RainViewer). Vzorkovací mřížka se odvozuje z aktuálního výřezu a rozměrů, 9–35 modelových vzorků místo pevných souřadnic.
+- Interpolovaná teplotní vrstva s legendou, směrové šipky větru, přístupný seznam vzorků a samostatné poslední archivní měření Loučky. Chybějící hodnoty nejsou interpolovány přes neplatné buňky. Po posunu se stará vrstva odstraní; nový model se načte na požádání kvůli limitům API.
+- ČHMÚ okolní stanice zatím pouze odkaz na otevřená data; bez ověřeného collectoru nejsou vydávány za měření. Přidány geometrické a browser testy; CI a nasazení ověřit samostatně.
+
+## 2026-11-25 – Čitelné modelové body na mapě
+- Modelové značky jsou oddělené od transformovaného radarového podkladu; na široké mapě krátké hodnoty ve dvou řádcích, na menší mapě číslované body s detailem a přístupným seznamem všech hodnot.
+- Zjednodušené vrstvy a odkaz na samostatnou předpověď. Radar a model nadále nezávislé, výchozí modelové vrstvy vypnuté.
+- Přidán Chromium test s kontrolovanými modelovými údaji, pěti šířkami a oběma motivy. Výsledky CI a DEV nasazení ověřit samostatně.
 
 ## 2026-11-25 – Dotažení portálu podle nasazených screenshotů
 - Kompaktnější blok výstrah, kontrastní nadpis, jednotky denních údajů vedle hodnot, desetinné srážky v modelu a odstranění záporné nuly u předpovědi.

@@ -1,6 +1,10 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**25. 11. 2026 – sjednocení:** Kandidát portálové homepage zahrnuje aktuální interaktivní mapy z main. Kontrast a dotyková plocha opraveny podle axe auditu. CI a DEV nasazení ověřit před označením za dokončené.
+
 **25. 11. 2026 – kandidát přepnutí:** Nový portál na `/` a sdíleném aliasu `/prehled-novy/`, klasická verze na `/prehled-klasicky/`. Změna vyžaduje úspěšné CI před sloučením; po nasazení ověřit veřejný smoke a případný návrat na předchozí commit. Produkce a DB nedotčeny.
+
+**25. 11. 2026 – interaktivní mapy:** Mapový výřez řídí zoom, posun a modelové vzorky. Open-Meteo teplota je bilineárně interpolovaná (nikoli nativní rastr), vítr šipkami, Loučka oddělené archivní měření. Radar RainViewer max zoom 7, nad ním pouze zvětšení. Nový model po změně výřezu načíst ručně, aby se omezily API požadavky. Okolní ČHMÚ stanice vyžadují ověřený collector; zatím odkaz na otevřená data. Ověřit CI a DEV.
 
 **25. 11. 2026 – portálová etapa 2:** Trend teploty/tlaku z archivu, meteogram a denní indikace výstrah, klimatologické porovnání shodných dní s kontrolou pokrytí, `/historie-den/` a upravená navigace. Původní homepage je stále výchozí. Srážkové odchylky odloženy kvůli známým problémům originálu; bez zásahu do DB. Ověřit nové CI a deploy.
 

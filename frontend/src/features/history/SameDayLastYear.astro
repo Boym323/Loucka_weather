@@ -13,6 +13,7 @@
 </section>
 <script>
  import {getStatistics} from '../../shared/api/client';
+ import {displayLocalDate} from '../../shared/domain/display-date';
  import {formatValue} from '../../shared/domain/metrics';
  import {qualitySupported} from '../../shared/domain/statistics';
  const root=document.querySelector<HTMLElement>('[data-day-history]');
@@ -46,9 +47,9 @@
      const complete=coverage>=.8;
      root.dataset.historyCompleteness=complete?'sufficient':'incomplete';
      if(status)status.textContent=complete
-      ?'Dochovaná měření · '+date+' · '+Math.round(coverage*100)+
+      ?'Dochovaná měření · '+displayLocalDate(date)+' · '+Math.round(coverage*100)+
        ' % dne. Nejde o potvrzené rekordy.'
-      :'Část měření chybí · '+date+' · '+(coverage>0
+      :'Část měření chybí · '+displayLocalDate(date)+' · '+(coverage>0
        ?'dochováno '+Math.round(coverage*100)+' % dne'
        :'rozsah nelze potvrdit')+
        '. Zobrazujeme jen známé hodnoty, ne celodenní extrémy.';
