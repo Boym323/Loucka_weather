@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-25 – Interaktivní radar a modelové vrstvy
+- Posun mapy, zoom 5–9, návrat na Loučku; radar nad zoomem 7 pouze zvětšen (limit RainViewer). Vzorkovací mřížka se odvozuje z aktuálního výřezu a rozměrů, 9–35 modelových vzorků místo pevných souřadnic.
+- Interpolovaná teplotní vrstva s legendou, směrové šipky větru, přístupný seznam vzorků a samostatné poslední archivní měření Loučky. Chybějící hodnoty nejsou interpolovány přes neplatné buňky. Po posunu se stará vrstva odstraní; nový model se načte na požádání kvůli limitům API.
+- ČHMÚ okolní stanice zatím pouze odkaz na otevřená data; bez ověřeného collectoru nejsou vydávány za měření. Přidány geometrické a browser testy; CI a nasazení ověřit samostatně.
+
 ## 2026-11-25 – Čitelné modelové body na mapě
 - Modelové značky jsou oddělené od transformovaného radarového podkladu; na široké mapě krátké hodnoty ve dvou řádcích, na menší mapě číslované body s detailem a přístupným seznamem všech hodnot.
 - Zjednodušené vrstvy a odkaz na samostatnou předpověď. Radar a model nadále nezávislé, výchozí modelové vrstvy vypnuté.

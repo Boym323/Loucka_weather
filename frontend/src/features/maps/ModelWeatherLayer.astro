@@ -1,129 +1,133 @@
 <div data-model-map class="model-map-controls">
- <label class="map-layer-option"><input type="checkbox" data-model-temperature /> Teplota · model <small>Open-Meteo</small></label>
- <label class="map-layer-option"><input type="checkbox" data-model-wind /> Vítr · model <small>Open-Meteo</small></label>
+ <label class="map-layer-option"><input type="checkbox" data-model-temperature /> Teplota · barevná vrstva <small>Open-Meteo</small></label>
+ <label class="map-layer-option"><input type="checkbox" data-model-wind /> Vítr · směrové šipky <small>Open-Meteo</small></label>
+ <div class="model-temperature-key" data-temperature-key hidden><div></div><span>−30 °C</span><span>0 °C</span><span>40 °C</span></div>
  <p class="source-note" data-model-status role="status">Modelové vrstvy jsou vypnuté.</p>
+ <button type="button" class="chart-tab model-refresh" data-model-refresh hidden>Načíst model pro tento výřez</button>
  <div class="model-point-detail" data-model-detail hidden role="status"></div>
- <details class="model-point-list" data-model-list hidden>
-  <summary>Hodnoty všech modelových bodů</summary>
-  <div data-model-values></div>
- </details>
- <p class="source-note">Devět vzorků modelu, nikoli měření stanic. Zdroj: <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a> (CC BY 4.0).</p>
+ <details class="model-point-list" data-model-list hidden><summary>Vzorkované hodnoty modelu</summary><div data-model-values></div></details>
+ <p class="source-note">Teplota je interpolace vzorků z modelu, nikoli měření či nativní rastr. Šipky ukazují směr, kam vítr fouká. Zdroj: <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a> (CC BY 4.0).</p>
+ <div class="model-station-card"><strong>Meteostanice Loučka</strong><p data-map-station-value>Načítám poslední měření…</p><a href="/aktualne/">Podrobná měření ↗</a></div>
+ <p class="source-note"><a href="https://opendata.chmi.cz/meteorology/climate/now/" target="_blank" rel="noopener noreferrer">Skutečná měření ČHMÚ – otevřená data ↗</a></p>
 </div>
 <script>
+ import {sampleGrid,interpolate,temperatureColor,screenPosition,station,type View,type Geo} from './map-geometry';
+ import {getCurrent} from '../../shared/api/client';
+ import {formatTimestamp} from '../../shared/domain/weather';
  const root=document.querySelector<HTMLElement>('[data-model-map]');
- const temp=root?.querySelector<HTMLInputElement>('[data-model-temperature]');
- const wind=root?.querySelector<HTMLInputElement>('[data-model-wind]');
- const state=root?.querySelector<HTMLElement>('[data-model-status]');
- const detail=root?.querySelector<HTMLElement>('[data-model-detail]');
- const list=root?.querySelector<HTMLDetailsElement>('[data-model-list]');
- const valuesRoot=root?.querySelector<HTMLElement>('[data-model-values]');
- const world=document.querySelector<HTMLElement>('[data-radar-panel]:not(.radar-compact) .radar-world');
- const map=world?.closest<HTMLElement>('[data-radar-map]');
- const center={lat:49.170035,lon:17.876076},zoom=7,scale=256*2**zoom;
- const project=(lat:number,lon:number)=>({x:(lon+180)/360*scale,y:(1-Math.asinh(Math.tan(lat*Math.PI/180))/Math.PI)/2*scale});
- const midpoint=project(center.lat,center.lon);
- const locations=[49.35,49.17,48.99].flatMap(lat=>[17.59,17.88,18.17].map(lon=>({lat,lon})));
- type Sample={current?:{temperature_2m?:number;wind_speed_10m?:number;wind_direction_10m?:number;time?:string}};
- let model:Sample[]|undefined,loading:Promise<void>|undefined,selected=-1;
+ const map=document.querySelector<HTMLElement>('.map-page-primary [data-radar-map]');
+ const temp=root?.querySelector<HTMLInputElement>('[data-model-temperature]'),wind=root?.querySelector<HTMLInputElement>('[data-model-wind]');
+ const state=root?.querySelector<HTMLElement>('[data-model-status]'),detail=root?.querySelector<HTMLElement>('[data-model-detail]'),list=root?.querySelector<HTMLDetailsElement>('[data-model-list]');
+ const valuesRoot=root?.querySelector<HTMLElement>('[data-model-values]'),refresh=root?.querySelector<HTMLButtonElement>('[data-model-refresh]'),key=root?.querySelector<HTMLElement>('[data-temperature-key]');
  const controller=new AbortController();
- const layer=document.createElement('div');layer.className='model-overlay';layer.hidden=true;
- if(map)map.append(layer);
- const fmt=(n:number)=>new Intl.NumberFormat('cs-CZ',{maximumFractionDigits:0}).format(Math.round(n)||0);
- const descriptions=['Severozápad','Sever','Severovýchod','Západ','Střed u Loučky','Východ','Jihozápad','Jih','Jihovýchod'];
- const read=(entry:Sample)=>{
-  const v=entry.current;
-  return {t:temp?.checked&&Number.isFinite(v?.temperature_2m)?fmt(v!.temperature_2m!)+' °C':null,
-   w:wind?.checked&&Number.isFinite(v?.wind_speed_10m)&&v!.wind_speed_10m!>=0?fmt(v!.wind_speed_10m!)+' km/h':null};
+ let pending:AbortController|undefined,loadedKey='',lastRequest=0,timer:number|undefined;
+ type Sample={current?:{temperature_2m?:number;wind_speed_10m?:number;wind_direction_10m?:number;time?:string};current_units?:Record<string,string>};
+ let model:Sample[]|undefined,grid:ReturnType<typeof sampleGrid>|undefined,view:View|undefined;
+ const overlay=document.createElement('div');overlay.className='model-overlay';overlay.hidden=true;map?.append(overlay);
+ const stationLabel=document.createElement('a');stationLabel.className='map-station-label';stationLabel.href='/aktualne/';stationLabel.textContent='Loučka · stanice';stationLabel.hidden=true;map?.append(stationLabel);
+ const stationValue=root?.querySelector<HTMLElement>('[data-map-station-value]');
+ let stationText='Loučka · stanice';
+ const fmt=(v:number,digits=0)=>new Intl.NumberFormat('cs-CZ',{maximumFractionDigits:digits}).format(Math.abs(v)<0.5*10**-digits?0:v);
+ const enabled=()=>!!(temp?.checked||wind?.checked);
+ const readView=()=>{try{return JSON.parse(map?.dataset.mapView??'null') as View|null;}catch{return null;}};
+ const viewKey=(v:View)=>JSON.stringify([v.center.lat,v.center.lon,v.zoom,v.scale,v.width,v.height]);
+ const valid=(n:unknown):n is number=>typeof n==='number'&&Number.isFinite(n);
+ const unit=(s:Sample,k:string,u:string)=>s.current_units?.[k]===u;
+ const temperature=(s:Sample)=>unit(s,'temperature_2m','°C')&&valid(s.current?.temperature_2m)?s.current!.temperature_2m!:null;
+ const windValue=(s:Sample)=>unit(s,'wind_speed_10m','km/h')&&valid(s.current?.wind_speed_10m)&&s.current!.wind_speed_10m!>=0?s.current!.wind_speed_10m!:null;
+ const direction=(s:Sample)=>unit(s,'wind_direction_10m','°')&&valid(s.current?.wind_direction_10m)&&s.current!.wind_direction_10m!>=0&&s.current!.wind_direction_10m!<=360?s.current!.wind_direction_10m!:null;
+ const stationPosition=()=>{
+  const v=readView();if(!v)return;const p=screenPosition(station,v);
+  stationLabel.hidden=p.x<42||p.x>v.width-42||p.y<15||p.y>v.height-20;
+  stationLabel.style.left=p.x+'px';stationLabel.style.top=p.y+'px';stationLabel.textContent=stationText;
  };
- const describe=(i:number,t:string|null,w:string|null)=>descriptions[i]+' · '+[t?'Teplota '+t:null,w?'Vítr '+w:null].filter(Boolean).join(' · ');
- const select=(i:number)=>{
-  if(!model||!detail)return;
-  const {t,w}=read(model[i]!);selected=i;detail.hidden=false;
-  detail.textContent=describe(i,t,w)+' (modelový bod)';
-  layer.querySelectorAll<HTMLButtonElement>('[data-model-point]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.modelPoint)===i)));
- };
+ void getCurrent(controller.signal).then(r=>{
+  const t=r.readings.outTemp,w=r.readings.windSpeed;
+  const measured=(reading:typeof t)=>reading?.quality==='measured'&&valid(reading.value);
+  const parts=[measured(t)?fmt(t!.value!,1)+' '+t!.unit:null,measured(w)?fmt(w!.value!,1)+' '+w!.unit:null].filter(Boolean);
+  if(stationValue)stationValue.textContent=parts.length?parts.join(' · ')+' · '+(r.stale?'Zastaralé měření':'Poslední archivní měření')+' '+formatTimestamp(r.observedAt):'Měření není dostupné.';
+  if(measured(t)&&!r.stale)stationText='Loučka · '+fmt(t!.value!,1)+' '+t!.unit;
+  stationPosition();
+ }).catch(()=>{if(stationValue&&!controller.signal.aborted)stationValue.textContent='Měření není dostupné.';});
+ function clear(){
+  overlay.replaceChildren();overlay.hidden=true;if(detail)detail.hidden=true;if(list)list.hidden=true;if(valuesRoot)valuesRoot.replaceChildren();if(key)key.hidden=true;
+ }
  function draw(){
-  if(!world||!map||!temp||!wind)return;
-  layer.hidden=!(temp.checked||wind.checked);
-  layer.replaceChildren();
-  if(valuesRoot)valuesRoot.replaceChildren();
-  if(list)list.hidden=layer.hidden||!model;
-  if(detail)detail.hidden=true;
-  if(!model||layer.hidden)return;
-  const mapBox=map.getBoundingClientRect(),worldBox=world.getBoundingClientRect();
-  const factor=worldBox.width/512;
-  if(!factor)return;
-  const positions=locations.map(p=>{const xy=project(p.lat,p.lon);return {
-   x:worldBox.left-mapBox.left-map.clientLeft+(256+xy.x-midpoint.x)*factor,
-   y:worldBox.top-mapBox.top-map.clientTop+(256+xy.y-midpoint.y)*factor
-  };});
-  const gapX=Math.abs(positions[1]!.x-positions[0]!.x),gapY=Math.abs(positions[3]!.y-positions[0]!.y);
-  // Screen-space labels must fit between sample locations. Small maps show dots.
-  const labels=gapX>=59&&gapY>=40;
-  layer.dataset.presentation=labels?'labels':'points';
-  model.forEach((entry,i)=>{
-   const {t,w}=read(entry);if(!t&&!w)return;
-   const description=describe(i,t,w);
-   const row=document.createElement('div');row.className='model-point-row';
-   const name=document.createElement('strong');name.textContent=descriptions[i]!;
-   const value=document.createElement('span');value.textContent=[t,w].filter(Boolean).join(' · ');row.append(name,value);valuesRoot?.append(row);
-   const p=positions[i]!;
-   const halfW=labels?27:10,halfH=labels?19:10;
-   if(p.x<halfW||p.x>map.clientWidth-halfW||p.y<halfH||p.y>map.clientHeight-halfH)return;
-   const marker=document.createElement('button');marker.type='button';
-   marker.className='model-map-marker'+(labels?' model-map-label':' model-map-dot');
-   marker.dataset.modelPoint=String(i);
-   marker.style.left=p.x+'px';marker.style.top=p.y+'px';
-   marker.setAttribute('aria-label',description+' (model)');marker.title=description;
-   marker.setAttribute('aria-pressed',String(i===selected));
-   if(labels){for(const v of [t,w]){if(!v)continue;const span=document.createElement('span');span.textContent=v;marker.append(span);}}
-   else marker.textContent=String(i+1);
-   marker.addEventListener('click',()=>select(i));
-   layer.append(marker);
+  clear();if(!enabled()||!model||!grid||!view||loadedKey!==viewKey(readView()??view))return;
+  overlay.hidden=false;const {cols,rows,points}=grid;
+  if(temp?.checked){
+   const canvas=document.createElement('canvas');canvas.className='model-temperature-canvas';canvas.width=160;canvas.height=Math.max(60,Math.min(160,Math.round(160*view.height/view.width)));canvas.setAttribute('aria-hidden','true');
+   const ctx=canvas.getContext('2d');
+   if(ctx){const img=ctx.createImageData(canvas.width,canvas.height),samples=model.map(temperature);
+    for(let y=0;y<canvas.height;y++)for(let x=0;x<canvas.width;x++){const v=interpolate(samples,cols,rows,x/(canvas.width-1),y/(canvas.height-1));if(v===null)continue;const c=temperatureColor(v),i=(y*canvas.width+x)*4;img.data[i]=c[0]!;img.data[i+1]=c[1]!;img.data[i+2]=c[2]!;img.data[i+3]=118;}
+    ctx.putImageData(img,0,0);overlay.append(canvas);if(key)key.hidden=false;
+   }
+  }
+  model.forEach((s,i)=>{
+   const p=points[i]!,t=temperature(s),w=windValue(s),d=direction(s);
+   const parts=[temp?.checked&&t!==null?fmt(t,1)+' °C':null,wind?.checked&&w!==null?fmt(w,1)+' km/h':null,wind?.checked&&d!==null?'směr od '+fmt(d)+'°':null].filter(Boolean);
+   if(!parts.length)return;
+   const desc=p.lat.toFixed(3)+'° N, '+p.lon.toFixed(3)+'° E · '+parts.join(' · ');
+   const row=document.createElement('div');row.className='model-point-row';row.textContent=desc;valuesRoot?.append(row);
+   if(!wind?.checked||w===null||d===null)return;
+   const xy=screenPosition(p,view!),stationXY=screenPosition(station,view!);
+   if(xy.x<18||xy.y<18||xy.x>view!.width-18||xy.y>view!.height-18||Math.hypot(xy.x-stationXY.x,xy.y-stationXY.y)<40)return;
+   const b=document.createElement('button');b.type='button';b.className='model-wind-arrow';b.dataset.modelPoint=String(i);b.style.left=xy.x+'px';b.style.top=xy.y+'px';b.title=desc;b.setAttribute('aria-label',desc);
+   const arrow=document.createElement('span');arrow.textContent=w<0.5?'•':'↑';arrow.style.transform='rotate('+(d+180)+'deg)';b.append(arrow);
+   b.addEventListener('click',()=>{if(detail){detail.hidden=false;detail.textContent=desc;}});overlay.append(b);
   });
-  if(selected>=0&&model[selected]&&(read(model[selected]!).t||read(model[selected]!).w))select(selected);
-  else selected=-1;
+  if(list)list.hidden=false;
+  if(state)state.textContent=grid.points.length+' vzorků · modelová interpolace'+(model[0]?.current?.time?' · '+model[0].current.time.replace('T',' '):'');
+  if(refresh)refresh.hidden=true;
  }
- function activate(){
-  if(!temp||!wind)return;
-  if(!temp.checked&&!wind.checked){selected=-1;if(state)state.textContent='Modelové vrstvy jsou vypnuté.';draw();return;}
-  if(model){if(state)state.textContent='Modelové body · nikoli měření';draw();return;}
-  if(loading)return;
-  if(state)state.textContent='Načítám modelové hodnoty…';
-  const params=new URLSearchParams({latitude:locations.map(p=>p.lat).join(','),longitude:locations.map(p=>p.lon).join(','),current:'temperature_2m,wind_speed_10m,wind_direction_10m',wind_speed_unit:'kmh',timezone:'Europe/Prague'});
-  loading=fetch('https://api.open-meteo.com/v1/forecast?'+params,{signal:controller.signal}).then(async response=>{
-   if(!response.ok)throw Error('Model nedostupný');
-   const result=await response.json() as unknown;
-   if(!Array.isArray(result)||result.length!==locations.length||!result.every(v=>v&&typeof v==='object'))throw Error('Neplatné modelové body');
-   model=result as Sample[];
-   if(!temp.checked&&!wind.checked){if(state)state.textContent='Modelové vrstvy jsou vypnuté.';}
-   else if(state)state.textContent='Modelové body · nikoli měření';
-   draw();
-  }).catch(()=>{
-   if(controller.signal.aborted)return;
-   if(state)state.textContent=!temp.checked&&!wind.checked?'Modelové vrstvy jsou vypnuté.':'Modelová data nejsou dostupná. Radar funguje nezávisle.';
-  }).finally(()=>{loading=undefined;});
+ async function load(){
+  const v=readView();if(!v||!enabled())return;
+  const id=viewKey(v);if(model&&loadedKey===id){draw();return;}
+  if(Date.now()-lastRequest<2500){window.clearTimeout(timer);timer=window.setTimeout(()=>void load(),2500-(Date.now()-lastRequest));return;}
+  pending?.abort();pending=new AbortController();const signal=pending.signal;lastRequest=Date.now();
+  clear();if(state)state.textContent='Načítám model pro zobrazenou oblast…';
+  const g=sampleGrid(v);
+  const params=new URLSearchParams({latitude:g.points.map(p=>p.lat.toFixed(4)).join(','),longitude:g.points.map(p=>p.lon.toFixed(4)).join(','),current:'temperature_2m,wind_speed_10m,wind_direction_10m',wind_speed_unit:'kmh',timezone:'Europe/Prague'});
+  try{
+   const res=await fetch('https://api.open-meteo.com/v1/forecast?'+params,{signal});if(!res.ok)throw Error('model');
+   const data=await res.json() as unknown;
+   if(signal.aborted||!enabled()||viewKey(readView()??v)!==id)return;
+   if(!Array.isArray(data)||data.length!==g.points.length||!data.every(s=>s&&typeof s==='object'))throw Error('samples');
+   const samples=data as Sample[];if(!samples.some(s=>temperature(s)!==null||windValue(s)!==null))throw Error('units');
+   model=samples;grid=g;view=v;loadedKey=id;draw();
+  }catch{if(!signal.aborted){if(state)state.textContent='Modelová data nedostupná. Radar a měření fungují nezávisle.';if(refresh)refresh.hidden=false;}}
  }
- // The radar rescales its own world on resize. Read the new geometry on the next frame.
- let raf=0;
- const resize=new ResizeObserver(()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(draw);});
- if(map)resize.observe(map);
- temp?.addEventListener('change',activate);wind?.addEventListener('change',activate);
- document.addEventListener('astro:before-swap',()=>{controller.abort();resize.disconnect();cancelAnimationFrame(raf);layer.remove();},{once:true});
+ function toggle(){
+  if(!enabled()){pending?.abort();window.clearTimeout(timer);clear();if(state)state.textContent='Modelové vrstvy jsou vypnuté.';if(refresh)refresh.hidden=true;return;}
+  const v=readView();if(v&&loadedKey===viewKey(v)&&model)draw();else void load();
+ }
+ function changed(){
+  stationPosition();if(!enabled())return;
+  const v=readView();if(v&&loadedKey===viewKey(v)){draw();return;}
+  pending?.abort();window.clearTimeout(timer);clear();if(state)state.textContent='Výřez mapy se změnil. Načti model pro novou oblast.';if(refresh)refresh.hidden=false;
+ }
+ temp?.addEventListener('change',toggle,{signal:controller.signal});wind?.addEventListener('change',toggle,{signal:controller.signal});refresh?.addEventListener('click',()=>void load(),{signal:controller.signal});map?.addEventListener('loucka:map-view',changed,{signal:controller.signal});
+ stationPosition();
+ document.addEventListener('astro:before-swap',()=>{controller.abort();pending?.abort();window.clearTimeout(timer);overlay.remove();stationLabel.remove();},{once:true});
 </script>
 <style is:global>
- /* The overlay is deliberately a sibling of the transformed radar world. */
- .radar-map>.model-overlay{position:absolute;inset:0;pointer-events:none;z-index:3}
- .radar-map>.model-overlay[hidden]{display:none}
- .radar-map .model-map-marker{position:absolute;transform:translate(-50%,-50%);pointer-events:auto;box-sizing:border-box;margin:0;border:1px solid #fff;border-radius:5px;background:#123744f5;color:white;font:650 11px/1.15 system-ui,sans-serif;box-shadow:0 1px 3px #0006;text-shadow:none;cursor:pointer;padding:0}
- .radar-map .model-map-label{width:54px;min-height:34px;display:grid;align-content:center;gap:1px;text-align:center}
- .radar-map .model-map-label span{display:block;white-space:nowrap}
- .radar-map .model-map-dot{width:20px;height:20px;border-radius:50%;font-size:10px}
- .radar-map .model-map-marker[aria-pressed="true"],.radar-map .model-map-marker:focus-visible{outline:2px solid #ffd269;outline-offset:1px;z-index:1}
- .model-point-detail{background:var(--panel-2);padding:10px;border:1px solid var(--line);border-radius:8px;font-size:13px;margin:8px 0}
- .model-point-list{margin:8px 0;font-size:13px}
- .model-point-list summary{cursor:pointer;min-height:44px;align-content:center;font-weight:650}
- .model-point-row{display:grid;gap:3px;padding:8px 0;border-top:1px solid var(--line)}
- .model-point-row span{font-variant-numeric:tabular-nums}
- .model-map-controls .source-note{font-size:12px;line-height:1.45}
+.radar-map>.model-overlay{position:absolute;inset:0;pointer-events:none;z-index:2}
+.radar-map>.model-overlay[hidden]{display:none}
+.model-temperature-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.model-wind-arrow{position:absolute;width:30px;height:30px;transform:translate(-50%,-50%);display:grid;place-items:center;padding:0;border:1px solid #fff;border-radius:50%;background:#123744e8;color:#fff;font:700 20px/1 system-ui;pointer-events:auto;cursor:pointer}
+.model-wind-arrow span{display:block}
+.map-station-label{position:absolute;transform:translate(-50%,-50%);z-index:3;background:#fff;color:#123744;border:2px solid #db323e;padding:5px 8px;font-size:12px;font-weight:700;border-radius:5px;white-space:nowrap;text-decoration:none;box-shadow:0 1px 4px #0006}
+.map-station-label[hidden]{display:none}
+.map-page-primary .radar-pin{display:none}
+.model-temperature-key{display:grid;grid-template-columns:1fr 1fr 1fr;font-size:11px;gap:4px;margin:10px 0}
+.model-temperature-key[hidden]{display:none}
+.model-temperature-key div{grid-column:1/-1;height:12px;border-radius:4px;background:linear-gradient(90deg,#411e91 0%,#354fb8 21.43%,#41b1da 42.86%,#4cb76a 57.14%,#f7da4f 71.43%,#f0762c 85.71%,#b52730 100%)}
+.model-temperature-key span:nth-of-type(2){text-align:center}.model-temperature-key span:last-child{text-align:right}
+.model-point-detail,.model-station-card{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:10px;margin:8px 0;font-size:13px}
+.model-point-detail[hidden],.model-refresh[hidden],.model-point-list[hidden]{display:none}
+.model-station-card p{margin:6px 0;line-height:1.4}
+.model-point-list summary{cursor:pointer;min-height:44px;align-content:center;font-weight:650;font-size:13px}
+.model-point-row{font-size:12px;padding:7px 0;border-top:1px solid var(--line)}
+.model-map-controls .source-note{font-size:12px;line-height:1.45}
+.model-refresh{min-height:44px;white-space:normal}
 </style>

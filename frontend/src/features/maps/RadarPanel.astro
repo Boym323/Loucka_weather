@@ -8,12 +8,17 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
   <div class="panel-title"><SiteIcon name="radar" size={18}/><h2 id="radar-heading">Srážkový radar – Loučka a okolí</h2></div>
   <span class="status-chip" data-radar-status role="status">Načítám radar</span>
  </div>
- <div class="radar-map" data-radar-map role="group" aria-label="Radar srážek na podkladě OpenStreetMap">
+ <div class="radar-map" data-radar-map role="group" aria-label="Radar srážek na podkladě OpenStreetMap" tabindex={compact?undefined:0}>
   <div class="radar-world">
    <div data-radar-base class="radar-base" aria-hidden="true"></div>
    <img class="radar-overlay" data-radar-overlay alt="" hidden />
    <span class="radar-pin" title="Loučka, okres Zlín" aria-hidden="true">●</span>
   </div>
+  {!compact&&<div class="map-navigation" aria-label="Ovládání mapy">
+   <div class="map-zoom"><button type="button" data-map-action="in" aria-label="Přiblížit">+</button><button type="button" data-map-action="out" aria-label="Oddálit">−</button></div>
+   <div class="map-pan"><button type="button" data-map-action="north" aria-label="Posun na sever">↑</button><button type="button" data-map-action="west" aria-label="Posun na západ">←</button><button type="button" data-map-action="home" aria-label="Vycentrovat Loučku">⌂</button><button type="button" data-map-action="east" aria-label="Posun na východ">→</button><button type="button" data-map-action="south" aria-label="Posun na jih">↓</button></div>
+   <span class="map-zoom-label" data-map-zoom>Zoom 7</span>
+  </div>}
   <div class="radar-overlay-message" data-radar-message role="status">Zjišťuji poslední radarový snímek…</div>
   <div class="radar-scale" aria-hidden="true"><span>Slabé</span><i></i><span>Silné</span></div>
  </div>
@@ -34,24 +39,20 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
  </div>
 </section>
 <script>
+ import {project,unproject,screenPosition,station,type Geo,type View} from './map-geometry';
  type Frame={time:number;path:string};
  type RV={host?:string;radar?:{past?:Frame[]}};
- const lat=49.170035,lon=17.876076,zoom=7,size=256;
- const n=2**zoom;
- const latRad=lat*Math.PI/180;
- const px=(lon+180)/360*n*size;
- const py=(1-Math.asinh(Math.tan(latRad))/Math.PI)/2*n*size;
- // OSM tile grid and radar coordinate tile share the same EPSG:3857 center.
- function baseTiles(parent:HTMLElement){
-  const x0=px-256,y0=py-256;
+ const size=256;
+ function baseTiles(parent:HTMLElement,center:Geo,zoom:number){
+  const {x:px,y:py}=project(center,zoom),n=2**zoom,x0=px-256,y0=py-256;
+  parent.replaceChildren();
   for(let x=Math.floor(x0/size);x<=Math.floor((x0+512)/size);x++){
    for(let y=Math.floor(y0/size);y<=Math.floor((y0+512)/size);y++){
     if(x<0||x>=n||y<0||y>=n)continue;
     const img=document.createElement('img');
     img.src='https://tile.openstreetmap.org/'+zoom+'/'+x+'/'+y+'.png';
     img.alt='';img.loading='lazy';img.decoding='async';
-    img.style.left=(x*size-x0)+'px';img.style.top=(y*size-y0)+'px';
-    parent.append(img);
+    img.style.left=(x*size-x0)+'px';img.style.top=(y*size-y0)+'px';parent.append(img);
    }
   }
  }
@@ -71,11 +72,18 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
   const scrubLabel=root.querySelector<HTMLElement>('[data-radar-timeline-label]');
   const frameCount=root.querySelector<HTMLElement>('[data-radar-frame]');
   if(!base||!image)return;
-  baseTiles(base);
+  const compact=root.classList.contains('radar-compact');
+  let center={...station},zoom=7;
+  baseTiles(base,center,zoom);
   const scaleToContainer=()=>{
    if(!map||!world)return;
-   const s=Math.max(1,Math.min(2.6,map.clientWidth/512));
+   const s=Math.max(1,map.clientWidth/512,map.clientHeight/512);
+   const view:View={center:{...center},zoom,scale:s,width:map.clientWidth,height:map.clientHeight};
+   map.dataset.mapView=JSON.stringify(view);
+   const pin=root.querySelector<HTMLElement>('.radar-pin');
+   if(pin&&!compact){const point=screenPosition(station,view);pin.style.left=(256+(point.x-view.width/2)/s)+'px';pin.style.top=(256+(point.y-view.height/2)/s)+'px';pin.hidden=point.x<0||point.x>view.width||point.y<0||point.y>view.height;}
    world.style.transform='translate(-50%,-50%) scale('+s+')';
+   if(!compact)map.dispatchEvent(new Event('loucka:map-view'));
   };
   const resizeObserver=new ResizeObserver(scaleToContainer);
   if(map)resizeObserver.observe(map);
@@ -112,10 +120,37 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
     if(message){message.hidden=false;message.textContent='Radarový snímek se nepodařilo načíst.';}
     if(status){status.textContent='Chyba snímku';status.classList.add('warning');}
    };
-   image.src=host+path+'/512/7/'+lat+'/'+lon+'/2/1_1.png';
+   const radarZoom=Math.min(7,zoom),overzoom=2**(zoom-radarZoom);
+   image.style.width=512*overzoom+'px';image.style.height=512*overzoom+'px';image.style.inset='auto';image.style.left='50%';image.style.top='50%';image.style.transform='translate(-50%,-50%)';
+   image.src=host+path+'/512/'+radarZoom+'/'+center.lat.toFixed(5)+'/'+center.lon.toFixed(5)+'/2/1_1.png';
    if(time)time.textContent='Snímek '+timeLabel(frame.time);
   };
   const controller=new AbortController();
+  if(!compact&&map){
+   const changeView=(action:string,dx=0,dy=0)=>{
+    stop();
+    if(action==='home'){center={...station};zoom=7;}
+    else if(action==='in')zoom=Math.min(9,zoom+1);
+    else if(action==='out')zoom=Math.max(5,zoom-1);
+    else {
+     const c=project(center,zoom),s=Math.max(1,map.clientWidth/512,map.clientHeight/512);
+     const move=action==='west'?[-map.clientWidth/4,0]:action==='east'?[map.clientWidth/4,0]:action==='north'?[0,-map.clientHeight/4]:action==='south'?[0,map.clientHeight/4]:[dx,dy];
+     const nextCenter=unproject({x:c.x+move[0]!/s,y:c.y+move[1]!/s},zoom);
+     center={lat:Math.max(46,Math.min(52,nextCenter.lat)),lon:Math.max(12,Math.min(23,nextCenter.lon))};
+    }
+    baseTiles(base,center,zoom);scaleToContainer();render();
+    const label=root.querySelector<HTMLElement>('[data-map-zoom]');
+    if(label)label.textContent='Zoom '+zoom+(zoom>7?' · radar zvětšen':'');
+    const plus=root.querySelector<HTMLButtonElement>('[data-map-action="in"]'),minus=root.querySelector<HTMLButtonElement>('[data-map-action="out"]');
+    if(plus)plus.disabled=zoom>=9;if(minus)minus.disabled=zoom<=5;
+   };
+   root.querySelectorAll<HTMLButtonElement>('[data-map-action]').forEach(b=>b.addEventListener('click',()=>changeView(b.dataset.mapAction??''),{signal:controller.signal}));
+   map.addEventListener('keydown',e=>{if(e.target!==map)return;const actions:Record<string,string>={ArrowUp:'north',ArrowDown:'south',ArrowLeft:'west',ArrowRight:'east','+':'in','-':'out',Home:'home'};if(actions[e.key]){e.preventDefault();changeView(actions[e.key]!);}},{signal:controller.signal});
+   let drag:{x:number;y:number;id:number}|undefined;
+   map.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'||e.button!==0||(e.target as HTMLElement).closest('button,a,input'))return;drag={x:e.clientX,y:e.clientY,id:e.pointerId};map.setPointerCapture(e.pointerId);},{signal:controller.signal});
+   map.addEventListener('pointerup',e=>{if(!drag||drag.id!==e.pointerId)return;const dx=drag.x-e.clientX,dy=drag.y-e.clientY;drag=undefined;if(Math.abs(dx)+Math.abs(dy)>8)changeView('drag',dx,dy);},{signal:controller.signal});
+   map.addEventListener('pointercancel',()=>{drag=undefined;},{signal:controller.signal});
+  }
   void fetch('https://api.rainviewer.com/public/weather-maps.json',{signal:controller.signal}).then(async response=>{
    if(!response.ok)throw new Error('Nedostupné radarové snímky');
    const data=await response.json() as RV;
