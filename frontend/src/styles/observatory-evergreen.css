@@ -165,7 +165,7 @@
  color:#627c82!important;font-size:12px!important;line-height:1.25;
  margin:3px 0 0;min-height:0
 }
-.evergreen-hero .current-panel .metric-card .metric-note[data-reading-state="measured"]{
+.evergreen-hero .current-panel[data-current-state="live"] .metric-card .metric-note[data-reading-source="live"][data-reading-state="measured"]{
  display:none
 }
 

@@ -82,6 +82,12 @@ try{
       assert.equal(await page.locator('.climate-mobile-chapters').isVisible(),true,'mobile chapter selector missing');
      }
      if(path==='/'){
+      const shortcut=page.locator('[data-mobile-alert-shortcut]');
+      if(width<=760){
+       await shortcut.waitFor({state:'visible',timeout:10000});
+       assert.match(await shortcut.textContent()??'',/Stav výstrah ČHMÚ nelze ověřit/);
+       assert.ok(await page.evaluate(()=>document.querySelector('[data-mobile-alert-shortcut]').getBoundingClientRect().bottom<document.querySelector('[data-home-hero]').getBoundingClientRect().top),'warning shortcut before instruments');
+      }else assert.equal(await shortcut.isVisible(),false,'mobile-only warning shortcut on desktop');
       assert.ok(await page.evaluate(()=>document.querySelector('#pocasi-predpoved').getBoundingClientRect().top<document.querySelector('#pocasi-kamera').getBoundingClientRect().top),'forecast should precede camera');
       const boxes=result.spotlight;
       assert.ok(boxes?.length===4&&boxes.every(Boolean),'four observatory cards are present');
