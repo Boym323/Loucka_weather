@@ -218,6 +218,7 @@
 
 
 /* Visual pass 2026-11-27: make the homepage scan quickly and avoid an empty wind instrument. */
+@media(min-width:1200px){.site-header .nav a{font-size:13px}}
 .portal-preview{gap:clamp(12px,1.25vw,17px)}
 .portal-heading{padding-bottom:2px}
 .portal-heading .eyebrow{font-size:11px;letter-spacing:.055em}
