@@ -302,8 +302,9 @@ try{
      assert.equal(await page.locator('[data-yearbook-rain-chart] svg').count(),1);
      assert.equal(await page.locator('[data-yearbook-temp-chart] .atlas-chart-temp-bar').count(),12);
      assert.equal(await page.locator('[data-yearbook-rain-chart] .atlas-chart-rain-bar').count(),12);
-     assert.equal((await page.locator('[data-yearbook-rain-chart] .chart-axis').first().textContent())?.trim(),'0',
-      'rainfall visual scale starts at zero, not negative precipitation');
+     assert.match((await page.locator('[data-yearbook-rain-chart] .chart-axis').first().textContent())?.trim()??'',
+      /^0(?:[,.]0+)?$/,
+      'rainfall visual scale starts at zero in the active locale, not negative precipitation');
      await page.emulateMedia({media:'print'});
      assert.equal(await page.locator('.site-header').evaluate(e=>getComputedStyle(e).display),'none');
      assert.equal(await page.locator('.atlas-yearbook').evaluate(e=>getComputedStyle(e).display)!=='none',true);
