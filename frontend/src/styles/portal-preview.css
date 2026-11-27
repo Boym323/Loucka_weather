@@ -215,3 +215,44 @@
  .portal-preview .alert-strip-time{font-size:11px}
  .portal-preview .portal-warning .local-warnings.strip{padding:7px 9px}
 }
+
+
+/* Visual pass 2026-11-27: make the homepage scan quickly and avoid an empty wind instrument. */
+.portal-preview{gap:clamp(12px,1.25vw,17px)}
+.portal-heading{padding-bottom:2px}
+.portal-heading .eyebrow{font-size:11px;letter-spacing:.055em}
+.portal-heading .panel-link{min-height:40px;padding:8px 11px;border:1px solid var(--line);border-radius:9px;background:var(--panel);text-decoration:none;font-weight:650}
+.portal-heading .panel-link:hover{border-color:var(--teal);background:var(--panel-2)}
+.portal-warning .local-warnings.strip{padding:9px 14px;border-radius:12px}
+.portal-warning .local-warnings.strip .section-heading{margin-bottom:4px}
+.portal-warning .local-warnings.strip .section-heading h2{font-size:15px}
+.portal-warning .local-warnings.strip .source-note{margin:2px 0 0;line-height:1.4}
+.portal-primary,.portal-media,.portal-context{gap:14px}
+.portal-primary>div{gap:12px}
+.portal-preview .section,.portal-context>section{border-radius:13px}
+.portal-preview .current-panel[data-variant="portal"] .metric-card{border-radius:11px}
+.portal-preview .forecast-day{border-radius:11px}
+.portal-preview .portal-quick-links a,.portal-destinations a{border-radius:9px}
+
+/* When direction is unverified, the compass has no useful needle to show.
+   Keep the real speed and gust readings visible in a short two-column strip. */
+.portal-preview .wind-compass-panel:has(.wind-gauge-v2[data-wind-valid="false"]){padding:11px 15px}
+.portal-preview .wind-compass-panel:has(.wind-gauge-v2[data-wind-valid="false"]) .section-heading{margin-bottom:7px}
+.portal-preview .wind-compass-panel:has(.wind-gauge-v2[data-wind-valid="false"]) .wind-layout-v2{display:block;margin:0}
+.portal-preview .wind-compass-panel:has(.wind-gauge-v2[data-wind-valid="false"]) .wind-gauge-v2{display:none}
+.portal-preview .wind-compass-panel:has(.wind-gauge-v2[data-wind-valid="false"]) .observatory-wind-direction,
+.portal-preview .wind-compass-panel:has(.wind-gauge-v2[data-wind-valid="false"]) [data-wind-description],
+.portal-preview .wind-compass-panel:has(.wind-gauge-v2[data-wind-valid="false"]) .observatory-source-note{display:none}
+.portal-preview .wind-compass-panel:has(.wind-gauge-v2[data-wind-valid="false"]) .wind-readout-v2{display:block}
+.portal-preview .wind-compass-panel:has(.wind-gauge-v2[data-wind-valid="false"]) .wind-metrics-v2{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0}
+.portal-preview .wind-compass-panel:has(.wind-gauge-v2[data-wind-valid="false"]) .wind-metric-v2{padding:8px 10px;border-radius:9px}
+
+@media(max-width:760px){
+ .portal-heading{align-items:flex-start}
+ .portal-heading .panel-link{min-height:40px;font-size:12px}
+ .portal-warning .local-warnings.strip{padding:8px 10px}
+ .portal-primary,.portal-media,.portal-context{gap:11px}
+ .portal-primary>div{gap:10px}
+ .portal-preview .wind-compass-panel:has(.wind-gauge-v2[data-wind-valid="false"]){padding:10px 12px}
+}
+@media(prefers-reduced-motion:reduce){.portal-heading .panel-link{transition:none}}
