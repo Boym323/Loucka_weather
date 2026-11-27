@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-27 – Vizuální hierarchie úvodní stránky
+- Zpřehledněny rozestupy a úvodní pás; výstrahy mají kompaktnější podobu.
+- Při neověřeném směru větru se skryje prázdný kompas, ale rychlost a nárazy zůstávají jako kompaktní měření včetně zdrojových štítků. Data ani výpočty se nemění.
+- Změna je připravena ve větvi `codex/portal-visual-polish-20261127`; CI a DEV náhled je nutné ověřit samostatně.
+
+
 ## 2026-11-25 – Jednotná přesnost grafů
 - Formátování podle veličiny v historických, srážkových a klimatologických grafech, tooltipech, tabulkách a souhrnech; osy ECharts s minimálním krokem podle přesnosti. Teplota, tlak, vítr, srážky a UV na desetiny; vlhkost, směr a záření na celá čísla.
 - Česká desetinná čárka, chybějící hodnoty zůstávají pomlčkou, odstranění záporné nuly. Bez zaokrouhlení zdrojových dat či výpočtů. Doplněny regresní testy; CI a nasazení ověřit samostatně.
