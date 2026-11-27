@@ -23,7 +23,7 @@ test('history table is lazy, keyboard accessible and uses real quality-labelled 
  assert.match(code,/if\(!tableBody\|\|!tableDetails\?\.open\)return/);
  assert.match(code,/const fragment=document\.createDocumentFragment\(\)/);
  assert.match(code,/if\(index===3\)cell\.dataset\.quality=point\.quality/);
- assert.match(code,/valid\(point\)\?formatValue/);
+ assert.match(code,/valid\(point\)\?formatMetricValue/);
  assert.match(code,/timeZone:'Europe\/Prague'/);
  assert.match(css,/\.history-table-alternative/);
 });
