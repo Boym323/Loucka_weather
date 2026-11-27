@@ -1,5 +1,8 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**27. 11. 2026 – vizuální úprava portálové homepage:** Zkompaktněný pás výstrah a rozestupy. Pokud není ověřen směr větru, kompas se skryje a rychlost/nárazy zůstanou v úsporném přehledu se zdroji. Připravena větev `codex/portal-visual-polish-20261127`; změny ani jejich nasazení zatím nejsou ověřené přes CI nebo DEV.
+
+
 **25. 11. 2026 – sjednocení:** Kandidát portálové homepage zahrnuje aktuální interaktivní mapy z main. Kontrast a dotyková plocha opraveny podle axe auditu. CI a DEV nasazení ověřit před označením za dokončené.
 
 **25. 11. 2026 – kandidát přepnutí:** Nový portál na `/` a sdíleném aliasu `/prehled-novy/`, klasická verze na `/prehled-klasicky/`. Změna vyžaduje úspěšné CI před sloučením; po nasazení ověřit veřejný smoke a případný návrat na předchozí commit. Produkce a DB nedotčeny.
