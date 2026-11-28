@@ -1,6 +1,7 @@
 /** Controlled local fixtures only; never calls the production archive. */
 import {chromium} from 'playwright';
 import assert from 'node:assert/strict';
+import {pragueMidnightIso,nextDate} from '../src/shared/domain/statistics.ts';
 import {mkdir} from 'node:fs/promises';
 const origin=process.env.LOCAL_PREVIEW_URL||'http://127.0.0.1:4321/';
 const out='test-results/portal-functional';await mkdir(out,{recursive:true});
@@ -94,7 +95,9 @@ try{
    if(url.pathname==='/api/v1/statistics/daily'){
     if(calendarGate)await calendarGate.pending;
     const metric=url.searchParams.get('metric'),aggregation=url.searchParams.get('aggregation');
-    return json({schemaVersion:'1',metric,aggregation,unit:metric==='rain'?'mm':'°C',value:metric==='rain'?0:aggregation==='min'?-2:7,quality:'derived',source:'weewx_daily',dataRevision:'fixture',completeness:{valid:288,fraction:1},timeCoverage:{fraction:1}});
+    const date=url.searchParams.get('date');
+    const seconds=(Date.parse(pragueMidnightIso(nextDate(date)))-Date.parse(pragueMidnightIso(date)))/1000;
+    return json({schemaVersion:'1',metric,aggregation,unit:metric==='rain'?'mm':'°C',value:metric==='rain'?0:aggregation==='min'?-2:7,quality:'derived',source:'weewx_daily',units:'metricwx',provenance:'weewx-daily-'+aggregation,dataRevision:'fixture',completeness:{expected:null,valid:288,fraction:null},timeCoverage:{validSeconds:seconds,expectedSeconds:seconds,fraction:1,basis:'weewx_daily_sumtime_seconds',scope:'metric_only'},extremaObservedAt:null,extremaSource:aggregation==='min'||aggregation==='max'?'unknown':'not_applicable'});
    }
    if(url.pathname.startsWith('/api/v1/'))return route.fulfill({status:503,body:'fixture unavailable'});
    if(url.origin!==new URL(origin).origin)return route.abort();

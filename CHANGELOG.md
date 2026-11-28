@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-11-28 – Integrace kalendáře a modelu grafu
+- Exact DEV #204 `d61cc68` 46167913348 (scheduled run, stabilní SHA před/po) PASS: grafy i senzory CLS 0, slow4G 3/3 medián 2320 ms. Původní push smoke byl zrušen souběžným scheduled během. #203 231/231 MariaDB a 164/164 frontend + Chromium PASS (46167869865/46167869867); #205 165/165 + Chromium PASS (46168021107). Integrované CI/DEV ověřit samostatně.
+
+## 2026-11-28 – Ověření stabilizace a CSS
+- #204 sloučen `d61cc68` po 162/162 testech a CSSOM potvrzení 4/15 tras s kompasem, 11/15 bez. Exact DEV #202 `7efde45` 46166974447 PASS: grafy CLS 0,1435 → 0, senzory 0,1061 → 0,026; slow4G 3/3 medián 2536 ms (lab). #203 první CI 163/163 unit PASS, browser odhalil chybějící denní pokrytí; oprava a nové CI v tomto PR.
+
+## 2026-11-28 – Validace statistického kontraktu frontendu
+- #202 sloučen `7efde45` po společném CI 46149223241 (161/161 + Chromium; 6 shodných geometrií). #200 exact DEV `5558396` 46149065666 PASS, rain 284/284, live/failover PASS, slow4G 3/3 medián 2600 ms (lab).
+- Frontend odmítá neplatné statistické agregace, kvalitu, completeness a neověřenou coverage; skutečná nula, NULL a count=0 zůstávají rozdílné. Ověřuje duration basis/scope a původní toleranci 1 %. Test fixture kalendáře odpovídá backendu; přímé negativní testy. Bez změn backendu, SQL či zdrojových dat. CI/DEV ověřit samostatně.
+- Regrese kalendáře odhalila nesoulad: API poskytovalo timeCoverage pouze ročnímu průměru, kalendář ji vyžadoval pro denní extrémy a srážky. Doplněno pouze pro outTemp min/max a rain sum z existujícího sumtime, skutečná délka dne 23/24/25 h, neznámé/překročené pokrytí NULL. Zůstávají QC brány, beze změny zdrojových dat nebo SQL. Kalendář výslovně rozlišuje evidované pokrytí od nezávislé validace. Testy skutečných API odpovědí + browser fixture.
+
+
+## 2026-11-28 – Refaktoring historického grafu
+- `history-chart-model.ts` odděluje čisté převody bodů, kvalitu, HTML escaping a jednoprůchodový souhrn minim/maxim a počtů. Bez změn zdrojových hodnot; neznámá kvalita se nezobrazuje jako platná. Abortovaný požadavek nesmí přepsat CSV/tabulku/tooltip po novějším výběru; nejprve ověření signálu, potom publikace. Chybový stav vyprázdní výsledky. Přímé testy nul, NULL, nekonečných/nesprávných hodnot, 150 tis. bodů a escapingu; stávající browser regrese. CI/DEV ověřit samostatně.
+
 ## 2026-11-28 – Komponentový CSS kompasu
 - Přesun importu `wind-compass-v2.css` z BaseLayout do WindCompass.astro, bez změny pravidel CSS. Kompas se používá na přehledu, aliasu, klasickém přehledu a aktuálních údajích. Ostatní trasy nemají načítat cca 8,1 kB zdrojového CSS kompasu. Kontrola skutečně emitovaných CSSOM pravidel a tokenů na 15 trasách, stávající vizuální wind regrese zůstává. CI/DEV a velikost přenosu ověřit samostatně; bez změny dat.
 

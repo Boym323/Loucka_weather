@@ -76,7 +76,8 @@
  import {getHistoryInterval} from '../../shared/api/client';
  import {pragueMidnightIso,nextDate} from '../../shared/domain/statistics';
  import {formatMetricValue,metricAxisStep} from '../../shared/domain/metrics';
- import type {HistoryResponse,HistoryPoint} from '../../shared/domain/weather';
+ import type {HistoryResponse} from '../../shared/domain/weather';
+ import {validHistoryPoint as valid,historyQualityName as qualityName,escapeChartHtml as escapeHtml,summarizeHistorySeries,historyAxisPoints,historyTotals} from '../../shared/domain/history-chart-model';
  import * as echarts from 'echarts/core';
  import {LineChart,BarChart} from 'echarts/charts';
  import {GridComponent,TooltipComponent,LegendComponent,DataZoomComponent} from 'echarts/components';
@@ -100,7 +101,6 @@
   const formatter=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Prague',year:'numeric',month:'2-digit',day:'2-digit'});
   const localDate=(date:Date)=>formatter.format(date);
   let activeRange='7d',controller:AbortController|undefined,results:HistoryResponse[]=[];
-  const valid=(p:HistoryPoint)=>p.value!==null&&Number.isFinite(p.value)&&p.quality!=='missing'&&p.quality!=='suspect';
   const zoomButtons=[...root.querySelectorAll<HTMLButtonElement>('[data-history-zoom]')];
   const zoomStatus=root.querySelector<HTMLElement>('[data-history-zoom-status]');
   const setZoomEnabled=(enabled:boolean)=>{
@@ -140,8 +140,6 @@
   const tableTimeFormat=new Intl.DateTimeFormat('cs-CZ',{
    dateStyle:'short',timeStyle:'short',timeZone:'Europe/Prague'
   });
-  const qualityName=(quality:HistoryPoint['quality'])=>({measured:'měřeno',derived:'odvozeno',reconstructed:'rekonstruováno',suspect:'podezřelé',missing:'chybí'}[quality]);
-  const escapeHtml=(value:string)=>value.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]??c));
   const names:Record<string,string>={
    outTemp:'Teplota',outHumidity:'Vlhkost',barometer:'Tlak',windSpeed:'Vítr',
    windGust:'Nárazy větru',rain:'Srážky',rainRate:'Intenzita srážek',
@@ -249,8 +247,10 @@
     const resolution=days<=2?'raw':days<=40?'hourly':'daily';
     if(status){status.textContent='Načítám graf…';status.className='status-chip';}
     const keys=[...new Set([metric,compare].filter(Boolean))];
-    results=await Promise.all(keys.map(k=>getHistoryInterval(k,from,to,resolution,signal)));
+    const loaded=await Promise.all(keys.map(k=>getHistoryInterval(k,from,to,resolution,signal)));
+    // Do not publish an older request into the shared CSV/table/tooltip state.
     if(signal.aborted)return;
+    results=loaded;
     const compact=window.matchMedia('(max-width:650px)').matches;
     const light=document.documentElement.dataset.theme!=='dark';
     const colors=light?lightColors:darkColors;
@@ -262,9 +262,7 @@
      const color=colors[id]??primary;
      return {
       name:names[id]??id,type:id==='rain'?'bar':'line',
-      yAxisIndex:index,data:result.points.map(p=>[
-       Date.parse(p.endTime),valid(p)?p.value:null
-      ] as [number,number|null]),
+      yAxisIndex:index,data:historyAxisPoints(result.points),
       showSymbol:false,smooth:false,connectNulls:false,barMaxWidth:compact?8:14,
       itemStyle:{color},lineStyle:{width:compact?2:2.5,color},
       emphasis:{focus:'series'},
@@ -321,26 +319,17 @@
        dataBackground:{lineStyle:{color:gridColor},areaStyle:{color:gridColor}}}
      ]
     },true);
-    const counts=results.flatMap(r=>r.points).reduce((n,p)=>{
-     if(!valid(p))n.missing++;
-     else if(p.quality==='measured')n.measured++;
-     else if(p.quality==='reconstructed')n.reconstructed++;
-     else n.derived++;
-     return n;
-    },{measured:0,derived:0,reconstructed:0,missing:0});
+    const summaries=results.map(result=>summarizeHistorySeries(result.points));
+    const counts=historyTotals(summaries);
     const total=counts.measured+counts.derived+counts.reconstructed;
     if(status){status.textContent=`Zobrazeno ${total} hodnot · ${counts.missing} mezer`;status.className='status-chip '+(total?'ok':'warning');}
     if(qualitySummary)qualitySummary.textContent=`${counts.measured} měřených, ${counts.derived} odvozených, ${counts.reconstructed} rekonstruovaných a ${counts.missing} chybějících nebo nejistých bodů. Rozlišení grafu: ${resolution}.`+(results.some(r=>r.points.some(p=>p.provenance==='weewx-archive-overlapping-intervals'))?' Časově se překrývající měření nejsou zahrnuta.':'');
     if(summary){
-     for(const result of results){
-      const vals=result.points.filter(valid).map(p=>p.value as number);
+     for(const [index,result] of results.entries()){
+      const {minimum,maximum,missing:gaps}=summaries[index]!;
       const span=document.createElement('span');
-      if(vals.length){
-       const measured=result.points.filter(p=>valid(p)&&p.quality==='measured').length;
-       const reconstructed=result.points.filter(p=>valid(p)&&p.quality==='reconstructed').length;
-       const derived=result.points.filter(p=>valid(p)&&p.quality==='derived').length;
-       const gaps=result.points.length-vals.length;
-       span.textContent=`${names[result.metric]??result.metric}: od ${formatMetricValue(Math.min(...vals),result.metric,result.unit)} do ${formatMetricValue(Math.max(...vals),result.metric,result.unit)} ${units[result.metric]??result.unit} · ${gaps} mezer`;
+      if(minimum!==null&&maximum!==null){
+       span.textContent=`${names[result.metric]??result.metric}: od ${formatMetricValue(minimum,result.metric,result.unit)} do ${formatMetricValue(maximum,result.metric,result.unit)} ${units[result.metric]??result.unit} · ${gaps} mezer`;
       }else span.textContent=(names[result.metric]??result.metric)+': bez měření';
       summary.append(span);
      }
@@ -359,6 +348,7 @@
     chart.resize();
    }catch(e){
     if(signal.aborted)return;
+    results=[];
     chart.clear();
     setZoomEnabled(false);
     if(zoomStatus)zoomStatus.textContent='Časovou osu teď nelze přiblížit.';

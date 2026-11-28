@@ -64,3 +64,28 @@ test('station routes preserve metadata clock and isolate sensor evidence cache',
  assert.equal(value(x.body),7);assert.equal(value(y.body),9);
  assert.equal(a.presenceReads(),1);assert.equal(b.presenceReads(),1);
 });
+
+test('calendar daily extrema and rain publish only recorded time coverage, including DST',async t=>{
+ let rows:DailySummaryRow[]=[];
+ const reader:ArchiveReader={latest:async()=>null,history:async()=>[],ping:async()=>{},
+  dailySummaries:async()=>rows};
+ const app=buildApp(reader,now);t.after(()=>app.close());
+ for(const [date,seconds] of [['2026-03-29',82800],['2026-10-25',90000],['2026-11-24',86400]] as const){
+  const start=localMidnight(date)!;
+  const original={...sample,dateTime:start,mintime:start+300,maxtime:start+600,count:seconds/300,sumtime:seconds};
+  for(const [metric,aggregation] of [['outTemp','min'],['outTemp','max'],['rain','sum']] as const){
+   const url='/api/v1/statistics/daily?metric='+metric+'&aggregation='+aggregation+'&date='+date;
+   rows=[original];
+   let res=await app.inject(url);assert.equal(res.statusCode,200,res.body);
+   assert.deepEqual(res.json().timeCoverage,{validSeconds:seconds,expectedSeconds:seconds,fraction:1,basis:'weewx_daily_sumtime_seconds',scope:'metric_only'});
+   assert.equal(res.json().value,0);
+   rows=[{...original,sumtime:seconds/2}];res=await app.inject(url);
+   assert.equal(res.json().timeCoverage.fraction,.5);
+   for(const bad of [{...original,sumtime:null},{...original,sumtime:seconds+1},{...original,count:0}]){
+    rows=[bad];res=await app.inject(url);
+    assert.equal(res.statusCode,200,res.body);assert.equal(res.json().timeCoverage,null);
+   }
+   rows=[];res=await app.inject(url);assert.equal(res.json().value,null);assert.equal(res.json().timeCoverage,null);
+  }
+ }
+});
