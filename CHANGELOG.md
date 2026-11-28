@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-28 – Sdílený lifecycle frontendových požadavků
+- `concurrent-request.ts` vyčleňuje sdílení souběžného GET, individuální rušení, invalidaci a bezpečné uvolnění po chybě. Aktuální archivní GET zachovává veřejné rozhraní a validaci; žádná persistentní cache ani změna retry. Šest runtime testů skutečného modulu doplňuje stávající browser regrese. CI/DEV ověřit samostatně.
+
+## 2026-11-28 – Modularizace statistických a staničních endpointů
+- #197 sloučen jako `b0addaa` po 227/227 testech izolované MariaDB (46144785988). Exact DEV #196 `439d896` smoke 46144700124 PASS, srážky 284/283 intervalů desktop/mobil, live/failover PASS, slow4G 3/3 medián FCP/LCP kandidáta 2588 ms (lab).
+- `statistics-routes.ts` a `station-routes.ts` přebírají existující statistiky, liveness/readiness, metadata, live/current, monitoring, senzory a stav kamery. Stejné pořadí registrace, původní hodiny a cache jednotlivých instancí, limity a QC. Typované request/reply ve statistikách. Přímé testy shody samostatné a složené registrace, ETag, DST/SQL limitů, izolace senzorové cache. Bez změn dat, SQL, HTTP kontraktů a produkce. CI/DEV nové revize ověřit samostatně.
+
 ## 2026-11-28 – Modularizace klimatologických endpointů
 - #196 sloučen jako `439d896` po 226/226 testech v izolované MariaDB (46143952486). Exact DEV #195 `31f1377` smoke 46143872572 PASS; srážková historie 284/283 platných intervalů (desktop/mobil v rozdílném čase), live/failover PASS; slow4G 3/3 medián FCP/LCP kandidáta 2584 ms (lab, nikoli field).
 - `climate-routes.ts` přebírá existující čtyři klimatologické endpointy včetně jejich instančních cache, limitů, fingerprintů a diagnostiky. Registrace na téže Fastify instanci, stejné pořadí, bez změn SQL či HTTP. Nová regrese ověřuje shodu odpovědí, ETag, souběžné sdílení cold load a izolaci cache mezi instancemi aplikace. CI/DEV nové revize ověřit samostatně. Bez zásahu do dat či produkce.
@@ -1007,6 +1014,3 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 ### Otevřené
 
 Vizuální a funkční shoda všech stránek s předlohou, mobilní kontrola, víceřadové a dlouhodobé grafy, denní statistiky v API, ověření DB oprávnění, dostupnost a aktualizace kamery, radar, výstrahy, předpověď, registr senzorů a ověření informace o nasazené verzi. Viz [stav frontendu](frontend/README.md).
-
-## 2026-11-28 – Sdílený lifecycle frontendových požadavků
-- `concurrent-request.ts` vyčleňuje sdílení souběžného GET, individuální rušení, invalidaci a bezpečné uvolnění po chybě. Aktuální archivní GET zachovává veřejné rozhraní a validaci; žádná persistentní cache ani změna retry. Šest runtime testů skutečného modulu doplňuje stávající browser regrese. CI/DEV ověřit samostatně.
