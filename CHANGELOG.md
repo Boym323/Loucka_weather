@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-11-28 – Překreslení grafů bez nového síťového požadavku
+- Kompaktní historický graf a detail srážek oddělují načtení od překreslení. Změna motivu používá výhradně poslední úspěšnou odpověď stejného výběru; výběr veličiny/období, archive-updated a ruční retry nadále načítají aktuální data. Při chybě/novém požadavku je snapshot odstraněn, zrušený srážkový požadavek nesmí renderovat po odchodu ze stránky. Chromium ověřuje změnu SVG a nulový počet nových raw GET při přepnutí motivu v 6 kombinacích. CI/DEV pending.
+
 ## 2026-11-28 – Komponentový CSS kompasu
 - Přesun importu `wind-compass-v2.css` z BaseLayout do WindCompass.astro, bez změny pravidel CSS. Kompas se používá na přehledu, aliasu, klasickém přehledu a aktuálních údajích. Ostatní trasy nemají načítat cca 8,1 kB zdrojového CSS kompasu. Kontrola skutečně emitovaných CSSOM pravidel a tokenů na 15 trasách, stávající vizuální wind regrese zůstává. CI/DEV a velikost přenosu ověřit samostatně; bez změny dat.
 

@@ -1,5 +1,7 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**28. 11. 2026 – grafy a motiv:** HistoryChart/RainDetail oddělují render od síťového load, přepnutí motivu nevytváří raw GET; snapshot jen v paměti instance, invalidace při novém výběru/chybě. Browser regrese 6 kombinací. CI/DEV ověřit samostatně.
+
 **28. 11. 2026 – komponentový CSS:** WindCompass importuje vlastní `wind-compass-v2.css` namísto BaseLayout. CSSOM test 15 tras, stávající wind browser regrese; 8,1 kB zdrojového CSS není garantovaná přenosová úspora. CI/DEV ověřit samostatně.
 
 **28. 11. 2026 – frontend integrace:** #200 sloučen `5558396`, 230/230 izolovaná MariaDB, #198 exact DEV 46148520993 PASS, slow4G 2576 ms. #199 161/161 + Chromium PASS, #201 155/155 + 6 shodných geometrií. Integrované CI/DEV ověřit samostatně.

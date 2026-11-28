@@ -9,6 +9,7 @@
 </section>
 <script>
  import {getHistory24h} from '../../shared/api/client';
+ import type {HistoryResponse} from '../../shared/domain/weather';
  import {formatValue,chartValue,metricAxisStep} from '../../shared/domain/metrics';
  import * as echarts from 'echarts/core';
  import { BarChart } from 'echarts/charts';
@@ -25,13 +26,8 @@
   const observer=new ResizeObserver(()=>chart.resize());observer.observe(target);
   const controller=new AbortController();
   let loading=false;
-  const load=async()=>{
-   if(loading||controller.signal.aborted)return;
-   loading=true;if(retry)retry.disabled=true;
-   if(status){status.textContent='Ověřuji srážky…';status.className='status-chip';}
-   if(summary)summary.textContent='Načítám skutečné intervalové úhrny.';
-   try{
-   const result=await getHistory24h('rain',controller.signal);
+  let lastResult:HistoryResponse|undefined;
+  const render=(result:HistoryResponse)=>{
    const values=result.points.map(p=>[
     Date.parse(p.endTime),
     p.value===null||p.quality==='missing'||p.quality==='suspect'?null:p.value
@@ -69,8 +65,19 @@
     }
    }
    chart.resize();
+  };
+  const load=async()=>{
+   if(loading||controller.signal.aborted)return;
+   loading=true;lastResult=undefined;if(retry)retry.disabled=true;
+   if(status){status.textContent='Ověřuji srážky…';status.className='status-chip';}
+   if(summary)summary.textContent='Načítám skutečné intervalové úhrny.';
+   try{
+   const result=await getHistory24h('rain',controller.signal);
+   if(controller.signal.aborted)return;
+   render(result);lastResult=result;
    }catch(error){
     if(controller.signal.aborted)return;
+    lastResult=undefined;chart.clear();
     if(status){status.textContent='Historie nedostupná';status.className='status-chip error';}
     if(summary)summary.textContent='Načtení intervalů selhalo. Zkus Obnovit; chyba: '+(error instanceof Error?error.message:'nedostupné API');
    }finally{loading=false;if(retry)retry.disabled=false;}
@@ -78,7 +85,7 @@
   retry?.addEventListener('click',()=>void load());
   // Do not compete with the large advanced-history request during initial navigation.
   const initial=setTimeout(()=>void load(),2200);
-  const themeChanged=()=>void load();
+  const themeChanged=()=>{if(lastResult&&!controller.signal.aborted)render(lastResult);};
   window.addEventListener('loucka:theme-change',themeChanged);
   document.addEventListener('astro:before-swap',()=>{
    clearTimeout(initial);controller.abort();observer.disconnect();chart.dispose();
