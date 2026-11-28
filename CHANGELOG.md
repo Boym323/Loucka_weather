@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-28 – Validace statistického kontraktu frontendu
+- #202 sloučen `7efde45` po společném CI 46149223241 (161/161 + Chromium; 6 shodných geometrií). #200 exact DEV `5558396` 46149065666 PASS, rain 284/284, live/failover PASS, slow4G 3/3 medián 2600 ms (lab).
+- Frontend odmítá neplatné statistické agregace, kvalitu, completeness a neověřenou coverage; skutečná nula, NULL a count=0 zůstávají rozdílné. Ověřuje duration basis/scope a původní toleranci 1 %. Test fixture kalendáře odpovídá backendu; přímé negativní testy. Bez změn backendu, SQL či zdrojových dat. CI/DEV ověřit samostatně.
+
 ## 2026-11-28 – Integrace frontendových refaktorů
 - #200 sloučen `5558396` po 230/230 izolovaných MariaDB testech (46148573697); #198 exact DEV `1d9cadf` 46148520993 PASS, rain 284/284, live/failover PASS, slow4G 3/3 medián 2576 ms (lab). #199 samostatný frontend CI 46148626617 PASS (161/161), #201 CI 46148792514 PASS (155/155 a shodné sledované souřadnice před/po načtení v 6 viewport/theme kombinacích). Integrované CI a přesné DEV ověřit samostatně.
 

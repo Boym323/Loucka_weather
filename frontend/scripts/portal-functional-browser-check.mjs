@@ -94,7 +94,7 @@ try{
    if(url.pathname==='/api/v1/statistics/daily'){
     if(calendarGate)await calendarGate.pending;
     const metric=url.searchParams.get('metric'),aggregation=url.searchParams.get('aggregation');
-    return json({schemaVersion:'1',metric,aggregation,unit:metric==='rain'?'mm':'°C',value:metric==='rain'?0:aggregation==='min'?-2:7,quality:'derived',source:'weewx_daily',dataRevision:'fixture',completeness:{valid:288,fraction:1},timeCoverage:{fraction:1}});
+    return json({schemaVersion:'1',metric,aggregation,unit:metric==='rain'?'mm':'°C',value:metric==='rain'?0:aggregation==='min'?-2:7,quality:'derived',source:'weewx_daily',units:'metricwx',provenance:'weewx-daily-'+aggregation,dataRevision:'fixture',completeness:{expected:null,valid:288,fraction:null},timeCoverage:null,extremaObservedAt:null,extremaSource:aggregation==='min'||aggregation==='max'?'unknown':'not_applicable'});
    }
    if(url.pathname.startsWith('/api/v1/'))return route.fulfill({status:503,body:'fixture unavailable'});
    if(url.origin!==new URL(origin).origin)return route.abort();
