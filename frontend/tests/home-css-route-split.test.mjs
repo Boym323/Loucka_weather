@@ -34,3 +34,15 @@ test('history table styles belong to the advanced history component',async()=>{
  assert.match(css,/\.history-table-alternative\s*\{/);
  assert.match(css,/\.history-table-alternative \.history-table\{min-width:520px\}/);
 });
+
+test('camera archive refinements are imported only by their component',async()=>{
+ const layout=await read('src/layouts/BaseLayout.astro');
+ const global=await read('src/styles/ui-refinement.css');
+ const component=await read('src/features/camera/CameraArchive.astro');
+ const css=await read('src/styles/camera-archive.css');
+ assert.doesNotMatch(layout,/camera-archive\.css/);
+ assert.doesNotMatch(global,/\.camera-archive-views\s*\{/);
+ assert.match(component,/import '\.\.\/\.\.\/styles\/camera-archive\.css'/);
+ assert.match(css,/\.camera-archive-views\{display:grid;gap:19px\}/);
+ assert.match(css,/\.camera-photos-hint\{display:none\}/);
+});
