@@ -186,7 +186,6 @@ test('raw and hourly history classify invalid archive data without returning par
   {rows:[{...row,dateTime:600.5}],message:'Invalid archive timestamp'},
   {rows:[{...row,interval:0}],message:'Invalid archive interval'},
   {rows:[{...row,usUnits:99}],message:'Unsupported archive units'},
-  {rows:[row,{...row,dateTime:660}],message:'Overlapping archive intervals'},
   {rows:[row,{...row,dateTime:600}],message:'Invalid archive ordering'},
   {rows:[{...row,outTemp:Infinity}],message:'Invalid archive measurement or conversion'}
  ];
@@ -208,6 +207,62 @@ test('raw and hourly history classify invalid archive data without returning par
   const res=await app.inject('/api/v1/history?metric=outTemp&from=1970-01-01T00:00:00Z&to=1970-01-01T00:25:00Z&resolution='+resolution);
   assert.equal(res.statusCode,503);
   assert.ok(!res.body.includes('private database diagnostic'));
+ }
+});
+test('raw history quarantines whole connected overlap groups, preserves touching and genuine zero',async t=>{
+ const r=(dateTime:number,interval:number,rain:number):ArchiveRow=>({dateTime,interval,usUnits:17,rain});
+ const rows=[r(300,5,0),r(600,5,2),r(900,5,3),r(1200,12,4),r(1500,5,1)];
+ const app=buildApp(reader(fixture,rows),now);t.after(()=>app.close());
+ const res=await app.inject('/api/v1/history?metric=rain&from=1970-01-01T00:00:00Z&to=1970-01-01T00:25:00Z&resolution=raw');
+ assert.equal(res.statusCode,200,res.body);
+ const body=res.json();
+ // The long final conflict reaches back across two earlier groups.
+ assert.deepEqual(body.points.map((p:any)=>p.value),[0,null,1]);
+ assert.equal(body.points[1].startTime,'1970-01-01T00:05:00.000Z');
+ assert.equal(body.points[1].endTime,'1970-01-01T00:20:00.000Z');
+ assert.equal(body.points[1].quality,'missing');
+ assert.equal(body.points[1].provenance,'weewx-archive-overlapping-intervals');
+ assert.equal(body.completeness.valid,2);
+});
+test('hourly history masks affected buckets including extrema and keeps adjacent valid hours',async t=>{
+ const r=(dateTime:number,interval:number,rain:number):ArchiveRow=>({dateTime,interval,usUnits:17,rain});
+ const rows=[r(3600,5,2),r(3900,5,10),r(4200,10,20),r(7200,5,5),r(7500,5,0)];
+ const app=buildApp(reader(fixture,rows),now);t.after(()=>app.close());
+ const res=await app.inject('/api/v1/history?metric=rain&from=1970-01-01T00:00:00Z&to=1970-01-01T03:00:00Z&resolution=hourly');
+ assert.equal(res.statusCode,200,res.body);
+ const body=res.json();
+ assert.deepEqual(body.points.map((p:any)=>p.value),[2,null,0]);
+ assert.equal(body.points[1].provenance,'weewx-archive-overlapping-intervals');
+ for(const key of ['minValue','maxValue','minObservedAt','maxObservedAt'])assert.equal(body.points[1][key],null);
+ assert.equal(body.points[1].validCount,0);
+ assert.equal(body.completeness.valid,2);
+});
+test('hourly quarantine detects an overlap across the archive paging boundary',async t=>{
+ const rows=Array.from({length:5001},(_,i):ArchiveRow=>({
+  dateTime:(i+1)*60,interval:i===5000?2:1,usUnits:17,rain:1
+ }));
+ const fake=reader(fixture,rows);
+ let pages=0;
+ fake.historyPage=async(_metrics,_from,_to,after,limit)=>{
+  pages++;return rows.filter(row=>row.dateTime>after).slice(0,limit);
+ };
+ const app=buildApp(fake,now);t.after(()=>app.close());
+ const end=new Date(5001*60*1000).toISOString();
+ const res=await app.inject('/api/v1/history?metric=rain&from=1970-01-01T00:00:00Z&to='+encodeURIComponent(end)+'&resolution=hourly');
+ assert.equal(res.statusCode,200,res.body);
+ const points=res.json().points;
+ assert.equal(pages,2);
+ assert.equal(points[0].value,60);
+ assert.equal(points.at(-1).value,null);
+ assert.equal(points.at(-1).provenance,'weewx-archive-overlapping-intervals');
+});
+test('invalid measurement in an overlapping group still fails closed',async t=>{
+ const row:ArchiveRow={dateTime:600,interval:5,usUnits:16,outTemp:10};
+ const app=buildApp(reader(fixture,[row,{...row,dateTime:660,outTemp:Infinity}]),now);t.after(()=>app.close());
+ for(const resolution of ['raw','hourly']){
+  const res=await app.inject('/api/v1/history?metric=outTemp&from=1970-01-01T00:00:00Z&to=1970-01-01T00:25:00Z&resolution='+resolution);
+  assert.equal(res.statusCode,503);
+  assert.equal(res.json().error.message,'Invalid archive measurement or conversion');
  }
 });
 test('history has no fabricated points when no source rows exist',async t=>{
