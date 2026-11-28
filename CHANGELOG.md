@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-28 – Modularizace klimatologických endpointů
+- #196 sloučen jako `439d896` po 226/226 testech v izolované MariaDB (46143952486). Exact DEV #195 `31f1377` smoke 46143872572 PASS; srážková historie 284/283 platných intervalů (desktop/mobil v rozdílném čase), live/failover PASS; slow4G 3/3 medián FCP/LCP kandidáta 2584 ms (lab, nikoli field).
+- `climate-routes.ts` přebírá existující čtyři klimatologické endpointy včetně jejich instančních cache, limitů, fingerprintů a diagnostiky. Registrace na téže Fastify instanci, stejné pořadí, bez změn SQL či HTTP. Nová regrese ověřuje shodu odpovědí, ETag, souběžné sdílení cold load a izolaci cache mezi instancemi aplikace. CI/DEV nové revize ověřit samostatně. Bez zásahu do dat či produkce.
+
 ## 2026-11-28 – Modularizace HTTP historie a společného kontraktu
 - #195 sloučen jako `31f1377` po 224/224 testech v izolované MariaDB (46142200319). Exact DEV #194 `92909da` public smoke 46142138481 PASS: 284 platných srážkových intervalů na desktopu/mobilu, live/failover PASS, slow4G 3/3 medián FCP/LCP kandidáta 2224 ms (lab, nikoli field ani prokázaná kauzalita refaktoringu).
 - `history-route.ts` odděluje původní HTTP registraci historie, `http-contract.ts` sdílí query schema, ETag, error a agregační policy. Zachovány URL, registrace na stejném Fastify instance, SQL, limity, revision gate a formát odpovědi; explicitní typ bodů a Fastify request/reply místo any. Test samostatné registrace vs. aplikace, ETag 304, validace a nepřítomnost DB čtení při odmítnutí požadavku. CI/DEV nové revize ověřit samostatně. Bez zásahu do produkce a dat.
