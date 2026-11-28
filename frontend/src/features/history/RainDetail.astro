@@ -61,8 +61,12 @@
    const hasGaps=values.length===0||values.some(p=>p[1]===null);
    if(status){status.textContent=valid.length?' '+valid.length+' platných intervalů':'Bez potvrzených intervalů';status.className='status-chip '+(valid.length?'ok':'warning');}
    if(summary){
-    const total=valid.reduce((acc,p)=>acc+p[1],0);
-    summary.textContent='Součet naměřených intervalů: '+formatValue(total,1)+' mm'+(hasGaps?' · neúplné pokrytí':'');
+    // An empty set of valid observations is unknown, not measured zero.
+    if(!valid.length)summary.textContent='Úhrn nelze určit: žádné platné intervaly.';
+    else{
+     const total=valid.reduce((acc,p)=>acc+p[1],0);
+     summary.textContent='Součet naměřených intervalů: '+formatValue(total,1)+' mm'+(hasGaps?' · neúplné pokrytí':'');
+    }
    }
    chart.resize();
    }catch(error){
