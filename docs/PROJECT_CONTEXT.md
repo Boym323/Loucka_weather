@@ -190,3 +190,5 @@ Read-only archivní observer a SSE `archive-updated` jsou již implementované n
 ## Průběžná dokumentace
 
 Aktuální změny zapisovat do [CHANGELOG.md](../CHANGELOG.md), stav rozhraní a otevřené problémy udržovat ve [frontend/README.md](../frontend/README.md). Nové nasazení ověřovat samostatně, GitHub `main` ani úspěšné CI nejsou důkazem nasazeného commitu.
+
+**28. 11. 2026 – frontend request lifecycle:** `concurrent-request.ts` je samostatný typovaný helper pro sdílení pouze in-flight GET, individuální abort a invalidaci. `getCurrent` zachovává rozhraní a validaci, šest přímých runtime testů; beze změny veřejného API/dat. CI/DEV ověřit samostatně.

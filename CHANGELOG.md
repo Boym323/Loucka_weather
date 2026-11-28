@@ -1007,3 +1007,6 @@ Průběžný záznam změn projektu Počasí Loučka. Data jsou uvedena v místn
 ### Otevřené
 
 Vizuální a funkční shoda všech stránek s předlohou, mobilní kontrola, víceřadové a dlouhodobé grafy, denní statistiky v API, ověření DB oprávnění, dostupnost a aktualizace kamery, radar, výstrahy, předpověď, registr senzorů a ověření informace o nasazené verzi. Viz [stav frontendu](frontend/README.md).
+
+## 2026-11-28 – Sdílený lifecycle frontendových požadavků
+- `concurrent-request.ts` vyčleňuje sdílení souběžného GET, individuální rušení, invalidaci a bezpečné uvolnění po chybě. Aktuální archivní GET zachovává veřejné rozhraní a validaci; žádná persistentní cache ani změna retry. Šest runtime testů skutečného modulu doplňuje stávající browser regrese. CI/DEV ověřit samostatně.
