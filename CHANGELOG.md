@@ -4,6 +4,10 @@
 - Shodná výstraha zachovává původní DOM a aktualizuje jen čas ověření. U změněné výstrahy se obnoví rozbalení a fokus podle jednoznačné kombinace události a časů platnosti; při odstranění výstrahy se fokus přesune na stavový prvek.
 - Browser fixture ověřuje pravidelnou aktualizaci, změněné doporučení, aktivní extrémní výstrahu, ukončení a nedostupnost na přehledu a předpovědi. Issue #180; CI a DEV nasazení ověřit samostatně.
 
+## 2026-11-28 – Stabilita živých údajů větru
+- Větrný panel chrání čerstvé live hodnoty každé veličiny zvlášť před opožděnou archivní odpovědí i její chybou; archiv může doplnit ostatní údaje. Starší live událost nepřepíše novější a po vypršení živého režimu se obnoví archiv.
+- Chromium scénář nové výchozí homepage pokrývá zpožděný úspěch i chybu archivu, nulovou rychlost, neplatný směr a návrat k platnému severu na mobilu/desktopu v obou motivech. Issue #179; CI a skutečné DEV nasazení ověřit samostatně. Bez změn zdrojových dat, API a produkce.
+
 ## 2026-11-27 – Vizuální hierarchie úvodní stránky
 - Zpřehledněny rozestupy a úvodní pás; výstrahy mají kompaktnější podobu a navigace na širokých obrazovkách je čitelnější.
 - Při neověřeném směru větru se skryje prázdný kompas, ale rychlost a nárazy zůstávají jako kompaktní měření včetně zdrojových štítků. Data ani výpočty se nemění.
