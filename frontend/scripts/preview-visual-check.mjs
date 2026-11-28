@@ -138,6 +138,13 @@ try{
   const historyCodes=new Set(['UPSTREAM_UNAVAILABLE','LIMIT_EXCEEDED','INVALID_RANGE','BAD_REQUEST','UNKNOWN_METRIC','UNVERIFIED_FIELD_MAPPING','HISTORICAL_QC_HOLD','DATASET_UNAVAILABLE','INVALID_AGGREGATION','INTERNAL_ERROR']);
   const historyReasons=new Map([
    ['Unsupported archived observation','invalid_archive_observation'],
+   ['Invalid archive timestamp','invalid_timestamp'],
+   ['Invalid archive interval','invalid_interval'],
+   ['Unsupported archive units','unsupported_units'],
+   ['Overlapping archive intervals','overlapping_intervals'],
+   ['Invalid archive ordering','invalid_ordering'],
+   ['Invalid archive measurement or conversion','invalid_measurement_or_conversion'],
+   ['Hourly archive unavailable or invalid','hourly_archive_unavailable'],
    ['Archive unavailable','archive_read_failed'],
    ['Archive changed during history request; retry','revision_changed'],
    ['Too many points for requested limit','point_limit'],
