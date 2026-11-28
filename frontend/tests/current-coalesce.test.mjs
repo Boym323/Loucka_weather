@@ -3,13 +3,11 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 
-test('same archive request is shared by concurrent panels but not cached after completion',async()=>{
+test('current client delegates concurrent reads and retains response validation',async()=>{
  const api=await read('src/shared/api/client.ts');
- assert.match(api,/let pendingCurrent:PendingCurrent\|undefined/);
- assert.match(api,/entry\.subscribers\+\+/);
- assert.match(api,/entry\.subscribers===0&&!entry\.finished/);
- assert.match(api,/pendingCurrent===pending\)pendingCurrent=undefined/);
- assert.match(api,/if\(signal\?\.aborted\)return Promise\.reject/);
+ assert.match(api,/createConcurrentRequest<CurrentResponse>/);
+ assert.match(api,/currentRequest\.invalidate\(\)/);
+ assert.match(api,/currentRequest\.get\(signal\)/);
  assert.match(api,/isCurrentResponse\(data\)/);
  assert.doesNotMatch(api,/localStorage|sessionStorage|indexedDB/);
 });

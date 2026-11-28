@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-28 – Integrace frontendových refaktorů
+- #200 sloučen `5558396` po 230/230 izolovaných MariaDB testech (46148573697); #198 exact DEV `1d9cadf` 46148520993 PASS, rain 284/284, live/failover PASS, slow4G 3/3 medián 2576 ms (lab). #199 samostatný frontend CI 46148626617 PASS (161/161), #201 CI 46148792514 PASS (155/155 a shodné sledované souřadnice před/po načtení v 6 viewport/theme kombinacích). Integrované CI a přesné DEV ověřit samostatně.
+
+## 2026-11-28 – Sdílený lifecycle frontendových požadavků
+- `concurrent-request.ts` vyčleňuje sdílení souběžného GET, individuální rušení, invalidaci a bezpečné uvolnění po chybě. Aktuální archivní GET zachovává veřejné rozhraní a validaci; žádná persistentní cache ani změna retry. Šest runtime testů skutečného modulu doplňuje stávající browser regrese. CI/DEV ověřit samostatně.
+
+## 2026-11-28 – Kandidát stabilizace grafů a senzorů
+- #152: místní responzivní prostor pro stav a souhrn podrobného grafu a stabilní sloupce senzorového adresáře. Bez změny dat, ořezávání textu nebo nového API. Chromium zadrží fixture odpověď a porovná souřadnice před/po načtení na 320/390/1440 v obou motivech; ověří 0 vs pomlčku. CI a skutečný CLS efekt ověřit samostatně.
+
 ## 2026-11-28 – Dokončení modularizace HTTP backendu
 - #198 sloučen jako `1d9cadf` po opravení flakiness testu dynamického času kamery (bez změny API), 229/229 izolovaná MariaDB (46148381270). Exact DEV #197 `b0addaa` 46147114917 PASS, rain 284/284, live/failover PASS, slow4G 3/3 medián FCP/LCP kandidáta 2520 ms (lab).
 - `observation-routes.ts` vyčleňuje live SSE, current a original QC. Zachovány schémata, limity, revision gate, replay, heartbeat a preClose drain per instance; `app.ts` je composition root. Přímý test shody current/QC, ETag, SQL parametrů a vypnutého SSE doplňuje existující stream integrační testy. CI/DEV ověřit samostatně, žádné změny dat/produkce.
