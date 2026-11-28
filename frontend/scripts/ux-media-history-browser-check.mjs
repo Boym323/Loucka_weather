@@ -15,12 +15,21 @@ try{
    const ctx=await browser.newContext({viewport:{width,height:900}});
    await ctx.addInitScript(selected=>localStorage.setItem('loucka-theme',selected),theme);
    let historyRequests=0;
+   let rainValue=null;
    await ctx.route('**/api/v1/**',async route=>{
     const url=new URL(route.request().url());
     if(url.pathname==='/api/v1/history'){
      historyRequests++;
      const metric=url.searchParams.get('metric')||'outTemp';
      const resolution=url.searchParams.get('resolution')||'hourly';
+     if(metric==='rain'&&resolution==='raw')return route.fulfill({
+      status:200,contentType:'application/json',body:JSON.stringify({
+       schemaVersion:'1',metric,unit:'mm',resolution,dataRevision:'rain-fixture',
+       points:[
+        {startTime:'2026-11-18T09:00:00Z',endTime:'2026-11-18T09:05:00Z',value:rainValue,quality:rainValue===null?'missing':'measured',source:'weewx_archive',provenance:null},
+        {startTime:'2026-11-18T09:05:00Z',endTime:'2026-11-18T09:10:00Z',value:999,quality:'suspect',source:'weewx_archive',provenance:null}
+       ]})
+     });
      return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
       schemaVersion:'1',metric,unit:'°C',resolution,dataRevision:'browser-only',
       points:[
@@ -45,6 +54,16 @@ try{
    page.on('pageerror',error=>errors.push(error.message));
    await page.goto(new URL('grafy/',origin).href,{waitUntil:'domcontentloaded',timeout:30000});
    await page.waitForFunction(()=>document.querySelector('[data-advanced-status]')?.textContent?.includes('Zobrazeno'),null,{timeout:20000});
+   // Allow delayed rain initialization to finish before the unrelated
+   // zoom/no-extra-request assertion snapshots the total request count.
+   await page.waitForFunction(()=>document.querySelector('[data-rain-status]')?.textContent==='Bez potvrzených intervalů',null,{timeout:12000});
+   const rainSummary=page.locator('[data-rain-summary]');
+   assert.match(await rainSummary.textContent(),/Úhrn nelze určit/);
+   assert.doesNotMatch(await rainSummary.textContent(),/0,0 mm/);
+   rainValue=0;
+   await page.locator('[data-rain-retry]').click();
+   await page.waitForFunction(()=>document.querySelector('[data-rain-status]')?.textContent?.includes('1 platných intervalů'),null,{timeout:12000});
+   assert.match(await rainSummary.textContent(),/0,0 mm · neúplné pokrytí/);
    const before=historyRequests;
    const zoomIn=page.locator('[data-history-zoom="in"]');
    assert.equal(await zoomIn.isEnabled(),true,'Zoom becomes available for valid points');
