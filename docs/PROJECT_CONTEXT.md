@@ -1,5 +1,7 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**28. 11. 2026 – refaktoring etapa 2:** #192 sloučen `1ae2199` po 215/215 izolované MariaDB testů. Předchozí exact DEV #191 `cfb6711` 46136211605 PASS: kalendář CLS 0,0004, stav 0, grafy 0,1435, senzory 0,1061; slow4G 3/3 medián 2572 ms. `calendar-time.ts` vyčleňuje stávající časové funkce a cache bez změny pravidel, testy CET/CEST a hraničních dat. CI/DEV nové revize ověřit samostatně; žádné SQL, DB ani produkční změny.
+
 **28. 11. 2026 – refaktoring API:** `archive-history.ts` odděluje pure raw/hourly zpracování, validaci a překryvy od HTTP orchestrace v `app.ts`; explicitní typ bodu, přímé unit testy s nezávislou referencí. Záměrně bez změny SQL, agregací, HTTP formátu, zdrojového archivu či produkce. CI a DEV aktuální revize ověřit samostatně.
 
 **28. 11. 2026 – kandidát CLS #152:** exact DEV 8760c23 46133455708 PASS, mobilní lab CLS kalendář 0,1748, stav 0,1604, grafy 0,1435, senzory 0,1061. Lokální CSS rezervuje stavové a textové řádky kalendáře a monitoru; delayed-response browser fixture porovnává geometrii, veřejný smoke přidává omezené kategorie posunutých prvků bez dodatečných požadavků. Skutečný efekt a CI nové revize zatím neověřeny. Žádné zásahy do API, dat a produkce.
