@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-11-28 – Integrace optimalizace grafů, kontroly kontraktu a Chrome
+- #206 sloučen `6e95cc9`, 231/231 MariaDB a 167/167 frontend + Chromium (46168503682/46168503678). #208 reálné Chrome playback a seek PASS (46168817839, stabilní DEV `d61cc68`, 1280×720, 13,7 s, 4 dekódované snímky, seek 8,219999 s, žádný MediaError). Safari/iPhone zůstává samostatná akceptace.
+- #207 první browser test chybně očekával kompaktní graf na /grafy/; opraven na /aktualne/ a čeká na skutečné SVG. #209 guard aktuálních a historických dat. Kombinovaný CI a DEV ověřit samostatně; bez zásahu do produkce a DB.
+
+## 2026-11-28 – Překreslení grafů bez nového síťového požadavku
+- Kompaktní historický graf a detail srážek oddělují načtení od překreslení. Změna motivu používá výhradně poslední úspěšnou odpověď stejného výběru; výběr veličiny/období, archive-updated a ruční retry nadále načítají aktuální data. Při chybě/novém požadavku je snapshot odstraněn, zrušený srážkový požadavek nesmí renderovat po odchodu ze stránky. Chromium ověřuje změnu SVG a nulový počet nových raw GET při přepnutí motivu v 6 kombinacích. CI/DEV pending.
+
+## 2026-11-28 – Ověření časosběru v Chrome (#143)
+- Přidán oddělený read-only smoke v oficiálním Chrome (Playwright channel chrome, bez automatických media artefaktů). Jeden dokončený DEV MP4, skutečné dekódované snímky, čas přehrávání, posun a stabilní deployment SHA před/po. Blokuje nepodporovaný kodek místo falešného PASS. PR testuje aktuální DEV, nikoli nenasazený PR kód; Chrome/Safari na iPhonu nelze z tohoto runneru prohlásit za ověřené. Výsledek pending.
+
+## 2026-11-28 – Validace aktuálních a historických odpovědí
+- #206 sloučen jako `6e95cc9` po 231/231 MariaDB a 167/167 frontend + Chromium. Aktuální a historický klient ověřuje časové značky, konečné numerické hodnoty, kvalitu včetně skutečných stavů `sensor_error`/`unverified`, provenance a revizi; odmítá neplatné nebo neodpovídající rozlišení, bez nahrazování chybějících hodnot nulami. Testy kontraktu a realistické browser fixtures. CI/DEV pending, bez zásahu do SQL/dat.
+
 ## 2026-11-28 – Integrace kalendáře a modelu grafu
 - Exact DEV #204 `d61cc68` 46167913348 (scheduled run, stabilní SHA před/po) PASS: grafy i senzory CLS 0, slow4G 3/3 medián 2320 ms. Původní push smoke byl zrušen souběžným scheduled během. #203 231/231 MariaDB a 164/164 frontend + Chromium PASS (46167869865/46167869867); #205 165/165 + Chromium PASS (46168021107). Integrované CI/DEV ověřit samostatně.
 

@@ -11,10 +11,10 @@ const out='test-results/pre-ci-screenshots';
 await mkdir(out,{recursive:true});
 const browser=await chromium.launch({headless:true});
 const readings={
- outTemp:{value:12.4,unit:'degC',quality:'measured',source:'weewx_archive'},
- outHumidity:{value:72,unit:'percent',quality:'measured',source:'weewx_archive'},
- barometer:{value:1018.6,unit:'hPa',quality:'measured',source:'weewx_archive'},
- dewpoint:{value:7.4,unit:'degC',quality:'derived',source:'weewx_archive'}
+ outTemp:{value:12.4,unit:'degC',quality:'measured',source:'weewx_archive',provenance:null},
+ outHumidity:{value:72,unit:'percent',quality:'measured',source:'weewx_archive',provenance:null},
+ barometer:{value:1018.6,unit:'hPa',quality:'measured',source:'weewx_archive',provenance:null},
+ dewpoint:{value:7.4,unit:'degC',quality:'derived',source:'weewx_archive',provenance:null}
 };
 try{
  for(const width of [320,390,1440]){
