@@ -109,7 +109,7 @@ try{
    const changeTheme=mode=>page.evaluate(mode=>{document.documentElement.dataset.theme=mode;window.dispatchEvent(new Event('loucka:theme-change'));},mode);
    const otherTheme=theme==='dark'?'light':'dark';
    await changeTheme(otherTheme);
-   await page.waitForFunction(before=>document.querySelector('[data-rain-chart] svg')?.innerHTML!==before,rainBefore);
+   await page.waitForFunction(before=>{const svg=document.querySelector('[data-rain-chart] svg');return !!svg&&svg.innerHTML!==before;},rainBefore);
    assert.equal(rawHistoryRequests,rawBeforeTheme,'rain theme switch must not refetch raw history');
    await changeTheme(theme);
    await page.waitForFunction(()=>document.querySelector('[data-advanced-status]')?.textContent?.includes('Zobrazeno'));
@@ -135,9 +135,11 @@ try{
    const compactBefore=rawHistoryRequests;
    const svgBefore=await page.locator('[data-chart-canvas] svg').innerHTML();
    await changeTheme(otherTheme);
-   await page.waitForFunction(before=>document.querySelector('[data-chart-canvas] svg')?.innerHTML!==before,svgBefore);
+   await page.waitForFunction(before=>{const svg=document.querySelector('[data-chart-canvas] svg');return !!svg&&svg.innerHTML!==before;},svgBefore);
    assert.equal(rawHistoryRequests,compactBefore,'compact chart theme switch must not refetch');
    await changeTheme(theme);
+   await page.waitForFunction(()=>{const svg=document.querySelector('[data-chart-canvas] svg');return !!svg;});
+   assert.equal(rawHistoryRequests,compactBefore,'restoring theme must not refetch compact history');
    console.log('HISTORY THEME REPAINT',width,theme,'raw GET delta',rawHistoryRequests-compactBefore);
    await page.goto(new URL('kamera/',origin).href,{waitUntil:'domcontentloaded',timeout:30000});
    await page.waitForFunction(()=>Boolean(document.querySelector('[data-archive-player]')?.getAttribute('poster')),null,{timeout:12000});
