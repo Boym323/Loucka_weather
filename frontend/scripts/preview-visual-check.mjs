@@ -125,6 +125,40 @@ try{
    }catch{/* Unsupported entry type: leave zero. */}
   });
 
+  // Passive diagnostics for existing history requests only; never log URLs,
+  // request identifiers, raw response bodies, measurements or visitor data.
+  const historyMeta=request=>{
+   const url=new URL(request.url());
+   if(url.origin!==new URL(base).origin||url.pathname!=='/api/v1/history')return null;
+   const metric=url.searchParams.get('metric');
+   const resolution=url.searchParams.get('resolution')??'auto';
+   return {metric:['outTemp','rain','rainRate','windGust','windSpeed','outHumidity','barometer','radiation','UV','pm25_1'].includes(metric)?metric:'other',
+    resolution:['raw','hourly','daily','auto'].includes(resolution)?resolution:'other'};
+  };
+  const historyCodes=new Set(['UPSTREAM_UNAVAILABLE','LIMIT_EXCEEDED','INVALID_RANGE','BAD_REQUEST','UNKNOWN_METRIC','UNVERIFIED_FIELD_MAPPING','HISTORICAL_QC_HOLD','DATASET_UNAVAILABLE','INVALID_AGGREGATION','INTERNAL_ERROR']);
+  const historyReasons=new Map([
+   ['Unsupported archived observation','invalid_archive_observation'],
+   ['Archive unavailable','archive_read_failed'],
+   ['Archive changed during history request; retry','revision_changed'],
+   ['Too many points for requested limit','point_limit'],
+   ['Too many archive points for requested limit','row_limit']
+  ]);
+  page.on('response',response=>{
+   const meta=historyMeta(response.request());
+   if(!meta)return;
+   const status=response.status();
+   console.log('HISTORY HTTP',size.name,JSON.stringify({...meta,status}));
+   if(status>=400)void response.json().then(body=>{
+    const error=body?.error??body;
+    console.log('HISTORY API ERROR',size.name,JSON.stringify({...meta,status,
+     code:historyCodes.has(error?.code)?error.code:'other',
+     reason:historyReasons.get(error?.message)??'other'}));
+   }).catch(()=>console.log('HISTORY API ERROR',size.name,JSON.stringify({...meta,status,code:'non_json_or_unavailable'})));
+  });
+  page.on('requestfailed',request=>{
+   const meta=historyMeta(request);
+   if(meta)console.log('HISTORY NETWORK FAILURE',size.name,JSON.stringify(meta));
+  });
   page.on('pageerror',error=>errors.push(size.name+': JavaScript exception: '+error.message));
   for(const [name,path] of routes){
    try{
@@ -201,8 +235,18 @@ try{
       return !!root?.querySelector('[data-chart-canvas] svg') &&
        /naměřených bodů/.test(status);
      },null,{timeout:16000}).then(()=>true).catch(()=>false);
-     if(!chartPainted)
-      errors.push(size.name+': deferred homepage history chart did not paint a real archive SVG');
+     if(!chartPainted){
+       const diagnostic=await page.locator('.evergreen-hero [data-history-chart]').evaluate(root=>{
+        const state=root.querySelector('.chart-figure')?.dataset.chartState;
+        const text=root.querySelector('[data-chart-message]')?.textContent??'';
+        return {state:['loading','ready','empty','error'].includes(state)?state:'unknown',
+         svg:!!root.querySelector('[data-chart-canvas] svg'),
+         phase:text.includes('Graf se nepodařilo připravit')?'engine_or_initialization':
+          text.includes('Historická data se nepodařilo načíst')?'history_or_render':'other'};
+       });
+       console.log('HISTORY CLASSIC CHART DIAGNOSTIC',size.name,JSON.stringify(diagnostic));
+       errors.push(size.name+': deferred homepage history chart did not paint a real archive SVG');
+      }
      if(collapsed){await toggle.click();await page.evaluate(()=>window.scrollTo(0,0));}
      // Source identity and freshness caution are the contract; the public
      // wording was simplified in PR #114 and must not fail on that copy edit.
@@ -495,7 +539,14 @@ try{
       rain=(await page.locator('[data-rain-status]').textContent())?.trim()??'';
      }
      console.log('RAIN HISTORY',size.name,rain);
-     if(rain==='Historie nedostupná')errors.push(size.name+': rain detail chart failed after user retry');
+     if(rain==='Historie nedostupná'){
+       const summary=await page.locator('[data-rain-summary]').textContent()??'';
+       const status=/API HTTP (\d{3})/.exec(summary)?.[1];
+       console.log('HISTORY RAIN CHART DIAGNOSTIC',size.name,JSON.stringify({
+        httpStatus:status?Number(status):null,
+        phase:status?'http':summary.includes('Neplatný formát historie')?'response_contract':'history_or_render'}));
+       errors.push(size.name+': rain detail chart failed after user retry');
+      }
      if(await page.locator('[data-rain-chart] svg').count()===0)
       errors.push(size.name+': rain chart missing SVG after history load');
     }
