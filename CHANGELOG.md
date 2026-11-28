@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-28 – Integrace formátovačů a komponentového CSS
+- #212 (46171314520) a #213 (46171602571) nezávisle PASS, každý 170/170 unit + Chromium. CSSOM 19/19, tabulka pouze na /grafy/, 18 tras bez specifického CSS, mobilní geometrie 12/44/520 px zachována. 12 repaint kontrol bez dodatečných raw GET. Kombinovaný CI a exact public DEV zatím neověřeny. Bez změny API/DB/produkce.
+
+## 2026-11-28 – Komponentové CSS tabulky historie
+- Přesun pravidel `.history-table-alternative` z globálního `ui-refinement.css` do `history-table.css` importovaného pouze v AdvancedHistory. Selektory a deklarace beze změny; společné styly ostatních tabulek zůstávají. Unit kontrola a CSSOM smoke 19 tras ověří přítomnost jen s komponentou a mobilní geometrii tabulky. CI/DEV a skutečná úspora přenášených bajtů zatím neověřeny.
+
 ## 2026-11-28 – Menší režie formátování grafů
 - Sdílený `formatValue` opakovaně používá omezenou cache Intl.NumberFormat pro běžné přesnosti (0–20); ostatní vstupy beze změny. Pokročilý, kompaktní a srážkový graf používají pevné Intl.DateTimeFormat instance místo konstrukce při každém popisku či redraw. Zachována čeština, Europe/Prague, přesnost, nulové a chybějící hodnoty. Přidán regresní test shody s původním formátováním; CI a skutečný výkon zatím neověřeny. Bez změn API/DB.
 
