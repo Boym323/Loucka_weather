@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-11-28 – Ověření časosběru v Chrome (#143)
+- Přidán oddělený read-only smoke v oficiálním Chrome (Playwright channel chrome, bez automatických media artefaktů). Jeden dokončený DEV MP4, skutečné dekódované snímky, čas přehrávání, posun a stabilní deployment SHA před/po. Blokuje nepodporovaný kodek místo falešného PASS. PR testuje aktuální DEV, nikoli nenasazený PR kód; Chrome/Safari na iPhonu nelze z tohoto runneru prohlásit za ověřené. Výsledek pending.
+
 ## 2026-11-28 – Komponentový CSS kompasu
 - Přesun importu `wind-compass-v2.css` z BaseLayout do WindCompass.astro, bez změny pravidel CSS. Kompas se používá na přehledu, aliasu, klasickém přehledu a aktuálních údajích. Ostatní trasy nemají načítat cca 8,1 kB zdrojového CSS kompasu. Kontrola skutečně emitovaných CSSOM pravidel a tokenů na 15 trasách, stávající vizuální wind regrese zůstává. CI/DEV a velikost přenosu ověřit samostatně; bez změny dat.
 
