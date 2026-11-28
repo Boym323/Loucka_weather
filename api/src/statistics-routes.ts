@@ -70,12 +70,16 @@ export function registerStatisticsRoutes(app:FastifyInstance,reader:ArchiveReade
     dataRevision:`daily-${fingerprint}`,completeness:{expected:null,valid:result.valid,fraction:null},
     // WeeWX day_<metric>.sumtime is the time-weighted number of VALID
     // observation seconds. Do not infer this from row counts or assume 5 min.
-    timeCoverage:(period==='year'&&aggregation==='mean'&&
+    timeCoverage:(((period==='year'&&aggregation==='mean')||
+     (period==='day'&&((metric==='outTemp'&&(aggregation==='min'||aggregation==='max'))||
+      (metric==='rain'&&aggregation==='sum'))))&&
      rows.length>0&&rows.every(r=>(r.count??0)===0||
       (r.sumtime!==null&&Number.isFinite(r.sumtime)&&r.sumtime>=0)))?(()=>{
+      // Daily publication requires coherent positive-count duration evidence.
+      if(period==='day'&&rows.some(r=>(r.count??0)===0&&(r.sumtime??0)>0))return null;
       const validSeconds=rows.reduce((n,r)=>n+(r.sumtime??0),0);
       const expectedSeconds=end-start;
-      return validSeconds<=expectedSeconds*1.01&&expectedSeconds>0?
+      return validSeconds<=expectedSeconds*(period==='day'?1:1.01)&&expectedSeconds>0?
        {validSeconds,expectedSeconds,fraction:Math.min(1,validSeconds/expectedSeconds),
         basis:'weewx_daily_sumtime_seconds',scope:'metric_only'}:null;
      })():null,
