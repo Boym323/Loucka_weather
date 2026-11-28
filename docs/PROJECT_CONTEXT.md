@@ -1,5 +1,7 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**28. 11. 2026 – observation routes:** #198 sloučen `1d9cadf`, 229/229 izolovaná MariaDB po opravě testu časové značky; #197 exact DEV `b0addaa` 46147114917 PASS, rain 284/284, live/failover PASS, slow4G 2520 ms. `observation-routes.ts` odděluje SSE/current/QC včetně instančního preClose drain; `app.ts` composition root. Test shody a SQL parametrů. CI/DEV ověřit samostatně; bez zásahu do dat/produkce.
+
 **28. 11. 2026 – statistické a staniční HTTP moduly:** #197 sloučen `b0addaa`, 227/227 izolovaná MariaDB. #196 exact DEV `439d896` 46144700124 PASS, rain 284/283, live/failover PASS, slow4G 3/3 medián 2588 ms. `statistics-routes.ts`, `station-routes.ts` zachovávají kontrakty, cache, čas a pořadí registrace, přímé testy shody a izolace. CI/DEV nové revize ověřit samostatně; žádné změny dat/produkce.
 
 **28. 11. 2026 – klimatologické HTTP moduly:** #196 sloučen `439d896`, 226/226 izolovaná MariaDB. #195 exact DEV `31f1377` 46143872572 PASS, rain 284/283, live/failover PASS, slow4G 3/3 medián 2584 ms. `climate-routes.ts` vyčleňuje čtyři klimatologické endpointy se stávajícími instančními cache, limity, kontrakty a SQL; test shody, ETag, coalescing a izolace instancí. CI/DEV nové revize ověřit samostatně; žádná změna dat nebo produkce.

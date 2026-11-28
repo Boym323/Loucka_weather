@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-28 – Dokončení modularizace HTTP backendu
+- #198 sloučen jako `1d9cadf` po opravení flakiness testu dynamického času kamery (bez změny API), 229/229 izolovaná MariaDB (46148381270). Exact DEV #197 `b0addaa` 46147114917 PASS, rain 284/284, live/failover PASS, slow4G 3/3 medián FCP/LCP kandidáta 2520 ms (lab).
+- `observation-routes.ts` vyčleňuje live SSE, current a original QC. Zachovány schémata, limity, revision gate, replay, heartbeat a preClose drain per instance; `app.ts` je composition root. Přímý test shody current/QC, ETag, SQL parametrů a vypnutého SSE doplňuje existující stream integrační testy. CI/DEV ověřit samostatně, žádné změny dat/produkce.
+
 ## 2026-11-28 – Modularizace statistických a staničních endpointů
 - #197 sloučen jako `b0addaa` po 227/227 testech izolované MariaDB (46144785988). Exact DEV #196 `439d896` smoke 46144700124 PASS, srážky 284/283 intervalů desktop/mobil, live/failover PASS, slow4G 3/3 medián FCP/LCP kandidáta 2588 ms (lab).
 - `statistics-routes.ts` a `station-routes.ts` přebírají existující statistiky, liveness/readiness, metadata, live/current, monitoring, senzory a stav kamery. Stejné pořadí registrace, původní hodiny a cache jednotlivých instancí, limity a QC. Typované request/reply ve statistikách. Přímé testy shody samostatné a složené registrace, ETag, DST/SQL limitů, izolace senzorové cache. Bez změn dat, SQL, HTTP kontraktů a produkce. CI/DEV nové revize ověřit samostatně.
