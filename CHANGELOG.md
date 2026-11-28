@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-11-28 – Refaktoring archivních bodů a agregací API
+- Oddělen výpočet raw/hourly historie, validace metadat a streaming seskupování překryvů z `app.ts` do typovaného modulu `archive-history.ts`. Beze změny HTTP kontraktu, SQL dotazů, výpočtů, pořadí a původu měření; explicitní typ archivního bodu nahrazuje `any[]` v těchto dvou výpočtech. Přímé offline testy porovnávají streaming s nezávislým referenčním algoritmem včetně kompakce, hraničních intervalů, skutečné nuly a bezpečných chyb. CI a DEV ověřit samostatně.
+
 ## 2026-11-28 – Stabilnější rozložení historického kalendáře a stavu služeb
 - Opakovaný veřejný lab na `8760c23` (46133455708) ukázal mobilní CLS kalendáře 0,1748 a stavu služeb 0,1604; další kandidáti grafy 0,1435 a senzory 0,1061. Nejde o field p75.
 - Kalendář a stav služeb rezervují responzivní prostor pro stavové štítky a výsledné texty; bez ořezávání textu, změn dat nebo API. Chromium fixture zadrží odpověď a porovná pozice před/po načtení na desktopu/mobilu v obou motivech. Veřejný smoke pasivně přidává povolené kategorie posunutých prvků (ne příčiny ani field CLS), bez dalších požadavků a bez DOM obsahu. Issue #152; CI a skutečný efekt DEV ověřit samostatně.
