@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-28 – Refaktoring denních statistik API
+- #194 sloučen jako `92909da` po 219/219 izolovaných MariaDB testů (46136974838). Exact DEV #192 `1ae2199` public smoke 46136921592 PASS, srážky 284 platných intervalů na desktopu i mobilu, live/failover PASS; slow4G 3/3, medián FCP/LCP kandidáta 2332 ms (lab, nikoli field ani důkaz kauzality refaktoringu).
+- Odděleny stávající denní agregace a tvorba denních bodů do `daily-statistics.ts`, explicitní typ namísto `any[]`. Přímé testy časově váženého průměru, nulových srážek vs. NULL, extrémů, směru větru, DST a odmítnutí neplatných souhrnů. Beze změny výpočtů, dat, HTTP, SQL a produkce. CI/DEV nové revize ověřit samostatně.
+
 ## 2026-11-28 – Refaktoring časových hranic API
 - PR #192 sloučen jako `1ae2199` po API/MariaDB CI 46136304168 (215/215 v izolované MariaDB). Veřejný smoke předchozího #191 na `cfb6711` 46136211605 PASS; mobilní CLS kalendář 0,1748 → 0,0004 a stav služeb 0,1604 → 0; grafy 0,1435 a senzory 0,1061 zůstávají. Slow4G 3/3, medián FCP/LCP kandidáta 2572 ms. Jde o lab, nikoli field.
 - Nový `calendar-time.ts` soustřeďuje RFC3339 validaci, převody Europe/Prague, hranice hodin/dnů a původní omezenou cache půlnocí; algoritmy a rozsahy nezměněny. Přímé testy neplatných dat, offsetů, přestupného roku, 23/25h dnů a hranice (start,end]. CI/DEV nové revize ověřit samostatně. Bez změn SQL, HTTP kontraktů, dat a produkce.
