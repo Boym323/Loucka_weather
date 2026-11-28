@@ -13,9 +13,22 @@ export const metrics = [
 
 export type KnownMetric = (typeof metrics)[number]['id'];
 export const getMetric = (id: string) => metrics.find((item) => item.id === id);
+// Reuse only the common presentation precisions. Unusual inputs retain Intl's original behavior.
+const numberFormats = new Map<number, Intl.NumberFormat>();
+function numberFormat(digits: number): Intl.NumberFormat {
+  if (Number.isInteger(digits) && digits >= 0 && digits <= 20) {
+    let formatter = numberFormats.get(digits);
+    if (!formatter) {
+      formatter = new Intl.NumberFormat('cs-CZ', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+      numberFormats.set(digits, formatter);
+    }
+    return formatter;
+  }
+  return new Intl.NumberFormat('cs-CZ', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+}
 export const formatValue = (value: number | null | undefined, digits = 1): string =>
   typeof value === 'number' && Number.isFinite(value)
-    ? new Intl.NumberFormat('cs-CZ', { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(Math.abs(value)<0.5*10**-digits?0:value)
+    ? numberFormat(digits).format(Math.abs(value)<0.5*10**-digits?0:value)
     : '—';
 
 /** Presentation precision only. Never round archive points or intermediate calculations. */

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {formatMetricValue,chartValue,metricAxisStep,metricDigits} from '../src/shared/domain/metrics.ts';
+import {formatValue,formatMetricValue,chartValue,metricAxisStep,metricDigits} from '../src/shared/domain/metrics.ts';
 test('display precision follows meteorological metric, not floating point precision',()=>{
  assert.equal(formatMetricValue(2.345678,'outTemp'),'2,3');
  assert.equal(formatMetricValue(84.1234,'outHumidity'),'84');
@@ -16,4 +16,17 @@ test('display precision follows meteorological metric, not floating point precis
  assert.equal(metricAxisStep('outHumidity'),1);
  assert.equal(metricAxisStep('outTemp'),0.1);
  assert.equal(metricDigits('soilMoisture1','%'),0);
+});
+
+test('reused numeric formatters preserve locale, precision, grouping and negative zero handling',()=>{
+ for(const digits of [0,1,2,3,6,20,21]){
+  const original=new Intl.NumberFormat('cs-CZ',{minimumFractionDigits:digits,maximumFractionDigits:digits});
+  for(const value of [-12345.678,-0.000001,-0,0,0.005,1.25,10000.5]){
+   const expected=original.format(Math.abs(value)<0.5*10**-digits?0:value);
+   assert.equal(formatValue(value,digits),expected);
+   assert.equal(formatValue(value,digits),expected);
+  }
+ }
+ for(const value of [null,undefined,NaN,Infinity,-Infinity])assert.equal(formatValue(value),'—');
+ assert.throws(()=>formatValue(1,-1),RangeError);
 });
