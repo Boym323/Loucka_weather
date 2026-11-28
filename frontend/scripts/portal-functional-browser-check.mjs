@@ -75,15 +75,24 @@ try{
    window.__refreshWarningFixture=()=>timers.forEach(fn=>fn());
   },theme);
   let alertResponse=[alert],revision=0;
+  let calendarGate=null,monitorGate=null;
+  const hold=()=>{let release;const pending=new Promise(resolve=>{release=resolve;});return {pending,release};};
   const setResponse=next=>{alertResponse=next;};
   const resetResponse=()=>{alertResponse=[alert];};
-  await context.route('**/*',route=>{
+  await context.route('**/*',async route=>{
    const url=new URL(route.request().url());
    const json=body=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(body)});
    if(url.hostname==='api.open-meteo.com')return json(url.searchParams.has('hourly')?{hourly,hourly_units:{temperature_2m:'°C',precipitation:'mm',precipitation_probability:'%',wind_speed_10m:'m/s'}}:{daily});
    if(url.pathname==='/api/v1/alerts/local')return alertResponse===null?json({status:'unavailable',alerts:[]}):
     json({status:'verified',alerts:alertResponse,checkedAt:new Date(Date.now()+60000*(revision++)).toISOString()});
+   if(url.pathname==='/api/v1/monitor/status'){
+    if(monitorGate)await monitorGate.pending;
+    const checkedAt=new Date().toISOString();
+    const components=Object.fromEntries(['api','archive','gw3000','camera','chmi'].map(key=>[key,{status:key==='gw3000'?'missing':'ok',lastObservedAt:key==='gw3000'?null:checkedAt}]));
+    return json({checkedAt,status:'warning',components});
+   }
    if(url.pathname==='/api/v1/statistics/daily'){
+    if(calendarGate)await calendarGate.pending;
     const metric=url.searchParams.get('metric'),aggregation=url.searchParams.get('aggregation');
     return json({schemaVersion:'1',metric,aggregation,unit:metric==='rain'?'mm':'°C',value:metric==='rain'?0:aggregation==='min'?-2:7,quality:'derived',source:'weewx_daily',dataRevision:'fixture',completeness:{valid:288,fraction:1},timeCoverage:{fraction:1}});
    }
@@ -131,8 +140,16 @@ try{
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
   await page.screenshot({path:out+'/forecast-'+width+'-'+theme+'.png',fullPage:true});
   await checkWarningRefresh(page,setResponse,resetResponse,false);
+  calendarGate=hold();
   await page.goto(new URL('historie-den/',origin).href,{waitUntil:'domcontentloaded'});
+  await page.waitForFunction(()=>document.querySelector('[data-calendar-status]')?.textContent==='Načítám');
+  const positions=selectors=>page.evaluate(list=>list.map(s=>Math.round(document.querySelector(s).getBoundingClientRect().top*10)/10),selectors);
+  const calendarSelectors=['[data-calendar-form]','.portal-climate-grid','[data-calendar-coverage="0"]','[data-calendar-graph]'];
+  const beforeCalendar=await positions(calendarSelectors);
+  calendarGate.release();calendarGate=null;
   await page.waitForFunction(()=>document.querySelector('[data-calendar-value="0"]')?.textContent?.includes('°C'));
+  const afterCalendar=await positions(calendarSelectors);
+  assert.ok(beforeCalendar.every((v,i)=>Math.abs(v-afterCalendar[i])<=2),'Calendar geometry '+JSON.stringify({width,theme,beforeCalendar,afterCalendar}));
   await page.locator('[name="date"]').fill('2024-06-15');
   await page.locator('[data-calendar-form] button').click();
   await page.waitForFunction(()=>document.querySelector('[data-calendar-graph]')?.getAttribute('href')?.includes('2024-06-15'));
@@ -140,6 +157,19 @@ try{
   assert.match(await page.locator('[data-calendar-value="2"]').textContent(),/0,0 mm/);
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
   await page.screenshot({path:out+'/calendar-'+width+'-'+theme+'.png',fullPage:true});
+  monitorGate=hold();
+  await page.goto(new URL('stav/',origin).href,{waitUntil:'domcontentloaded'});
+  await page.locator('[data-monitor-overall]').waitFor();
+  const monitorSelectors=['[data-monitor-checked]','.monitor-grid','[data-monitor-card="archive"]','.status-explainer'];
+  const beforeMonitor=await positions(monitorSelectors);
+  monitorGate.release();monitorGate=null;
+  await page.waitForFunction(()=>document.querySelector('[data-monitor-overall]')?.textContent==='Některé zdroje mají omezení');
+  const afterMonitor=await positions(monitorSelectors);
+  assert.ok(beforeMonitor.every((v,i)=>Math.abs(v-afterMonitor[i])<=2),'Monitor geometry '+JSON.stringify({width,theme,beforeMonitor,afterMonitor}));
+  assert.match(await page.locator('[data-monitor-state="gw3000"]').textContent(),/Nedostupné/);
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
+  await page.screenshot({path:out+'/monitor-'+width+'-'+theme+'.png',fullPage:true});
+  console.log('STABLE ASYNC GEOMETRY',width,theme,JSON.stringify({beforeCalendar,afterCalendar,beforeMonitor,afterMonitor}));
   assert.deepEqual(errors,[]);
   await context.close();
  }
