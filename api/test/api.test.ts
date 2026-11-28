@@ -180,6 +180,36 @@ test('history refuses large raw periods and silent truncation while supporting r
  const big='/api/v1/history?metric=outTemp&from=2026-01-01T00:00:00Z&to=2026-05-01T00:00:00Z';
  assert.equal((await app.inject(big)).statusCode,422);
 });
+test('raw and hourly history classify invalid archive data without returning partial observations',async t=>{
+ const row:ArchiveRow={dateTime:600,interval:5,usUnits:16,outTemp:10};
+ const cases:{rows:ArchiveRow[];message:string}[]=[
+  {rows:[{...row,dateTime:600.5}],message:'Invalid archive timestamp'},
+  {rows:[{...row,interval:0}],message:'Invalid archive interval'},
+  {rows:[{...row,usUnits:99}],message:'Unsupported archive units'},
+  {rows:[row,{...row,dateTime:660}],message:'Overlapping archive intervals'},
+  {rows:[row,{...row,dateTime:600}],message:'Invalid archive ordering'},
+  {rows:[{...row,outTemp:Infinity}],message:'Invalid archive measurement or conversion'}
+ ];
+ for(const item of cases){
+  const app=buildApp(reader(fixture,item.rows),now);
+  try{
+   for(const resolution of ['raw','hourly']){
+    const res=await app.inject('/api/v1/history?metric=outTemp&from=1970-01-01T00:00:00Z&to=1970-01-01T00:25:00Z&resolution='+resolution);
+    assert.equal(res.statusCode,503,res.body);
+    assert.equal(res.json().error.code,'UPSTREAM_UNAVAILABLE');
+    assert.equal(res.json().error.message,item.message);
+    assert.equal(res.json().points,undefined);
+   }
+  }finally{await app.close();}
+ }
+ const fail=reader();fail.history=async()=>{throw Error('private database diagnostic');};
+ const app=buildApp(fail,now);t.after(()=>app.close());
+ for(const resolution of ['raw','hourly']){
+  const res=await app.inject('/api/v1/history?metric=outTemp&from=1970-01-01T00:00:00Z&to=1970-01-01T00:25:00Z&resolution='+resolution);
+  assert.equal(res.statusCode,503);
+  assert.ok(!res.body.includes('private database diagnostic'));
+ }
+});
 test('history has no fabricated points when no source rows exist',async t=>{
  const app=buildApp(reader(fixture,[]),now);t.after(()=>app.close());
  const res=await app.inject('/api/v1/history?metric=rain&from=1970-01-01T00:00:00Z&to=1970-01-01T00:10:00Z');

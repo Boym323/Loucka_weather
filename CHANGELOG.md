@@ -3,6 +3,10 @@
 ## 2026-11-28 – Zachování originální hodnoty při QC chybě senzoru
 - API kvality (`/api/v1/quality/observations`) zachovává převedenou původní číselnou hodnotu v `measurementValue` i při `SENSOR_ERROR`; `displayValue` zůstává maskovaná, QC příznaky a nezpůsobilost pro extrémy se nemění. PR #174; původní izolované API/MariaDB CI prošlo, aktuální revizi ověřit znovu. Bez změn originálního archivu, agregací a schvalování rekonstrukcí.
 
+## 2026-11-28 – Klasifikace výpadku archivních grafů
+- Veřejný DEV smoke 46130015774 potvrdil na přesném SHA 3b22d66 HTTP 503 `Unsupported archived observation` u raw teploty, nárazů a srážek; hodinová teplota rovněž selhala, denní agregace HTTP 200. Stejné selhání doloženo již před #181 (27. 11.).
+- API rozlišuje bezpečnými pevnými chybovými zprávami neplatný timestamp, interval, jednotky, překryv, pořadí a konverzi; HTTP 503 a fail-closed validace zůstávají zachovány. Smoke rozpozná tyto kategorie bez dalších požadavků či zveřejnění řádků. Přidány raw/hourly regresní testy. Issue #183: přesný typ vady v reálném archivu dosud neověřen, CI a DEV ověřit samostatně. Bez změny zdrojových dat a výpočtů.
+
 ## 2026-11-28 – Diagnostika dostupnosti historických grafů na DEV
 - Veřejný smoke loguje omezené HTTP stavy a povolené chybové kódy existujících history požadavků bez nových požadavků, URL nebo hodnot měření. Při selhání rozliší stav grafu a dostupnost SVG. Původní akceptační brány zůstávají nezměněné; issue #183, příčina výpadku zatím neověřena.
 
