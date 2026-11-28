@@ -1,3 +1,6 @@
+---
+import '../../styles/history-table.css';
+---
 <section class="section advanced-history" data-advanced-history aria-labelledby="advanced-history-heading">
  <div class="section-heading">
   <div><span class="eyebrow">Vyber si období a měření</span><h2 id="advanced-history-heading">Podrobný historický graf</h2></div>
@@ -192,14 +195,11 @@
    windSpeed:'#8dd1b4',windGust:'#8dd1b4',rain:'#8dc7e4',
    rainRate:'#8dc7e4',radiation:'#e2bc76',pm25_1:'#ceaddb'
   };
-  const fmtDate=(value:number,days:number)=>{
-   const options:Intl.DateTimeFormatOptions=days<=2
-    ?{timeZone:'Europe/Prague',hour:'2-digit',minute:'2-digit'}
-    :days<=40
-    ?{timeZone:'Europe/Prague',day:'numeric',month:'numeric'}
-    :{timeZone:'Europe/Prague',month:'short',year:'2-digit'};
-   return new Intl.DateTimeFormat('cs-CZ',options).format(new Date(value));
-  };
+  const axisClock=new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',hour:'2-digit',minute:'2-digit'});
+  const axisDay=new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',day:'numeric',month:'numeric'});
+  const axisMonth=new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',month:'short',year:'2-digit'});
+  const tooltipTime=new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',dateStyle:'medium',timeStyle:'short'});
+  const fmtDate=(value:number,days:number)=>(days<=2?axisClock:days<=40?axisDay:axisMonth).format(value);
   const dateInput=(key:string)=>form.elements.namedItem(key) as HTMLInputElement;
   const metricInput=(key:string)=>form.elements.namedItem(key) as HTMLSelectElement;
   // Calendar arithmetic is done on local date strings, not elapsed milliseconds:
@@ -291,7 +291,7 @@
        const rows=Array.isArray(items)?items:items?[items]:[];
        if(!rows.length)return '';
        const first=rows[0];
-       const date=new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',dateStyle:'medium',timeStyle:'short'}).format(new Date(first.value[0]));
+       const date=tooltipTime.format(new Date(first.value[0]));
        const details=rows.map(item=>{
         const result=results[item.seriesIndex],p=result?.points[item.dataIndex];
         const value=valid(p)?formatMetricValue(p.value,result.metric,result.unit)+' '+(units[result.metric]??result.unit):'—';

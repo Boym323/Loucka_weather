@@ -1,5 +1,11 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**28. 11. 2026 – integrace #212/#213:** oba samostatně 170/170 + Chromium PASS; CSSOM 19/19, tabulka jen /grafy/, 12 repaint kontrol bez GET. Kombinovaný CI/DEV pending; bez změn API/DB/produkce.
+
+**28. 11. 2026 – CSS tabulky historie:** samostatný komponentový `history-table.css`, pravidla přesunuta beze změny, unit a CSSOM/geometry smoke na 19 trasách; CI/DEV pending. Bez zásahů do API/DB.
+
+**28. 11. 2026 – režie formátování grafů:** omezené opakované použití Intl.NumberFormat, pevné časové formátovače v AdvancedHistory/HistoryChart/RainDetail; stejná čeština, Europe/Prague a přesnost. Regresní test parity, CI/DEV pending; neprohlašovat měřený výkon bez důkazu. Bez zásahu do API/DB.
+
 **28. 11. 2026 – #210 sloučen:** main `5b6c316`, kandidát `1eb14e2` frontend 169/169 + Chromium (46169328238), 12 theme repaint kontrol bez nových raw GET. Předchozí exact DEV `6e95cc9` smoke 46168969733 PASS, 3/3 LCP kandidát 2504 ms. Chrome decode+seek 46169328261 a 46170601485 PASS na `6e95cc9`; exact DEV 46170601488 PASS na `5b6c316`, 3/3 LCP kandidát 2384 ms, failover PASS; post-merge frontend 46170601509 PASS 169/169 a 12 repaint kontrol bez GET. Produkční NO-GO: #69 provozní brány, #143 Safari/iPhone, #152 field/UX. Žádné změny produkce/DB.
 
 **28. 11. 2026 – integrace grafy/Chrome/QC:** #206 sloučen `6e95cc9`, 231/231 + 167/167; #208 Chrome H.264 decode+seek PASS na `d61cc68` (46168817839). #207 opraven test trasy, #209 guard počasí; společné CI/DEV ověřit samostatně, Safari/iPhone neověřeno.

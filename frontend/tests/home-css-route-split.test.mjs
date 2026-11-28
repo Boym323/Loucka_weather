@@ -22,3 +22,15 @@ test('wind compass CSS belongs to the component, not the shared layout',async()=
  assert.match(wind,/import '\.\.\/\.\.\/styles\/wind-compass-v2\.css'/);
  assert.match(css,/--wind-v2-ink:/);
 });
+
+test('history table styles belong to the advanced history component',async()=>{
+ const layout=await read('src/layouts/BaseLayout.astro');
+ const global=await read('src/styles/ui-refinement.css');
+ const component=await read('src/features/history/AdvancedHistory.astro');
+ const css=await read('src/styles/history-table.css');
+ assert.doesNotMatch(layout,/history-table\.css/);
+ assert.doesNotMatch(global,/^\.history-table-alternative\s*\{/m);
+ assert.match(component,/import '\.\.\/\.\.\/styles\/history-table\.css'/);
+ assert.match(css,/\.history-table-alternative\s*\{/);
+ assert.match(css,/\.history-table-alternative \.history-table\{min-width:520px\}/);
+});

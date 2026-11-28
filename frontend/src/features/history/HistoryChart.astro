@@ -38,7 +38,9 @@ const tabs = [
  import type { HistoryResponse } from '../../shared/domain/weather';
  // Delay the large ECharts engine until the document is interactive.
  // No history value or endpoint is changed; the visible real chart still paints.
- const formatTime=(value:number)=>new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',hour:'2-digit',minute:'2-digit',day:'numeric',month:'numeric'}).format(new Date(value));
+ const fullTime=new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',hour:'2-digit',minute:'2-digit',day:'numeric',month:'numeric'});
+ const hourTime=new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',hour:'2-digit',minute:'2-digit'});
+ const dayTime=new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',day:'numeric',month:'numeric'});
  const colorByMetric:Record<string,string>={outTemp:'#176878',outHumidity:'#386e96',barometer:'#665d83',windSpeed:'#27785e',windGust:'#27785e',rainRate:'#2879a3'};
  let departed=false;
  document.addEventListener('astro:before-swap',()=>{departed=true;},{once:true});
@@ -107,9 +109,7 @@ const tabs = [
     const compact=window.matchMedia('(max-width:650px)').matches;
     const axisColor=light?'#4b625e':'#bbd0cc';
     const gridColor=light?'#e2e9e6':'#3a5054';
-    const shortTime=new Intl.DateTimeFormat('cs-CZ',{
-     timeZone:'Europe/Prague',...(hours<=24?{hour:'2-digit',minute:'2-digit'}:{day:'numeric',month:'numeric'})
-    });
+    const shortTime=hours<=24?hourTime:dayTime;
     const darkColors:Record<string,string>={outTemp:'#8dd5c9',outHumidity:'#89bedb',barometer:'#bbacd5',
      windSpeed:'#8dd1b4',windGust:'#8dd1b4',rainRate:'#8dc7e4'};
     const color=light?(colorByMetric[activeMetric]??'#176878'):(darkColors[activeMetric]??'#8dd5c9');
@@ -122,7 +122,7 @@ const tabs = [
      xAxis:{type:'time',splitNumber:compact?3:7,
       axisLine:{lineStyle:{color:gridColor}},
       axisLabel:{color:axisColor,fontSize:compact?11:12,hideOverlap:true,showMinLabel:false,showMaxLabel:false,
-       formatter:(value:number)=>compact?shortTime.format(new Date(value)):formatTime(value)},
+       formatter:(value:number)=>(compact?shortTime:fullTime).format(value)},
       axisTick:{show:false},splitLine:{show:false}},
      yAxis:{type:'value',scale:true,splitNumber:4,minInterval:metricAxisStep(activeMetric,known.unit),name:known.unit,
       nameTextStyle:{color:axisColor,fontSize:11},

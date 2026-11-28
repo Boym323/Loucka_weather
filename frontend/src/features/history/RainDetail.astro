@@ -27,6 +27,7 @@
   const controller=new AbortController();
   let loading=false;
   let lastResult:HistoryResponse|undefined;
+  const clock=new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',hour:'2-digit',minute:'2-digit'});
   const render=(result:HistoryResponse)=>{
    const values=result.points.map(p=>[
     Date.parse(p.endTime),
@@ -36,7 +37,6 @@
    const light=document.documentElement.dataset.theme!=='dark';
    const ink=light?'#4b625e':'#bbd0cc',gridColor=light?'#e2e9e6':'#3a5054';
    const color=light?'#2879a3':'#8dc7e4';
-   const clock=new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',hour:'2-digit',minute:'2-digit'});
    chart.clear();
    chart.setOption({
     backgroundColor:'transparent',animation:false,
@@ -44,7 +44,7 @@
     tooltip:{trigger:'axis',confine:true,valueFormatter:(value:unknown)=>chartValue(value,'rain','mm')},
     xAxis:{type:'time',splitNumber:compact?3:7,
      axisLabel:{color:ink,fontSize:compact?10:12,hideOverlap:true,
-      showMinLabel:false,showMaxLabel:false,formatter:(v:number)=>clock.format(new Date(v))},
+      showMinLabel:false,showMaxLabel:false,formatter:(v:number)=>clock.format(v)},
      axisTick:{show:false},axisLine:{lineStyle:{color:gridColor}},splitLine:{show:false}},
     yAxis:{type:'value',min:0,name:'mm',splitNumber:4,minInterval:metricAxisStep('rain'),
      nameTextStyle:{color:ink,fontSize:11},axisLabel:{color:ink,fontSize:compact?10:12,formatter:(value:number)=>formatValue(value,1)},
