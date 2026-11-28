@@ -164,3 +164,19 @@ const channels=[
   document.addEventListener('astro:before-swap',()=>controller.abort(),{once:true});
  }
 </script>
+
+<style>
+ /* The reading and quality labels must not change the width of the name
+    column when an archive value arrives. Keep long labels readable. */
+ .sensor-directory > .section-heading{display:grid;grid-template-columns:minmax(0,1fr);gap:6px}
+ [data-sensors-status]{justify-self:start;display:flex;align-items:center;min-block-size:calc(2lh + 12px);max-width:100%;box-sizing:border-box}
+ .sensor-directory-row{grid-template-columns:minmax(0,1fr) minmax(0,40%) 20px}
+ .sensor-directory-reading{min-width:0}
+ .sensor-directory-reading .sensor-state{min-block-size:2lh;overflow-wrap:anywhere}
+ .sensor-directory-reading strong{white-space:normal;overflow-wrap:anywhere}
+ @media(max-width:760px){.sensor-directory-row{grid-template-columns:minmax(0,1fr) minmax(0,40%) 16px}}
+ @media(min-width:761px){
+  .sensor-directory > .section-heading{grid-template-columns:minmax(0,1fr) minmax(0,17rem);align-items:center}
+  [data-sensors-status]{justify-self:end}
+ }
+</style>

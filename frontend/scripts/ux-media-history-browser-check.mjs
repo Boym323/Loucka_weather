@@ -16,12 +16,15 @@ try{
    await ctx.addInitScript(selected=>localStorage.setItem('loucka-theme',selected),theme);
    let historyRequests=0;
    let rainValue=null;
+   const hold=()=>{let release;const pending=new Promise(resolve=>{release=resolve;});return {pending,release};};
+   let graphGate=hold(),sensorGate=hold();
    await ctx.route('**/api/v1/**',async route=>{
     const url=new URL(route.request().url());
     if(url.pathname==='/api/v1/history'){
      historyRequests++;
      const metric=url.searchParams.get('metric')||'outTemp';
      const resolution=url.searchParams.get('resolution')||'hourly';
+     if(metric==='outTemp'&&resolution==='hourly'&&graphGate)await graphGate.pending;
      if(metric==='rain'&&resolution==='raw')return route.fulfill({
       status:200,contentType:'application/json',body:JSON.stringify({
        schemaVersion:'1',metric,unit:'mm',resolution,dataRevision:'rain-fixture',
@@ -45,6 +48,13 @@ try{
       videos:[{date:'2026-11-19',url:validVideo,state:'live'},
        {date:'2026-11-18',url:'/api/v1/camera/timelapse/2026-11-18.mp4',state:'complete'}]
      })});
+    if(url.pathname==='/api/v1/current'){
+     if(sensorGate)await sensorGate.pending;
+     const readings=Object.fromEntries(['soilTemp1','soilTemp2','soilTemp3','soilTemp4','extraTemp1','extraHumid1','pm25_1','lightning_distance'].map((metric,i)=>[metric,{
+      value:i%2===0?0:null,quality:i%2===0?'measured':'missing',unit:'unit',source:'weewx_archive',provenance:null
+     }]));
+     return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({schemaVersion:'1',observedAt:new Date().toISOString(),stale:false,units:'metricwx',dataset:'original',dataRevision:'sensor-fixture',readings})});
+    }
     if(url.pathname==='/api/v1/station')
      return route.fulfill({status:200,contentType:'application/json',body:'{"schemaVersion":"1","capabilities":[]}'});
     return route.fulfill({status:503,contentType:'application/json',body:'{"error":"test-only"}'});
@@ -53,7 +63,14 @@ try{
    const errors=[];
    page.on('pageerror',error=>errors.push(error.message));
    await page.goto(new URL('grafy/',origin).href,{waitUntil:'domcontentloaded',timeout:30000});
+   await page.waitForFunction(()=>document.querySelector('[data-advanced-status]')?.textContent==='Načítám graf…');
+   const positions=selectors=>page.evaluate(list=>list.map(selector=>Math.round(document.querySelector(selector).getBoundingClientRect().top*10)/10),selectors);
+   const graphSelectors=['.history-presets','[data-history-form]','[data-advanced-canvas]','[data-advanced-table]'];
+   const graphBefore=await positions(graphSelectors);
+   graphGate.release();graphGate=null;
    await page.waitForFunction(()=>document.querySelector('[data-advanced-status]')?.textContent?.includes('Zobrazeno'),null,{timeout:20000});
+   const graphAfter=await positions(graphSelectors);
+   assert.ok(graphBefore.every((v,i)=>Math.abs(v-graphAfter[i])<=2),'Graph async layout '+JSON.stringify({width,theme,graphBefore,graphAfter}));
    // Allow delayed rain initialization to finish before the unrelated
    // zoom/no-extra-request assertion snapshots the total request count.
    await page.waitForFunction(()=>document.querySelector('[data-rain-status]')?.textContent==='Bez potvrzených intervalů',null,{timeout:12000});
@@ -87,6 +104,18 @@ try{
    assert.equal(table.rows[2][2],'—');
    assert.equal(table.source,true);
    if(capture)await page.screenshot({path:'test-results/ux-media-history/history-'+width+'-'+theme+'.png',fullPage:false});
+   await page.goto(new URL('senzory/',origin).href,{waitUntil:'domcontentloaded',timeout:30000});
+   await page.locator('[data-sensor-channels]').waitFor();
+   const sensorSelectors=['.sensor-directory-toolbar','.sensor-directory-list','[data-sensor-id="soilTemp2"]','.sensor-advanced-section'];
+   const sensorBefore=await positions(sensorSelectors);
+   sensorGate.release();sensorGate=null;
+   await page.waitForFunction(()=>document.querySelector('[data-sensors-status]')?.textContent==='Poslední archivní měření');
+   const sensorAfter=await positions(sensorSelectors);
+   assert.ok(sensorBefore.every((v,i)=>Math.abs(v-sensorAfter[i])<=2),'Sensor async layout '+JSON.stringify({width,theme,sensorBefore,sensorAfter}));
+   assert.equal(await page.locator('[data-sensor-value="soilTemp1"]').textContent(),'0,0');
+   assert.equal(await page.locator('[data-sensor-value="soilTemp2"]').textContent(),'—');
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
+   console.log('HISTORY SENSOR ASYNC GEOMETRY',width,theme,JSON.stringify({graphBefore,graphAfter,sensorBefore,sensorAfter}));
    await page.goto(new URL('kamera/',origin).href,{waitUntil:'domcontentloaded',timeout:30000});
    await page.waitForFunction(()=>Boolean(document.querySelector('[data-archive-player]')?.getAttribute('poster')),null,{timeout:12000});
    assert.equal(await page.locator('[data-archive-player]').getAttribute('poster'),frame);

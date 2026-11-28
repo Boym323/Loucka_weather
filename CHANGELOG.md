@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-11-28 – Kandidát stabilizace grafů a senzorů
+- #152: místní responzivní prostor pro stav a souhrn podrobného grafu a stabilní sloupce senzorového adresáře. Bez změny dat, ořezávání textu nebo nového API. Chromium zadrží fixture odpověď a porovná souřadnice před/po načtení na 320/390/1440 v obou motivech; ověří 0 vs pomlčku. CI a skutečný CLS efekt ověřit samostatně.
+
 ## 2026-11-28 – Modularizace statistických a staničních endpointů
 - #197 sloučen jako `b0addaa` po 227/227 testech izolované MariaDB (46144785988). Exact DEV #196 `439d896` smoke 46144700124 PASS, srážky 284/283 intervalů desktop/mobil, live/failover PASS, slow4G 3/3 medián FCP/LCP kandidáta 2588 ms (lab).
 - `statistics-routes.ts` a `station-routes.ts` přebírají existující statistiky, liveness/readiness, metadata, live/current, monitoring, senzory a stav kamery. Stejné pořadí registrace, původní hodiny a cache jednotlivých instancí, limity a QC. Typované request/reply ve statistikách. Přímé testy shody samostatné a složené registrace, ETag, DST/SQL limitů, izolace senzorové cache. Bez změn dat, SQL, HTTP kontraktů a produkce. CI/DEV nové revize ověřit samostatně.

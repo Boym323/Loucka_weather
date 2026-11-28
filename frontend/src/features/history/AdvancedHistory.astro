@@ -405,3 +405,15 @@
   }else setPreset(activeRange);
  }
 </script>
+
+<style>
+ /* Keep asynchronous status and single-series summary from moving the controls
+    and following content. Long results can still wrap; no clipped text. */
+ .advanced-history > .section-heading{display:grid;grid-template-columns:minmax(0,1fr);gap:6px}
+ [data-advanced-status]{justify-self:start;display:flex;align-items:center;min-block-size:calc(2lh + 12px);max-width:100%;box-sizing:border-box}
+ [data-advanced-summary]{min-block-size:calc(3lh + 16px);align-items:start}
+ @media(min-width:761px){
+  .advanced-history > .section-heading{grid-template-columns:minmax(0,1fr) minmax(0,17rem);align-items:center}
+  [data-advanced-status]{justify-self:end}
+ }
+</style>
