@@ -40,7 +40,7 @@ export function isStatisticsResult(data: unknown): data is StatisticsResult {
   typeof data.aggregation==='string'&&aggregations.includes(data.aggregation)&&
   (data.value===null||finite(data.value))&&
   data.quality===(data.value===null?'missing':'derived')&&
-  text(data.unit)&&['us','metric','metricwx'].includes(String(data.units))&&typeof data.units==='string'&&
+  text(data.unit)&&typeof data.units==='string'&&['us','metric','metricwx'].includes(data.units)&&
   data.source==='weewx_daily'&&(data.provenance===null||text(data.provenance))&&
   text(data.dataRevision)&&
   (data.extremaObservedAt===null||typeof data.extremaObservedAt==='string'&&Number.isFinite(Date.parse(data.extremaObservedAt)))&&
