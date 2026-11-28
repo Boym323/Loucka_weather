@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-28 – Ověřená obnova historických grafů a integrace oprav
+- PR #188, commit `9b05527`: veřejný DEV smoke [46132945676](https://github.com/Boym323/Loucka_weather/actions/runs/46132945676) ověřil přesné nasazení, HTTP 200 pro raw teplotu, nárazy a srážky i hodinovou teplotu, 284 platných srážkových intervalů na obou viewports, 11 tras a GW3000/archiv failover PASS. Issue #183 uzavřeno; původní překryvy zůstávají k odbornému read-only posouzení v #80.
+- PR #189 sloučen jako `8760c23`; všechny čtyři původní PR #182/#174/#172/#186 jsou sloučené. Integrační API/MariaDB [46133026036](https://github.com/Boym323/Loucka_weather/actions/runs/46133026036), frontend/Chromium [46133026052](https://github.com/Boym323/Loucka_weather/actions/runs/46133026052) a security [46133026015](https://github.com/Boym323/Loucka_weather/actions/runs/46133026015) PASS, npm audit 0 zranitelností. Nová veřejná akceptace exact SHA `8760c23` [46133455708](https://github.com/Boym323/Loucka_weather/actions/runs/46133455708) PASS na přesném SHA: 284 platných srážkových intervalů na desktopu/mobilu, 11 tras, GW3000 live/failover; všechny post-merge API, frontend a security workflow PASS. Slow4G 3/3, medián FCP/LCP kandidáta 2588 ms (lab, nikoli field).
+- Mobilní slow4G lab na `9b05527`: 3/3, medián FCP i LCP kandidáta 2612 ms; dva CSS soubory ~191574 CDP B bez potvrzené gzip/br komprese, další práce #152. H.264 dekódování #143 není prokázané, produkční readiness #69 a historická QC #80/#107/#111 zůstávají otevřené. Bez změn DB, originálního archivu a produkce.
+
 ## 2026-11-28 – Společný integrační kandidát zbývajících oprav
 - Zachovány samostatné změny #182 (ČHMÚ), #174 (QC), #172 (Astro) a #186 (srážky) nad main s #188. Integrační CI musí ověřit kombinaci; veřejné nasazení ověřit samostatně. Bez zásahu do produkce a archivu.
 
