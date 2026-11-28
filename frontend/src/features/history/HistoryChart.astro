@@ -92,17 +92,10 @@ const tabs = [
   const observer=new ResizeObserver(()=>chart.resize());observer.observe(element);
   let controller:AbortController|undefined;
   let activeMetric=root.dataset.defaultMetric??'outTemp',hours=24;
-  async function update(){
-   controller?.abort();controller=new AbortController();const signal=controller.signal;
-   if(status){status.textContent='Načítání…';status.className='status-chip';}
-   if(retry)retry.hidden=true;
-   if(figure)figure.dataset.chartState='loading';
-   if(element)element.hidden=false;
+  // Repaint the last successful selection on a theme change, never refetch it.
+  let lastResult:HistoryResponse|undefined;
+  function render(result:HistoryResponse){
    if(summary)summary.replaceChildren();
-   if(message)message.textContent='Načítání archivních měření…';
-   try{
-    const result:HistoryResponse=await getHistoryRange(activeMetric,hours,signal);
-    if(signal.aborted)return;
     const known=getMetric(activeMetric);
     if(!known)throw new Error('Nepodporovaná veličina');
     const plotted=result.points.map(point=>[
@@ -160,8 +153,24 @@ const tabs = [
      summary.append(lowest,highest);
     }
     chart.resize();
+  }
+  async function update(){
+   controller?.abort();controller=new AbortController();const signal=controller.signal;
+   lastResult=undefined;
+   if(status){status.textContent='Načítání…';status.className='status-chip';}
+   if(retry)retry.hidden=true;
+   if(figure)figure.dataset.chartState='loading';
+   if(element)element.hidden=false;
+   if(summary)summary.replaceChildren();
+   if(message)message.textContent='Načítání archivních měření…';
+   try{
+    const result:HistoryResponse=await getHistoryRange(activeMetric,hours,signal);
+    if(signal.aborted)return;
+    render(result);
+    lastResult=result;
    }catch(error){
     if(signal.aborted)return;
+    lastResult=undefined;
     chart.clear();
     if(status){status.textContent='Historie nedostupná';status.className='status-chip error';}
     if(figure)figure.dataset.chartState='error';
@@ -188,8 +197,8 @@ const tabs = [
   },{once:true});
   const archiveChanged=()=>{if(!controller?.signal.aborted)void update();};
   window.addEventListener('loucka:archive-updated',archiveChanged);
-  // Reuse the existing API route: switching theme also recolors the chart axes.
-  const themeChanged=()=>{void update();};
+  // An in-flight request renders using the latest theme on completion.
+  const themeChanged=()=>{if(lastResult)render(lastResult);};
   window.addEventListener('loucka:theme-change',themeChanged);
   void update();
    });

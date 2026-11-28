@@ -1,0 +1,37 @@
+name: Public DEV Chrome H264 playback
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "frontend/scripts/public-camera-chrome-playback.mjs"
+      - ".github/workflows/public-camera-chrome-playback.yml"
+  push:
+    branches: [main]
+    paths:
+      - "frontend/scripts/public-camera-chrome-playback.mjs"
+      - ".github/workflows/public-camera-chrome-playback.yml"
+      - "frontend/src/features/camera/**"
+permissions:
+  contents: read
+concurrency:
+  group: loucka-camera-chrome-playback
+  cancel-in-progress: true
+jobs:
+  playback:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+      - name: Install pinned Playwright and verify branded Chrome
+        working-directory: frontend
+        run: |
+          npm ci --no-audit --no-fund
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          google-chrome --version || npx playwright install chrome
+          node --check scripts/public-camera-chrome-playback.mjs
+      - name: Decode and seek one completed DEV MP4
+        working-directory: frontend
+        run: node scripts/public-camera-chrome-playback.mjs

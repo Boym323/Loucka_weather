@@ -8,10 +8,10 @@ const reading=value=>({
  schemaVersion:'1',observedAt:new Date().toISOString(),stale:false,
  units:'metricwx',dataset:'original',dataRevision:'browser-fixture-only',
  readings:{
-  outTemp:{value,unit:'degC',quality:'measured',source:'weewx_archive'},
-  windDir:{value:275,unit:'degree_compass',quality:'measured',source:'weewx_archive'},
-  windSpeed:{value:4.2,unit:'meter_per_second',quality:'measured',source:'weewx_archive'},
-  windGust:{value:8.1,unit:'meter_per_second',quality:'measured',source:'weewx_archive'}
+  outTemp:{value,unit:'degC',quality:'measured',source:'weewx_archive',provenance:null},
+  windDir:{value:275,unit:'degree_compass',quality:'measured',source:'weewx_archive',provenance:null},
+  windSpeed:{value:4.2,unit:'meter_per_second',quality:'measured',source:'weewx_archive',provenance:null},
+  windGust:{value:8.1,unit:'meter_per_second',quality:'measured',source:'weewx_archive',provenance:null}
  }
 });
 try{

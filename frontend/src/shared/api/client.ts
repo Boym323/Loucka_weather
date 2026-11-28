@@ -33,7 +33,7 @@ async function request(path: string, signal?: AbortSignal): Promise<unknown> {
 // Share only concurrent archive GETs, never persist weather across refreshes.
 const currentRequest=createConcurrentRequest<CurrentResponse>(async signal=>{
  const data=await request('/api/v1/current?units=metricwx&dataset=original',signal);
- if(!isCurrentResponse(data))throw new Error('Neplatný formát aktuálních dat');
+ if(!isCurrentResponse(data)||data.units!=='metricwx'||data.dataset!=='original')throw new Error('Neplatný formát aktuálních dat');
  return data;
 });
 /** Call on a real archive revision / live-to-archive transition, never on a timer. */
@@ -48,7 +48,7 @@ export async function getHistoryRange(metric:string,hours:number,signal?:AbortSi
   resolution:'raw',units:'metricwx',dataset:'original',limit:'1000'
  });
  const data=await request('/api/v1/history?'+query.toString(),signal);
- if(!isHistoryResponse(data)||data.metric!==metric)throw new Error('Neplatný formát historie');
+ if(!isHistoryResponse(data)||data.metric!==metric||data.resolution!=='raw')throw new Error('Neplatný formát historie');
  return data;
 }
 export const getHistory24h=(metric:string,signal?:AbortSignal)=>getHistoryRange(metric,24,signal);

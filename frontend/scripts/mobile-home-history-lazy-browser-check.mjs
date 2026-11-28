@@ -14,7 +14,7 @@ try{
    const metric=url.searchParams.get('metric')||'outTemp';
    historyRequests.push(metric);
    return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
-    schemaVersion:'1',metric,unit:'°C',resolution:'hourly',dataRevision:'isolated-test',
+    schemaVersion:'1',metric,unit:'°C',resolution:'raw',dataRevision:'isolated-test',
     points:[
      {startTime:'2026-11-19T08:00:00Z',endTime:'2026-11-19T09:00:00Z',value:8.2,quality:'measured',source:'weewx_archive',provenance:null},
      {startTime:'2026-11-19T09:00:00Z',endTime:'2026-11-19T10:00:00Z',value:9.1,quality:'measured',source:'weewx_archive',provenance:null}

@@ -1,5 +1,13 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**28. 11. 2026 – integrace grafy/Chrome/QC:** #206 sloučen `6e95cc9`, 231/231 + 167/167; #208 Chrome H.264 decode+seek PASS na `d61cc68` (46168817839). #207 opraven test trasy, #209 guard počasí; společné CI/DEV ověřit samostatně, Safari/iPhone neověřeno.
+
+**28. 11. 2026 – grafy a motiv:** HistoryChart/RainDetail oddělují render od síťového load, přepnutí motivu nevytváří raw GET; snapshot jen v paměti instance, invalidace při novém výběru/chybě. Browser regrese 6 kombinací. CI/DEV ověřit samostatně.
+
+**28. 11. 2026 – #143 Chrome H.264:** oddělený workflow `public-camera-chrome-playback.yml` testuje jeden dokončený MP4 na aktuálním DEV v branded Chrome, reálné frame decoding a seek, stabilní SHA před/po, bez fotografií a media artifacts. CI pending; Safari/iPhone není testováno.
+
+**28. 11. 2026 – current/history guard:** #206 sloučen `6e95cc9`, 231/231 MariaDB a 167/167 frontend. Striktnější runtime kontrakt v `weather.ts`, maskované QC stavy odpovídají API; testy a oprava fixtures. CI/DEV ověřit samostatně.
+
 **28. 11. 2026 – integrace kalendář a graf:** exact DEV `d61cc68` 46167913348 PASS, grafy i senzory CLS 0, slow4G 2320 ms. #203 231/231 + 164/164 a #205 165/165 + Chromium PASS; společné CI/DEV ověřit samostatně.
 
 **28. 11. 2026 – ověření frontend:** #204 sloučen `d61cc68`, 162/162 + CSSOM 4/15 s kompasem. #202 exact DEV 46166974447 PASS, CLS grafy 0, senzory 0,026; slow4G 2536 ms. #203 první browser regrese odhalila skutečný kontraktový nesoulad denní coverage.

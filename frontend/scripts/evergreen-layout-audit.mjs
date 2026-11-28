@@ -14,10 +14,10 @@ try{
   const context=await browser.newContext({viewport:{width,height:900},deviceScaleFactor:1});
   // Coherent test-only API response, never a real station reading.
   const layoutReadings={
-   outTemp:{value:-18.9,unit:'degC',quality:'measured',source:'weewx_archive'},
-   outHumidity:{value:100,unit:'percent',quality:'measured',source:'weewx_archive'},
-   barometer:{value:1045.3,unit:'hPa',quality:'measured',source:'weewx_archive'},
-   dewpoint:{value:-18.9,unit:'degC',quality:'measured',source:'weewx_archive'}
+   outTemp:{value:-18.9,unit:'degC',quality:'measured',source:'weewx_archive',provenance:null},
+   outHumidity:{value:100,unit:'percent',quality:'measured',source:'weewx_archive',provenance:null},
+   barometer:{value:1045.3,unit:'hPa',quality:'measured',source:'weewx_archive',provenance:null},
+   dewpoint:{value:-18.9,unit:'degC',quality:'measured',source:'weewx_archive',provenance:null}
   };
   await context.route('**/api/v1/current**',route=>route.fulfill({
    status:200,contentType:'application/json',

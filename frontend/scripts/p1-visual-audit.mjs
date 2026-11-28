@@ -13,10 +13,10 @@ try{
     status:200,contentType:'application/json',
     body:JSON.stringify({schemaVersion:'1',observedAt:new Date().toISOString(),stale:false,
      units:'metricwx',dataset:'original',dataRevision:'test-only',
-     readings:{outTemp:{value:12.4,quality:'measured',unit:'degC',source:'weewx_archive'},
-      outHumidity:{value:72,quality:'measured',unit:'percent',source:'weewx_archive'},
-      barometer:{value:1018.6,quality:'measured',unit:'hPa',source:'weewx_archive'},
-      dewpoint:{value:7.4,quality:'derived',unit:'degC',source:'weewx_archive'}}})
+     readings:{outTemp:{value:12.4,quality:'measured',unit:'degC',source:'weewx_archive',provenance:null},
+      outHumidity:{value:72,quality:'measured',unit:'percent',source:'weewx_archive',provenance:null},
+      barometer:{value:1018.6,quality:'measured',unit:'hPa',source:'weewx_archive',provenance:null},
+      dewpoint:{value:7.4,quality:'derived',unit:'degC',source:'weewx_archive',provenance:null}}})
    }));
    const page=await context.newPage();
    const response=await page.goto('http://127.0.0.1:4321/prehled-klasicky/',{waitUntil:'domcontentloaded',timeout:30000});

@@ -14,7 +14,7 @@ try{
   for(const theme of ['light','dark']){
    const ctx=await browser.newContext({viewport:{width,height:900}});
    await ctx.addInitScript(selected=>localStorage.setItem('loucka-theme',selected),theme);
-   let historyRequests=0;
+   let historyRequests=0,rawHistoryRequests=0;
    let rainValue=null;
    const hold=()=>{let release;const pending=new Promise(resolve=>{release=resolve;});return {pending,release};};
    let graphGate=hold(),sensorGate=hold();
@@ -24,6 +24,7 @@ try{
      historyRequests++;
      const metric=url.searchParams.get('metric')||'outTemp';
      const resolution=url.searchParams.get('resolution')||'hourly';
+     if(resolution==='raw')rawHistoryRequests++;
      if(metric==='outTemp'&&resolution==='hourly'&&graphGate)await graphGate.pending;
      if(metric==='rain'&&resolution==='raw')return route.fulfill({
       status:200,contentType:'application/json',body:JSON.stringify({
@@ -103,6 +104,18 @@ try{
    assert.equal(table.rows[1][2],'—');
    assert.equal(table.rows[2][2],'—');
    assert.equal(table.source,true);
+   const rawBeforeTheme=rawHistoryRequests;
+   const rainBefore=await page.locator('[data-rain-chart] svg').innerHTML();
+   const changeTheme=mode=>page.evaluate(mode=>{document.documentElement.dataset.theme=mode;window.dispatchEvent(new Event('loucka:theme-change'));},mode);
+   const otherTheme=theme==='dark'?'light':'dark';
+   await changeTheme(otherTheme);
+   await page.waitForFunction(before=>{const svg=document.querySelector('[data-rain-chart] svg');return !!svg&&svg.innerHTML!==before;},rainBefore);
+   assert.equal(rawHistoryRequests,rawBeforeTheme,'rain theme switch must not refetch raw history');
+   await changeTheme(theme);
+   await page.waitForFunction(()=>document.querySelector('[data-advanced-status]')?.textContent?.includes('Zobrazeno'));
+   assert.equal(rawHistoryRequests,rawBeforeTheme,'restoring theme must not refetch rain');
+   assert.match(await rainSummary.textContent(),/0,0 mm · neúplné pokrytí/);
+   console.log('RAIN THEME REPAINT',width,theme,'raw GET delta',rawHistoryRequests-rawBeforeTheme);
    if(capture)await page.screenshot({path:'test-results/ux-media-history/history-'+width+'-'+theme+'.png',fullPage:false});
    await page.goto(new URL('senzory/',origin).href,{waitUntil:'domcontentloaded',timeout:30000});
    await page.locator('[data-sensor-channels]').waitFor();
@@ -116,6 +129,18 @@ try{
    assert.equal(await page.locator('[data-sensor-value="soilTemp2"]').textContent(),'—');
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
    console.log('HISTORY SENSOR ASYNC GEOMETRY',width,theme,JSON.stringify({graphBefore,graphAfter,sensorBefore,sensorAfter}));
+   // The compact HistoryChart is on /aktualne/, not the /grafy/ route.
+   await page.goto(new URL('aktualne/',origin).href,{waitUntil:'domcontentloaded',timeout:30000});
+   await page.waitForFunction(()=>document.querySelector('[data-chart-status]')?.textContent?.includes('naměřených bodů'));
+   const compactBefore=rawHistoryRequests;
+   const svgBefore=await page.locator('[data-chart-canvas] svg').innerHTML();
+   await changeTheme(otherTheme);
+   await page.waitForFunction(before=>{const svg=document.querySelector('[data-chart-canvas] svg');return !!svg&&svg.innerHTML!==before;},svgBefore);
+   assert.equal(rawHistoryRequests,compactBefore,'compact chart theme switch must not refetch');
+   await changeTheme(theme);
+   await page.waitForFunction(()=>{const svg=document.querySelector('[data-chart-canvas] svg');return !!svg;});
+   assert.equal(rawHistoryRequests,compactBefore,'restoring theme must not refetch compact history');
+   console.log('HISTORY THEME REPAINT',width,theme,'raw GET delta',rawHistoryRequests-compactBefore);
    await page.goto(new URL('kamera/',origin).href,{waitUntil:'domcontentloaded',timeout:30000});
    await page.waitForFunction(()=>Boolean(document.querySelector('[data-archive-player]')?.getAttribute('poster')),null,{timeout:12000});
    assert.equal(await page.locator('[data-archive-player]').getAttribute('poster'),frame);
