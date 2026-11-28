@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-28 – Refaktoring časových hranic API
+- PR #192 sloučen jako `1ae2199` po API/MariaDB CI 46136304168 (215/215 v izolované MariaDB). Veřejný smoke předchozího #191 na `cfb6711` 46136211605 PASS; mobilní CLS kalendář 0,1748 → 0,0004 a stav služeb 0,1604 → 0; grafy 0,1435 a senzory 0,1061 zůstávají. Slow4G 3/3, medián FCP/LCP kandidáta 2572 ms. Jde o lab, nikoli field.
+- Nový `calendar-time.ts` soustřeďuje RFC3339 validaci, převody Europe/Prague, hranice hodin/dnů a původní omezenou cache půlnocí; algoritmy a rozsahy nezměněny. Přímé testy neplatných dat, offsetů, přestupného roku, 23/25h dnů a hranice (start,end]. CI/DEV nové revize ověřit samostatně. Bez změn SQL, HTTP kontraktů, dat a produkce.
+
 ## 2026-11-28 – Refaktoring archivních bodů a agregací API
 - Oddělen výpočet raw/hourly historie, validace metadat a streaming seskupování překryvů z `app.ts` do typovaného modulu `archive-history.ts`. Beze změny HTTP kontraktu, SQL dotazů, výpočtů, pořadí a původu měření; explicitní typ archivního bodu nahrazuje `any[]` v těchto dvou výpočtech. Přímé offline testy porovnávají streaming s nezávislým referenčním algoritmem včetně kompakce, hraničních intervalů, skutečné nuly a bezpečných chyb. CI a DEV ověřit samostatně.
 

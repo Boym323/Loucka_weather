@@ -1,3 +1,4 @@
+import {utcIso,utcHourStart} from './calendar-time.js';
 import type {ArchiveRow} from './store.js';
 import type {Metric} from './metrics.js';
 import type {Aggregation} from './aggregation.js';
@@ -18,8 +19,6 @@ export type ArchiveHistoryPoint={
 };
 
 const source= {source:'weewx_archive',provenance:null} as const;
-export function utcIso(seconds:number):string{return new Date(seconds*1000).toISOString();}
-function utcHourStart(endEpoch:number):number{return Math.floor((endEpoch-1)/3600)*3600;}
 export function pointQuality(value:number|null):'measured'|'derived'|'missing'{
  return value===null?'missing':'derived';
 }
