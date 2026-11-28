@@ -54,3 +54,15 @@ import '../styles/portal-preview.css';
   document.addEventListener('astro:before-swap',()=>ctrl?.abort(),{once:true});
  }
 </script>
+
+<style>
+ /* Reserve the same space for loading, missing and fully covered days. */
+ [data-day-calendar] .section-heading{display:grid;grid-template-columns:minmax(0,1fr);gap:6px}
+ [data-calendar-status]{justify-self:start;min-block-size:calc(2lh + 12px);display:flex;align-items:center;max-width:100%;box-sizing:border-box}
+ [data-calendar-coverage]{display:block;line-height:1.45;min-block-size:2lh;overflow-wrap:anywhere}
+ [data-calendar-value]{line-height:1.25;min-block-size:1lh}
+ @media(min-width:761px){
+  [data-day-calendar] .section-heading{grid-template-columns:minmax(0,1fr) minmax(0,15rem);align-items:center}
+  [data-calendar-status]{justify-self:end}
+ }
+</style>
