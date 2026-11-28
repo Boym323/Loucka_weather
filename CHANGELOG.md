@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-28 – Zachování originální hodnoty při QC chybě senzoru
+- API kvality (`/api/v1/quality/observations`) zachovává převedenou původní číselnou hodnotu v `measurementValue` i při `SENSOR_ERROR`; `displayValue` zůstává maskovaná, QC příznaky a nezpůsobilost pro extrémy se nemění. PR #174; původní izolované API/MariaDB CI prošlo, aktuální revizi ověřit znovu. Bez změn originálního archivu, agregací a schvalování rekonstrukcí.
+
+## 2026-11-28 – Diagnostika dostupnosti historických grafů na DEV
+- Veřejný smoke loguje omezené HTTP stavy a povolené chybové kódy existujících history požadavků bez nových požadavků, URL nebo hodnot měření. Při selhání rozliší stav grafu a dostupnost SVG. Původní akceptační brány zůstávají nezměněné; issue #183, příčina výpadku zatím neověřena.
+
 ## 2026-11-28 – Stabilita živých údajů větru
 - Větrný panel chrání čerstvé live hodnoty každé veličiny zvlášť před opožděnou archivní odpovědí i její chybou; archiv může doplnit ostatní údaje. Starší live událost nepřepíše novější a po vypršení živého režimu se obnoví archiv.
 - Chromium scénář nové výchozí homepage pokrývá zpožděný úspěch i chybu archivu, nulovou rychlost, neplatný směr a návrat k platnému severu na mobilu/desktopu v obou motivech. Issue #179; CI a skutečné DEV nasazení ověřit samostatně. Bez změn zdrojových dat, API a produkce.
