@@ -1,5 +1,7 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**28. 11. 2026 – denní statistiky:** #194 sloučen `92909da`, 219/219 izolované MariaDB. #192 exact DEV `1ae2199` 46136921592 PASS, rain 284 intervalů, live/failover PASS, slow4G 3/3 medián 2332 ms. Nový `daily-statistics.ts` izoluje původní agregace a daily points s explicitním typem a přímými testy; bez změny algoritmu, SQL, HTTP nebo dat. CI a DEV nové revize ověřit samostatně.
+
 **28. 11. 2026 – refaktoring etapa 2:** #192 sloučen `1ae2199` po 215/215 izolované MariaDB testů. Předchozí exact DEV #191 `cfb6711` 46136211605 PASS: kalendář CLS 0,0004, stav 0, grafy 0,1435, senzory 0,1061; slow4G 3/3 medián 2572 ms. `calendar-time.ts` vyčleňuje stávající časové funkce a cache bez změny pravidel, testy CET/CEST a hraničních dat. CI/DEV nové revize ověřit samostatně; žádné SQL, DB ani produkční změny.
 
 **28. 11. 2026 – refaktoring API:** `archive-history.ts` odděluje pure raw/hourly zpracování, validaci a překryvy od HTTP orchestrace v `app.ts`; explicitní typ bodu, přímé unit testy s nezávislou referencí. Záměrně bez změny SQL, agregací, HTTP formátu, zdrojového archivu či produkce. CI a DEV aktuální revize ověřit samostatně.
