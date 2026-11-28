@@ -45,7 +45,15 @@ test('station routes preserve metadata clock and isolate sensor evidence cache',
  t.after(async()=>{await standalone.close();await composed.close();await rm(root,{recursive:true,force:true});});
  for(const path of ['/api/v1/healthz','/api/v1/readyz','/api/v1/station','/api/v1/live/current','/api/v1/monitor/status','/api/v1/sensors','/api/v1/camera/status']){
   const x=await standalone.inject(path),y=await composed.inject(path);
-  assert.equal(x.statusCode,200,x.body);assert.deepEqual(y.json(),x.json());
+  assert.equal(x.statusCode,200,x.body);assert.equal(y.statusCode,200,y.body);
+  if(path==='/api/v1/camera/status'){
+   // Disabled camera status uses real wall-clock time, not the injected app clock.
+   // Compare stable contract fields and independently check both dynamic timestamps.
+   const {updatedAt:xTime,...xBody}=x.json(),{updatedAt:yTime,...yBody}=y.json();
+   assert.ok(Number.isFinite(Date.parse(xTime)));
+   assert.ok(Number.isFinite(Date.parse(yTime)));
+   assert.deepEqual(yBody,xBody);
+  }else assert.deepEqual(y.json(),x.json());
   assert.equal(y.headers.etag,x.headers.etag);
  }
  const url='/api/v1/sensors/channels';
