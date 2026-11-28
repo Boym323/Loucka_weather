@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-11-28 – Neznámý srážkový úhrn není nula
+- Detail srážek při absenci všech platných intervalů uvádí, že úhrn nelze určit; skutečná naměřená nula zůstává 0,0 mm a při mezerách je označena neúplnost. Přidán Chromium scénář chybějící a podezřelé hodnoty versus skutečná nula. Issue #185; CI a DEV ověřit samostatně. Neřeší příčinu výpadku #183; bez změn meteorologických dat a API.
+
 ## 2026-11-28 – Diagnostika dostupnosti historických grafů na DEV
 - Veřejný smoke loguje omezené HTTP stavy a povolené chybové kódy existujících history požadavků bez nových požadavků, URL nebo hodnot měření. Při selhání rozliší stav grafu a dostupnost SVG. Původní akceptační brány zůstávají nezměněné; issue #183, příčina výpadku zatím neověřena.
 
