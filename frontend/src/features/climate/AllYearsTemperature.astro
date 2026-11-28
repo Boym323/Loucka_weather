@@ -63,6 +63,7 @@ import '../../styles/all-years-temperature.css';
  </details>
 </section>
 <script>
+ import {formatMetricValue,metricAxisStep} from '../../shared/domain/metrics';
  import {getTemperatureYears} from '../../shared/api/client';
  import {overlayTemperatureYears,monthLabels,hasValidTemperature} from '../../shared/domain/temperature-years';
  import type {TemperatureYears,TemperatureOverlay,TemperatureResolution} from '../../shared/domain/temperature-years';
@@ -224,8 +225,8 @@ import '../../styles/all-years-temperature.css';
       formatter:(key:string)=>mode.value==='monthly'?
        monthLabels[Number(key)-1]:(key.endsWith('-01')?
         monthLabels[Number(key.slice(0,2))-1]:'')}},
-    yAxis:{type:'value',scale:true,name:'°C',nameTextStyle:{color:fg,fontSize:12},
-     axisLabel:{color:fg,fontSize:11},axisLine:{show:false},axisTick:{show:false},
+    yAxis:{type:'value',scale:true,minInterval:metricAxisStep('outTemp'),name:'°C',nameTextStyle:{color:fg,fontSize:12},
+     axisLabel:{color:fg,fontSize:11,formatter:(value:number)=>formatMetricValue(value,'outTemp')},axisLine:{show:false},axisTick:{show:false},
      splitLine:{lineStyle:{color:grid,type:'dotted'}}},
     series
    },true);

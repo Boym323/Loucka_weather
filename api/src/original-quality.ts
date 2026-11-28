@@ -6,7 +6,7 @@
  */
 import type {ArchiveRow} from './store.js';
 import type {Metric} from './metrics.js';
-import {publiclySafeReading} from './units.js';
+import {publiclySafeReading,converted} from './units.js';
 import type {OutputUnits} from './units.js';
 
 export type OriginalFieldState='UNVERIFIED'|'MISSING'|'SENSOR_ERROR';
@@ -45,20 +45,23 @@ export function originalFieldQuality(row:ArchiveRow,metric:Metric,units:OutputUn
  if(!Number.isSafeInteger(row.dateTime)||row.dateTime<0||
     !Number.isSafeInteger(row.interval)||row.interval<1||row.interval>1440)
   throw new Error('Invalid archive interval metadata');
- const reading=publiclySafeReading(metric,row[metric],row.usUnits,units);
+ const reading=publiclySafeReading(metric,row[metric],row.usUnits,units,row.dateTime);
  const state:OriginalFieldState=reading.quality==='sensor_error'?'SENSOR_ERROR':
-   reading.value===null?'MISSING':'UNVERIFIED';
+   reading.quality==='unverified'?'UNVERIFIED':reading.value===null?'MISSING':'UNVERIFIED';
  const local=localEnd(row.dateTime);
  return {
   schema:'loucka-field-qc-v1',
   timestampUtc:row.dateTime,endTime:utcIso(row.dateTime),
   localEndIso:local.iso,localFold:local.fold,
   variable:metric,unit:reading.unit,sourceUsUnits:row.usUnits,
-  state,measurementValue:reading.value,displayValue:reading.value,
+  state,measurementValue:reading.quality==='unverified'?
+   converted(metric,row[metric],row.usUnits,units).value:reading.value,
+   displayValue:reading.value,
   sourceRef:'weewx_original_archive',epochRef:null,changeRef:null,
   approved:false,independentValidation:false,extremaEligible:false,
   diagnosisConfidence:'UNRESOLVED',replacementConfidence:'UNRESOLVED',
-  qcFlags:state==='SENSOR_ERROR'?['UNVERIFIED_FIELD_MAPPING']:
+  qcFlags:reading.qcFlags?[...reading.qcFlags]:
+   state==='SENSOR_ERROR'?['UNVERIFIED_FIELD_MAPPING']:
    state==='MISSING'?['ARCHIVE_FIELD_NULL']:['ORIGINAL_NOT_INDEPENDENTLY_VALIDATED'],
   joinChartLine:false
  };

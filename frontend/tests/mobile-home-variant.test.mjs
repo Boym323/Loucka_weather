@@ -3,13 +3,13 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 const read=p=>readFile(new URL('../'+p,import.meta.url),'utf8');
 
-test('compact mobile firstfold is explicitly opt-in and does not change weather values',async()=>{
- const home=await read('src/pages/index.astro');
+test('compact mobile firstfold is default with full opt-out and does not change weather values',async()=>{
+ const home=await read('src/pages/prehled-klasicky.astro');
  const css=await read('src/styles/ui-refinement.css');
- assert.match(home,/get\('mobile'\)==='compact'/);
+ assert.match(home,/get\('mobile'\)!=='full'/);
  assert.match(home,/dataset\.mobileHomeVariant/);
  assert.match(home,/aria-controls="home-wind home-history" aria-expanded="false"/);
- assert.match(home,/Zpět na běžné zobrazení/);
+ assert.match(home,/Plný přehled měření/);
  assert.match(home,/<CurrentPanel variant="observatory" \/>/);
  assert.match(home,/<WindCompass variant="hero" \/>/);
  assert.match(home,/<HistoryChart compact hero \/>/);

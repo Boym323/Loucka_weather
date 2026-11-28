@@ -9,7 +9,7 @@
 </section>
 <script>
  import {getHistory24h} from '../../shared/api/client';
- import {formatValue} from '../../shared/domain/metrics';
+ import {formatValue,chartValue,metricAxisStep} from '../../shared/domain/metrics';
  import * as echarts from 'echarts/core';
  import { BarChart } from 'echarts/charts';
  import { GridComponent, TooltipComponent } from 'echarts/components';
@@ -45,13 +45,13 @@
    chart.setOption({
     backgroundColor:'transparent',animation:false,
     grid:{top:22,bottom:compact?45:52,left:compact?42:52,right:compact?12:22},
-    tooltip:{trigger:'axis',confine:true},
+    tooltip:{trigger:'axis',confine:true,valueFormatter:(value:unknown)=>chartValue(value,'rain','mm')},
     xAxis:{type:'time',splitNumber:compact?3:7,
      axisLabel:{color:ink,fontSize:compact?10:12,hideOverlap:true,
       showMinLabel:false,showMaxLabel:false,formatter:(v:number)=>clock.format(new Date(v))},
      axisTick:{show:false},axisLine:{lineStyle:{color:gridColor}},splitLine:{show:false}},
-    yAxis:{type:'value',min:0,name:'mm',splitNumber:4,
-     nameTextStyle:{color:ink,fontSize:11},axisLabel:{color:ink,fontSize:compact?10:12},
+    yAxis:{type:'value',min:0,name:'mm',splitNumber:4,minInterval:metricAxisStep('rain'),
+     nameTextStyle:{color:ink,fontSize:11},axisLabel:{color:ink,fontSize:compact?10:12,formatter:(value:number)=>formatValue(value,1)},
      axisLine:{show:false},axisTick:{show:false},
      splitLine:{lineStyle:{color:gridColor,type:'solid'}}},
     series:[{name:'Intervalový úhrn',type:'bar',data:values,itemStyle:{color},

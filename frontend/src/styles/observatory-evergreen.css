@@ -10,15 +10,15 @@
  --evergreen-soft:#eaf3f3;
  --evergreen-stroke:rgba(45,96,107,.16);
  --evergreen-glass:rgba(250,253,252,.94);
- --evergreen-deep-shadow:0 24px 60px rgba(20,48,53,.16),0 4px 14px rgba(29,59,62,.07);
+ --evergreen-deep-shadow:0 8px 22px rgba(20,48,53,.08),0 1px 4px rgba(29,59,62,.04);
  --evergreen-card-shadow:0 10px 27px rgba(25,57,63,.065),0 1px 3px rgba(25,57,63,.025);
  gap:23px;
 }
 .evergreen-home .atlas-location{font-size:12px;letter-spacing:.08em;color:#184456;font-weight:650}
 .evergreen-home .atlas-location svg{flex:none}
-.evergreen-scene{position:relative;isolation:isolate;padding:25px 0 4px}
+.evergreen-scene{position:relative;isolation:isolate;padding:12px 0 4px}
 .evergreen-landscape{
- position:absolute;top:-30px;left:50%;width:100vw;height:385px;
+ position:absolute;top:-30px;left:50%;width:100vw;height:240px;
  transform:translateX(-50%);overflow:hidden;z-index:-1;
  background:linear-gradient(110deg,#a9cad1,#deeee8 58%,#eacfae);
  pointer-events:none
@@ -34,13 +34,13 @@
  linear-gradient(0deg,var(--bg) 0%,rgba(248,250,249,.18) 28%,transparent 70%);
 }
 .evergreen-intro{
- padding:0 16px;margin:0 0 32px;align-items:end;
- min-height:130px;display:flex;justify-content:space-between
+ padding:0 16px;margin:0 0 16px;align-items:center;
+ min-height:0;display:flex;justify-content:space-between
 }
 .evergreen-home .evergreen-intro h1{
- font-size:clamp(38px,4.5vw,64px);font-weight:650;
- line-height:1.06;letter-spacing:-.055em;
- color:var(--evergreen-ink);margin:9px 0 7px
+ font-size:clamp(30px,2.6vw,40px);font-weight:650;
+ line-height:1.15;letter-spacing:-.035em;
+ color:var(--evergreen-ink);margin:5px 0 0
 }
 .evergreen-home .evergreen-intro p{color:#345969;font-size:14px;line-height:1.5;max-width:67ch}
 .evergreen-intro .atlas-intro-link{
@@ -165,7 +165,7 @@
  color:#627c82!important;font-size:12px!important;line-height:1.25;
  margin:3px 0 0;min-height:0
 }
-.evergreen-hero .current-panel .metric-card .metric-note[data-reading-state="measured"]{
+.evergreen-hero .current-panel[data-current-state="live"] .metric-card .metric-note[data-reading-source="live"][data-reading-state="measured"]{
  display:none
 }
 
@@ -468,7 +468,7 @@
  --evergreen-stroke:rgba(174,214,218,.21);
  --evergreen-glass:rgba(24,43,48,.96);
  --evergreen-card-shadow:none;
- --evergreen-deep-shadow:0 18px 40px rgba(0,0,0,.22);
+ --evergreen-deep-shadow:0 5px 16px rgba(0,0,0,.14);
 }
 :root[data-theme="dark"] .evergreen-landscape::after{
  background:linear-gradient(90deg,rgba(19,34,40,.76),rgba(25,43,48,.45) 54%,rgba(26,44,49,.2)),
@@ -831,4 +831,61 @@ html.homepage-layout{overflow-x:clip}
  .evergreen-spotlight .evergreen-camera-tile .atlas-media-image img{
   transition:none!important;transform:none!important
  }
+}
+
+/* Weather first, less decorative depth. */
+.evergreen-home .evergreen-hero{border-radius:16px}
+.evergreen-home .evergreen-spotlight>*{box-shadow:none}
+.evergreen-home .mobile-home-compact-link{display:none}
+@media(max-width:760px){
+ .evergreen-home .mobile-home-compact-link{display:block;font-size:13px;margin:0 3px 8px}
+ .evergreen-home .mobile-home-compact-link a{display:inline-flex;align-items:center;min-height:44px;color:var(--text)}
+ :root[data-mobile-home-variant="compact"] .evergreen-home .mobile-home-compact-link{display:none}
+ .evergreen-home .evergreen-intro{min-height:0;margin-bottom:8px}
+ .evergreen-home .evergreen-landscape{height:180px}
+ :root[data-mobile-home-variant="compact"] .evergreen-home .evergreen-landscape{height:124px}
+}
+
+/* A concise, truthful jump to the actual warning, without a second warning fetch. */
+.mobile-alert-shortcut{display:none}
+#vystrahy-chmu{scroll-margin-top:90px}
+@media(max-width:760px){
+ .evergreen-home .mobile-alert-shortcut:not([hidden]){
+  display:grid;grid-template-columns:20px minmax(0,1fr) auto;align-items:center;gap:9px;
+  padding:12px;margin:0 0 10px;min-height:44px;border:1px solid var(--line);
+  border-inline-start:4px solid var(--gold);background:var(--panel);color:var(--text);
+  border-radius:10px;font-size:13px;font-weight:650;text-decoration:none;
+ }
+ .evergreen-home .mobile-alert-shortcut[data-level="severe"]{border-inline-start-color:#d97706;background:color-mix(in srgb,#d97706 11%,var(--panel))}
+ .evergreen-home .mobile-alert-shortcut[data-level="extreme"]{border-inline-start-color:var(--red);background:color-mix(in srgb,var(--red) 11%,var(--panel))}
+ .evergreen-home .mobile-home-compact-link{margin:6px 0 0;text-align:right}
+ .evergreen-home .mobile-home-compact-link a{font-size:12px;color:var(--muted)}
+}
+
+@media(max-width:760px){
+ .evergreen-home .mobile-home-compact-link{display:block;margin:0;text-align:right}
+ .evergreen-home .mobile-home-compact-link [data-full-home-link]{display:none}
+ :root[data-mobile-home-variant="compact"] .evergreen-home .mobile-home-compact-link{display:block}
+ :root[data-mobile-home-variant="compact"] .evergreen-home .mobile-home-compact-link [data-full-home-link]{display:inline-flex}
+ :root[data-mobile-home-variant="compact"] .evergreen-home .mobile-home-compact-link [data-compact-home-link]{display:none}
+ .evergreen-home .evergreen-intro{margin-bottom:10px}
+ .evergreen-home .evergreen-intro p{font-size:13px}
+}
+
+/* Compact identity strip: measurement values, not the page title, dominate the fold. */
+.evergreen-home .evergreen-scene{padding-top:12px}
+.evergreen-home .evergreen-intro{min-height:0;margin:0 0 14px;padding:0 16px;align-items:center}
+.evergreen-home .evergreen-intro h1{font-size:clamp(30px,2.6vw,40px);margin:5px 0 0;line-height:1.15}
+.evergreen-home .evergreen-intro .atlas-intro-link{margin:0;min-height:44px;display:inline-flex;align-items:center;gap:6px}
+.evergreen-home .evergreen-landscape{height:240px}
+@media(max-width:850px){
+ .evergreen-home .evergreen-intro .atlas-intro-link{display:none}
+ .evergreen-home .evergreen-intro{padding-inline:4px}
+}
+@media(max-width:760px){
+ .evergreen-home .evergreen-scene{padding-top:4px}
+ .evergreen-home .evergreen-intro{margin-bottom:10px;padding:0 3px}
+ .evergreen-home .evergreen-intro h1{font-size:clamp(28px,7.5vw,34px)!important;margin:4px 0 0}
+ .evergreen-home .evergreen-landscape{height:140px}
+ :root[data-mobile-home-variant="compact"] .evergreen-home .evergreen-intro{margin-bottom:10px}
 }

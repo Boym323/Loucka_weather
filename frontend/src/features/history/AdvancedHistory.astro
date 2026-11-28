@@ -43,14 +43,14 @@
   <button class="history-apply" type="submit">Zobrazit</button>
   <button class="history-export" type="button" data-history-export disabled>Stáhnout CSV</button>
  </form>
+ <p class="sr-only" data-history-zoom-status role="status">Časová osa zatím není dostupná.</p>
+ <div class="advanced-history-chart" data-advanced-canvas role="img" aria-label="Dynamický časový graf archivních měření"></div>
  <div class="history-zoom-controls" role="group" aria-label="Přiblížení časové osy grafu">
   <button type="button" class="chart-tab" data-history-zoom="in" disabled>Přiblížit</button>
   <button type="button" class="chart-tab" data-history-zoom="out" disabled>Oddálit</button>
   <button type="button" class="chart-tab" data-history-zoom="reset" disabled>Celé období</button>
  </div>
  <p class="source-note history-zoom-hint">Časovou osu upravíš tlačítky nebo posuvníkem pod grafem. Tlačítka lze ovládat i klávesnicí; všechny hodnoty najdeš v tabulce níže.</p>
- <p class="sr-only" data-history-zoom-status role="status">Časová osa zatím není dostupná.</p>
- <div class="advanced-history-chart" data-advanced-canvas role="img" aria-label="Dynamický časový graf archivních měření"></div>
  <div class="advanced-history-feedback" data-advanced-feedback hidden role="status">
   <span data-advanced-feedback-text>Graf není dostupný.</span>
   <button type="button" class="chart-retry" data-advanced-retry>Zkusit znovu</button>
@@ -75,7 +75,7 @@
 <script>
  import {getHistoryInterval} from '../../shared/api/client';
  import {pragueMidnightIso,nextDate} from '../../shared/domain/statistics';
- import {formatValue} from '../../shared/domain/metrics';
+ import {formatMetricValue,metricAxisStep} from '../../shared/domain/metrics';
  import type {HistoryResponse,HistoryPoint} from '../../shared/domain/weather';
  import * as echarts from 'echarts/core';
  import {LineChart,BarChart} from 'echarts/charts';
@@ -162,7 +162,7 @@
      const fields=[
       Number.isFinite(end)?tableTimeFormat.format(new Date(end)):'Neznámý čas',
       names[result.metric]??result.metric,
-      valid(point)?formatValue(point.value as number,2)+' '+(units[result.metric]??result.unit):'—',
+      valid(point)?formatMetricValue(point.value,result.metric,result.unit)+' '+(units[result.metric]??result.unit):'—',
       qualityName(point.quality),
       point.provenance??point.source??'Neurčený'
      ];
@@ -274,10 +274,10 @@
     const yAxis=results.map((result,index)=>({
      type:'value',scale:result.metric!=='rain',min:result.metric==='rain'?0:undefined,
      name:units[result.metric]??result.unit,position:index===0?'left':'right',
-     splitNumber:compact?4:5,
+     splitNumber:compact?4:5,minInterval:metricAxisStep(result.metric,result.unit),
      nameGap:10,nameTextStyle:{color:ink,fontSize:compact?10:12},
      axisLine:{show:false},axisTick:{show:false},
-     axisLabel:{color:ink,fontSize:compact?11:12,hideOverlap:true,margin:compact?8:12},
+     axisLabel:{color:ink,fontSize:compact?11:12,hideOverlap:true,margin:compact?8:12,formatter:(value:number)=>formatMetricValue(value,result.metric,result.unit)},
      splitLine:{show:index===0,lineStyle:{color:gridColor,type:'solid',width:1}}
     }));
     chart.clear();
@@ -296,7 +296,7 @@
        const date=new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',dateStyle:'medium',timeStyle:'short'}).format(new Date(first.value[0]));
        const details=rows.map(item=>{
         const result=results[item.seriesIndex],p=result?.points[item.dataIndex];
-        const value=valid(p)?formatValue(p.value,2)+' '+(units[result.metric]??result.unit):'—';
+        const value=valid(p)?formatMetricValue(p.value,result.metric,result.unit)+' '+(units[result.metric]??result.unit):'—';
         const origin=p?.provenance?` · ${escapeHtml(p.provenance)}`:'';
         return `${item.marker}${escapeHtml(item.seriesName)}: ${value} <small>(${p?qualityName(p.quality):'bez údaje'}${origin})</small>`;
        });
@@ -340,7 +340,7 @@
        const reconstructed=result.points.filter(p=>valid(p)&&p.quality==='reconstructed').length;
        const derived=result.points.filter(p=>valid(p)&&p.quality==='derived').length;
        const gaps=result.points.length-vals.length;
-       span.textContent=`${names[result.metric]??result.metric}: od ${formatValue(Math.min(...vals),1)} do ${formatValue(Math.max(...vals),1)} ${units[result.metric]??result.unit} · ${gaps} mezer`;
+       span.textContent=`${names[result.metric]??result.metric}: od ${formatMetricValue(Math.min(...vals),result.metric,result.unit)} do ${formatMetricValue(Math.max(...vals),result.metric,result.unit)} ${units[result.metric]??result.unit} · ${gaps} mezer`;
       }else span.textContent=(names[result.metric]??result.metric)+': bez měření';
       summary.append(span);
      }
@@ -393,6 +393,15 @@
    controller?.abort();observer.disconnect();chart.dispose();
    window.removeEventListener('loucka:theme-change',themeChanged);
   },{once:true});
-  setPreset(activeRange);
+  const requestedMetric=new URLSearchParams(location.search).get('metric');
+  if(requestedMetric&&[...metricInput('metric').options].some(option=>option.value===requestedMetric))metricInput('metric').value=requestedMetric;
+  const requestedDate=new URLSearchParams(location.search).get('date');
+  const today=localDate(new Date());
+  let validDate=false;
+  if(requestedDate&&requestedDate>='2009-01-01'&&requestedDate<=today){try{pragueMidnightIso(requestedDate);validDate=true;}catch{}}
+  if(validDate&&requestedDate){
+   activeRange='custom';dateInput('from').value=requestedDate;dateInput('to').value=requestedDate;
+   root.querySelectorAll<HTMLButtonElement>('[data-period]').forEach(b=>b.setAttribute('aria-pressed','false'));void refresh();
+  }else setPreset(activeRange);
  }
 </script>

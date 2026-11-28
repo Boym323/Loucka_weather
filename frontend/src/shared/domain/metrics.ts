@@ -15,5 +15,21 @@ export type KnownMetric = (typeof metrics)[number]['id'];
 export const getMetric = (id: string) => metrics.find((item) => item.id === id);
 export const formatValue = (value: number | null | undefined, digits = 1): string =>
   typeof value === 'number' && Number.isFinite(value)
-    ? new Intl.NumberFormat('cs-CZ', { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(value)
+    ? new Intl.NumberFormat('cs-CZ', { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(Math.abs(value)<0.5*10**-digits?0:value)
     : '—';
+
+/** Presentation precision only. Never round archive points or intermediate calculations. */
+export function metricDigits(id:string,unit=''):number{
+ const known=getMetric(id);
+ if(known)return known.digits;
+ if(/humidity|moisture|winddir|winddirection|radiation|solarrad|luminosity|cloudbase/i.test(id))return 0;
+ if(['%','°','W/m²','lux','m'].includes(unit))return 0;
+ return 1;
+}
+export const formatMetricValue=(value:number|null|undefined,id:string,unit='')=>formatValue(value,metricDigits(id,unit));
+export const metricAxisStep=(id:string,unit='')=>10**-metricDigits(id,unit);
+/** ECharts passes the numeric component to valueFormatter. Reject missing/non-numeric values. */
+export function chartValue(value:unknown,id:string,unit=''):string{
+ const formatted=formatMetricValue(typeof value==='number'?value:null,id,unit);
+ return formatted==='—'||!unit?formatted:formatted+(unit==='°'?'':' ')+unit;
+}

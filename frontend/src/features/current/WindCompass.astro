@@ -37,6 +37,7 @@ const {variant='default'}=Astro.props;
     <div class="wind-metric-v2"><span>Rychlost</span><strong><span data-wind-value="windSpeed">—</span> <small>m/s</small></strong><small data-wind-source="windSpeed">Načítám</small></div>
     <div class="wind-metric-v2"><span>Nárazy</span><strong><span data-wind-value="windGust">—</span> <small>m/s</small></strong><small data-wind-source="windGust">Načítám</small></div>
    </div>
+   <p class="source-note wind-shared-source">Rychlost a nárazy: živé měření</p>
   </div>
  </div>
  <p class="observatory-source-note">Šipka ukazuje, odkud vítr vane.</p>
@@ -56,6 +57,12 @@ const {variant='default'}=Astro.props;
   const description=root.querySelector<HTMLElement>('[data-wind-description]');
   const gauge=root.querySelector<HTMLElement>('[data-wind-valid]');
   let lastRotation:number|null=null;
+  let archiveRequestSerial=0;
+  type WindMetric='windDir'|'windSpeed'|'windGust';
+  const liveReceived=new Map<WindMetric,number>();
+  const isFresh=(received:number)=>Number.isFinite(received)&&
+   Date.now()-received<=120000&&received<=Date.now()+60000;
+  const hasFreshLive=(id:WindMetric)=>isFresh(liveReceived.get(id)??NaN);
 
   const sourceLabel=(source:string)=>source==='Živě · GW3000'?'Živé měření':
    source==='Archiv WeeWX'?'Uložené měření':
@@ -68,6 +75,8 @@ const {variant='default'}=Astro.props;
     minimumFractionDigits:1,maximumFractionDigits:1
    }).format(value);
    if(note)note.textContent=sourceLabel(source);
+   const sources=[...root.querySelectorAll<HTMLElement>('[data-wind-source]')];
+   root.dataset.sharedWindSource=sources.length===2&&sources.every(item=>item.textContent==='Živé měření')?'true':'false';
   };
 
   const clearDirection=(reason:string)=>{
@@ -101,15 +110,18 @@ const {variant='default'}=Astro.props;
   };
 
   const load=()=>{
+   const serial=++archiveRequestSerial;
    void getCurrent(controller.signal).then(response=>{
-    if(controller.signal.aborted)return;
+    if(controller.signal.aborted||serial!==archiveRequestSerial)return;
     for(const id of ['windSpeed','windGust'] as const){
+     if(hasFreshLive(id))continue;
      const item=response.readings[id];
      const valid=Boolean(item&&item.value!==null&&Number.isFinite(item.value)&&
       item.quality!=='missing'&&item.quality!=='suspect');
      setWind(id,valid&&item&&typeof item.value==='number'?item.value:null,
       valid?(response.stale?'Starší archiv WeeWX':'Archiv WeeWX'):'Nedostupné');
     }
+    if(hasFreshLive('windDir'))return;
     const reading=response.readings.windDir;
     if(!reading||reading.value===null||reading.quality==='missing'||
      reading.quality==='suspect'||!Number.isFinite(reading.value)){
@@ -119,11 +131,14 @@ const {variant='default'}=Astro.props;
     }
     show(reading.value,'Archiv WeeWX',response.stale);
    }).catch(()=>{
-    if(controller.signal.aborted)return;
-    clearDirection('Směr větru se nepodařilo načíst.');
-   if(status){status.textContent='Data nedostupná';status.className='status-chip error';}
-    setWind('windSpeed',null,'API nedostupné');
-    setWind('windGust',null,'API nedostupné');
+    if(controller.signal.aborted||serial!==archiveRequestSerial)return;
+    if(!hasFreshLive('windDir')){
+     clearDirection('Směr větru se nepodařilo načíst.');
+     if(status){status.textContent='Směr nedostupný';status.className='status-chip error';}
+    }
+    for(const id of ['windSpeed','windGust'] as const){
+     if(!hasFreshLive(id))setWind(id,null,'API nedostupné');
+    }
    });
   };
 
@@ -131,22 +146,27 @@ const {variant='default'}=Astro.props;
    if(controller.signal.aborted)return;
    const data=(event as CustomEvent<{state:string;receivedAt:string;units:string;
     readings:Record<string,{value:number;quality:string;source:string}>}>).detail;
-   if(data?.state!=='live'||data.units!=='metricwx'||
-    !Number.isFinite(Date.parse(data.receivedAt))||
-    Date.now()-Date.parse(data.receivedAt)>120000)return;
-   for(const id of ['windSpeed','windGust'] as const){
+   const received=Date.parse(data?.receivedAt??'');
+   if(data?.state!=='live'||data.units!=='metricwx'||!isFresh(received))return;
+   for(const id of ['windSpeed','windGust','windDir'] as const){
     const value=data.readings?.[id];
     if(value?.source==='gw3000_live'&&value.quality==='measured'&&
-     typeof value.value==='number'&&Number.isFinite(value.value))
-     setWind(id,value.value,'Živě · GW3000');
+     typeof value.value==='number'&&Number.isFinite(value.value)&&
+     received>=(liveReceived.get(id)??-Infinity)){
+     liveReceived.set(id,received);
+     if(id==='windDir')show(value.value,'Živě · GW3000');
+     else setWind(id,value.value,'Živě · GW3000');
+    }
    }
-   const reading=data.readings?.windDir;
-   if(reading?.source==='gw3000_live'&&reading.quality==='measured'&&
-    typeof reading.value==='number'&&Number.isFinite(reading.value))
-    show(reading.value,'Živě · GW3000');
   };
 
-  const restore=()=>load();
+  const restore=()=>{
+   // CurrentPanel invalidates the shared GET synchronously on this event.
+   // Defer until all listeners finish so we join the new generation, not the old GET.
+   ++archiveRequestSerial;
+   liveReceived.clear();
+   queueMicrotask(()=>{if(!controller.signal.aborted)load();});
+  };
   window.addEventListener('loucka:live-observation',live);
   window.addEventListener('loucka:live-expired',restore);
   load();

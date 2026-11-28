@@ -5,7 +5,7 @@ import CameraArchive from '../features/camera/CameraArchive.astro';
 import SiteIcon from '../shared/ui/SiteIcon.astro';
 ---
 <BaseLayout title="Webkamera" description="Živý pohled západní kamerou na Loučku, archiv skutečně uložených snímků a dnešní průběžný časosběr.">
- <div class="page-intro camera-page-intro"><span class="eyebrow">Pohled na Loučku a okolí</span><h1>Webkamera Loučka – západ</h1><p>Aktuální snímek, denní časosběr a historie fotografií na jednom místě.</p></div>
+ <div class="page-intro camera-page-intro"><span class="eyebrow">Pohled na Loučku a okolí</span><h1>Webkamera Loučka – západ</h1></div>
  <nav class="camera-view-navigation" aria-label="Části stránky webkamery">
   <a href="#camera-current"><SiteIcon name="camera" size={18}/> Aktuální pohled</a>
   <a href="#camera-timelapse-title"><SiteIcon name="clock" size={18}/> Časosběr</a>
@@ -49,7 +49,7 @@ import SiteIcon from '../shared/ui/SiteIcon.astro';
  </div>
 </BaseLayout>
 <style>
- .camera-layout{display:grid;grid-template-columns:minmax(0,3fr) minmax(220px,1fr);gap:12px;align-items:start}.camera-panel{min-width:0}.camera-actions{display:flex;gap:16px;align-items:center;flex-wrap:wrap}.camera-refresh{padding:8px 12px;color:#052119;background:#43e6ab;border:0;border-radius:6px;font-weight:700}.camera-info dl{margin:12px 0}.camera-info dl div{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:10px 0;font-size:12px}.camera-info dt{color:var(--muted)}.camera-info dd{margin:0;text-align:right}.camera-panel [data-camera-message]{margin:10px 0}@media(max-width:750px){.camera-layout{grid-template-columns:1fr}}
+ .camera-layout{display:grid;grid-template-columns:minmax(0,3fr) minmax(220px,1fr);gap:12px;align-items:start}.camera-panel{min-width:0}.camera-actions{display:flex;gap:16px;align-items:center;flex-wrap:wrap}.camera-refresh{padding:8px 12px;color:var(--panel);background:var(--teal);border:1px solid var(--teal);border-radius:6px;font-weight:700}.camera-info dl{margin:12px 0}.camera-info dl div{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:10px 0;font-size:12px}.camera-info dt{color:var(--muted)}.camera-info dd{margin:0;text-align:right}.camera-panel [data-camera-message]{margin:10px 0}@media(max-width:750px){.camera-layout{grid-template-columns:1fr}}
 
  .camera-layout-enhanced{grid-template-columns:minmax(0,2.2fr) minmax(250px,.8fr)}
  .camera-sidebar{display:grid;gap:12px;align-content:start}

@@ -1,0 +1,41 @@
+<section class="section portal-climate" data-portal-climate aria-labelledby="portal-climate-title">
+ <div class="section-heading"><h2 id="portal-climate-title">Jaké je letošní počasí</h2><span class="status-chip" data-portal-climate-status role="status">Načítám archiv</span></div>
+ <div class="portal-climate-grid">
+  {['Měsíc','Sezóna','Rok'].map((name,i)=><article><h3>{name}</h3><strong data-climate-current={i}>—</strong><p data-climate-delta={i}>—</p><small data-climate-coverage={i}>Čekám na údaje</small></article>)}
+ </div>
+ <details class="source-note"><summary>Jak srovnání počítáme</summary><p>Průměr denních teplot do včerejška, nejméně 90 % dní a 90 % času každého použitého dne. Historická reference používá přesně stejné dostupné kalendářní dny nejméně tří starších let; 29. únor vynecháváme. Nejde o klimatický normál ČHMÚ ani o dokončenou kontrolu původního archivu. Srážky zde neporovnáváme, protože historie obsahuje známé anomálie.</p></details>
+ <a class="panel-link" href="/klimatologie/">Klimatologický atlas ↗</a>
+</section>
+<script>
+ import {getTemperatureYears} from '../../shared/api/client';
+ import {compareTemperaturePeriod} from '../../shared/domain/portal-climate';
+ import {pragueCivilDate} from '../../shared/domain/astronomy';
+ import {formatValue} from '../../shared/domain/metrics';
+ const root=document.querySelector<HTMLElement>('[data-portal-climate]');
+ if(root){
+  const ctrl=new AbortController(),status=root.querySelector<HTMLElement>('[data-portal-climate-status]')!;
+  const put=(key:string,i:number,value:string)=>{const n=root.querySelector<HTMLElement>('[data-climate-'+key+'="'+i+'"]');if(n)n.textContent=value;};
+  const load=async()=>{
+   try{
+    const data=await getTemperatureYears(ctrl.signal);if(ctrl.signal.aborted)return;
+    const today=pragueCivilDate(new Date()),year=today.slice(0,4),month=Number(today.slice(5,7));
+    const end=today<data.endsBefore?today:data.endsBefore;
+    // Winter is split at New Year: show the year-to-date winter segment explicitly.
+    const seasonMonth=month<=2?1:month<=5?3:month<=8?6:month<=11?9:12;
+    const starts=[today.slice(0,7)+'-01',year+'-'+String(seasonMonth).padStart(2,'0')+'-01',year+'-01-01'];
+    let count=0;
+    starts.forEach((start,i)=>{
+     const c=compareTemperaturePeriod(data,start,end);
+     if(!c){put('coverage',i,'Nedostatečné srovnatelné údaje');return;}
+     count++;put('current',i,formatValue(c.current,1)+' °C');
+     put('delta',i,(c.delta>0?'+':'')+formatValue(c.delta,1)+' °C proti referenci');
+     put('coverage',i,c.days+'/'+c.expected+' dní · '+c.years.length+' referenčních let ('+c.years.join(', ')+')');
+    });
+    if(month<=2||month===12){const h=root.querySelectorAll('h3')[1];if(h)h.textContent='Zima · část v tomto roce';}
+    status.textContent=count?'Původní archiv · orientační':'Nedostatečné údaje';status.className='status-chip warning';
+   }catch{if(ctrl.signal.aborted)return;status.textContent='Archiv nedostupný';status.className='status-chip warning';for(let i=0;i<3;i++)put('coverage',i,'Údaje nelze ověřit');}
+  };
+  const observer=new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting)){observer.disconnect();void load();}},{rootMargin:'150px'});observer.observe(root);
+  document.addEventListener('astro:before-swap',()=>{observer.disconnect();ctrl.abort();},{once:true});
+ }
+</script>

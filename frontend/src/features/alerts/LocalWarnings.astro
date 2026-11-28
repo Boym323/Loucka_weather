@@ -1,50 +1,172 @@
 ---
-interface Props { compact?:boolean }
-const {compact=false}=Astro.props;
+interface Props { compact?:boolean; condensed?:boolean; strip?:boolean }
+const {compact=false,condensed=false,strip=false}=Astro.props;
 import SiteIcon from '../../shared/ui/SiteIcon.astro';
 ---
-<section class:list={['section','local-warnings',{compact}]} data-local-warnings aria-label="Výstrahy ČHMÚ pro Loučku">
- <div class="section-heading"><div class="panel-title"><SiteIcon name="alert" size={17}/><h2>Výstrahy ČHMÚ</h2></div><span class="status-chip" data-alert-status role="status">Kontroluji výstrahy</span></div>
- <div data-alert-body class="source-note">Načítám aktuální výstrahy…</div>
- <p class="source-note">Přehled pro Loučku a okolí · zdroj <a href="https://vystrahy-cr.chmi.cz/" target="_blank" rel="noopener noreferrer">ČHMÚ</a>. V nebezpečí se řiďte pokyny ČHMÚ.</p>
+<section id="vystrahy-chmu" class:list={['section','local-warnings',{compact,condensed,strip}]} data-local-warnings data-condensed={String(condensed)} data-strip={String(strip)} aria-label="Výstrahy ČHMÚ pro Loučku">
+ <div class="section-heading"><div class="panel-title"><SiteIcon name="alert" size={20}/><h2>Výstrahy ČHMÚ</h2></div><span class="status-chip" data-alert-status role="status">Kontroluji výstrahy</span></div>
+ <div data-alert-body>Načítám aktuální výstrahy…</div>
+ <p class="source-note">Zdroj <a href="https://vystrahy-cr.chmi.cz/" target="_blank" rel="noopener noreferrer">ČHMÚ</a>. V nebezpečí se řiďte pokyny ČHMÚ.</p>
 </section>
 <script>
+ import {warningDate,warningState,severityDisplay,warningCount,warningSummary} from './warning-display';
+ import type {LocalAlert} from './warning-display';
  const root=document.querySelector<HTMLElement>('[data-local-warnings]');
  if(root){
   const status=root.querySelector<HTMLElement>('[data-alert-status]');
   const body=root.querySelector<HTMLElement>('[data-alert-body]');
   const controller=new AbortController();
-  type Alert={event:string;severity:string;onset:string;expires:string;headline:string;description:string;instruction:string};
-  void fetch('/api/v1/alerts/local',{signal:controller.signal}).then(r=>r.json() as Promise<{status:string;checkedAt?:string;alerts:Alert[]}>).then(data=>{
-   if(controller.signal.aborted||!body)return;
-   body.replaceChildren();
-   if(data.status!=='verified'){
-    if(status){status.textContent='Stav nelze ověřit';status.className='status-chip warning';}
-    body.textContent='Aktuální výstrahy se nepodařilo ověřit. Podívejte se přímo na web ČHMÚ.';
-    return;
-   }
-   if(!data.alerts.length){
-    if(status){status.textContent='Bez platné výstrahy';status.className='status-chip ok';}
-    body.textContent='ČHMÚ pro okolí Loučky neuvádí žádnou platnou výstrahu.';
-   }else{
-    if(status){status.textContent=data.alerts.length+' výstrah v okolí';status.className='status-chip warning';}
-    for(const alert of data.alerts){
-     const article=document.createElement('article');article.className='local-alert-entry';
-     const h=document.createElement('strong');h.textContent=alert.headline||alert.event;article.append(h);
-     const p=document.createElement('p');
-     p.textContent=[alert.severity,alert.onset&&'Od '+alert.onset,alert.expires&&'Do '+alert.expires].filter(Boolean).join(' · ');
-     article.append(p);
-     if(alert.description){const desc=document.createElement('p');desc.textContent=alert.description;article.append(desc);}
-     if(alert.instruction){const note=document.createElement('p');note.textContent='Doporučení ČHMÚ: '+alert.instruction;article.append(note);}
-     body.append(article);
+  const shortcut=document.querySelector<HTMLAnchorElement>('[data-mobile-alert-shortcut]');
+  const shortcutLabel=shortcut?.querySelector<HTMLElement>('[data-mobile-alert-label]');
+  const showShortcut=(label:string,level:string)=>{
+   if(!shortcut||!shortcutLabel)return;
+   shortcutLabel.textContent=label;
+   shortcut.dataset.level=level;
+   shortcut.hidden=false;
+  };
+  const hideShortcut=()=>{if(shortcut)shortcut.hidden=true;};
+  const setStatus=(label:string,kind:string)=>{
+   if(status){status.textContent=label;status.className='status-chip '+kind;}
+  };
+  const publishAlerts=(alerts:LocalAlert[])=>{root.dataset.forecastAlerts=JSON.stringify(alerts);document.dispatchEvent(new Event('loucka:warning-update'));};
+  const unavailable=()=>{
+   publishAlerts([]);
+   setStatus('Stav nelze ověřit','warning');
+   showShortcut('Stav výstrah ČHMÚ nelze ověřit','unknown');
+   if(body)body.textContent='Aktuální výstrahy se nepodařilo ověřit. Podívejte se přímo na web ČHMÚ.';
+  };
+  const appendText=(parent:HTMLElement,tag:string,value:string,className='')=>{
+   const element=document.createElement(tag);
+   element.textContent=value;
+   if(className)element.className=className;
+   parent.append(element);
+   return element;
+  };
+  let inFlight=false;
+  const refresh=async()=>{
+   if(inFlight||controller.signal.aborted||!body)return;
+   inFlight=true;
+   try{
+    const response=await fetch('/api/v1/alerts/local',{signal:controller.signal,cache:'no-store'});
+    if(!response.ok)throw Error('Warning source unavailable');
+    const data=await response.json() as {status:string;checkedAt?:string;alerts:LocalAlert[]};
+    if(controller.signal.aborted)return;
+    if(data.status!=='verified'||!Array.isArray(data.alerts)){unavailable();return;}
+    const now=Date.now();
+    const alerts=data.alerts.map(alert=>({alert,state:warningState(alert,now)}))
+     .filter(item=>item.state!=='expired')
+     .sort((a,b)=>Number(a.state==='upcoming')-Number(b.state==='upcoming')||
+      (Date.parse(a.alert.onset)||0)-(Date.parse(b.alert.onset)||0));
+    publishAlerts(alerts.map(item=>item.alert));
+    body.replaceChildren();
+    if(!alerts.length){
+     setStatus('Bez výstrahy','ok');
+     hideShortcut();
+     appendText(body,'p','ČHMÚ pro okolí Loučky neuvádí žádnou aktuální ani nadcházející výstrahu.','local-alert-empty');
+    }else{
+     const active=alerts.filter(item=>item.state==='active').length;
+     const upcoming=alerts.filter(item=>item.state==='upcoming').length;
+     setStatus(root.dataset.strip==='true'?warningCount(alerts.length):warningCount(alerts.length)+(active?' · '+active+' právě platí':upcoming===alerts.length?' · nadcházející':''),'warning');
+     const ranked=['minor','moderate','severe','extreme'];
+     const highest=[...alerts].sort((a,b)=>ranked.indexOf(severityDisplay(b.alert.severity).level)-
+      ranked.indexOf(severityDisplay(a.alert.severity).level))[0]!;
+     const level=severityDisplay(highest.alert.severity).level;
+     showShortcut(warningCount(alerts.length)+' · '+(highest.alert.headline||highest.alert.event||'ČHMÚ')+
+      (highest.state==='upcoming'?' · nadcházející':highest.state==='active'?' · právě platí':''),level);
+     for(const {alert,state} of alerts){
+      const severity=severityDisplay(alert.severity);
+      const article=document.createElement('article');
+      article.className='local-alert-entry';
+      article.dataset.level=severity.level;article.dataset.validity=state;
+      if(root.dataset.strip==='true'){
+       const details=document.createElement('details');details.className='local-alert-details alert-strip-details';
+       const summary=document.createElement('summary');
+       const headline=document.createElement('span');headline.className='alert-strip-headline';
+       appendText(headline,'strong',alert.headline||alert.event||'Výstraha ČHMÚ');
+       appendText(headline,'span',severity.label+' · '+(state==='active'?'Právě platí':state==='upcoming'?'Nadcházející':'Platnost neupřesněna'),'alert-strip-severity');
+       summary.append(headline);
+       appendText(summary,'span','Od '+warningDate(alert.onset)+' · do '+warningDate(alert.expires),'alert-strip-time');
+       appendText(summary,'span','Podrobnosti','alert-strip-open');
+       details.append(summary);
+       if(alert.description)appendText(details,'p',alert.description);
+       if(alert.instruction)appendText(details,'p','Doporučení ČHMÚ: '+alert.instruction);
+       if(state==='active'&&severity.level==='extreme')details.open=true;
+       article.append(details);body.append(article);continue;
+      }
+      const meta=document.createElement('div');meta.className='local-alert-meta';article.append(meta);
+      appendText(meta,'span',severity.label,'local-alert-severity');
+      appendText(meta,'span',state==='active'?'Právě platí':state==='upcoming'?'Nadcházející':'Platnost neupřesněna','local-alert-state');
+      appendText(article,'h3',alert.headline||alert.event||'Výstraha ČHMÚ');
+      appendText(article,'p','Od '+warningDate(alert.onset)+' · Do '+warningDate(alert.expires),'local-alert-time');
+      if(alert.description)appendText(article,'p',warningSummary(alert.description),'local-alert-summary');
+      if(alert.instruction)appendText(article,'p','Doporučení ČHMÚ: '+warningSummary(alert.instruction),'local-alert-summary local-alert-instruction');
+      if(root.dataset.condensed==='true'||(alert.description&&warningSummary(alert.description)!==alert.description.trim())||
+         (alert.instruction&&warningSummary(alert.instruction)!==alert.instruction.trim())){
+       const details=document.createElement('details');details.className='local-alert-details';
+       appendText(details,'summary',root.dataset.condensed==='true'?'Doporučení a úplné znění ČHMÚ':'Úplné znění výstrahy ČHMÚ');
+       if(alert.description)appendText(details,'p',alert.description);
+       if(alert.instruction)appendText(details,'p','Doporučení ČHMÚ: '+alert.instruction);
+       article.append(details);
+      }
+      body.append(article);
+     }
     }
-   }
-   if(data.checkedAt){const checked=document.createElement('small');checked.textContent='Zdroj ověřen: '+new Intl.DateTimeFormat('cs-CZ',{timeZone:'Europe/Prague',dateStyle:'short',timeStyle:'short'}).format(new Date(data.checkedAt));body.append(checked);}
-  }).catch(()=>{
-   if(controller.signal.aborted)return;
-   if(status)status.textContent='Výstrahy nelze ověřit';
-   if(body)body.textContent='Oficiální výstražný zdroj není momentálně dostupný.';
-  });
-  document.addEventListener('astro:before-swap',()=>controller.abort(),{once:true});
+    if(data.checkedAt)appendText(body,'small','Zdroj ověřen: '+warningDate(data.checkedAt),'local-alert-checked');
+   }catch{if(!controller.signal.aborted)unavailable();}
+   finally{inFlight=false;}
+  };
+  void refresh();
+  const timer=window.setInterval(()=>void refresh(),5*60_000);
+  document.addEventListener('astro:before-swap',()=>{controller.abort();window.clearInterval(timer);},{once:true});
  }
 </script>
+<style is:global>
+ .atlas-alert-line>.local-warnings{grid-template-columns:minmax(0,1fr);align-items:start;gap:12px}
+ .atlas-alert-line .local-warnings .section-heading{justify-content:space-between;gap:8px}
+ .atlas-alert-line .local-warnings .section-heading h2,.local-warnings .panel-title h2{font-size:17px}
+ .local-warnings [data-alert-body]{display:grid;gap:10px;min-width:0;color:var(--text);font-size:14px}
+ .local-warnings .local-alert-entry{--alert-accent:var(--muted);padding:14px 16px;border:1px solid color-mix(in srgb,var(--alert-accent),var(--line) 45%);border-inline-start:4px solid var(--alert-accent);border-radius:10px;background:color-mix(in srgb,var(--alert-accent) 9%,var(--panel));max-height:none;overflow:visible;min-width:0;overflow-wrap:anywhere}
+ .local-warnings .local-alert-entry[data-level="minor"],.local-warnings .local-alert-entry[data-level="moderate"]{--alert-accent:#c59510}
+ .local-warnings .local-alert-entry[data-level="severe"]{--alert-accent:#d97706}
+ .local-warnings .local-alert-entry[data-level="extreme"]{--alert-accent:#dc3947}
+ .local-warnings .local-alert-meta{display:flex;align-items:center;justify-content:space-between;gap:6px 12px;flex-wrap:wrap;font-size:13px;font-weight:650;color:var(--text)}
+ .local-warnings .local-alert-state{font-size:12px;font-weight:600;border:1px solid var(--line);border-radius:6px;padding:3px 8px;background:var(--panel)}
+ .local-warnings .local-alert-entry h3{font-size:clamp(17px,2vw,21px);line-height:1.3;margin:9px 0 4px;color:var(--text)}
+ .local-warnings .local-alert-entry p{font-size:14px;line-height:1.55;margin:8px 0;color:var(--text);white-space:pre-wrap}
+ .local-warnings .local-alert-entry .local-alert-time{font-size:13px;font-weight:600;color:var(--text)}
+ .local-warnings .local-alert-details{border-top:1px solid var(--line);margin-top:12px;padding-top:8px}
+ .local-warnings .local-alert-details summary{cursor:pointer;font-size:13px;font-weight:650;color:var(--text);padding:5px 0}
+ .local-warnings .local-alert-checked{color:var(--muted);font-size:12px}
+ .local-warnings .local-alert-empty{margin:0;font-size:14px}
+ @media(max-width:600px){.local-warnings .local-alert-entry{padding:12px}.local-warnings .local-alert-meta{justify-content:flex-start}.local-warnings .local-alert-time{overflow-wrap:anywhere}}
+</style>
+
+<style is:global>
+.local-warnings .panel-title{color:var(--text)}
+.local-warnings .panel-title svg{color:var(--muted)}
+.local-warnings.condensed{padding:12px}
+.local-warnings.condensed .section-heading{margin-bottom:0}
+.local-warnings.condensed .local-alert-entry{padding:10px 12px}
+.local-warnings.condensed .local-alert-entry h3{margin:5px 0 3px}
+.local-warnings.condensed .local-alert-entry p{margin:4px 0;line-height:1.45}
+.local-warnings.condensed .local-alert-details{margin-top:5px;padding-top:4px}
+.local-warnings.condensed .source-note{margin:0;font-size:12px}
+@media(max-width:760px){
+ .local-warnings.condensed .section-heading h2{font-size:16px}
+ .local-warnings.condensed .local-alert-entry h3{font-size:17px}
+ .local-warnings.condensed .local-alert-meta{gap:4px;font-size:12px}
+ .local-warnings.condensed .local-alert-state{font-size:11px;padding:2px 5px}
+ .local-warnings.condensed .local-alert-time{font-size:12px}
+ .local-warnings.condensed .local-alert-summary{font-size:13px}
+ .local-warnings.condensed .local-alert-details summary{min-height:44px;display:flex;align-items:center}
+}
+</style>
+
+<style is:global>
+@media(max-width:760px){
+ /* A future warning still shows severity, time and hazard. Its full advice is one tap away. Active/unknown warnings retain their advice inline. */
+ .local-warnings.condensed .local-alert-entry[data-validity="upcoming"]:not([data-level="extreme"])>.local-alert-instruction{display:none}
+ .local-warnings.condensed .local-alert-entry[data-validity="upcoming"] .local-alert-details{margin-top:3px}
+ .local-warnings.condensed .local-alert-checked{font-size:11px}
+}
+</style>

@@ -636,8 +636,8 @@
 }
 .advanced-history .history-zoom-hint{margin:0 0 10px}
 
-/* Opt-in mobile layout comparison, not the default visitor layout.
-   The query ?mobile=compact only collapses expert modules; no measurement
+/* Compact mobile layout, with an explicit full-layout alternative.
+   The compact layout only collapses expert modules; no measurement
    or provenance text in the visible current summary is changed. */
 .mobile-home-preview-note,.mobile-home-expert-toggle{display:none}
 @media(max-width:760px){
@@ -793,3 +793,90 @@
   transition:none
  }
 }
+
+/* Shared visitor presentation; quality and source exceptions remain visible. */
+:root{--ui-control-radius:10px;--ui-card-radius:14px;--ui-space-md:16px;--ui-touch-target:44px}
+.page-intro h1{font-size:clamp(30px,3vw,40px);letter-spacing:-.035em}
+.page-intro p{font-size:15px;line-height:1.6;max-width:72ch}
+.section-heading h2{font-size:clamp(18px,1.6vw,22px)}
+:where(.section,.page-intro) .source-note{font-size:12px;line-height:1.55}
+.section,.climate-summary-metric,.monitor-card,.sensor-channel{border-radius:var(--ui-card-radius);box-shadow:none}
+.current-panel .metric-label{font-size:13px}
+.current-panel .metric-card:not(.featured) .metric-number{font-size:clamp(21px,2.1vw,30px)}
+.current-panel .metric-number{font-variant-numeric:tabular-nums}
+.current-panel .metric-unit{display:inline;font-size:.54em;white-space:nowrap}
+.current-panel[data-shared-reading-source="true"] .metric-note[data-reading-state="measured"]{position:absolute!important;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.wind-compass-panel[data-shared-wind-source="true"] [data-wind-source]{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+[data-soil-air] .soil-live-number{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px;font-size:clamp(23px,2.4vw,32px);font-weight:650;line-height:1.2}
+[data-soil-air] .soil-live-unit{font-size:.53em;color:var(--muted);white-space:nowrap}
+[data-soil-air] [data-soil-live-quality][data-reading-state="measured"]{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+[data-soil-air] .soil-air-card{padding:16px;background:var(--panel-2)}
+[data-soil-air] .sensor-mini-trend svg{height:72px}
+[data-climate-records] .climate-summary-metric{border-top:3px solid var(--teal);padding:16px}
+[data-climate-records] .climate-summary-metric>strong{font-size:clamp(24px,2.8vw,36px);font-weight:650;line-height:1.15}
+[data-climate-records] .climate-summary-metric>small{font-size:12px;line-height:1.4}
+.advanced-history .history-zoom-controls{margin-top:10px}
+.advanced-history .advanced-history-chart:not([hidden]){height:clamp(330px,36vw,480px)}
+.advanced-history .history-presets{gap:5px}
+.advanced-history .history-presets .chart-tab{padding-inline:10px}
+.advanced-history .history-apply{background:var(--teal);color:var(--panel);font-weight:700}
+.camera-layout-enhanced .camera-refresh{background:var(--teal);color:var(--panel);border-color:var(--teal)}
+.map-page-layout{grid-template-columns:minmax(0,4fr) minmax(235px,1fr)}
+.map-page-primary .radar-map{height:clamp(400px,48vw,650px)}
+.map-unavailable-layers{margin-top:12px;border-top:1px solid var(--line);padding-top:10px;font-size:13px;color:var(--muted)}
+.map-unavailable-layers summary{cursor:pointer;min-height:44px;padding:9px 0;color:var(--text)}
+.map-unavailable-layers p{margin:0 0 8px}
+.about-image a{display:block}
+.about-image img{height:clamp(210px,24vw,340px);object-fit:cover}
+.about-main .about-facts{grid-template-columns:repeat(2,minmax(0,1fr))}
+.about-main .about-facts strong{font-size:22px}
+.monitor-card .section-heading h3{font-size:16px}
+.sensor-channel .sensor-number{font-variant-numeric:tabular-nums}
+@media(max-width:900px){
+ .map-page-layout{grid-template-columns:minmax(0,1fr)}
+ .map-page-primary .radar-map{height:clamp(320px,65vw,500px)}
+}
+@media(max-width:760px){
+ .page-intro h1{font-size:clamp(29px,7.5vw,36px)}
+ .page-intro p{font-size:14px}
+ .advanced-history .history-presets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+ .advanced-history .history-presets .chart-tab{padding-inline:4px;min-width:0;font-size:12px}
+ .advanced-history .advanced-history-chart:not([hidden]){height:330px}
+ .advanced-history-form label{font-size:12px}
+ [data-climate-records] .climate-summary-metric{padding:12px}
+ [data-climate-records] .climate-summary-metric>strong{font-size:clamp(22px,6vw,29px)}
+}
+
+.wind-compass-panel .wind-shared-source{display:none}
+.wind-compass-panel[data-shared-wind-source="true"] .wind-shared-source{display:block;margin:6px 0 0;font-size:12px}
+
+/* Keep units adjacent, even in two-column mobile record cards. */
+.inline-metric-unit{font-size:.62em;font-weight:550;white-space:nowrap;letter-spacing:0}
+[data-record-value],[data-extreme-value]{white-space:nowrap;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+@media(max-width:430px){[data-climate-records] .climate-summary-metric>[data-record-value]{font-size:clamp(20px,6vw,26px)}}
+.current-panel[data-variant="detail"][data-current-state="live"] .metric-note[data-reading-source="live"][data-reading-state="measured"]{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+
+/* Compact landing: keep the disclosure, full mode and all readings accessible. */
+@media(max-width:760px){
+ :root[data-mobile-home-variant="compact"] .evergreen-home .mobile-home-preview-note{display:none}
+ :root[data-mobile-home-variant="compact"] .evergreen-hero .mobile-home-expert-toggle{margin:0;width:100%;min-height:44px;text-align:center}
+ :root[data-mobile-home-variant="compact"] .evergreen-home .mobile-home-compact-link{display:block;margin:0}
+ :root[data-mobile-home-variant="compact"] .evergreen-home .mobile-home-compact-link a{min-height:44px}
+ .evergreen-home .evergreen-more-heading{margin-block:0}
+ .evergreen-home .evergreen-more-heading h2{font-size:23px}
+}
+
+/* Shared compact page introductions: data starts close to the navigation. */
+@media screen{
+ .content .page-intro{padding-block:4px 12px;margin:0;min-height:0;gap:8px 16px}
+ .content .page-intro h1{font-size:clamp(28px,2.4vw,36px);line-height:1.17;font-weight:650;letter-spacing:-.03em;margin:3px 0 4px;max-width:100%}
+ .content .page-intro p{font-size:14px;line-height:1.5;margin:4px 0 0;max-width:85ch}
+ .content .page-intro .eyebrow{font-size:12px;line-height:1.4;letter-spacing:.02em}
+}
+@media screen and (max-width:760px){
+ .content .page-intro{padding-block:2px 10px}
+ .content .page-intro h1{font-size:clamp(28px,6.8vw,32px)}
+}
+
+/* Larger mobile menu remains reachable on short screens. */
+.atlas-mobile-more-menu{max-height:min(70dvh,520px);overflow-y:auto;overscroll-behavior:contain}

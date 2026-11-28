@@ -25,6 +25,7 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
     <span class="forecast-temp" data-forecast-max={i}>—</span>
     <small data-forecast-min={i}>—</small>
     <span class="forecast-rain" data-forecast-rain={i}>—</span>
+    <a data-forecast-warning={i} class="forecast-day-warning" href="#vystrahy-chmu" hidden></a>
   </div>)}
  </div>
  <p class="forecast-context" data-forecast-message>Předpověď se může změnit; stanice zobrazuje skutečná měření.</p>
@@ -34,6 +35,9 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
  </div>
 </section>
 <script>
+ import {warningsForDay} from '../alerts/warning-calendar';
+ import {severityDisplay,warningCount} from '../alerts/warning-display';
+ import type {LocalAlert} from '../alerts/warning-display';
  type Daily = {time:string[];weather_code:number[];temperature_2m_max:number[];temperature_2m_min:number[];precipitation_sum:number[]};
  const condition=(code:number):{kind:string;description:string}=>{
   if(code===0)return {kind:'clear',description:'Jasno'};
@@ -47,13 +51,32 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
   if(code>=95)return {kind:'storm',description:'Bouřky'};
   return {kind:'cloud',description:'Oblačno'};
  };
- const fmt=(n:number)=>new Intl.NumberFormat('cs-CZ',{maximumFractionDigits:0}).format(n);
+ const fmt=(n:number)=>new Intl.NumberFormat('cs-CZ',{maximumFractionDigits:0}).format(Math.round(n)||0);
+ const rainFmt=(n:number)=>new Intl.NumberFormat('cs-CZ',{maximumFractionDigits:1}).format(n);
  const timeFmt=new Intl.DateTimeFormat('cs-CZ',{weekday:'short',day:'numeric',month:'numeric',timeZone:'Europe/Prague'});
  const url='https://api.open-meteo.com/v1/forecast?latitude=49.170035&longitude=17.876076&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Europe%2FPrague&forecast_days=6';
  document.querySelectorAll<HTMLElement>('[data-forecast-panel]').forEach(root=>{
   const status=root.querySelector<HTMLElement>('[data-forecast-status]');
   const msg=root.querySelector<HTMLElement>('[data-forecast-message]');
   const controller=new AbortController();
+  let dates:string[]=[];
+  const paintWarnings=()=>{
+   const source=document.querySelector<HTMLElement>('[data-local-warnings]');
+   let alerts:LocalAlert[]=[];
+   if(source?.dataset.forecastAlerts){try{alerts=JSON.parse(source.dataset.forecastAlerts);}catch{return;}}
+   for(let i=0;i<6;i++){
+    const link=root.querySelector<HTMLAnchorElement>('[data-forecast-warning="'+i+'"]');
+    if(!link)continue;
+    link.hidden=true;
+    if(!dates[i])continue;
+    const relevant=warningsForDay(alerts,dates[i]!,Date.now());
+    if(!relevant.length)continue;
+    link.hidden=false;link.dataset.level=severityDisplay(relevant[0]!.severity).level;
+    link.textContent=warningCount(relevant.length);
+    link.title=relevant.map(a=>a.headline||a.event).join(' · ');
+   }
+  };
+  document.addEventListener('loucka:warning-update',paintWarnings,{signal:controller.signal});
   void fetch(url,{signal:controller.signal}).then(async response=>{
    if(!response.ok)throw new Error('Model není dostupný');
    const data=await response.json() as {daily?:Daily};
@@ -74,8 +97,9 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
     put('description',weather.description);
     put('max',fmt(d.temperature_2m_max[i])+'°');
     put('min',fmt(d.temperature_2m_min[i])+'°');
-    put('rain',fmt(d.precipitation_sum[i])+' mm');
+    put('rain',rainFmt(d.precipitation_sum[i])+' mm');
    }
+   dates=d.time.slice(0,6);paintWarnings();
    if(status){status.textContent='Předpověď dostupná';status.classList.add('ok');}
    if(msg)msg.textContent='Předpověď pro Loučku a okolí. S každou aktualizací se může změnit.';
   }).catch(()=>{
@@ -86,3 +110,10 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
   document.addEventListener('astro:before-swap',()=>controller.abort(),{once:true});
  });
 </script>
+
+<style is:global>
+.forecast-day-warning[hidden]{display:none!important}
+.forecast-day-warning:not([hidden]){display:inline-block;color:var(--text);font-size:11px;text-decoration:underline;text-underline-offset:2px;border-bottom:2px solid #c59510}
+.forecast-day-warning[data-level="severe"]{border-color:#d97706}
+.forecast-day-warning[data-level="extreme"]{border-color:#dc3947}
+</style>

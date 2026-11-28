@@ -46,6 +46,8 @@ jobs:
           node --check scripts/mobile-home-variant-browser-check.mjs
           node --check scripts/mobile-home-history-lazy-browser-check.mjs
           node --check scripts/design-final-browser-check.mjs
+          node --check scripts/portal-functional-browser-check.mjs
+          node --check scripts/map-model-browser-check.mjs
       - name: Unit tests
         run: npm test
       - name: Build static website
@@ -70,6 +72,8 @@ jobs:
           node scripts/mobile-home-variant-browser-check.mjs
           node scripts/mobile-home-history-lazy-browser-check.mjs
           node scripts/design-final-browser-check.mjs
+          node scripts/portal-functional-browser-check.mjs
+          node scripts/map-model-browser-check.mjs
           node scripts/climate-firstfold-review.mjs
       - uses: actions/upload-artifact@v7
         if: always()
@@ -80,6 +84,8 @@ jobs:
             frontend/test-results/climate-firstfold-review
             frontend/test-results/mobile-home-variant
             frontend/test-results/design-final
+            frontend/test-results/portal-functional
+            frontend/test-results/map-model
           retention-days: 7
           if-no-files-found: ignore
       - uses: actions/upload-artifact@v7

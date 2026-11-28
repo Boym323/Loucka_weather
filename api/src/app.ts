@@ -19,6 +19,7 @@ import {consolidateAnnualSummaries} from './climate-consolidation.js';
 import {buildTemperatureDays} from './temperature-years.js';
 import {sensorChannels} from './sensor-evidence.js';
 import {originalQualityWindow} from './original-quality.js';
+import {originalDailyAggregateHeld,originalAnnualAggregateHeld} from './sensor-publication-qc.js';
 import type {Metric} from './metrics.js';
 import type {OutputUnits} from './units.js';
 
@@ -130,9 +131,9 @@ function rawHistoryPoints(metric:Metric,rows:ArchiveRow[],from:number,to:number,
   const rowStart=rowIsValid(row,lastEnd);
   if(rowStart>previous)points.push({startTime:utcIso(previous),endTime:utcIso(rowStart),value:null,
    quality:'missing',source:'derived',provenance:null,sourceUsUnits:null});
-  const reading=publiclySafeReading(metric,row[metric],row.usUnits,units);
+  const reading=publiclySafeReading(metric,row[metric],row.usUnits,units,row.dateTime);
   points.push({startTime:utcIso(Math.max(rowStart,from)),endTime:utcIso(row.dateTime),value:reading.value,
-   quality:reading.quality,...source,sourceUsUnits:reading.sourceUsUnits});
+   quality:reading.quality,qcFlags:reading.qcFlags,...source,sourceUsUnits:reading.sourceUsUnits});
   if(reading.value!==null)valid++;
   previous=row.dateTime;lastEnd=row.dateTime;
  }
@@ -177,7 +178,7 @@ function addHourlyRow(buckets:Map<number,HourBucket>,metric:Metric,aggregation:A
   }
  }else{
   const bucket=bucketAt(utcHourStart(row.dateTime));
-  const reading=converted(metric,row[metric],row.usUnits,units).value;
+  const reading=publiclySafeReading(metric,row[metric],row.usUnits,units,row.dateTime).value;
   if(reading!==null){
    if(aggregation==='mean'){
     for(let bucketStart=Math.floor(weightedStart/3600)*3600;bucketStart<weightedEnd;bucketStart+=3600){
@@ -508,6 +509,7 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
   if(dataset==='approved')return bad(reply,req.id,'DATASET_UNAVAILABLE','No approved dataset published',503);
   if(!metric||!isMetric(metric))return bad(reply,req.id,'UNKNOWN_METRIC','Unknown metric',400);
    if(hasUnverifiedLightningMapping(metric))return bad(reply,req.id,'UNVERIFIED_FIELD_MAPPING','Original lightning counter mapping is unverified',503);
+  if(originalAnnualAggregateHeld(metric))return bad(reply,req.id,'HISTORICAL_QC_HOLD','Unverified original daily summaries could contain known sensor anomalies',503);
   const policy=historyPolicy(metric),aggregation=policy.aggregation;
   if(!policy.enabled||!['mean','sum','min','max'].includes(aggregation))
    return bad(reply,req.id,'INVALID_AGGREGATION','No safe annual aggregation',422);
@@ -787,6 +789,7 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
   }
   const start=localMidnight(localStart),end=localMidnight(localEnd);
   if(start===null||end===null||end<=start)return bad(reply,req.id,'INVALID_RANGE','Invalid local period',422);
+  if(originalDailyAggregateHeld(metric,start,end))return bad(reply,req.id,'HISTORICAL_QC_HOLD','Unverified original daily summaries could contain known sensor anomalies',503);
   if(!reader.dailySummaries)return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Daily summaries are unavailable',503);
   let rows:DailySummaryRow[];
   try{rows=await reader.dailySummaries(metric,start,end,period==='year'?400:40);}
@@ -1035,6 +1038,7 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
    }
   }
   if(selectedResolution!=='daily')return bad(reply,req.id,'BAD_REQUEST','Unknown history resolution');
+  if(originalDailyAggregateHeld(metric,start,end))return bad(reply,req.id,'HISTORICAL_QC_HOLD','Unverified original daily summaries could contain known sensor anomalies',503);
   if(resolution==='daily'&&!policy.enabled)return bad(reply,req.id,'INVALID_AGGREGATION','No verified aggregate policy for this metric',422);
   const fromDate=localDateAt(start),toDate=localDateAt(end);
   const dailyStart=localMidnight(fromDate),dailyEnd=localMidnight(toDate);

@@ -34,7 +34,7 @@ const tabs = [
 </section>
 <script>
  import { getHistoryRange } from '../../shared/api/client';
- import { getMetric, formatValue } from '../../shared/domain/metrics';
+ import { getMetric, formatValue, chartValue, metricAxisStep } from '../../shared/domain/metrics';
  import type { HistoryResponse } from '../../shared/domain/weather';
  // Delay the large ECharts engine until the document is interactive.
  // No history value or endpoint is changed; the visible real chart still paints.
@@ -125,15 +125,15 @@ const tabs = [
      backgroundColor:'transparent',
      animation:false,
      grid:{top:24,right:compact?10:18,bottom:compact?37:43,left:compact?43:49,containLabel:false},
-     tooltip:{trigger:'axis',confine:true},
+     tooltip:{trigger:'axis',confine:true,valueFormatter:(value:unknown)=>chartValue(value,activeMetric,known.unit)},
      xAxis:{type:'time',splitNumber:compact?3:7,
       axisLine:{lineStyle:{color:gridColor}},
       axisLabel:{color:axisColor,fontSize:compact?11:12,hideOverlap:true,showMinLabel:false,showMaxLabel:false,
        formatter:(value:number)=>compact?shortTime.format(new Date(value)):formatTime(value)},
       axisTick:{show:false},splitLine:{show:false}},
-     yAxis:{type:'value',scale:true,splitNumber:4,name:known.unit,
+     yAxis:{type:'value',scale:true,splitNumber:4,minInterval:metricAxisStep(activeMetric,known.unit),name:known.unit,
       nameTextStyle:{color:axisColor,fontSize:11},
-      axisLabel:{color:axisColor,fontSize:compact?11:12},
+      axisLabel:{color:axisColor,fontSize:compact?11:12,formatter:(value:number)=>formatValue(value,known.digits)},
       axisLine:{show:false},axisTick:{show:false},
       splitLine:{lineStyle:{color:gridColor,type:'solid'}}},
      series:[{

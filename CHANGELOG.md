@@ -1,5 +1,97 @@
 # Changelog
 
+## 2026-11-28 – Stabilita živých údajů větru
+- Větrný panel chrání čerstvé live hodnoty každé veličiny zvlášť před opožděnou archivní odpovědí i její chybou; archiv může doplnit ostatní údaje. Starší live událost nepřepíše novější a po vypršení živého režimu se obnoví archiv.
+- Chromium scénář nové výchozí homepage pokrývá zpožděný úspěch i chybu archivu, nulovou rychlost, neplatný směr a návrat k platnému severu na mobilu/desktopu v obou motivech. Issue #179; CI a skutečné DEV nasazení ověřit samostatně. Bez změn zdrojových dat, API a produkce.
+
+## 2026-11-27 – Vizuální hierarchie úvodní stránky
+- Zpřehledněny rozestupy a úvodní pás; výstrahy mají kompaktnější podobu a navigace na širokých obrazovkách je čitelnější.
+- Při neověřeném směru větru se skryje prázdný kompas, ale rychlost a nárazy zůstávají jako kompaktní měření včetně zdrojových štítků. Data ani výpočty se nemění.
+- Opraveno zastaralé očekávání v přístupnostním testu: odpovídá aktuálnímu formátovači tabulky, který zachovává přesnost podle veličiny.
+- Opraveno očekávání osy srážek v Chromium kontrole: přijímá nulu zobrazenou s českou desetinnou čárkou (`0,0`) a odmítá záporný začátek.
+- Změna je připravena ve větvi `codex/portal-visual-polish-20261127`; CI a DEV náhled je nutné ověřit samostatně.
+
+
+## 2026-11-25 – Jednotná přesnost grafů
+- Formátování podle veličiny v historických, srážkových a klimatologických grafech, tooltipech, tabulkách a souhrnech; osy ECharts s minimálním krokem podle přesnosti. Teplota, tlak, vítr, srážky a UV na desetiny; vlhkost, směr a záření na celá čísla.
+- Česká desetinná čárka, chybějící hodnoty zůstávají pomlčkou, odstranění záporné nuly. Bez zaokrouhlení zdrojových dat či výpočtů. Doplněny regresní testy; CI a nasazení ověřit samostatně.
+
+## 2026-11-25 – Rychlý přehled bez roztříštěných měření
+- Na homepage kompaktní rozbalitelný pruh výstrah s názvem, stupněm, platností a úplným zněním. Aktivní extrémní výstraha zůstává otevřená. Ostatní stránky zachovávají dosavadní režim.
+- Vítr, nárazy, směr, denní minima/maxima/srážky a hodinové trendy seskupeny k aktuálnímu měření; bez dvojího zobrazování rychlosti a nárazů. Předpověď vedle měření, radar a kamera potom, historický graf přes celou šířku. Klasický přehled zachován.
+- Doplněny kontroly pořadí, jedinečnosti větru a výšky výstrahy. CI a nasazení ověřit samostatně. Bez zásahu do DB, WeeWX a meteorologických výpočtů.
+
+## 2026-11-25 – Sjednocení kandidáta s interaktivní mapou
+- Zachovány všechny změny mapy z main. Opraven kontrast astronomického štítku v tmavém režimu a dotyková plocha metodiky klimatologického srovnání. Přepnutí vyžaduje zelené CI a následný veřejný smoke.
+
+## 2026-11-25 – Vizuální audit kandidáta portálu
+- Zkráceny mezery v panelu výstrah a mobilním záhlaví; na homepage je přesná hodinová tabulka rozbalitelná pod meteogramem. Na samostatné předpovědi zůstává otevřená.
+- Opraveny tři zastaralé testovací kontrakty z přesunu klasického přehledu a rozšíření auditu z 15 na 18 tras. Doplněna funkční kontrola rozbalování tabulky a úplné výstrahy. PR stále vyžaduje zelené CI a potvrzené nasazení.
+
+## 2026-11-25 – Kandidát přepnutí výchozího portálu
+- Nový portál jako výchozí `/`, alias `/prehled-novy/` používá stejnou komponentu. Původní přehled je zachován na `/prehled-klasicky/` včetně plného mobilního režimu.
+- Trendy přesunuty k větru, rychlé mobilní odkazy a úspornější karty. Nadcházející výstrahy na telefonu zobrazují nebezpečí, platnost a stručný popis; úplné doporučení v podrobnostech. Aktivní a extrémní výstrahy zachovávají doporučení přímo.
+- Kandidát v samostatné větvi, bez DB nebo produkčních změn. Přepnutí až po průchodu CI; veřejný smoke po nasazení musí potvrdit nový commit.
+
+## 2026-11-25 – Interaktivní radar a modelové vrstvy
+- Posun mapy, zoom 5–9, návrat na Loučku; radar nad zoomem 7 pouze zvětšen (limit RainViewer). Vzorkovací mřížka se odvozuje z aktuálního výřezu a rozměrů, 9–35 modelových vzorků místo pevných souřadnic.
+- Interpolovaná teplotní vrstva s legendou, směrové šipky větru, přístupný seznam vzorků a samostatné poslední archivní měření Loučky. Chybějící hodnoty nejsou interpolovány přes neplatné buňky. Po posunu se stará vrstva odstraní; nový model se načte na požádání kvůli limitům API.
+- ČHMÚ okolní stanice zatím pouze odkaz na otevřená data; bez ověřeného collectoru nejsou vydávány za měření. Přidány geometrické a browser testy; CI a nasazení ověřit samostatně.
+
+## 2026-11-25 – Čitelné modelové body na mapě
+- Modelové značky jsou oddělené od transformovaného radarového podkladu; na široké mapě krátké hodnoty ve dvou řádcích, na menší mapě číslované body s detailem a přístupným seznamem všech hodnot.
+- Zjednodušené vrstvy a odkaz na samostatnou předpověď. Radar a model nadále nezávislé, výchozí modelové vrstvy vypnuté.
+- Přidán Chromium test s kontrolovanými modelovými údaji, pěti šířkami a oběma motivy. Výsledky CI a DEV nasazení ověřit samostatně.
+
+## 2026-11-25 – Dotažení portálu podle nasazených screenshotů
+- Kompaktnější blok výstrah, kontrastní nadpis, jednotky denních údajů vedle hodnot, desetinné srážky v modelu a odstranění záporné nuly u předpovědi.
+- Opraven typ navigace po přesunu klimatologie do mobilního menu (předchozí CI TS2367). Nové testy a nasazení ověřit samostatně.
+
+## 2026-11-25 – Trendy, meteogram, historický kalendář a navigace
+- Archivní hodinové změny teploty a tlaku pouze ze dvou blízkých platných měření, grafický meteogram s oddělenými osami, propojení výstrah s kalendářními dny bez druhého požadavku na ČHMÚ.
+- Srovnání měsíce, části sezóny a roku se shodnými dny starších let, nikoli klimatický normál; srážkové srovnání zatím nepřidáno kvůli známým omezením archivu. Historický kalendář s kontrolou pokrytí a odkazem na konkrétní den grafu.
+- Přístup k předpovědi, radaru a kameře v hlavní navigaci; původní homepage zůstává výchozí do vizuálního ověření alternativy. Bez změn DB, WeeWX a produkce.
+
+## 2026-11-25 – Alternativní portálový přehled
+- Nová zkušební trasa `/prehled-novy/`, původní homepage zůstává výchozí. Měření a předpověď vedle sebe, radar a kamera, širší interaktivní graf, vítr a včerejší souhrn.
+- Samostatná `/predpoved/` s hodinovou tabulkou Open-Meteo a stávajícími denními údaji. Klikatelné názvy veličin otevřou odpovídající historický graf. Včerejší statistiky pouze při doloženém pokrytí alespoň 90 %.
+- Bez změny databáze, výpočtů, globální navigace nebo produkčního webu. Nové trasy zahrnuty do vizuálního QA; CI a nasazení ověřit samostatně.
+
+## 2026-11-25 – Kompaktní záhlaví všech stránek
+- Homepage: nadpis nejvýše 40 px na desktopu, nižší fotografické pozadí a odstraněný redundantní popisek; měření se posouvá výše. Kompaktní úvod na všech ostatních veřejných trasách včetně atlasu.
+- Zkráceny úvodní texty při zachování informací o zdrojích a nejistotě dat; žádné změny měření.
+- Opravena kontrola kontrastu CSS tokenů po chybě CI; přidány geometrické limity úvodů pro všech 15 tras, sedm šířek a oba motivy. Výsledky nové revize ověřit samostatně.
+
+## 2026-11-25 – Mobilní přehled a klimatologická čitelnost
+- Kompaktní mobilní homepage je výchozí; plný přehled zůstává dostupný a vítr i graf lze rozbalit klávesnicí či dotykem. Desktop zůstává beze změny rozložení.
+- Sjednoceny plochy klimatologických grafů, tabulky, osy sezón, rozlišení omezených ročních bodů, jednotky historických hodnot a zkráceny nadbytečné texty.
+- Browser testy ověřují rozbalení grafu, plnou variantu a kontrast základních textových tokenů. Výsledky nové revize a DEV nasazení ověřovat samostatně. Bez změn meteorologických výpočtů a DB.
+
+## 2026-11-25 – Dotažení vizuálu po veřejném screenshot auditu
+- Mobilní zkratka skutečných výstrah ČHMÚ nad měřením, bez nových požadavků na API; stav nedostupnosti nezaměňuje za bezpečí.
+- Rekordní hodnoty s menší jednotkou na stejném řádku; kamera používá společný barevný token. Sezónní série mají samostatnou modrou barvu a přerušovanou druhou křivku i legendu.
+- Zkrácená opakovaná označení živých hodnot, archivní a nejisté hodnoty zůstávají rozlišeny. Kompaktní režim zůstává volitelný.
+- Kontroly a nasazení nového commitu ověřovat samostatně; bez zásahu do zdrojů meteorologických dat.
+
+## 2026-11-25 – Sjednocení návštěvnického vizuálu
+- Předpověď a radar před kontextovými kartami, méně výrazné stíny, dostupný odkaz na kompaktní mobilní variantu (výchozí rozložení větru a grafu zachováno).
+- Jednotky půdy a ovzduší vedle hodnot, česká data rekordů, větší radar a graf, jedna mobilní navigace atlasu, rozlišení sezón a ročenka s jasným stavem načítání.
+- Shodný zdroj měření bez opakovaných vizuálních štítků; výjimky zůstávají viditelné. Browser QA rozšířena na 15 tras, 7 šířek a oba motivy. Výsledky CI a skutečné nasazení ověřovat zvlášť. Bez změn DB, WeeWX a produkce.
+
+## 2026-11-25 – Výstrahy ČHMÚ na DEV
+- API odlišuje výslovná oznámení „Žádná výstraha…“ od skutečných výstrah, nevyřazuje samotnou závažnost Minor a nezobrazuje ukončené výstrahy. Neplatný snapshot není stav bez výstrah.
+- Přehled má české časy a závažnosti, barevné rozlišení, stav platnosti, čitelný jednosloupcový layout a rozbalitelné originální znění. Přidány regresní testy API a frontendových formátovacích funkcí.
+- Bez změny produkce, databáze a instalovaného collectoru; ověření nasazení vyžaduje DEV smoke.
+
+## 2026-11-24 – Ověřený soukromý náhled historického tlaku
+- Na DEV LXC byl ověřen SHA-256 finálního třívrstvého gzipu a vytvořen soukromý denní index s 1 697 621 záznamy. Náhled běží odděleně na loopbacku portu 3102 pod účtem `loucka`; bez veřejné proxy.
+- Ověřeny chráněný Q1 2018, rozlišené vrstvy v říjnu 2018, zlom zdroje 26. 4. 2019 a absence regionální reference v roce 2026. Headless prohlížeč ověřil desktop i mobil.
+- Bez změny produkčního webu, WeeWX, databází, veřejného API a oficiálních statistik. Hodnoty zůstávají neschválené.
+
+## 2026-11-24 – Soukromý náhled rekonstrukce tlaku
+- Přidán samostatný DEV náhled tří tlakových vrstev nad SHA-256 ověřeným snapshotem Meteo_audit #99. Omezené UTC výřezy, tři přepínače a tabulka, bez slučování vrstev.
+- Import a HTTP proces jsou oddělené od veřejného API, MariaDB a WeeWX; původní implementační záznam předcházel ověření na DEV LXC, které zaznamenává následující položka.
+
 ## 2026-11-22 – Diagnostika komprese CSS na veřejném DEV
 - Při dosavadních třech mobilních návštěvách test pouze anonymně počítá CSS odpovědi podle `Content-Encoding`, `Vary: Accept-Encoding` a jednoleté `immutable` cache. Neukládá jednotlivé URL ani citlivé hlavičky, nepřidává další požadavky a sám gzip/br nezapíná.
 - Před převzetím výsledku se ověřuje skutečně nasazený commit; proxy může hlavičky upravovat. Bez ručního testu `nginx -t` a bezpečného rollbacku se nastavení Nginxu nemění.

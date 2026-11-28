@@ -44,7 +44,7 @@ try{
    await page.addInitScript(mode=>localStorage.setItem('loucka-theme',mode),theme);
    for(const path of ['','aktualne/']){
     fixture=fixtureForArchive();
-    const response=await page.goto(new URL(path,origin).href,{
+    const response=await page.goto(new URL(path||'/prehled-klasicky/?mobile=full',origin).href,{
      waitUntil:'domcontentloaded',timeout:25000
     });
     assert.equal(response?.status(),200,path+' HTTP 200');
@@ -118,6 +118,93 @@ try{
     assert.equal((await compass.locator('[data-wind-degrees]').textContent())?.trim(),'—');
     assert.match(await compass.locator('.wind-gauge-v2').getAttribute('aria-label')??'',/není dostupný/);
     assert.equal(exceptions.length,0,'JS exceptions: '+exceptions.join('; '));
+   }
+   // Exercise the actual default portal separately: its compact dial is smaller
+   // than the classic instrument. Hold the archive GET until live arrives.
+   for(const fail of [false,true]){
+    const portal=await context.newPage();
+    const portalErrors=[];
+    portal.on('pageerror',e=>portalErrors.push(e.message));
+    await portal.addInitScript(mode=>localStorage.setItem('loucka-theme',mode),theme);
+    let archive=fixtureForArchive();
+    let release;
+    const gate=new Promise(resolve=>{release=resolve;});
+    let first=true;
+    await portal.route('**/api/v1/current?*',async route=>{
+     if(first){
+      first=false;
+      await gate;
+      if(fail)return route.fulfill({status:500,contentType:'application/json',body:'{}'});
+     }
+     return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(archive)});
+    });
+    const requested=portal.waitForRequest(req=>new URL(req.url()).pathname==='/api/v1/current',{timeout:12000});
+    try{
+     const response=await portal.goto(new URL('/',origin).href,{waitUntil:'domcontentloaded',timeout:25000});
+     assert.equal(response?.status(),200);
+     await requested;
+     const panel=portal.locator('[data-wind-compass]');
+     const live={schemaVersion:'1',eventType:'observation',state:'live',
+      receivedAt:new Date().toISOString(),units:'metricwx',source:'gw3000_live',
+      readings:{
+       windDir:{...reading(10,'gw3000_live'),unit:'degree_compass'},
+       windSpeed:reading(0,'gw3000_live')
+      }
+     };
+     const emit=detail=>portal.evaluate(data=>window.dispatchEvent(
+      new CustomEvent('loucka:live-observation',{detail:data})),detail);
+     await emit(live);
+     await portal.waitForFunction(()=>document.querySelector('[data-wind-degrees]')?.textContent==='10');
+     assert.equal(await panel.locator('[data-wind-value="windSpeed"]').textContent(),'0,0');
+     assert.equal(await panel.locator('.wind-gauge-v2').isVisible(),true);
+     release();
+     // Gust is intentionally not live: its update proves the delayed archive
+     // success/rejection was processed, rather than asserting before it settled.
+     await portal.waitForFunction(expected=>
+      document.querySelector('[data-wind-source="windGust"]')?.textContent===expected,
+      fail?'Data nedostupná':'Uložené měření',{timeout:12000});
+     assert.equal(await panel.locator('[data-wind-degrees]').textContent(),'10');
+     assert.equal(await panel.locator('[data-wind-value="windSpeed"]').textContent(),'0,0');
+     assert.equal(await panel.locator('[data-wind-source="windSpeed"]').textContent(),'Živé měření');
+     assert.equal(await panel.locator('[data-wind-value="windGust"]').textContent(),fail?'—':'7,8');
+     assert.equal(await panel.locator('[data-wind-status]').textContent(),'Živé měření');
+     // A packet can still be fresh enough for display but older than the last
+     // accepted live packet. It must not roll back either metric.
+     const older=structuredClone(live);
+     older.receivedAt=new Date(Date.parse(live.receivedAt)-5000).toISOString();
+     older.readings.windDir.value=270;
+     older.readings.windSpeed.value=9;
+     await emit(older);
+     assert.equal(await panel.locator('[data-wind-degrees]').textContent(),'10');
+     assert.equal(await panel.locator('[data-wind-value="windSpeed"]').textContent(),'0,0');
+     if(!fail){
+      archive={...fixtureForArchive(),readings:{
+       ...fixtureForArchive().readings,
+       windDir:{...reading(null,'weewx_archive','missing'),unit:'degree_compass'},
+       windSpeed:reading(0)
+      }};
+      await portal.evaluate(()=>window.dispatchEvent(new Event('loucka:live-expired')));
+      await panel.locator('[data-wind-valid="false"]').waitFor({state:'attached',timeout:12000});
+      assert.equal(await panel.locator('.wind-gauge-v2').isVisible(),false);
+      assert.equal(await panel.locator('[data-wind-status]').textContent(),'Bez platného směru');
+      assert.equal(await panel.locator('[data-wind-value="windSpeed"]').textContent(),'0,0');
+      assert.equal(await panel.locator('[data-wind-source="windSpeed"]').textContent(),'Uložené měření');
+      assert.equal(await panel.locator('[data-wind-value="windSpeed"]').isVisible(),true);
+      assert.equal(await panel.locator('[data-wind-value="windGust"]').isVisible(),true);
+      const north=structuredClone(live);
+      north.receivedAt=new Date().toISOString();
+      north.readings.windDir.value=0;
+      await emit(north);
+      await panel.locator('[data-wind-valid="true"]').waitFor({state:'visible',timeout:12000});
+      assert.equal(await panel.locator('[data-wind-degrees]').textContent(),'0');
+      assert.ok(await portal.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
+      await portal.screenshot({path:out+'/wind-rose-v2-portal-'+viewport.name+'-'+theme+'.png',fullPage:true});
+     }
+     assert.deepEqual(portalErrors,[]);
+    }finally{
+     release();
+     await portal.close();
+    }
    }
    await page.emulateMedia({reducedMotion:'reduce'});
    const duration=await page.locator('[data-wind-bearing]').evaluate(

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Počasí Loučka – Historický staniční tlak</title>
+<link rel="stylesheet" href="/dev/pressure-preview/style.css">
+<script src="/dev/pressure-preview/app.js" defer></script>
+</head>
+<body><main>
+<header><p class="eyebrow">POČASÍ LOUČKA · INTERNÍ NÁHLED</p><h1>Historický staniční tlak</h1>
+<p>Porovnej původní archiv, jeho rekonstrukci a regionální referenci. Odhady nejsou naměřené hodnoty a nejsou schválené pro použití v oficiálních statistikách.</p></header>
+<section class="panel">
+<form id="form">
+<label>Soukromý přístupový token<input id="token" type="password" autocomplete="off" minlength="32" required></label>
+<label>Od (UTC)<input id="date" type="date" min="2009-01-01" max="2026-11-24" value="2018-10-01" required></label>
+<label>Rozsah<select id="days"><option>1</option><option>3</option><option selected>7</option></select></label>
+<button type="submit" id="load">Zobrazit</button><button type="button" id="clear">Odpojit</button>
+</form><p role="status" id="status" aria-live="polite">Zadej přístupový token a vyber období.</p>
+</section>
+<section class="panel">
+<h2>Průběh tlaku <small>hPa</small></h2>
+<div class="legend">
+<label><input type="checkbox" data-layer="1" checked><span class="swatch original"></span>Původní archiv</label>
+<label><input type="checkbox" data-layer="2"><span class="swatch reconstruction"></span>Rekonstrukce archivu</label>
+<label><input type="checkbox" data-layer="3" checked><span class="swatch regional"></span>Regionální reference</label>
+</div>
+<div class="chart"><canvas id="chart" role="img" aria-label="Tři samostatné vrstvy historického staničního tlaku v hPa"></canvas></div>
+<p id="summary" aria-live="polite">Graf zatím neobsahuje data.</p>
+<p class="muted">Mezery zůstávají prázdné. Časy jsou UTC; ERA5 má hodinovou podporu do roku 2017, ČHMÚ od roku 2018 desetiminutovou nebo interpolovanou podporu. Q1 2018 je chráněné. Regionální referenční křivka není měřením v Loučce.</p>
+<details><summary>Zobrazit hodnoty v tabulce</summary><div class="table-scroll"><table><thead><tr><th>UTC</th><th>Archiv (hPa)</th><th>Rekonstrukce (hPa)</th><th>Reference (hPa)</th><th>Regionální odhad (hPa)</th><th>Zdroj a podpora</th></tr></thead><tbody id="rows"></tbody></table></div></details>
+</section><footer>Oddělený diagnostický snapshot; bez změn meteorologického archivu. <span id="digest"></span></footer>
+</main></body></html>

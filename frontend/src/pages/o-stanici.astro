@@ -4,9 +4,9 @@ import DeploymentInfo from '../shared/ui/DeploymentInfo.astro';
 import StationTimeline from '../features/history/StationTimeline.astro';
 ---
 <BaseLayout title="O projektu">
- <div class="page-intro"><span class="eyebrow">O meteorologické stanici</span><h1>O projektu Počasí Loučka</h1><p>Místní měření a přehled počasí z Loučky a okolí.</p></div>
+ <div class="page-intro"><span class="eyebrow">O meteorologické stanici</span><h1>O projektu Počasí Loučka</h1></div>
  <div class="about-layout">
-  <section class="section about-image"><img src="https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg" alt="Západní pohled z webkamery meteorologické stanice Loučka" loading="lazy" /><span class="source-note">Skutečná západní webkamera · čas pořízení snímku není ověřen</span></section>
+  <section class="section about-image"><a href="/kamera/" aria-label="Otevřít webkameru Loučka"><img src="https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg" alt="Západní pohled z webkamery meteorologické stanice Loučka" loading="lazy" /></a><span class="source-note">Skutečná západní webkamera · čas pořízení snímku není ověřen</span></section>
   <section class="section about-main"><span class="eyebrow">Meteorologická stanice</span><h2>Počasí Loučka</h2><p class="lead">Místní stanice sleduje počasí v Loučce a zpřístupňuje současná i archivní měření. Historie měření sahá do roku 2009.</p><div class="about-facts"><div><strong>2009</strong><span>První záznam</span></div><div><strong>Loučka</strong><span>Místo měření</span></div></div></section>
  </div>
  <StationTimeline />

@@ -1,0 +1,259 @@
+/* Isolated portal layout experiment: no changes to the original homepage. */
+.portal-preview{display:grid;gap:16px;min-width:0}
+.portal-preview>*{min-width:0}
+.portal-heading{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.portal-primary,.portal-media,.portal-history,.portal-context{display:grid;gap:16px;align-items:start;min-width:0}
+.portal-primary{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+.portal-media{grid-template-columns:repeat(2,minmax(0,1fr))}
+.portal-history{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}
+.portal-context{grid-template-columns:repeat(3,minmax(0,1fr))}
+.portal-primary>div{display:grid;gap:10px;min-width:0}
+.portal-preview .section{padding:16px;border-radius:14px}
+.portal-preview .local-warnings{display:grid;gap:8px}
+.portal-preview .section-heading{flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.portal-preview .current-panel[data-variant="portal"] .metric-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
+.portal-preview .current-panel[data-variant="portal"] .metric-card{padding:12px;min-width:0}
+.portal-preview .current-panel[data-variant="portal"] .metric-card.featured{grid-column:1/-1;background:var(--panel-2)}
+.portal-preview .current-panel[data-variant="portal"] .metric-card.featured .metric-number{font-size:clamp(52px,5.5vw,80px);color:var(--text)}
+.portal-preview .metric-number{white-space:nowrap}
+.portal-preview .metric-label a{color:var(--text);text-underline-offset:3px}
+.portal-preview .daily-brief{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.portal-preview .daily-brief-item{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px;padding:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+.portal-preview .daily-brief-item>span{flex-basis:100%;font-size:12px}
+.portal-preview .daily-brief-item strong{font-size:22px}
+.portal-preview .daily-brief-status{grid-column:1/-1;color:var(--muted);font-size:12px}
+.portal-preview .forecast-tabs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}
+.portal-preview .forecast-day{padding:8px 3px;min-width:0;text-align:center}
+.portal-preview .forecast-day strong{font-size:12px}
+.portal-preview .forecast-temp{font-size:21px}
+.portal-preview .forecast-context{font-size:12px}
+.portal-link,.portal-destinations a{display:inline-flex;align-items:center;min-height:44px;font-size:14px;color:var(--teal);font-weight:650}
+.portal-camera img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:10px;display:block}
+.portal-preview .radar-map{height:clamp(220px,28vw,420px)}
+.portal-preview .chart-box.large{height:clamp(290px,30vw,440px)}
+.portal-preview .chart-toolbar{flex-wrap:wrap}
+.portal-preview .chart-tab{min-height:44px}
+.portal-context>section{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
+.portal-yesterday dl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
+.portal-yesterday dt{font-size:12px;color:var(--muted)}
+.portal-yesterday dd{margin:3px 0 0;font-size:17px;font-weight:650}
+.portal-hour-scroll{overflow-x:auto;max-width:100%;border:1px solid var(--line);border-radius:10px}
+.portal-hour-table{width:max-content;min-width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+.portal-hour-table th,.portal-hour-table td{padding:9px 10px;white-space:nowrap;text-align:center;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.portal-hour-table th:first-child{position:sticky;left:0;background:var(--panel-3);z-index:1;text-align:left}
+.portal-hour-table thead th{background:var(--panel-2);font-weight:650}
+.portal-hour-table tbody:nth-child(even) td{background:var(--panel-2)}
+.portal-destinations{display:flex;flex-wrap:wrap;gap:8px 20px}
+@media(max-width:1024px){.portal-preview .forecast-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}.portal-history{grid-template-columns:1fr}.portal-context{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.portal-primary,.portal-media,.portal-context{grid-template-columns:1fr}.portal-preview{gap:12px}.portal-preview .section{padding:12px}.portal-heading{flex-wrap:wrap}.portal-preview .metric-number{font-size:24px}.portal-preview .daily-brief-item strong{font-size:19px}.portal-preview .daily-brief-item{padding:8px 5px}.portal-yesterday dd{font-size:16px}}
+
+.portal-preview .portal-trends dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0}
+.portal-trends dt,.portal-climate-grid small{color:var(--muted);font-size:12px}
+.portal-trends dd{margin:4px 0;font-size:20px;font-weight:650;font-variant-numeric:tabular-nums}
+.portal-meteogram{margin:0 0 12px}
+.portal-meteogram svg{width:100%;height:auto;display:block}
+.portal-meteogram figcaption{font-size:12px;color:var(--muted)}
+.meteogram-axis{fill:var(--text);font-size:13px}
+.meteogram-grid{stroke:var(--line)}
+.meteogram-line{stroke:var(--teal);stroke-width:2.5;stroke-linejoin:round}
+.meteogram-point{fill:var(--teal)}
+.meteogram-rain{fill:#4267a8}
+:root[data-theme="dark"] .meteogram-rain{fill:#9eb9ff}
+.forecast-day-warning:not([hidden]){display:inline-block;color:var(--text);font-size:11px;text-decoration:underline;text-underline-offset:2px;border-bottom:2px solid #c59510}
+.forecast-day-warning[data-level="severe"]{border-color:#d97706}.forecast-day-warning[data-level="extreme"]{border-color:#dc3947}
+.portal-climate-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0}
+.portal-climate-grid article{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0;overflow-wrap:anywhere}
+.portal-climate-grid h3{font-size:15px;margin:0 0 5px}.portal-climate-grid strong{display:block;font-size:clamp(22px,2.4vw,30px);font-variant-numeric:tabular-nums}.portal-climate-grid p{font-size:14px;margin:5px 0}
+.portal-calendar-form{display:flex;flex-wrap:wrap;align-items:end;gap:12px}.portal-calendar-form label{display:grid;gap:5px}.portal-calendar-form input,.portal-calendar-form button{min-height:44px}
+@media(max-width:760px){.portal-climate-grid{grid-template-columns:1fr}.portal-climate-grid article{padding:10px}.portal-preview .portal-trends dd{font-size:18px}}
+
+/* Screenshot audit: tighter daily values, readable units and compact warning header. */
+.portal-preview .daily-brief-item{display:grid;grid-template-columns:max-content minmax(0,1fr);grid-template-rows:auto auto;align-items:baseline;gap:3px 4px}
+.portal-preview .daily-brief-item>span{grid-column:1/-1;min-height:0;width:auto}
+.portal-preview .daily-brief-item>strong{grid-column:1;white-space:nowrap}
+.portal-preview .daily-brief-item>small{grid-column:2;white-space:nowrap;display:inline;font-size:12px}
+.portal-preview .metric-number .metric-unit{margin-left:4px}
+.portal-preview .portal-warning .local-warnings{gap:6px}
+.portal-preview .portal-heading{margin-bottom:0}
+.portal-preview .portal-hour-table th,.portal-preview .portal-hour-table td{padding:8px}
+@media(max-width:760px){
+ .portal-preview .portal-heading{gap:4px}
+ .portal-preview .portal-heading>a{font-size:12px}
+ .portal-preview .daily-brief-item>strong{font-size:18px}
+ .portal-preview .daily-brief-item>small{font-size:11px}
+ .portal-preview .daily-brief-item>span{font-size:11px}
+}
+
+/* Portal becomes the landing page only after independent PR checks. */
+.portal-history-aside{display:grid;gap:16px;min-width:0}
+.portal-media>div{min-width:0}
+.portal-quick-links{display:flex;align-items:center;gap:8px 16px;flex-wrap:wrap}
+.portal-quick-links a{display:inline-flex;align-items:center;min-height:44px;font-size:13px;color:var(--teal);font-weight:650;text-underline-offset:3px}
+.portal-preview .current-panel[data-variant="portal"] .metric-card.featured{min-height:0}
+.portal-preview .current-panel[data-variant="portal"] .metric-grid{margin:8px 0}
+.portal-preview .current-panel[data-variant="portal"] .metric-card .metric-label{margin:0 0 4px}
+.portal-preview .current-panel[data-variant="portal"] [data-current-updated]{margin:0}
+.portal-preview .portal-heading h1{margin-bottom:0}
+.portal-preview #pocasi-predpoved,.portal-preview #pocasi-radar,.portal-preview #pocasi-kamera{scroll-margin-top:90px}
+@media(min-width:761px){.portal-preview .portal-quick-links a[href^="#"]{display:none}}
+@media(max-width:760px){
+ .portal-preview .portal-heading{flex-wrap:nowrap;align-items:flex-end;gap:6px}
+ .portal-preview .portal-heading>a{max-width:90px;text-align:right;line-height:1.3}
+ .portal-preview .portal-heading h1{font-size:clamp(28px,7vw,32px)}
+ .portal-preview .portal-heading .eyebrow{font-size:11px}
+ .portal-preview .current-panel[data-variant="portal"] .metric-card{padding:9px}
+ .portal-preview .current-panel[data-variant="portal"] .metric-card.featured{padding:10px 12px}
+ .portal-preview .current-panel[data-variant="portal"] .metric-card.featured .metric-number{font-size:54px}
+ .portal-preview .current-panel[data-variant="portal"] .metric-label{font-size:12px}
+ .portal-preview .current-panel[data-variant="portal"] .source-note{font-size:12px;margin:4px 0}
+ .portal-preview .portal-quick-links{gap:4px 12px}
+ .portal-preview .portal-quick-links a{font-size:12px}
+ .portal-preview .portal-meteogram svg{min-width:460px}
+ .portal-preview .portal-meteogram{overflow-x:auto}
+}
+
+/* Render the most useful information before secondary detail. */
+.portal-preview .portal-heading{padding-block:0 4px}
+.portal-preview .portal-warning .local-warnings.condensed{padding:10px 12px;gap:6px}
+.portal-preview .portal-warning .local-warnings.condensed .section-heading{margin:0;align-items:center}
+.portal-preview .portal-warning .local-alert-entry{padding:8px 10px}
+.portal-preview .portal-warning .local-alert-entry h3{font-size:clamp(17px,1.5vw,20px);margin:4px 0}
+.portal-preview .portal-warning .local-alert-entry p{margin:3px 0;line-height:1.4}
+.portal-preview .portal-warning .local-alert-details{margin-top:4px;padding-top:2px}
+.portal-preview .portal-warning .local-alert-details summary{padding:6px 0}
+.portal-preview .portal-warning .local-alert-checked{font-size:11px}
+.portal-preview .portal-warning .source-note{font-size:11px;line-height:1.4}
+.portal-hour-details summary{cursor:pointer;min-height:44px;display:list-item;align-content:center;font-size:13px;font-weight:650;color:var(--text)}
+.portal-hour-details[open] summary{margin-bottom:8px}
+.portal-preview .portal-primary{align-items:start}
+@media(max-width:760px){
+ .portal-preview .portal-warning .local-warnings.condensed .section-heading h2{font-size:16px}
+ .portal-preview .portal-warning .local-alert-meta{font-size:12px}
+ .portal-preview .portal-warning .local-alert-entry .local-alert-time{font-size:12px}
+ .portal-preview .portal-warning .local-alert-entry .local-alert-summary{font-size:13px}
+ .portal-preview .portal-warning .local-alert-details summary{font-size:12px;min-height:44px}
+ .portal-preview .portal-warning .local-alert-state{padding:1px 4px;font-size:11px}
+ .portal-preview .portal-meteogram svg{min-width:0}
+ .portal-preview .portal-meteogram .meteogram-axis{font-size:17px}
+}
+
+/* Resolve actual axe blockers from the candidate audit, with shared theme tokens. */
+.portal-preview .portal-context .observatory-sky .observatory-small-tag{
+ color:var(--text);background:var(--panel);border-color:var(--line);
+}
+.portal-preview .portal-climate>details>summary{
+ cursor:pointer;min-height:44px;align-content:center;color:var(--text);
+ padding:8px 0;
+}
+/* Keep the astronomy card in the common palette; retain the amber arc as accent. */
+.portal-preview .portal-context .observatory-sky{background:var(--panel)}
+/* A chart-sized loading region reduces the shift when hourly data arrives. */
+.portal-preview [data-hourly-content]:empty{min-height:124px}
+@media(min-width:761px){.portal-preview [data-hourly-content]:empty{min-height:180px}}
+
+/* A single quick-view group: temperature, pressure, humidity, wind and today's totals.
+   The forecast is its peer; historical exploration follows below. */
+.portal-preview .portal-primary{align-items:stretch;gap:12px}
+.portal-preview .portal-primary>div{gap:8px;align-content:start}
+.portal-preview .portal-measurements{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;min-width:0}
+.portal-preview .portal-measurements>.section{background:transparent;border:0;box-shadow:none;padding:0;border-radius:0;min-width:0}
+.portal-preview .portal-measurements>.section+.section,.portal-preview .portal-measurements>.portal-trends{border-top:1px solid var(--line);padding-top:10px}
+.portal-preview .portal-measurements .current-panel .metric-grid{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:6px;margin:8px 0}
+.portal-preview .portal-measurements .current-panel .metric-card.featured{grid-column:1;grid-row:1/span 2;display:flex;flex-direction:column;justify-content:center}
+.portal-preview .portal-measurements .current-panel .metric-card.featured .metric-number{font-size:clamp(36px,4vw,66px)}
+.portal-preview .portal-measurements .current-panel .metric-card{padding:9px;min-height:0}
+.portal-preview .portal-measurements .current-panel .metric-card:not(.featured) .metric-number{font-size:clamp(18px,2vw,26px)}
+.portal-preview .portal-measurements .wind-compass-panel .section-heading{margin-bottom:4px}
+.portal-preview .portal-measurements .wind-compass-panel .section-heading .eyebrow{display:none}
+.portal-preview .portal-measurements .wind-compass-panel .section-heading h2{font-size:16px}
+.portal-preview .portal-measurements .wind-layout{display:grid;grid-template-columns:88px minmax(0,1fr);align-items:center;gap:12px}
+.portal-preview .portal-measurements .wind-gauge{width:88px;height:88px;margin:0}
+.portal-preview .portal-measurements .wind-degrees strong{font-size:20px}
+.portal-preview .portal-measurements .wind-sector-short-v2{font-size:12px}
+.portal-preview .portal-measurements .wind-readout-v2{min-width:0}
+.portal-preview .portal-measurements .wind-metrics-v2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.portal-preview .portal-measurements .wind-metric-v2{padding:6px;min-width:0}
+.portal-preview .portal-measurements .wind-metric-v2 strong{font-size:clamp(16px,1.5vw,22px);white-space:nowrap}
+.portal-preview .portal-measurements .observatory-wind-direction{margin:0 0 4px;font-size:13px}
+.portal-preview .portal-measurements .wind-compass-panel [data-wind-description]{margin:0 0 4px;font-size:12px}
+.portal-preview .portal-measurements .wind-compass-panel .observatory-source-note{display:none}
+.portal-preview .portal-measurements .wind-shared-source{margin:4px 0 0}
+.portal-preview .portal-measurements .portal-trends .section-heading{margin-bottom:4px}
+.portal-preview .portal-measurements .portal-trends h2{font-size:15px}
+.portal-preview .portal-measurements .portal-trends dd{font-size:18px}
+.portal-preview .portal-measurements .portal-trends .source-note{margin:4px 0 0}
+.portal-preview .portal-history{grid-template-columns:minmax(0,1fr)}
+.portal-preview .portal-media{align-items:stretch}
+.portal-preview .portal-media>#pocasi-radar{display:flex;min-width:0}
+.portal-preview .portal-media>#pocasi-radar>section{width:100%;min-width:0}
+.portal-preview .portal-camera{display:flex;flex-direction:column}
+.portal-preview .portal-camera img{height:clamp(220px,28vw,420px);aspect-ratio:auto;object-fit:contain;background:#132126}
+.portal-preview .portal-warning .local-warnings.strip{padding:8px 12px;gap:4px}
+.portal-preview .portal-warning .strip .section-heading h2{font-size:14px}
+.portal-preview .portal-warning .strip .panel-title svg{width:16px;height:16px}
+.portal-preview .portal-warning .strip [data-alert-body]{gap:4px}
+.portal-preview .portal-warning .strip .local-alert-entry{padding:0 10px;background:var(--panel);border-radius:6px}
+.portal-preview .portal-warning .strip .alert-strip-details{margin:0;padding:0;border:0}
+.portal-preview .portal-warning .strip .alert-strip-details>summary{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px 12px;align-items:center;min-height:44px;padding:5px 0;cursor:pointer}
+.portal-preview .alert-strip-headline{display:flex;gap:3px 10px;align-items:baseline;flex-wrap:wrap;min-width:0}
+.portal-preview .alert-strip-headline strong{font-size:14px}
+.portal-preview .alert-strip-severity,.portal-preview .alert-strip-time{font-size:12px;font-weight:500}
+.portal-preview .alert-strip-open{font-size:12px;text-decoration:underline;text-underline-offset:3px}
+.portal-preview .alert-strip-open::after{content:" ▾"}
+.portal-preview details[open] .alert-strip-open::after{content:" ▴"}
+.portal-preview .portal-warning .strip .local-alert-checked,.portal-preview .portal-warning .strip>.source-note{font-size:11px}
+.portal-preview .portal-warning .strip .local-alert-entry p{margin:6px 0 10px}
+@media(max-width:760px){
+ .portal-preview .portal-measurements{padding:10px}
+ .portal-preview .portal-measurements .current-panel .metric-card.featured .metric-number{font-size:clamp(32px,10vw,46px)}
+ .portal-preview .portal-measurements .wind-layout{grid-template-columns:74px minmax(0,1fr);gap:8px}
+ .portal-preview .portal-measurements .wind-gauge{width:74px;height:74px}
+ .portal-preview .portal-measurements .wind-degrees strong{font-size:17px}
+ .portal-preview .portal-measurements .wind-metric-v2 strong{font-size:16px}
+ .portal-preview .portal-warning .strip .alert-strip-details>summary{grid-template-columns:minmax(0,1fr) auto;gap:3px 8px;min-height:44px}
+ .portal-preview .alert-strip-headline{grid-column:1/-1;display:grid;gap:2px}
+ .portal-preview .alert-strip-time{font-size:11px}
+ .portal-preview .portal-warning .local-warnings.strip{padding:7px 9px}
+}
+
+
+/* Visual pass 2026-11-27: make the homepage scan quickly and avoid an empty wind instrument. */
+@media(min-width:1200px){.site-header .nav a{font-size:13px}}
+.portal-preview{gap:clamp(12px,1.25vw,17px)}
+.portal-heading{padding-bottom:2px}
+.portal-heading .eyebrow{font-size:11px;letter-spacing:.055em}
+.portal-heading .panel-link{min-height:40px;padding:8px 11px;border:1px solid var(--line);border-radius:9px;background:var(--panel);text-decoration:none;font-weight:650}
+.portal-heading .panel-link:hover{border-color:var(--teal);background:var(--panel-2)}
+.portal-warning .local-warnings.strip{padding:9px 14px;border-radius:12px}
+.portal-warning .local-warnings.strip .section-heading{margin-bottom:4px}
+.portal-warning .local-warnings.strip .section-heading h2{font-size:15px}
+.portal-warning .local-warnings.strip .source-note{margin:2px 0 0;line-height:1.4}
+.portal-primary,.portal-media,.portal-context{gap:14px}
+.portal-primary>div{gap:12px}
+.portal-preview .section,.portal-context>section{border-radius:13px}
+.portal-preview .current-panel[data-variant="portal"] .metric-card{border-radius:11px}
+.portal-preview .forecast-day{border-radius:11px}
+.portal-preview .portal-quick-links a,.portal-destinations a{border-radius:9px}
+
+/* When direction is unverified, the compass has no useful needle to show.
+   Keep the real speed and gust readings visible in a short two-column strip. */
+.portal-preview .wind-compass-panel:has(.wind-gauge-v2[data-wind-valid="false"]){padding:11px 15px}
+.portal-preview .wind-compass-panel:has(.wind-gauge-v2[data-wind-valid="false"]) .section-heading{margin-bottom:7px}
+.portal-preview .wind-compass-panel:has(.wind-gauge-v2[data-wind-valid="false"]) .wind-layout-v2{display:block;margin:0}
+.portal-preview .wind-compass-panel:has(.wind-gauge-v2[data-wind-valid="false"]) .wind-gauge-v2{display:none}
+.portal-preview .wind-compass-panel:has(.wind-gauge-v2[data-wind-valid="false"]) .observatory-wind-direction,
+.portal-preview .wind-compass-panel:has(.wind-gauge-v2[data-wind-valid="false"]) [data-wind-description],
+.portal-preview .wind-compass-panel:has(.wind-gauge-v2[data-wind-valid="false"]) .observatory-source-note{display:none}
+.portal-preview .wind-compass-panel:has(.wind-gauge-v2[data-wind-valid="false"]) .wind-readout-v2{display:block}
+.portal-preview .wind-compass-panel:has(.wind-gauge-v2[data-wind-valid="false"]) .wind-metrics-v2{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0}
+.portal-preview .wind-compass-panel:has(.wind-gauge-v2[data-wind-valid="false"]) .wind-metric-v2{padding:8px 10px;border-radius:9px}
+
+@media(max-width:760px){
+ .portal-heading{align-items:flex-start}
+ .portal-heading .panel-link{min-height:40px;font-size:12px}
+ .portal-warning .local-warnings.strip{padding:8px 10px}
+ .portal-primary,.portal-media,.portal-context{gap:11px}
+ .portal-primary>div{gap:10px}
+ .portal-preview .wind-compass-panel:has(.wind-gauge-v2[data-wind-valid="false"]){padding:10px 12px}
+}
+@media(prefers-reduced-motion:reduce){.portal-heading .panel-link{transition:none}}

@@ -1,9 +1,9 @@
 ---
-interface Props { id: string; label: string; unit: string; featured?: boolean }
-const { id, label, unit, featured = false } = Astro.props;
+interface Props { id: string; label: string; unit: string; featured?: boolean; graphLink?: boolean }
+const { id, label, unit, featured = false, graphLink = false } = Astro.props;
 ---
 <article class:list={['metric-card',{featured}]} data-metric={id}>
- <p class="metric-label">{label}</p>
+ <p class="metric-label">{graphLink?<a href={'/grafy/?metric='+encodeURIComponent(id)+'#advanced-history-heading'}>{label} <span aria-hidden="true">↗</span></a>:label}</p>
  <p class="metric-number"><span data-metric-value={id}>—</span><span class="metric-unit">{unit}</span></p>
  <p class="metric-note" data-metric-quality={id}>Čeká na měření</p>
 </article>

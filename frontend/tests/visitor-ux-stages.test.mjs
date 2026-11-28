@@ -39,7 +39,7 @@ test('advanced history shows an actionable fallback instead of a large empty plo
 });
 
 test('mobile homepage promotes practical routes without duplicating weather API calls',async()=>{
- const source=await read('src/pages/index.astro');
+ const source=await read('src/pages/prehled-klasicky.astro');
  const styles=await read('src/styles/ux-stages.css');
  const layout=await read('src/layouts/BaseLayout.astro');
  assert.match(source,/class="evergreen-quick-access"/);

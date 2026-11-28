@@ -146,16 +146,25 @@ export function registerExtras(app:FastifyInstance,reader:ArchiveReader,sources:
   try{
    const data=await loadJson(warningsFile,180000);
    const updatedAt=String(data.checkedAt||'');
-   const fresh=Number.isFinite(Date.parse(updatedAt))&&Date.now()-Date.parse(updatedAt)<45*60_000;
+   const now=Date.now();
+   const age=now-Date.parse(updatedAt);
+   const fresh=Number.isFinite(age)&&age>=-60_000&&age<45*60_000;
    const scope=data.orp==='7209'&&data.source==='CHMI_CAP'&&data.status==='verified';
-   if(!fresh||!scope)return {schemaVersion:'1',status:'unavailable',area:'ORP Valašské Klobouky',alerts:[]};
-   const alerts=Array.isArray(data.alerts)?data.alerts.slice(0,40).filter(item=>item!==null&&typeof item==='object').map(item=>{
+   if(!fresh||!scope||!Array.isArray(data.alerts))return {schemaVersion:'1',status:'unavailable',area:'ORP Valašské Klobouky',alerts:[]};
+   const alerts=data.alerts.filter(item=>item!==null&&typeof item==='object').map(item=>{
     const a=item as Record<string,unknown>;
     const str=(key:string)=>typeof a[key]==='string'?String(a[key]).slice(0,2500):'';
     return {event:str('event'),severity:str('severity'),onset:str('onset'),
      expires:str('expires'),headline:str('headline'),description:str('description'),
      instruction:str('instruction')};
-   }):[];
+   }).filter(alert=>{
+    // CHMI includes explicit all-clear entries in CAP, even with severity Minor.
+    // Never filter by Minor alone: it may describe a genuine hazard.
+    const title=(alert.headline.trim()||alert.event.trim()).normalize('NFC');
+    if(/^žádná výstraha(?:\s|[.!:]|$)/iu.test(title))return false;
+    const expiry=Date.parse(alert.expires);
+    return !Number.isFinite(expiry)||expiry>now;
+   }).slice(0,40);
    return {schemaVersion:'1',status:'verified',area:'ORP Valašské Klobouky',
     checkedAt:updatedAt,source:'CHMI_CAP',alerts};
   }catch{return {schemaVersion:'1',status:'unavailable',area:'ORP Valašské Klobouky',alerts:[]};}

@@ -42,7 +42,7 @@ test('history charts use thematic colors and adaptive sparse time axes',async()=
 });
 
 test('homepage prioritizes live readings and discloses the difference from archive',async()=>{
- const home=await read('src/pages/index.astro');
+ const home=await read('src/pages/prehled-klasicky.astro');
  const css=await read('src/styles/atlas-minimal.css');
  assert.match(home,/CurrentPanel variant="observatory"/);
  assert.match(home,/WindCompass variant="hero"/);
