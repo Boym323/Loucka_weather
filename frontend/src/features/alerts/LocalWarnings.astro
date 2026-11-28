@@ -26,14 +26,22 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
   };
   const hideShortcut=()=>{if(shortcut)shortcut.hidden=true;};
   const setStatus=(label:string,kind:string)=>{
-   if(status){status.textContent=label;status.className='status-chip '+kind;}
+   if(status){if(status.textContent!==label)status.textContent=label;status.className='status-chip '+kind;}
   };
   const publishAlerts=(alerts:LocalAlert[])=>{root.dataset.forecastAlerts=JSON.stringify(alerts);document.dispatchEvent(new Event('loucka:warning-update'));};
+  let renderedSnapshot:string|undefined;
+  // The public alert contract has no ID. Do not transfer UI state between
+  // different events or ambiguous duplicate event/time tuples.
+  const alertKey=(alert:LocalAlert)=>JSON.stringify([alert.event,alert.onset,alert.expires]);
+  const focusStatus=()=>{if(status){status.tabIndex=-1;status.focus({preventScroll:true});}};
   const unavailable=()=>{
+   const hadFocus=Boolean(body?.contains(document.activeElement));
+   renderedSnapshot=undefined;
    publishAlerts([]);
    setStatus('Stav nelze ověřit','warning');
    showShortcut('Stav výstrah ČHMÚ nelze ověřit','unknown');
    if(body)body.textContent='Aktuální výstrahy se nepodařilo ověřit. Podívejte se přímo na web ČHMÚ.';
+   if(hadFocus)focusStatus();
   };
   const appendText=(parent:HTMLElement,tag:string,value:string,className='')=>{
    const element=document.createElement(tag);
@@ -41,6 +49,13 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
    if(className)element.className=className;
    parent.append(element);
    return element;
+  };
+  const updateChecked=(parent:HTMLElement,checkedAt?:string)=>{
+   const existing=parent.querySelector<HTMLElement>('.local-alert-checked');
+   if(!checkedAt){existing?.remove();return;}
+   const label='Zdroj ověřen: '+warningDate(checkedAt);
+   if(existing){if(existing.textContent!==label)existing.textContent=label;}
+   else appendText(parent,'small',label,'local-alert-checked');
   };
   let inFlight=false;
   const refresh=async()=>{
@@ -58,6 +73,22 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
      .sort((a,b)=>Number(a.state==='upcoming')-Number(b.state==='upcoming')||
       (Date.parse(a.alert.onset)||0)-(Date.parse(b.alert.onset)||0));
     publishAlerts(alerts.map(item=>item.alert));
+    const snapshot=JSON.stringify(alerts);
+    if(snapshot===renderedSnapshot){updateChecked(body,data.checkedAt);return;}
+    // An unchanged response never replaces controls. For changed responses,
+    // preserve state only when the public event/time key is unambiguous.
+    const previous=new Map<string,{open:boolean;focused:boolean;activeExtreme:boolean}|null>();
+    const hadFocus=body.contains(document.activeElement);
+    for(const article of body.querySelectorAll<HTMLElement>('[data-alert-key]')){
+     const key=article.dataset.alertKey!;
+     const details=article.querySelector<HTMLDetailsElement>('details');
+     if(previous.has(key)){previous.set(key,null);continue;}
+     if(details)previous.set(key,{open:details.open,focused:details.querySelector('summary')===document.activeElement,
+      activeExtreme:article.dataset.level==='extreme'&&article.dataset.validity==='active'});
+    }
+    const keyCounts=new Map<string,number>();
+    for(const {alert} of alerts){const key=alertKey(alert);keyCounts.set(key,(keyCounts.get(key)??0)+1);}
+    let restoreFocus:HTMLElement|undefined;
     body.replaceChildren();
     if(!alerts.length){
      setStatus('Bez výstrahy','ok');
@@ -78,6 +109,14 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
       const article=document.createElement('article');
       article.className='local-alert-entry';
       article.dataset.level=severity.level;article.dataset.validity=state;
+      const key=alertKey(alert);
+      article.dataset.alertKey=key;
+      const prior=keyCounts.get(key)===1?previous.get(key):undefined;
+      const restoreDetails=(details:HTMLDetailsElement)=>{
+       const activeExtreme=state==='active'&&severity.level==='extreme';
+       details.open=(activeExtreme&&!prior?.activeExtreme)||(prior?.open??false);
+       if(prior?.focused)restoreFocus=details.querySelector<HTMLElement>('summary')??undefined;
+      };
       if(root.dataset.strip==='true'){
        const details=document.createElement('details');details.className='local-alert-details alert-strip-details';
        const summary=document.createElement('summary');
@@ -90,7 +129,7 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
        details.append(summary);
        if(alert.description)appendText(details,'p',alert.description);
        if(alert.instruction)appendText(details,'p','Doporučení ČHMÚ: '+alert.instruction);
-       if(state==='active'&&severity.level==='extreme')details.open=true;
+       restoreDetails(details);
        article.append(details);body.append(article);continue;
       }
       const meta=document.createElement('div');meta.className='local-alert-meta';article.append(meta);
@@ -106,12 +145,15 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
        appendText(details,'summary',root.dataset.condensed==='true'?'Doporučení a úplné znění ČHMÚ':'Úplné znění výstrahy ČHMÚ');
        if(alert.description)appendText(details,'p',alert.description);
        if(alert.instruction)appendText(details,'p','Doporučení ČHMÚ: '+alert.instruction);
+       restoreDetails(details);
        article.append(details);
       }
       body.append(article);
      }
     }
-    if(data.checkedAt)appendText(body,'small','Zdroj ověřen: '+warningDate(data.checkedAt),'local-alert-checked');
+    updateChecked(body,data.checkedAt);
+    renderedSnapshot=snapshot;
+    if(hadFocus){if(restoreFocus)restoreFocus.focus({preventScroll:true});else focusStatus();}
    }catch{if(!controller.signal.aborted)unavailable();}
    finally{inFlight=false;}
   };
