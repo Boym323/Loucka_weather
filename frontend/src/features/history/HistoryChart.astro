@@ -146,7 +146,9 @@ const tabs = [
     if(status){status.textContent=valid.length+' naměřených bodů';status.className='status-chip '+(valid.length?'ok':'warning');}
     if(figure)figure.dataset.chartState=valid.length?'ready':'empty';
     if(element)element.hidden=!valid.length;
-    if(message)message.textContent=valid.length?'Mezery označují chybějící měření.':'Pro vybraný rozsah nejsou dostupné platné údaje. Zkus jinou veličinu nebo období.';
+    const overlaps=result.points.some(p=>p.provenance==='weewx-archive-overlapping-intervals');
+    if(message)message.textContent=(valid.length?'Mezery označují chybějící měření.':'Pro vybraný rozsah nejsou dostupné platné údaje. Zkus jinou veličinu nebo období.')+
+     (overlaps?' Časově se překrývající měření nejsou zahrnuta.':'');
     if(summary&&valid.length){
      const values=valid.map(point=>point[1]);
      const min=Math.min(...values),max=Math.max(...values);
