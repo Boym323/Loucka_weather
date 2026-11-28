@@ -1,5 +1,7 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**28. 11. 2026 – kandidát opravy #180:** Panel výstrah při shodné odpovědi nemění interaktivní prvky; u změněných jednoznačných záznamů zachovává rozbalení a fokus. Rozšířen offline Chromium test na `/` a `/predpoved/` (390/1440 px, light/dark), včetně změny doporučení, extrémní výstrahy, odstranění a neověřeného stavu. Zdrojová data, API, DB a produkce beze změny. CI a skutečné DEV nasazení samostatně.
+
 **27. 11. 2026 – vizuální úprava portálové homepage:** Zkompaktněný pás výstrah, sjednocené rozestupy a čitelnější navigace na širokých obrazovkách. Pokud není ověřen směr větru, kompas se skryje a rychlost/nárazy zůstanou v úsporném přehledu se zdroji. Připravena větev `codex/portal-visual-polish-20261127`; Sjednoceno očekávání `formatMetricValue` a českého zápisu nulové osy srážek (`0,0`) v přístupnostních a Chromium kontrolách; finální CI ověřit po posledním commitu. DEV náhled ověřit samostatně.
 
 
