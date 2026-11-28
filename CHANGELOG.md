@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-11-28 – Komponentové CSS tabulky historie
+- Přesun pravidel `.history-table-alternative` z globálního `ui-refinement.css` do `history-table.css` importovaného pouze v AdvancedHistory. Selektory a deklarace beze změny; společné styly ostatních tabulek zůstávají. Unit kontrola a CSSOM smoke 19 tras ověří přítomnost jen s komponentou a mobilní geometrii tabulky. CI/DEV a skutečná úspora přenášených bajtů zatím neověřeny.
+
 ## 2026-11-28 – Sloučení #210 a ověření kandidáta
 - #210 sloučen merge commitem `5b6c3165cb02f8c913ed14f7695c24b0ca15ff08`; #207, #208 a #209 jsou sloučené. Kandidát `1eb14e2`: frontend CI 46169328238 PASS, 169/169 unit testů, build a Chromium, 12 kontrol překreslení grafů (2 grafy × 3 šířky × 2 motivy) bez dalších raw GET.
 - Předchozí přesný veřejný DEV `6e95cc9`, smoke 46168969733 PASS, 11 tras desktop/mobil, failover PASS, 3/3 slow4G medián LCP kandidáta 2504 ms (laboratorní měření, nikoli field p75). Chrome 46169328261 i post-merge 46170601485 PASS (oba na `6e95cc9`, nikoli na novém main). Exact public smoke 46170601488 PASS na `5b6c316`, 11 tras desktop/mobil, failover PASS, 3/3 slow4G medián FCP/LCP 2384 ms; post-merge frontend 46170601509 PASS 169/169 a 12 repaint kontrol bez nových GET.
