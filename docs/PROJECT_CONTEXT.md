@@ -1,6 +1,9 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
 **28. 11. 2026 – kandidát opravy #180:** Panel výstrah při shodné odpovědi nemění interaktivní prvky; u změněných jednoznačných záznamů zachovává rozbalení a fokus. Rozšířen offline Chromium test na `/` a `/predpoved/` (390/1440 px, light/dark), včetně změny doporučení, extrémní výstrahy, odstranění a neověřeného stavu. Zdrojová data, API, DB a produkce beze změny. CI a skutečné DEV nasazení samostatně.
+Doplněn scénář vypršení přímo v odpovědi, zotavení a ztráty ověřitelnosti při fokusu v podrobnostech; nová revize vyžaduje vlastní CI.
+
+**28. 11. 2026 – diagnostika #183:** Public smoke 46130015774 na SHA `3b22d66` potvrzuje API HTTP 503 `Unsupported archived observation` u raw teploty, nárazů a srážek; daily 200. Dřívější shodný výpadek 46048110455 vylučuje vznik závady až po #181. Kandidát klasifikuje důvody validace pevnými neosobními kategoriemi bez uvolnění QC a bez SQL změny; historicky doložené překryvy jsou hypotéza, nikoli potvrzená příčina aktuálního výpadku. CI/DEV ověřit samostatně.
 
 **28. 11. 2026 – kandidát opravy #179:** Větrný panel má per-field ochranu čerstvých GW3000 hodnot, serializaci archivních odpovědí a odmítání starších live packetů. Po live-expired se připojuje k nové generaci společného archivního GET. Rozšířen offline Chromium test skutečné `/` (390/1440 px, light/dark) včetně opožděného úspěchu/chyby, částečného live, nuly a skrytého kompasu. CI a skutečné DEV nasazení této revize ověřit samostatně. Bez zásahu do DB a produkce.
 

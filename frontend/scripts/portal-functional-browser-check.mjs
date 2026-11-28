@@ -39,15 +39,26 @@ async function checkWarningRefresh(page,setResponse,resetResponse,strip){
   await extremeEntry.waitFor();
   assert.equal(await extremeEntry.locator('details').evaluate(e=>e.open),true);
  }
- setResponse([]);
+ // Keep an explicitly expired alert in the upstream response, not just an empty list.
+ const expired={...alert,onset:new Date(Date.now()-7200000).toISOString(),
+  expires:new Date(Date.now()-3600000).toISOString()};
+ setResponse([expired]);
  await page.evaluate(()=>window.__refreshWarningFixture());
  await page.waitForFunction(()=>document.querySelector('[data-alert-status]')?.textContent==='Bez výstrahy');
  assert.equal(await entry.count(),0);
  assert.ok(await page.locator('[data-alert-status]').evaluate(e=>e===document.activeElement));
+ // Recover, then fail while a visitor is reading the alert details.
+ setResponse([alert]);
+ await page.evaluate(()=>window.__refreshWarningFixture());
+ await summary.waitFor();
+ await summary.focus();
+ await summary.press('Enter');
+ assert.equal(await entry.locator('details').evaluate(e=>e.open),true);
  setResponse(null);
  await page.evaluate(()=>window.__refreshWarningFixture());
  await page.waitForFunction(()=>document.querySelector('[data-alert-status]')?.textContent==='Stav nelze ověřit');
  assert.equal(await entry.count(),0);
+ assert.ok(await page.locator('[data-alert-status]').evaluate(e=>e===document.activeElement),'unavailable state restores focus');
  resetResponse();
 }
 try{
