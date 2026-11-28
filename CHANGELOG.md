@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-28 – Aktualizace výstrah ČHMÚ bez ztráty rozbalení a fokusu
+- Shodná výstraha zachovává původní DOM a aktualizuje jen čas ověření. U změněné výstrahy se obnoví rozbalení a fokus podle jednoznačné kombinace události a časů platnosti; při odstranění výstrahy se fokus přesune na stavový prvek.
+- Browser fixture ověřuje pravidelnou aktualizaci, změněné doporučení, aktivní extrémní výstrahu, ukončení a nedostupnost na přehledu a předpovědi. Issue #180; CI a DEV nasazení ověřit samostatně.
+
 ## 2026-11-27 – Vizuální hierarchie úvodní stránky
 - Zpřehledněny rozestupy a úvodní pás; výstrahy mají kompaktnější podobu a navigace na širokých obrazovkách je čitelnější.
 - Při neověřeném směru větru se skryje prázdný kompas, ale rychlost a nárazy zůstávají jako kompaktní měření včetně zdrojových štítků. Data ani výpočty se nemění.
