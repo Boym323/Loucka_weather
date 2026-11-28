@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-11-28 – Společný integrační kandidát zbývajících oprav
+- Zachovány samostatné změny #182 (ČHMÚ), #174 (QC), #172 (Astro) a #186 (srážky) nad main s #188. Integrační CI musí ověřit kombinaci; veřejné nasazení ověřit samostatně. Bez zásahu do produkce a archivu.
+
+## 2026-11-28 – Aktualizace výstrah ČHMÚ bez ztráty rozbalení a fokusu
+- Shodná výstraha zachovává původní DOM a aktualizuje jen čas ověření. U změněné výstrahy se obnoví rozbalení a fokus podle jednoznačné kombinace události a časů platnosti; při odstranění výstrahy se fokus přesune na stavový prvek.
+- Browser fixture ověřuje pravidelnou aktualizaci, změněné doporučení, aktivní extrémní výstrahu, ukončení a nedostupnost na přehledu a předpovědi. Issue #180; CI a DEV nasazení ověřit samostatně.
+- Rozšířena browser regrese: skutečně vypršená výstraha zůstává v odpovědi, ale nesmí být vykreslena; po obnově a následném neověřeném stavu se fokus bezpečně přesune na stavový prvek. CI nové revize ověřit samostatně.
+
+## 2026-11-28 – Zachování originální hodnoty při QC chybě senzoru
+- API kvality (`/api/v1/quality/observations`) zachovává převedenou původní číselnou hodnotu v `measurementValue` i při `SENSOR_ERROR`; `displayValue` zůstává maskovaná, QC příznaky a nezpůsobilost pro extrémy se nemění. PR #174; původní izolované API/MariaDB CI prošlo, aktuální revizi ověřit znovu. Bez změn originálního archivu, agregací a schvalování rekonstrukcí.
+
+## 2026-11-28 – Patch aktualizace Astro 7.4.13
+- Kandidát PR #172 aktualizuje Astro 7.4.11 na 7.4.13 včetně lockfile. Předchozí frontend CI a dependency audit PASS, novou revizi ověřit samostatně. `picomatch` zůstává 4.0.7 (vnořená 2.3.2); GHSA-fc5q-39xc-vjpf bylo [oficiálně staženo 18. 11. 2026](https://github.com/advisories/GHSA-fc5q-39xc-vjpf), protože nejde o bezpečnostní chybu. Audit 46132677882 PASS; issue #124 lze uzavřít na základě stažení advisory, nikoli změny verze. Bez vynuceného downgradu nebo potlačení bezpečnostního auditu.
+
+## 2026-11-28 – Neznámý srážkový úhrn není nula
+- Detail srážek při absenci všech platných intervalů uvádí, že úhrn nelze určit; skutečná naměřená nula zůstává 0,0 mm a při mezerách je označena neúplnost. Přidán Chromium scénář chybějící a podezřelé hodnoty versus skutečná nula. Issue #185; CI a DEV ověřit samostatně. Neřeší příčinu výpadku #183; bez změn meteorologických dat a API.
+
 ## 2026-11-28 – Izolace překrývajících se archivních intervalů
 - DEV smoke 46132046210 na přesném SHA e799fda potvrdil HTTP 503 `overlapping_intervals` u raw teploty, nárazů, srážek i hourly teploty. Namísto výpadku celého grafu kandidát maskuje celé souvislé skupiny konfliktů jako explicitní `null` s původem `weewx-archive-overlapping-intervals`; dotčené hodinové souhrny včetně extrémů a počtů jsou nedostupné. Nepřekrývající se měření, skutečná nula, hranice intervalů a stávající fail-closed pravidla ostatních vad zůstávají zachovány.
 - Doplněny testy zpětného dosahu delšího intervalu, hranice hodin a stránkování, skutečné nuly a neplatné konverze. Frontend vysvětluje vynechané konflikty. CI a skutečné nasazení ověřit zvlášť; bez opravy či zápisu archivu, změny denních agregací a výběru domněle správného záznamu.

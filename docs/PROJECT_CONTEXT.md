@@ -1,5 +1,16 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**28. 11. 2026 – integrační kandidát:** Společná větev nad #188 integruje přesné source/test/lockfile bloby čtyř samostatných PR #182/#174/#172/#186 a zachovává jejich historii. Podmínka merge je společné zelené CI a veřejný smoke opravy #188. Bez změny původního archivu nebo produkce.
+
+**28. 11. 2026 – kandidát opravy #180:** Panel výstrah při shodné odpovědi nemění interaktivní prvky; u změněných jednoznačných záznamů zachovává rozbalení a fokus. Rozšířen offline Chromium test na `/` a `/predpoved/` (390/1440 px, light/dark), včetně změny doporučení, extrémní výstrahy, odstranění a neověřeného stavu. Zdrojová data, API, DB a produkce beze změny. CI a skutečné DEV nasazení samostatně.
+Doplněn scénář vypršení přímo v odpovědi, zotavení a ztráty ověřitelnosti při fokusu v podrobnostech; nová revize vyžaduje vlastní CI.
+
+**28. 11. 2026 – QC kandidát #174:** `measurementValue` zachovává původní číslo po převodu jednotek, `displayValue` při SENSOR_ERROR zůstává null. Není schválený rekord ani oprava databáze; dosavadní Fastify a izolovaná MariaDB CI PASS, aktuální revize vyžaduje vlastní CI a veřejný DEV test.
+
+**28. 11. 2026 – dependency kandidát #172:** Astro 7.4.13, předchozí CI i security audit PASS; `picomatch` 4.0.7/2.3.2 beze změny; [GHSA-fc5q-39xc-vjpf](https://github.com/advisories/GHSA-fc5q-39xc-vjpf) staženo 18. 11. 2026, audit 46132677882 PASS, #124 uzavřeno na základě stažení konkrétního advisory. Aktuální revizi a nasazení ověřovat samostatně; žádný zásah do produkce.
+
+**28. 11. 2026 – kandidát #185:** Srážkový detail rozlišuje neznámý součet bez platných intervalů a skutečný nulový úhrn; offline Chromium test s chybějící a podezřelou hodnotou a následnou měřenou nulou. Nezávislé na #183; CI a DEV ověřit samostatně.
+
 **28. 11. 2026 – kandidát opravy #183:** Public smoke 46132046210 na SHA e799fda definitivně potvrzuje `overlapping_intervals`. Raw maskuje celé propojené konfliktní skupiny vrácených intervalů s explicitním původem; hourly maskuje všechny dotčené hodiny i extrema/count. Kontrola jednotek, času, pořadí a konverze zůstává fail-closed. Bez dalších SQL čtení nebo zápisu, bez změn daily statistik. Není rekonstrukcí dat; CI a veřejný DEV ověřit samostatně.
 
 **28. 11. 2026 – diagnostika #183:** Public smoke 46130015774 na SHA `3b22d66` potvrzuje API HTTP 503 `Unsupported archived observation` u raw teploty, nárazů a srážek; daily 200. Dřívější shodný výpadek 46048110455 vylučuje vznik závady až po #181. Kandidát klasifikuje důvody validace pevnými neosobními kategoriemi bez uvolnění QC a bez SQL změny; historicky doložené překryvy jsou hypotéza, nikoli potvrzená příčina aktuálního výpadku. CI/DEV ověřit samostatně.

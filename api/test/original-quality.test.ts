@@ -46,13 +46,15 @@ test('original per-field endpoint keeps zero and NULL separate without inventing
   '&from=1970-01-01T00:00:00Z&to=1970-01-01T00:25:00Z',headers:{'if-none-match':String(response.headers.etag)}});
  assert.equal(conditional.statusCode,304);
 });
-test('original lightning noise source mapping is held as SENSOR_ERROR without exposing wrong number',()=>{
+test('original lightning noise is not displayed but remains forensic evidence',()=>{
  const r:ArchiveRow={dateTime:1793520000,interval:5,usUnits:16,
   lightning_noise_count:4,lightning_strike_count:4};
  const original=originalFieldQuality(r,'lightning_noise_count','metricwx');
  assert.equal(original.state,'SENSOR_ERROR');
  assert.equal(original.displayValue,null);
- assert.equal(original.measurementValue,null);
+ // Forensic raw number is preserved, never exposed as a valid reading or record.
+ assert.equal(original.measurementValue,4);
+ assert.equal(original.extremaEligible,false);
  assert.deepEqual(original.qcFlags,['UNVERIFIED_FIELD_MAPPING']);
  assert.equal(original.approved,false);
  assert.equal(originalFieldQuality({...r,lightning_noise_count:null},'lightning_noise_count','metricwx').state,'MISSING');

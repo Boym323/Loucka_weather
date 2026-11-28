@@ -54,8 +54,9 @@ export function originalFieldQuality(row:ArchiveRow,metric:Metric,units:OutputUn
   timestampUtc:row.dateTime,endTime:utcIso(row.dateTime),
   localEndIso:local.iso,localFold:local.fold,
   variable:metric,unit:reading.unit,sourceUsUnits:row.usUnits,
-  state,measurementValue:reading.quality==='unverified'?
-   converted(metric,row[metric],row.usUnits,units).value:reading.value,
+  // Preserve the original numeric observation even when its PUBLIC display
+  // value is withheld by a QC sensor-error rule. Never treat it as verified.
+  state,measurementValue:converted(metric,row[metric],row.usUnits,units).value,
    displayValue:reading.value,
   sourceRef:'weewx_original_archive',epochRef:null,changeRef:null,
   approved:false,independentValidation:false,extremaEligible:false,
