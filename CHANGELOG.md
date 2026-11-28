@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-28 – Stabilnější rozložení historického kalendáře a stavu služeb
+- Opakovaný veřejný lab na `8760c23` (46133455708) ukázal mobilní CLS kalendáře 0,1748 a stavu služeb 0,1604; další kandidáti grafy 0,1435 a senzory 0,1061. Nejde o field p75.
+- Kalendář a stav služeb rezervují responzivní prostor pro stavové štítky a výsledné texty; bez ořezávání textu, změn dat nebo API. Chromium fixture zadrží odpověď a porovná pozice před/po načtení na desktopu/mobilu v obou motivech. Veřejný smoke pasivně přidává povolené kategorie posunutých prvků (ne příčiny ani field CLS), bez dalších požadavků a bez DOM obsahu. Issue #152; CI a skutečný efekt DEV ověřit samostatně.
+
 ## 2026-11-28 – Ověřená obnova historických grafů a integrace oprav
 - PR #188, commit `9b05527`: veřejný DEV smoke [46132945676](https://github.com/Boym323/Loucka_weather/actions/runs/46132945676) ověřil přesné nasazení, HTTP 200 pro raw teplotu, nárazy a srážky i hodinovou teplotu, 284 platných srážkových intervalů na obou viewports, 11 tras a GW3000/archiv failover PASS. Issue #183 uzavřeno; původní překryvy zůstávají k odbornému read-only posouzení v #80.
 - PR #189 sloučen jako `8760c23`; všechny čtyři původní PR #182/#174/#172/#186 jsou sloučené. Integrační API/MariaDB [46133026036](https://github.com/Boym323/Loucka_weather/actions/runs/46133026036), frontend/Chromium [46133026052](https://github.com/Boym323/Loucka_weather/actions/runs/46133026052) a security [46133026015](https://github.com/Boym323/Loucka_weather/actions/runs/46133026015) PASS, npm audit 0 zranitelností. Nová veřejná akceptace exact SHA `8760c23` [46133455708](https://github.com/Boym323/Loucka_weather/actions/runs/46133455708) PASS na přesném SHA: 284 platných srážkových intervalů na desktopu/mobilu, 11 tras, GW3000 live/failover; všechny post-merge API, frontend a security workflow PASS. Slow4G 3/3, medián FCP/LCP kandidáta 2588 ms (lab, nikoli field).
