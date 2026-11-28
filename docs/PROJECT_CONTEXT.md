@@ -1,8 +1,12 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**28. 11. 2026 – ověření frontend:** #204 sloučen `d61cc68`, 162/162 + CSSOM 4/15 s kompasem. #202 exact DEV 46166974447 PASS, CLS grafy 0, senzory 0,026; slow4G 2536 ms. #203 první browser regrese odhalila skutečný kontraktový nesoulad denní coverage.
+
 **Doplnění:** #203 browser regrese odhalila chybějící denní timeCoverage; API ji nově vrací pro outTemp min/max a rain sum z evidovaného sumtime, s fail-closed kontrolou 23/24/25 h dne, bez změn SQL/dat a bez tvrzení o nezávislé validaci. CI/DEV pending.
 
 **28. 11. 2026 – statistický frontend kontrakt:** #202 sloučen `7efde45` 161/161 + Chromium; #200 exact DEV `5558396` 46149065666 PASS, slow4G 2600 ms. `isStatisticsResult` ověřuje kvalitu, completeness a časovou coverage dle backendu; nepravdivé coverage a nesprávné typy odmítá, nula/NULL zachovány. CI/DEV ověřit samostatně, bez změny SQL/dat.
+
+**28. 11. 2026 – komponentový CSS:** WindCompass importuje vlastní `wind-compass-v2.css` namísto BaseLayout. CSSOM test 15 tras, stávající wind browser regrese; 8,1 kB zdrojového CSS není garantovaná přenosová úspora. CI/DEV ověřit samostatně.
 
 **28. 11. 2026 – frontend integrace:** #200 sloučen `5558396`, 230/230 izolovaná MariaDB, #198 exact DEV 46148520993 PASS, slow4G 2576 ms. #199 161/161 + Chromium PASS, #201 155/155 + 6 shodných geometrií. Integrované CI/DEV ověřit samostatně.
 

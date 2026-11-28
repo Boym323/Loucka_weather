@@ -13,3 +13,12 @@ test('homepage-exclusive evergreen CSS is not imported in shared layout',async()
  assert.match(css,/\.evergreen-scene\s*\{/);
  assert.match(home,/class="atlas-home evergreen-home"/);
 });
+
+test('wind compass CSS belongs to the component, not the shared layout',async()=>{
+ const layout=await read('src/layouts/BaseLayout.astro');
+ const wind=await read('src/features/current/WindCompass.astro');
+ const css=await read('src/styles/wind-compass-v2.css');
+ assert.doesNotMatch(layout,/import .*wind-compass-v2\.css/);
+ assert.match(wind,/import '\.\.\/\.\.\/styles\/wind-compass-v2\.css'/);
+ assert.match(css,/--wind-v2-ink:/);
+});
