@@ -1,5 +1,7 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**28. 11. 2026 – kandidát opravy #183:** Public smoke 46132046210 na SHA e799fda definitivně potvrzuje `overlapping_intervals`. Raw maskuje celé propojené konfliktní skupiny vrácených intervalů s explicitním původem; hourly maskuje všechny dotčené hodiny i extrema/count. Kontrola jednotek, času, pořadí a konverze zůstává fail-closed. Bez dalších SQL čtení nebo zápisu, bez změn daily statistik. Není rekonstrukcí dat; CI a veřejný DEV ověřit samostatně.
+
 **28. 11. 2026 – diagnostika #183:** Public smoke 46130015774 na SHA `3b22d66` potvrzuje API HTTP 503 `Unsupported archived observation` u raw teploty, nárazů a srážek; daily 200. Dřívější shodný výpadek 46048110455 vylučuje vznik závady až po #181. Kandidát klasifikuje důvody validace pevnými neosobními kategoriemi bez uvolnění QC a bez SQL změny; historicky doložené překryvy jsou hypotéza, nikoli potvrzená příčina aktuálního výpadku. CI/DEV ověřit samostatně.
 
 **28. 11. 2026 – kandidát opravy #179:** Větrný panel má per-field ochranu čerstvých GW3000 hodnot, serializaci archivních odpovědí a odmítání starších live packetů. Po live-expired se připojuje k nové generaci společného archivního GET. Rozšířen offline Chromium test skutečné `/` (390/1440 px, light/dark) včetně opožděného úspěchu/chyby, částečného live, nuly a skrytého kompasu. CI a skutečné DEV nasazení této revize ověřit samostatně. Bez zásahu do DB a produkce.

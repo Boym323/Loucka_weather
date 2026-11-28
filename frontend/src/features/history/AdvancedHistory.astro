@@ -330,7 +330,7 @@
     },{measured:0,derived:0,reconstructed:0,missing:0});
     const total=counts.measured+counts.derived+counts.reconstructed;
     if(status){status.textContent=`Zobrazeno ${total} hodnot · ${counts.missing} mezer`;status.className='status-chip '+(total?'ok':'warning');}
-    if(qualitySummary)qualitySummary.textContent=`${counts.measured} měřených, ${counts.derived} odvozených, ${counts.reconstructed} rekonstruovaných a ${counts.missing} chybějících nebo nejistých bodů. Rozlišení grafu: ${resolution}.`;
+    if(qualitySummary)qualitySummary.textContent=`${counts.measured} měřených, ${counts.derived} odvozených, ${counts.reconstructed} rekonstruovaných a ${counts.missing} chybějících nebo nejistých bodů. Rozlišení grafu: ${resolution}.`+(results.some(r=>r.points.some(p=>p.provenance==='weewx-archive-overlapping-intervals'))?' Časově se překrývající měření nejsou zahrnuta.':'');
     if(summary){
      for(const result of results){
       const vals=result.points.filter(valid).map(p=>p.value as number);

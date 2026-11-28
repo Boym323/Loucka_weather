@@ -120,7 +120,7 @@ function pointQuality(value:number|null):'measured'|'derived'|'missing'{
 // Only fixed, non-sensitive categories are exposed; never include row values,
 // timestamps, driver messages or stack traces in the public error response.
 type HistoryValidationReason='Invalid archive timestamp'|'Invalid archive interval'|
- 'Unsupported archive units'|'Overlapping archive intervals'|'Invalid archive ordering';
+ 'Unsupported archive units'|'Invalid archive ordering';
 class HistoryValidationError extends Error {
  constructor(readonly reason:HistoryValidationReason){super(reason);}
 }
@@ -129,29 +129,72 @@ function historyValidationMessage(error:unknown,fallback:string):string{
  if(error instanceof UnsupportedSourceError)return 'Invalid archive measurement or conversion';
  return fallback;
 }
-function rowIsValid(row:ArchiveRow,previousEnd:number|null):number{
+function rowIsValid(row:ArchiveRow):number{
  if(!Number.isSafeInteger(row.dateTime)||row.dateTime<0)throw new HistoryValidationError('Invalid archive timestamp');
  if(!Number.isSafeInteger(row.interval)||row.interval<1||row.interval>1440)
   throw new HistoryValidationError('Invalid archive interval');
  if(row.usUnits!==1&&row.usUnits!==16&&row.usUnits!==17)
   throw new HistoryValidationError('Unsupported archive units');
- const rowStart=row.dateTime-row.interval*60;
- if(previousEnd!==null&&rowStart<previousEnd)throw new HistoryValidationError('Overlapping archive intervals');
- return rowStart;
+ return row.dateTime-row.interval*60;
+}
+const OVERLAP_PROVENANCE='weewx-archive-overlapping-intervals';
+type HistoryIntervalGroup={start:number;end:number;row:ArchiveRow|null};
+/** Ordered by interval end, not start. A later long interval may reach back
+ * across several earlier groups. Delay emission until no future valid row
+ * (maximum 1440 minutes) can overlap; merge backwards, not only adjacent pairs.
+ * A null row denotes an entire connected conflict group, never a chosen winner.
+ */
+class HistoryIntervalGroups{
+ private groups:HistoryIntervalGroup[]=[];
+ private head=0;
+ constructor(private readonly emit:(group:HistoryIntervalGroup)=>void){}
+ add(row:ArchiveRow,start:number){
+  const end=row.dateTime;
+  this.flush(end-1440*60);
+  let group:HistoryIntervalGroup={start,end,row};
+  while(this.groups.length>this.head){
+   const last=this.groups[this.groups.length-1]!;
+   if(last.end<=group.start)break;
+   this.groups.pop();
+   group={start:Math.min(last.start,group.start),end,row:null};
+  }
+  this.groups.push(group);
+ }
+ private flush(before:number){
+  while(this.head<this.groups.length&&this.groups[this.head]!.end<=before){
+   this.emit(this.groups[this.head++]!);
+  }
+  if(this.head>=1024&&this.head*2>=this.groups.length){
+   this.groups=this.groups.slice(this.head);this.head=0;
+  }
+ }
+ finish(){this.flush(Infinity);}
 }
 function rawHistoryPoints(metric:Metric,rows:ArchiveRow[],from:number,to:number,units:OutputUnits){
- const points:any[]=[];let previous=from,valid=0,lastEnd:number|null=null;
- for(const row of rows){
-  if(row.dateTime<=previous||row.dateTime>to)throw new HistoryValidationError('Invalid archive ordering');
-  const rowStart=rowIsValid(row,lastEnd);
-  if(rowStart>previous)points.push({startTime:utcIso(previous),endTime:utcIso(rowStart),value:null,
+ const points:any[]=[];let previous=from,valid=0,lastEnd=from;
+ const groups=new HistoryIntervalGroups(group=>{
+  if(group.start>previous)points.push({startTime:utcIso(previous),endTime:utcIso(group.start),value:null,
    quality:'missing',source:'derived',provenance:null,sourceUsUnits:null});
-  const reading=publiclySafeReading(metric,row[metric],row.usUnits,units,row.dateTime);
-  points.push({startTime:utcIso(Math.max(rowStart,from)),endTime:utcIso(row.dateTime),value:reading.value,
-   quality:reading.quality,qcFlags:reading.qcFlags,...source,sourceUsUnits:reading.sourceUsUnits});
-  if(reading.value!==null)valid++;
-  previous=row.dateTime;lastEnd=row.dateTime;
+  if(group.row===null){
+   points.push({startTime:utcIso(Math.max(group.start,from)),endTime:utcIso(group.end),value:null,
+    quality:'missing',source:'derived',provenance:OVERLAP_PROVENANCE,sourceUsUnits:null});
+  }else{
+   const row=group.row;
+   const reading=publiclySafeReading(metric,row[metric],row.usUnits,units,row.dateTime);
+   points.push({startTime:utcIso(Math.max(group.start,from)),endTime:utcIso(group.end),value:reading.value,
+    quality:reading.quality,qcFlags:reading.qcFlags,...source,sourceUsUnits:reading.sourceUsUnits});
+   if(reading.value!==null)valid++;
+  }
+  previous=group.end;
+ });
+ for(const row of rows){
+  if(row.dateTime<=lastEnd||row.dateTime>to)throw new HistoryValidationError('Invalid archive ordering');
+  const rowStart=rowIsValid(row);
+  // Preserve fail-closed conversion validation even for a quarantined row.
+  publiclySafeReading(metric,row[metric],row.usUnits,units,row.dateTime);
+  groups.add(row,rowStart);lastEnd=row.dateTime;
  }
+ groups.finish();
  if(rows.length&&previous<to)points.push({startTime:utcIso(previous),endTime:utcIso(to),value:null,
   quality:'missing',source:'derived',provenance:null,sourceUsUnits:null});
  return {points,valid};
@@ -209,10 +252,16 @@ function addHourlyRow(buckets:Map<number,HourBucket>,metric:Metric,aggregation:A
   }
  }
 }
-function hourlyHistoryPoints(metric:Metric,aggregation:Aggregation,rows:Map<number,HourBucket>,from:number,to:number,units:OutputUnits){
+function hourlyHistoryPoints(metric:Metric,aggregation:Aggregation,rows:Map<number,HourBucket>,from:number,to:number,units:OutputUnits,conflicted:ReadonlySet<number>){
  const first=Math.floor(from/3600)*3600,last=utcHourStart(to),points:any[]=[];let valid=0;
  const angular=metric==='windDir'||metric==='windGustDir';
  for(let bucket=first;bucket<=last;bucket+=3600){
+  if(conflicted.has(bucket)){
+   points.push({startTime:utcIso(Math.max(bucket,from)),endTime:utcIso(Math.min(bucket+3600,to)),
+    value:null,quality:'missing',source:'derived',provenance:OVERLAP_PROVENANCE,sourceUsUnits:null,
+    minValue:null,maxValue:null,minObservedAt:null,maxObservedAt:null,validCount:0});
+   continue;
+  }
   const data=rows.get(bucket);
   let value:number|null=null;
   if(data){
@@ -1028,23 +1077,33 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
    const selectedMetrics:Metric[]=metric==='windDir'?['windSpeed','windDir']:
     metric==='windGustDir'?['windGust','windGustDir']:[metric];
    const buckets=new Map<number,HourBucket>(),digest=createHash('sha256');
-   let cursor=start,previousEnd:number|null=null,scanned=0;
+   let cursor=start,scanned=0;
+   const conflicted=new Set<number>();
+   const groups=new HistoryIntervalGroups(group=>{
+    if(group.row!==null)return;
+    // Withhold whole affected hourly buckets, including extrema/counts.
+    // Never prorate rain or publish a partial sum as a complete hour.
+    for(let hour=Math.floor(Math.max(group.start,start)/3600)*3600;hour<Math.min(group.end,end);hour+=3600)
+     conflicted.add(hour);
+   });
    try{
     for(let page=0;page<300;page++){
      const rows=reader.historyPage?await reader.historyPage(selectedMetrics,start,end,cursor,5000):
       await reader.history(metric,start,end,500001);
      for(const row of rows){
       if(row.dateTime<=cursor||row.dateTime>end)throw new HistoryValidationError('Invalid archive ordering');
-      rowIsValid(row,previousEnd);
+      const rowStart=rowIsValid(row);
+      groups.add(row,rowStart);
       digest.update(JSON.stringify(row)).update('\n');
       addHourlyRow(buckets,metric,aggregation,row,units,start,end);
-      cursor=row.dateTime;previousEnd=row.dateTime;scanned++;
+      cursor=row.dateTime;scanned++;
       if(scanned>500000)throw new Error('Hourly input row limit exceeded');
      }
      if(!reader.historyPage||rows.length<5000)break;
      if(page===299)throw new Error('Hourly input paging limit exceeded');
     }
-    const result=hourlyHistoryPoints(metric,aggregation,buckets,start,end,units);
+    groups.finish();
+    const result=hourlyHistoryPoints(metric,aggregation,buckets,start,end,units,conflicted);
     return makeResponse('hourly',aggregation,result.points,result.valid,digest.digest('hex').slice(0,20));
    }catch(error){
     const message=error instanceof Error?error.message:'';
