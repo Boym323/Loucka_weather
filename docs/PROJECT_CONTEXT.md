@@ -1,5 +1,11 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**28. 11. 2026 – frontend integrace:** #200 sloučen `5558396`, 230/230 izolovaná MariaDB, #198 exact DEV 46148520993 PASS, slow4G 2576 ms. #199 161/161 + Chromium PASS, #201 155/155 + 6 shodných geometrií. Integrované CI/DEV ověřit samostatně.
+
+**28. 11. 2026 – frontend request lifecycle:** `concurrent-request.ts` je samostatný typovaný helper pro sdílení pouze in-flight GET, individuální abort a invalidaci. `getCurrent` zachovává rozhraní a validaci, šest přímých runtime testů; beze změny veřejného API/dat. CI/DEV ověřit samostatně.
+
+**28. 11. 2026 – kandidát CLS grafy/senzory #152:** scoped CSS stabilizuje stav, souhrn grafu a čtecí sloupce; zadržené fixtures 320/390/1440 light/dark porovnávají geometrii a 0 vs NULL. CI/DEV efekt zatím neověřen, bez zásahu do dat.
+
 **28. 11. 2026 – observation routes:** #198 sloučen `1d9cadf`, 229/229 izolovaná MariaDB po opravě testu časové značky; #197 exact DEV `b0addaa` 46147114917 PASS, rain 284/284, live/failover PASS, slow4G 2520 ms. `observation-routes.ts` odděluje SSE/current/QC včetně instančního preClose drain; `app.ts` composition root. Test shody a SQL parametrů. CI/DEV ověřit samostatně; bez zásahu do dat/produkce.
 
 **28. 11. 2026 – statistické a staniční HTTP moduly:** #197 sloučen `b0addaa`, 227/227 izolovaná MariaDB. #196 exact DEV `439d896` 46144700124 PASS, rain 284/283, live/failover PASS, slow4G 3/3 medián 2588 ms. `statistics-routes.ts`, `station-routes.ts` zachovávají kontrakty, cache, čas a pořadí registrace, přímé testy shody a izolace. CI/DEV nové revize ověřit samostatně; žádné změny dat/produkce.
