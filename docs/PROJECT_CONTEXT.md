@@ -1,5 +1,7 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**28. 11. 2026 – potvrzené DEV a sloučená integrace:** #188 (`9b05527`) public smoke 46132945676 PASS na přesném deployment SHA: raw teplota/nárazy/srážky a hourly teplota HTTP 200, 284 platných srážkových intervalů desktop/mobil, 11 tras a live/failover PASS. #183 uzavřeno, příčina zdrojových překryvů zůstává v #80. #189 (`8760c23`) sloučen po API/MariaDB 46133026036, Chromium 46133026052, security 46133026015 PASS; #182/#174/#172/#186 sloučené. Následný public smoke 46133455708 při zápisu probíhá, neprohlašovat nové nasazení za potvrzené před jeho výsledkem. Slow4G 3/3 na `9b05527`, FCP/LCP kandidát medián 2612 ms, #152 další optimalizace. #143 skutečný H.264 playback neověřen, #69 produkční readiness a #80/#107/#111 historická QC otevřené. Žádný zásah do DB, WeeWX a produkce.
+
 **28. 11. 2026 – integrační kandidát:** Společná větev nad #188 integruje přesné source/test/lockfile bloby čtyř samostatných PR #182/#174/#172/#186 a zachovává jejich historii. Podmínka merge je společné zelené CI a veřejný smoke opravy #188. Bez změny původního archivu nebo produkce.
 
 **28. 11. 2026 – kandidát opravy #180:** Panel výstrah při shodné odpovědi nemění interaktivní prvky; u změněných jednoznačných záznamů zachovává rozbalení a fokus. Rozšířen offline Chromium test na `/` a `/predpoved/` (390/1440 px, light/dark), včetně změny doporučení, extrémní výstrahy, odstranění a neověřeného stavu. Zdrojová data, API, DB a produkce beze změny. CI a skutečné DEV nasazení samostatně.
