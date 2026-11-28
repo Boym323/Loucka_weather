@@ -1,0 +1,130 @@
+/* Two separate media experiences, with video ahead of the image archive. */
+.camera-layout-enhanced .camera-archive-section{grid-area:archive;margin-top:0}
+.camera-archive-section{
+ border-radius:var(--ui-card-radius);
+ padding:clamp(14px,2.5vw,24px);
+ margin-top:18px
+}
+.camera-archive-section .camera-archive-heading{
+ margin-bottom:7px
+}
+.camera-archive-section .camera-archive-heading h2{
+ font-size:clamp(19px,2.5vw,24px)
+}
+.camera-archive-intro{
+ margin:5px 0 18px;
+ max-width:75ch;
+ font-size:13px;
+ line-height:1.6;
+ color:var(--muted)
+}
+.camera-archive-views{display:grid;gap:19px}
+.camera-mode-surface{
+ min-width:0;
+ border:1px solid var(--line);
+ border-radius:var(--ui-card-radius);
+ background:var(--panel);
+ padding:clamp(12px,2vw,19px);
+}
+.camera-mode-heading{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ gap:10px 16px;
+ margin-bottom:13px
+}
+.camera-mode-heading .eyebrow{
+ font-size:11px;
+ letter-spacing:.07em;
+}
+.camera-mode-heading h3{
+ font-size:clamp(17px,2vw,21px);
+ font-weight:650;
+ letter-spacing:-.02em;
+ margin:4px 0
+}
+.camera-timelapse-block.camera-mode-surface{
+ border:1px solid var(--line);
+ margin:0;
+ padding:clamp(12px,2vw,19px);
+}
+.camera-timelapse-block .camera-timelapse-controls{
+ gap:8px;
+}
+.camera-timelapse-block .camera-timelapse-controls select{
+ min-height:44px;
+ border-radius:var(--ui-control-radius);
+ padding:9px 11px;
+ font-size:13px;
+ max-width:100%
+}
+.camera-timelapse-block video{
+ display:block;
+ width:100%;
+ max-width:none;
+ aspect-ratio:16/9;
+ border-radius:13px;
+ background:#071622;
+ border:1px solid var(--line)
+}
+.camera-timelapse-block video[hidden]{display:none!important}
+.camera-timelapse-block .source-note{
+ margin:10px 0;
+ max-width:78ch;
+ font-size:12px;
+ line-height:1.55
+}
+.camera-timelapse-block .panel-link{
+ display:inline-flex;
+ align-items:center;
+ min-height:44px;
+ font-size:13px;
+ font-weight:650
+}
+.camera-timelapse-block .panel-link[hidden]{display:none!important}
+.camera-photos-hint{font-size:12px;color:var(--muted)}
+.camera-photos-block .camera-archive-grid{gap:10px}
+.camera-photos-block .camera-archive-thumb{
+ border-radius:10px;
+ overflow:hidden;
+}
+.camera-photos-block .camera-archive-thumb>span:last-child:not(.camera-thumb-message){
+ font-size:12px;
+ padding:8px 10px;
+ line-height:1.45
+}
+.camera-photos-block .camera-day-browser{
+ margin-top:20px;
+ padding-top:16px
+}
+.camera-photos-block .camera-day-browser h3{font-size:15px}
+.camera-photos-block .camera-day-browser .source-note{font-size:12px;line-height:1.55}
+.camera-photos-block .camera-day-choice input{min-height:44px;color-scheme:inherit}
+.camera-photos-block .camera-day-browser .chart-tab{min-height:44px}
+@media(max-width:760px){
+ .camera-mode-heading{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  align-items:start;
+  gap:7px
+ }
+ .camera-timelapse-block .camera-timelapse-controls{
+  width:100%;
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+ }
+ .camera-timelapse-block .camera-timelapse-controls select{width:100%}
+ .camera-timelapse-block .camera-timelapse-controls button{
+  width:100%;
+  justify-self:stretch
+ }
+ .camera-photos-hint{display:none}
+ .camera-photos-block .camera-day-browser .section-heading{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:8px
+ }
+ .camera-photos-block .camera-day-choice{width:100%;justify-content:space-between}
+ .camera-photos-block .camera-day-choice input{width:100%;max-width:none;min-width:0}
+}

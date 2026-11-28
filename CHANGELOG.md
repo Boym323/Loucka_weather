@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-11-28 – Komponentové CSS archivu webkamery
+- Pravidla časosběru a archivu fotografií včetně mobilních pravidel přesunuta beze změn deklarací z globálního `ui-refinement.css` do `camera-archive.css`, importovaného pouze v CameraArchive. Obecné kamerové a sdílené styly zůstávají. Nový unit a CSSOM smoke všech 19 tras ověřují absenci mimo /kamera/ a mobilní geometrii. Navazuje na #214; CI/DEV a síťová úspora zatím neověřeny. Bez změn API/DB/produkce.
+
 ## 2026-11-28 – Integrace formátovačů a komponentového CSS
 - #212 (46171314520) a #213 (46171602571) nezávisle PASS, každý 170/170 unit + Chromium. CSSOM 19/19, tabulka pouze na /grafy/, 18 tras bez specifického CSS, mobilní geometrie 12/44/520 px zachována. 12 repaint kontrol bez dodatečných raw GET. Kombinovaný CI a exact public DEV zatím neověřeny. Bez změny API/DB/produkce.
 

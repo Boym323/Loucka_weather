@@ -53,6 +53,23 @@ try{
     return {margin:getComputedStyle(table).marginTop,summaryMinHeight:getComputedStyle(summary).minHeight,
      scroll:getComputedStyle(scroll).overflowX,tableMinWidth:getComputedStyle(table.querySelector('table')).minWidth};
    })(),
+   hasCameraArchiveStyles:(()=>{
+    const walk=rules=>Array.from(rules).some(rule=>
+     rule.selectorText==='.camera-archive-views'&&rule.style?.getPropertyValue('gap')==='19px'||
+     !!rule.cssRules&&walk(rule.cssRules));
+    for(const sheet of document.styleSheets){
+     try{if(walk(sheet.cssRules))return true;}catch{}
+    }
+    return false;
+   })(),
+   hasCameraArchive:!!document.querySelector('[data-camera-archive]'),
+   cameraArchiveGeometry:(()=>{
+    const archive=document.querySelector('[data-camera-archive]');
+    if(!archive)return null;
+    const style=selector=>getComputedStyle(archive.querySelector(selector));
+    return {gap:style('.camera-archive-views').gap,selectMinHeight:style('[data-archive-video]').minHeight,
+     headingDisplay:style('.camera-mode-heading').display,photoHint:style('.camera-photos-hint').display};
+   })(),
    hasWind:!!document.querySelector('[data-wind-compass]'),
    windToken:document.querySelector('[data-wind-compass]')?
     getComputedStyle(document.querySelector('[data-wind-compass]')).getPropertyValue('--wind-v2-ink').trim():null,
@@ -72,6 +89,9 @@ try{
   assert.equal(result.hasHistoryTableStyles,result.hasHistoryTable,'history table CSS/component mismatch '+path);
   if(path==='/grafy/')assert.ok(result.hasHistoryTable,'advanced history table missing');
   if(result.hasHistoryTable)assert.deepEqual(result.historyTableGeometry,{margin:'12px',summaryMinHeight:'44px',scroll:'auto',tableMinWidth:'520px'},'history table geometry '+path);
+  assert.equal(result.hasCameraArchive,path==='/kamera/','camera archive component route '+path);
+  assert.equal(result.hasCameraArchiveStyles,result.hasCameraArchive,'camera archive CSS/component mismatch '+path);
+  if(result.hasCameraArchive)assert.deepEqual(result.cameraArchiveGeometry,{gap:'19px',selectMinHeight:'44px',headingDisplay:'grid',photoHint:'none'},'camera archive mobile geometry');
   await page.close();
  }
 }finally{await browser.close();}

@@ -1,5 +1,7 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**28. 11. 2026 – CSS archivu kamery:** komponentový `camera-archive.css`, přesun deklarací časosběru/fotografií včetně mobilních pravidel; unit a CSSOM smoke 19 tras, geometrie na /kamera/. Navazuje na #214, CI/DEV pending, bez změn dat/produkce.
+
 **28. 11. 2026 – integrace #212/#213:** oba samostatně 170/170 + Chromium PASS; CSSOM 19/19, tabulka jen /grafy/, 12 repaint kontrol bez GET. Kombinovaný CI/DEV pending; bez změn API/DB/produkce.
 
 **28. 11. 2026 – CSS tabulky historie:** samostatný komponentový `history-table.css`, pravidla přesunuta beze změny, unit a CSSOM/geometry smoke na 19 trasách; CI/DEV pending. Bez zásahů do API/DB.
