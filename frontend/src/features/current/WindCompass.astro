@@ -149,13 +149,14 @@ const {variant='default'}=Astro.props;
    const received=Date.parse(data?.receivedAt??'');
    if(data?.state!=='live'||data.units!=='metricwx'||!isFresh(received))return;
    for(const id of ['windSpeed','windGust','windDir'] as const){
-    const reading=data.readings?.[id];
-    if(reading?.source!=='gw3000_live'||reading.quality!=='measured'||
-     typeof reading.value!=='number'||!Number.isFinite(reading.value)||
-     received<(liveReceived.get(id)??-Infinity))continue;
-    liveReceived.set(id,received);
-    if(id==='windDir')show(reading.value,'Živě · GW3000');
-    else setWind(id,reading.value,'Živě · GW3000');
+    const value=data.readings?.[id];
+    if(value?.source==='gw3000_live'&&value.quality==='measured'&&
+     typeof value.value==='number'&&Number.isFinite(value.value)&&
+     received>=(liveReceived.get(id)??-Infinity)){
+     liveReceived.set(id,received);
+     if(id==='windDir')show(value.value,'Živě · GW3000');
+     else setWind(id,value.value,'Živě · GW3000');
+    }
    }
   };
 
