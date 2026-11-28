@@ -1,5 +1,7 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**28. 11. 2026 – dependency kandidát #172:** Astro 7.4.13, předchozí CI i security audit PASS; `picomatch` beze změny, #124 zůstává otevřené. Aktuální revizi a nasazení ověřovat samostatně; žádný zásah do produkce.
+
 **28. 11. 2026 – kandidát opravy #179:** Větrný panel má per-field ochranu čerstvých GW3000 hodnot, serializaci archivních odpovědí a odmítání starších live packetů. Po live-expired se připojuje k nové generaci společného archivního GET. Rozšířen offline Chromium test skutečné `/` (390/1440 px, light/dark) včetně opožděného úspěchu/chyby, částečného live, nuly a skrytého kompasu. CI a skutečné DEV nasazení této revize ověřit samostatně. Bez zásahu do DB a produkce.
 
 **27. 11. 2026 – vizuální úprava portálové homepage:** Zkompaktněný pás výstrah, sjednocené rozestupy a čitelnější navigace na širokých obrazovkách. Pokud není ověřen směr větru, kompas se skryje a rychlost/nárazy zůstanou v úsporném přehledu se zdroji. Připravena větev `codex/portal-visual-polish-20261127`; Sjednoceno očekávání `formatMetricValue` a českého zápisu nulové osy srážek (`0,0`) v přístupnostních a Chromium kontrolách; finální CI ověřit po posledním commitu. DEV náhled ověřit samostatně.

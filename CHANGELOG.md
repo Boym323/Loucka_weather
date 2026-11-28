@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-28 – Patch aktualizace Astro 7.4.13
+- Kandidát PR #172 aktualizuje Astro 7.4.11 na 7.4.13 včetně lockfile. Předchozí frontend CI a dependency audit PASS, novou revizi ověřit samostatně. `picomatch` zůstává 4.0.7 (vnořená 2.3.2), proto nejde o doloženou opravu issue #124. Bez vynuceného downgradu nebo potlačení bezpečnostního auditu.
+
+## 2026-11-28 – Diagnostika dostupnosti historických grafů na DEV
+- Veřejný smoke loguje omezené HTTP stavy a povolené chybové kódy existujících history požadavků bez nových požadavků, URL nebo hodnot měření. Při selhání rozliší stav grafu a dostupnost SVG. Původní akceptační brány zůstávají nezměněné; issue #183, příčina výpadku zatím neověřena.
+
 ## 2026-11-28 – Stabilita živých údajů větru
 - Větrný panel chrání čerstvé live hodnoty každé veličiny zvlášť před opožděnou archivní odpovědí i její chybou; archiv může doplnit ostatní údaje. Starší live událost nepřepíše novější a po vypršení živého režimu se obnoví archiv.
 - Chromium scénář nové výchozí homepage pokrývá zpožděný úspěch i chybu archivu, nulovou rychlost, neplatný směr a návrat k platnému severu na mobilu/desktopu v obou motivech. Issue #179; CI a skutečné DEV nasazení ověřit samostatně. Bez změn zdrojových dat, API a produkce.
