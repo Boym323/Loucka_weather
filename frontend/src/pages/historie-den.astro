@@ -1,0 +1,56 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import '../styles/portal-preview.css';
+---
+<BaseLayout title="Historický kalendář počasí">
+ <div class="portal-preview">
+  <header class="page-intro"><span class="eyebrow">Archiv od roku 2009</span><h1>Počasí v konkrétní den</h1><p>Vyber den a zobraz dostupné denní statistiky stanice.</p></header>
+  <section class="section" data-day-calendar aria-labelledby="day-calendar-title">
+   <div class="section-heading"><h2 id="day-calendar-title">Historický kalendář</h2><span class="status-chip" data-calendar-status role="status">Vyber datum</span></div>
+   <form data-calendar-form class="portal-calendar-form"><label>Datum <input type="date" name="date" min="2009-01-01" required/></label><button type="submit" class="history-apply">Zobrazit den</button></form>
+   <div class="portal-climate-grid">
+    {['Nejnižší teplota','Nejvyšší teplota','Srážky'].map((name,i)=><article><h3>{name}</h3><strong data-calendar-value={i}>—</strong><small data-calendar-coverage={i}>Čekám na výběr</small></article>)}
+   </div>
+   <p class="source-note">Původní denní archiv; neověřené nebo neúplné údaje nejsou potvrzené rekordy.</p>
+   <a data-calendar-graph class="panel-link" href="/grafy/">Otevřít průběh vybraného dne ↗</a>
+  </section>
+ </div>
+</BaseLayout>
+<script>
+ import {getStatistics} from '../shared/api/client';
+ import {pragueCivilDate} from '../shared/domain/astronomy';
+ import {nextDate,pragueMidnightIso,qualitySupported} from '../shared/domain/statistics';
+ import {formatValue} from '../shared/domain/metrics';
+ import {rainDayRisk} from '../shared/domain/rainfall-atlas';
+ const root=document.querySelector<HTMLElement>('[data-day-calendar]');
+ if(root){
+  const form=root.querySelector<HTMLFormElement>('[data-calendar-form]')!;
+  const input=form.elements.namedItem('date') as HTMLInputElement;
+  const status=root.querySelector<HTMLElement>('[data-calendar-status]')!;
+  const graph=root.querySelector<HTMLAnchorElement>('[data-calendar-graph]')!;
+  input.max=nextDate(pragueCivilDate(new Date()),-1);input.value=input.max;
+  let ctrl:AbortController|undefined;
+  const queries=[['outTemp','min','°C'],['outTemp','max','°C'],['rain','sum','mm']] as const;
+  const put=(key:string,i:number,value:string)=>{const n=root.querySelector<HTMLElement>('[data-calendar-'+key+'="'+i+'"]');if(n)n.textContent=value;};
+  const load=async()=>{
+   ctrl?.abort();ctrl=new AbortController();const signal=ctrl.signal;
+   const date=input.value;try{pragueMidnightIso(date);if(date<input.min||date>input.max)throw Error();}catch{status.textContent='Vyber platný dokončený den';return;}
+   graph.href='/grafy/?date='+encodeURIComponent(date)+'#advanced-history-heading';
+   status.textContent='Načítám';status.className='status-chip';
+   for(let i=0;i<3;i++){put('value',i,'—');put('coverage',i,'Načítám');}
+   const results=await Promise.allSettled(queries.map(([metric,aggregation])=>getStatistics('daily',metric,aggregation,date,signal)));
+   if(signal.aborted)return;
+   let count=0;
+   results.forEach((r,i)=>{
+    if(r.status!=='fulfilled'||!qualitySupported(r.value)){put('coverage',i,'Nedostupné');return;}
+    const coverage=r.value.timeCoverage?.fraction??null;
+    if(coverage===null||coverage<.9){put('coverage',i,coverage===null?'Pokrytí času neověřeno':'Pokrytí '+Math.round(coverage*100)+' % – neúplné');return;}
+    if(i===2&&rainDayRisk(date)){put('coverage',i,'Známé omezení srážkových dat');return;}
+    count++;put('value',i,formatValue(r.value.value,1)+' '+queries[i]![2]);put('coverage',i,'Pokrytí času '+Math.round(coverage*100)+' %');
+   });
+   status.textContent=count===3?'Původní archiv':count?'Neúplný den':'Bez ověřitelného souhrnu';status.className='status-chip '+(count===3?'ok':'warning');
+  };
+  form.addEventListener('submit',e=>{e.preventDefault();void load();});void load();
+  document.addEventListener('astro:before-swap',()=>ctrl?.abort(),{once:true});
+ }
+</script>

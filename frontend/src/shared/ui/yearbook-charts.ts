@@ -53,7 +53,7 @@ export function drawYearbookBars(
   const label=element('text');
   label.setAttribute('class','chart-axis');
   label.setAttribute('x','1');label.setAttribute('y',String(y(value)+4));
-  label.textContent=new Intl.NumberFormat('cs-CZ',{maximumFractionDigits:1}).format(value);
+  label.textContent=new Intl.NumberFormat('cs-CZ',{minimumFractionDigits:1,maximumFractionDigits:1}).format(value);
   svg.append(label);
  }
  const base=element('line');
@@ -77,7 +77,7 @@ export function drawYearbookBars(
   const hint=element('title');
   hint.textContent=fullNames[month.month-1]+': '+
    (month.value===null?'nedostatečné podklady':
-    new Intl.NumberFormat('cs-CZ',{maximumFractionDigits:1}).format(month.value)+
+    new Intl.NumberFormat('cs-CZ',{minimumFractionDigits:1,maximumFractionDigits:1}).format(month.value)+
     (kind==='temperature'?' °C':' mm'))+
    '; pokrytí '+Math.round(month.coverage*100)+' %';
   bar.append(hint);

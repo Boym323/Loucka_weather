@@ -5,7 +5,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
  <div class="page-intro">
   <span class="eyebrow">Loučka · původní archiv 2009–2026</span>
   <h1>Historické rekordy a charakteristické dny</h1>
-  <p>Jaké byly největší mrazy, vedra, deště a nárazy větru? Prohlédni si nejvýraznější hodnoty z dostupné historie. Některé starší údaje ještě nejsou úplně ověřené.</p>
+  <p>Nejvýraznější hodnoty z dostupné historie. Starší údaje mohou být dosud neověřené.</p>
  </div>
  <section class="section" data-climate-records>
   <div class="section-heading">
@@ -52,6 +52,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 </BaseLayout>
 <script>
  import {formatValue} from '../shared/domain/metrics';
+ import {renderMetricDisplay} from '../shared/ui/metric-display';
+ import {displayLocalDate,displayMonthDay} from '../shared/domain/display-date';
  const root=document.querySelector<HTMLElement>('[data-climate-records]');
  if(root){
   const ctrl=new AbortController();
@@ -69,8 +71,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
    for(const [key,item] of Object.entries(data.records)){
     const value=root.querySelector<HTMLElement>('[data-record-value="'+key+'"]');
     const date=root.querySelector<HTMLElement>('[data-record-date="'+key+'"]');
-    if(value)value.textContent=fmt(item);
-    if(date)date.textContent=item?'Zaznamenáno '+item.localDate+' · orientačně':'Bez spolehlivého údaje';
+    if(value){
+      if(item&&Number.isFinite(item.value))renderMetricDisplay(value,formatValue(item.value,1),item.unit);
+      else value.textContent='—';
+     }
+    if(date)date.textContent=item?'Zaznamenáno '+displayLocalDate(item.localDate)+' · orientačně':'Bez spolehlivého údaje';
    }
    for(const [key,value] of Object.entries(data.dayTypes)){
     const target=root.querySelector<HTMLElement>('[data-daycount="'+key+'"]');
@@ -86,7 +91,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     if(target)target.textContent=fmt(item);
    }
    const today=root.querySelector<HTMLElement>('[data-today-coverage]');
-   if(today)today.textContent='Den '+data.todayCalendar.monthDay+
+   if(today)today.textContent='Den '+displayMonthDay(data.todayCalendar.monthDay)+
     ' · dostupné denní souhrny '+data.todayCalendar.sampleYears+
     ' předchozích roků. Údaje jsou orientační.';
    const status=root.querySelector<HTMLElement>('[data-records-status]');

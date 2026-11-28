@@ -29,6 +29,7 @@ import {highlightMetrics} from '../../shared/domain/climate-highlights.ts';
  <p class="atlas-highlights-disclaimer">Záznamy jsou <strong>předběžné</strong>. Chybějící nebo neověřené údaje nevydáváme za potvrzené rekordy.</p>
 </section>
 <script>
+ import {renderMetricDisplay} from '../../shared/ui/metric-display';
  import {featuredClimateRecords} from '../../shared/domain/climate-highlights.ts';
  const root=document.querySelector<HTMLElement>('[data-climate-highlights]');
  if(root){
@@ -57,7 +58,9 @@ import {highlightMetrics} from '../../shared/domain/climate-highlights.ts';
      const date=root?.querySelector<HTMLTimeElement>('[data-highlight-date="'+entry.id+'"]');
      const note=root?.querySelector<HTMLElement>('[data-highlight-note="'+entry.id+'"]');
      if(value){
-      value.textContent=entry.value;
+      const split=entry.available?entry.value.lastIndexOf(' '):-1;
+      if(split>0)renderMetricDisplay(value,entry.value.slice(0,split),entry.value.slice(split+1));
+      else value.textContent=entry.value;
       value.removeAttribute('aria-label');
      }
      if(date){

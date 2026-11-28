@@ -8,8 +8,9 @@ import assert from 'node:assert/strict';
 import {mkdir} from 'node:fs/promises';
 
 const base=process.env.LOCAL_PREVIEW_URL||'http://127.0.0.1:4321/';
-const routes=['/','/aktualne/','/grafy/','/kamera/','/klimatologie/'];
-const widths=[320,390,1024,1328,1440];
+const coreRoutes=['/','/prehled-klasicky/','/aktualne/','/grafy/','/kamera/','/klimatologie/'];
+const routes=[...coreRoutes,'/rekordy/','/senzory/','/mapy/','/puda-ovzdusi/','/stav/','/o-stanici/','/klimatologie/extremy/','/klimatologie/trendy/','/klimatologie/sezony/','/klimatologie/rocenka/','/prehled-novy/','/predpoved/','/historie-den/'];
+const widths=[320,390,768,1024,1328,1440,1920];
 const themes=['light','dark'];
 const out='test-results/design-final';
 await mkdir(out,{recursive:true});
@@ -50,6 +51,7 @@ try{
        viewport:innerWidth,scrollWidth:document.documentElement.scrollWidth,
        h1Text:(h1?.textContent||'').trim().length,
        h1Font:h1?parseFloat(getComputedStyle(h1).fontSize):0,
+       introHeight:(document.querySelector('.evergreen-intro,.page-intro,.atlas-edition-hero')?.getBoundingClientRect().height??0),
        h1Width:head?.width??0,h1Left:head?.left??0,h1Right:head?.right??0,
        introTextSize:introductory?parseFloat(getComputedStyle(introductory).fontSize):null,
        actions:actions.map(el=>({height:Math.round(el.getBoundingClientRect().height),name:el.tagName.toLowerCase()})),
@@ -68,15 +70,48 @@ try{
       };
      });
      assert.equal(result.theme,theme,'theme selected');
+     const contrast=await page.evaluate(()=>{
+      const style=getComputedStyle(document.documentElement);
+      const rgb=token=>{
+       const value=style.getPropertyValue(token).trim();
+       const match=/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(value);
+       if(!match)throw new Error('Unresolved or unsupported color token: '+token+'='+value);
+       const hex=match[1].length===3?[...match[1]].map(c=>c+c).join(''):match[1];
+       return [0,2,4].map(i=>parseInt(hex.slice(i,i+2),16));
+      };
+      const lum=values=>values.map(v=>v/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4).reduce((n,v,i)=>n+v*[.2126,.7152,.0722][i],0);
+      const pairs=[['--text','--panel'],['--muted','--panel'],['--muted','--panel-2'],['--teal','--panel']];
+      if(lum(rgb('--text'))===lum(rgb('--panel')))throw new Error('Text and panel tokens resolve to identical luminance');
+      const result=pairs.map(([a,b])=>{const x=lum(rgb(a)),y=lum(rgb(b));return {pair:a+'/'+b,ratio:(Math.max(x,y)+.05)/(Math.min(x,y)+.05)};});
+      return result;
+     });
+     for(const item of contrast)assert.ok(item.ratio>=4.5,'token contrast below 4.5:1 '+JSON.stringify(item));
      assert.ok(result.scrollWidth<=width+2,'horizontal overflow at '+width+' '+path+': '+JSON.stringify(result));
      assert.ok(result.h1Text>0&&result.h1Font>=27,'missing or unreadable page heading');
+     assert.ok(result.h1Font<=40,'page heading should not dominate the data: '+path);
+     if(path==='/prehled-klasicky/')assert.ok(result.introHeight<=105,'homepage identity strip too tall: '+result.introHeight);
+     if(width>=1024)assert.ok(result.introHeight<=145,'desktop introduction too tall: '+path+' '+result.introHeight);
+     else assert.ok(result.introHeight<=240,'mobile introduction too tall: '+path+' '+result.introHeight);
      assert.ok(result.h1Left>=-2&&result.h1Right<=width+2,'heading clipped: '+path);
      if(path!=='/'&&result.introTextSize!==null)
       assert.ok(result.introTextSize>=14,'intro copy too small: '+path);
-     for(const action of result.actions)
+     for(const action of (coreRoutes.includes(path)?result.actions:[]))
       assert.ok(action.height>=43,'touch control below 44px: '+path+' '+JSON.stringify(action));
      if(width<=390)assert.ok(result.dockVisible,'mobile dock missing');
-     if(path==='/'){
+     if(path.startsWith('/klimatologie')&&width<=760){
+      assert.equal(await page.locator('.climate-atlas-nav').isVisible(),false,'duplicate mobile atlas navigation');
+      assert.equal(await page.locator('.climate-mobile-chapters').isVisible(),true,'mobile chapter selector missing');
+     }
+     if(path==='/prehled-klasicky/'){
+      const shortcut=page.locator('[data-mobile-alert-shortcut]');
+      if(width<=760){
+       await shortcut.waitFor({state:'visible',timeout:10000});
+       assert.match(await shortcut.textContent()??'',/Stav výstrah ČHMÚ nelze ověřit/);
+       assert.equal(await page.locator('[data-home-expert-toggle]').getAttribute('aria-expanded'),'false');
+       assert.equal(await page.locator('#home-history').isVisible(),false);
+       assert.ok(await page.evaluate(()=>document.querySelector('[data-mobile-alert-shortcut]').getBoundingClientRect().bottom<document.querySelector('[data-home-hero]').getBoundingClientRect().top),'warning shortcut before instruments');
+      }else assert.equal(await shortcut.isVisible(),false,'mobile-only warning shortcut on desktop');
+      assert.ok(await page.evaluate(()=>document.querySelector('#pocasi-predpoved').getBoundingClientRect().top<document.querySelector('#pocasi-kamera').getBoundingClientRect().top),'forecast should precede camera');
       const boxes=result.spotlight;
       assert.ok(boxes?.length===4&&boxes.every(Boolean),'four observatory cards are present');
       assert.ok(boxes.every(b=>b.width>140),'instrument cards are not squeezed');
@@ -91,11 +126,23 @@ try{
        assert.ok(boxes.every((b,i)=>i===0||b.top>boxes[i-1].top+30),'mobile instruments stack in source order');
       }
      }
+     if(path==='/'||path==='/prehled-novy/'){
+      assert.equal(await page.locator('.portal-preview').count(),1,'new overview missing');
+      assert.equal(await page.locator('[data-local-warnings]').count(),1,'single warning panel');
+      assert.equal(await page.locator('[data-current-panel][data-variant="portal"]').count(),1);
+      const layout=await page.evaluate(()=>({columns:getComputedStyle(document.querySelector('.portal-primary')).gridTemplateColumns.split(' ').length,forecast:document.querySelector('#pocasi-predpoved').getBoundingClientRect().top,radar:document.querySelector('#pocasi-radar').getBoundingClientRect().top}));
+      assert.equal(layout.columns,width<=760?1:2,'portal columns');
+      assert.ok(layout.forecast<layout.radar,'forecast precedes radar');
+     }
      if((width===390&&(path==='/'||path==='/kamera/'))||(width===1328&&path==='/')){
       await page.screenshot({
        path:out+'/'+(path==='/'?'home':'camera')+'-'+width+'-'+theme+'.png',
        fullPage:width===1328,animations:'disabled'
       });
+     }
+     if(width===390||width===1440){
+      const slug=path==='/'?'home':path.replace(/^\/|\/$/g,'').replaceAll('/','-');
+      await page.screenshot({path:out+'/route-'+slug+'-'+width+'-'+theme+'.png',fullPage:true,animations:'disabled'});
      }
      if(path==='/aktualne/'&&width===390){
       // Synthetic 200% root text sizing is a layout stress test,
@@ -122,5 +169,5 @@ if(failures.length){
  console.error('Design QA failures',JSON.stringify(failures));
  process.exitCode=1;
 }else{
- console.log('Design QA: 50 viewport/theme/route checks, balanced instrument grid, captions, controls and synthetic text stress PASS');
+ console.log('Design QA: '+routes.length*widths.length*themes.length+' viewport/theme/route checks PASS');
 }

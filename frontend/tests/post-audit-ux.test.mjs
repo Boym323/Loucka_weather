@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 
 test('practical mobile shortcuts are inside hero immediately after current readings',async()=>{
- const home=await read('src/pages/index.astro');
+ const home=await read('src/pages/prehled-klasicky.astro');
  const css=await read('src/styles/ux-stages.css');
  const core=home.indexOf('<div class="atlas-hero-top evergreen-core">');
  const quick=home.indexOf('<nav class="evergreen-quick-access"');

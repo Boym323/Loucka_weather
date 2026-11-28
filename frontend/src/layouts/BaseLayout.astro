@@ -16,28 +16,31 @@ const { title, description = 'Meteorologická měření ze stanice Počasí Lou�
 const navigation = [
  { href:'/',title:'Přehled' },
  { href:'/aktualne/',title:'Měření' },
+ { href:'/predpoved/',title:'Předpověď' },
+ { href:'/mapy/',title:'Radar' },
+ { href:'/kamera/',title:'Webkamera' },
  { href:'/grafy/',title:'Grafy' },
- { href:'/klimatologie/',title:'Klimatologie' },
- { href:'/rekordy/',title:'Rekordy' },
- { href:'/senzory/',title:'Senzory' }
+ { href:'/klimatologie/',title:'Klimatologie' }
 ];
 const secondaryNavigation = [
- { href:'/kamera/',title:'Webkamera' },
- { href:'/mapy/',title:'Radar a mapy' },
+ { href:'/prehled-klasicky/',title:'Klasický přehled' },
+ { href:'/historie-den/',title:'Historický kalendář' },
+ { href:'/rekordy/',title:'Rekordy' },
+ { href:'/senzory/',title:'Senzory' },
  { href:'/puda-ovzdusi/',title:'Půda a ovzduší' },
  { href:'/stav/',title:'Stav stanice' },
  { href:'/o-stanici/',title:'O projektu' }
 ];
-const active = Astro.url.pathname;
+const active = Astro.url.pathname==='/prehled-novy/'?'/':Astro.url.pathname;
 ---
 <!doctype html>
-<html lang="cs" data-theme="light" class={Astro.url.pathname==='/'?'homepage-layout':undefined}>
+<html lang="cs" data-theme="light" class={Astro.url.pathname==='/prehled-klasicky/'?'homepage-layout':undefined}>
  <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content={description} />
   <meta name="theme-color" content="#F6F9FB" />
-  {Astro.url.pathname==='/' && <>
+  {Astro.url.pathname==='/prehled-klasicky/' && <>
    <link rel="preconnect" href="https://webcam.pocasi-loucka.eu" />
    <link rel="preload" href="https://webcam.pocasi-loucka.eu/zapadni_kamera.jpg" as="image" fetchpriority="high" />
   </>}

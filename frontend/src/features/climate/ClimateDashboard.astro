@@ -96,7 +96,7 @@ const climateSections=[
   link.addEventListener('click',()=>{quickNav.open=false;});
  });
  import {pragueMidnightIso,qualitySupported} from '../../shared/domain/statistics';
- import {formatValue} from '../../shared/domain/metrics';
+ import {formatValue,chartValue} from '../../shared/domain/metrics';
  import * as echarts from 'echarts/core';
  import {BarChart,LineChart} from 'echarts/charts';
  import {GridComponent,TooltipComponent,LegendComponent} from 'echarts/components';
@@ -151,7 +151,7 @@ const climateSections=[
     connectNulls:false,showSymbol:false});}
    chart.setOption({animation:false,backgroundColor:'transparent',
     grid:{left:compact?40:49,right:compact?9:17,top:low?39:24,bottom:34},
-    tooltip:{trigger:'axis',confine:true},
+    tooltip:{trigger:'axis',confine:true,valueFormatter:(value:unknown)=>chartValue(value,name,unit)},
     legend:{show:!!low,textStyle:{color:p.ink,fontSize:compact?10:11},top:0,
      itemWidth:14,itemHeight:3},
     xAxis:{type:'category',data:months,axisTick:{show:false},
@@ -159,10 +159,10 @@ const climateSections=[
      axisLabel:{color:p.ink,fontSize:compact?10:11,hideOverlap:true,
       interval:compact?1:0}},
     yAxis:{type:'value',name:unit,scale:name!=='rain',
-     min:name==='rain'?0:undefined,splitNumber:4,
+     min:name==='rain'?0:undefined,splitNumber:4,minInterval:0.1,
      axisLine:{show:false},axisTick:{show:false},
      nameTextStyle:{color:p.ink,fontSize:11},
-     axisLabel:{color:p.ink,fontSize:compact?10:11},
+     axisLabel:{color:p.ink,fontSize:compact?10:11,formatter:(value:number)=>formatValue(value,1)},
      splitLine:{lineStyle:{color:p.grid,type:'solid'}}},
     series},true);
    chart.resize();
@@ -174,13 +174,13 @@ const climateSections=[
    const color=name==='temperature'?p.temperature:name==='rain'?p.rain:p.wind;
    chart.setOption({animation:false,backgroundColor:'transparent',
     grid:{top:12,left:compact?38:44,right:14,bottom:30},
-    tooltip:{trigger:'axis',confine:true},
+    tooltip:{trigger:'axis',confine:true,valueFormatter:(value:unknown)=>chartValue(value,name,name==='rain'?'mm':name==='temperature'?'°C':'m/s')},
     xAxis:{type:'category',data:years.map(String),axisTick:{show:false},
      axisLine:{lineStyle:{color:p.grid}},
      axisLabel:{color:p.ink,fontSize:compact?10:11,interval:0,hideOverlap:true}},
-    yAxis:{type:'value',scale:name!=='rain',min:name==='rain'?0:undefined,splitNumber:4,
+    yAxis:{type:'value',scale:name!=='rain',min:name==='rain'?0:undefined,splitNumber:4,minInterval:0.1,
      nameTextStyle:{color:p.ink},axisLine:{show:false},axisTick:{show:false},
-     axisLabel:{color:p.ink,fontSize:compact?10:11},
+     axisLabel:{color:p.ink,fontSize:compact?10:11,formatter:(value:number)=>formatValue(value,1)},
      splitLine:{lineStyle:{color:p.grid,type:'solid'}}},
     series:[{name:'Roční hodnoty',type:'bar',data:values,itemStyle:{color},barMaxWidth:28}]},true);
    chart.resize();

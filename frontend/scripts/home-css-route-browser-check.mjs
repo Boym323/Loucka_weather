@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 const base=process.env.LOCAL_PREVIEW_URL||'http://127.0.0.1:4321/';
 const browser=await chromium.launch({headless:true});
 try{
- for(const path of ['/','/aktualne/','/grafy/']){
+ for(const path of ['/','/prehled-klasicky/','/aktualne/','/grafy/']){
   const page=await browser.newPage({viewport:{width:390,height:844}});
   const response=await page.goto(new URL(path,base).href,{waitUntil:'domcontentloaded',timeout:25000});
   assert.equal(response?.status(),200,path+' must be available');
@@ -32,9 +32,9 @@ try{
     null
   }));
   console.log('HOME CSS ROUTE',path,JSON.stringify(result));
-  assert.equal(result.hasStyles,path==='/','evergreen style bleed on '+path);
-  assert.equal(result.hasHome,path==='/','evergreen DOM outside homepage');
-  if(path==='/')assert.ok(result.homeToken?.length>0,'homepage CSS token was not applied');
+  assert.equal(result.hasStyles,path==='/prehled-klasicky/','evergreen style bleed on '+path);
+  assert.equal(result.hasHome,path==='/prehled-klasicky/','evergreen DOM outside homepage');
+  if(path==='/prehled-klasicky/')assert.ok(result.homeToken?.length>0,'homepage CSS token was not applied');
   await page.close();
  }
 }finally{await browser.close();}

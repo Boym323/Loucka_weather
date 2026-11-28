@@ -11,7 +11,7 @@ import RainfallArchive from '../../features/climate/RainfallArchive.astro';
   <header class="atlas-edition-hero">
    <p class="atlas-eyebrow">02 / Vývoj počasí v čase</p>
    <h1 class="atlas-title">Trendy od roku 2009</h1>
-   <p class="atlas-subtitle">Podívej se, jak se v Loučce vyvíjely teploty, déšť a vítr. Každý rok vychází z dostupných měření; chybějící roky nedoplňujeme odhadem.</p>
+   <p class="atlas-subtitle">Vývoj teplot, srážek a větru. Chybějící roky nenahrazujeme odhadem.</p>
   </header>
   <AtlasNav active="trendy"/>
   <section class="atlas-panel" aria-labelledby="trend-chart-title">
@@ -28,6 +28,7 @@ import RainfallArchive from '../../features/climate/RainfallArchive.astro';
    </form>
    <p class="atlas-status" data-trend-status role="status">Načítám historický souhrn…</p>
    <div class="atlas-chart" data-trend-chart role="img" aria-label="Graf ročních hodnot s vyznačením skutečně dostupných let"></div>
+   <div class="atlas-chart-key"><span><i class="atlas-key-dot" aria-hidden="true"></i>Dostatečné pokrytí</span><span><i class="atlas-key-dot limited" aria-hidden="true"></i>Omezené nebo neúplné údaje</span></div>
    <div class="atlas-results">
     <div class="atlas-result"><span>Podložené dokončené roky</span><strong data-trend-valid>—</strong><small>Požadováno dostatečné pokrytí</small></div>
     <div class="atlas-result"><span>Orientační změna za 10 let</span><strong data-trend-slope>—</strong><small>Odhad směru vývoje, nikoliv jistý dlouhodobý trend</small></div>
@@ -127,7 +128,8 @@ import RainfallArchive from '../../features/climate/RainfallArchive.astro';
     else segment.push((segment.length?'L':'M')+x(r.year).toFixed(1)+' '+y(r.value).toFixed(1));
     const dot=el('circle');dot.setAttribute('class','chart-points');
     dot.setAttribute('cx',String(x(r.year)));dot.setAttribute('cy',String(y(r.value)));
-    dot.setAttribute('r',eligible(r,metric)?'4':'3');dot.setAttribute('opacity',eligible(r,metric)?'1':'.35');
+    dot.setAttribute('r',eligible(r,metric)?'4':'4');
+    if(!eligible(r,metric))dot.setAttribute('class','chart-points chart-point-limited');
     const tip=el('title');tip.textContent=r.year+' · '+formatValue(r.value,1)+' '+descriptions[metric].unit+
      ' · '+r.validDays+'/'+r.elapsedDays+' dnů'+
      (metric==='rain'&&rainYearRisk(r.year)?' · '+rainYearRisk(r.year):'');dot.append(tip);svg.append(dot);
@@ -150,7 +152,7 @@ import RainfallArchive from '../../features/climate/RainfallArchive.astro';
     set('[data-trend-valid]',String(trendRows.length));
     set('[data-trend-samples]',String(rows.filter(r=>r.value!==null).length));
     set('[data-trend-slope]',slope===null?'Nelze určit':
-     (slope>0?'+':'')+formatValue(slope*10,2)+' '+unit);
+     (slope>0?'+':'')+formatValue(slope*10,1)+' '+unit);
     set('[data-trend-method]',(slope===null?
      'K popisnému sklonu chybí alespoň osm dostatečně pokrytých dokončených let v rozpětí 10 let. Chybějící souhrny nedoplňujeme.':
      'Orientační změna spočítaná z '+trendRows.length+' dokončených let. Stanice i její čidla se mohla během let změnit; výsledek sám o sobě neprokazuje změnu klimatu.')+

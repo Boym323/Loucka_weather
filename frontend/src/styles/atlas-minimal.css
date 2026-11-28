@@ -164,7 +164,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,s
 .atlas-hero-daily .daily-brief-status{font-size:11px;grid-column:1/-1;color:var(--muted);line-height:1.4;padding:8px 12px 4px;min-width:0}
 
 /* Calm, full-width warning strip, without full dashboard tile */
-.atlas-alert-line>.local-warnings{padding:15px 20px;box-shadow:none;display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px 22px}
+.atlas-alert-line>.local-warnings{padding:15px 20px;box-shadow:none;display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:12px}
 .atlas-alert-line .local-warnings .section-heading{margin:0}
 .atlas-alert-line .local-warnings .section-heading h2{font-size:13px}
 .atlas-alert-line .local-warnings .panel-title{font-size:13px}

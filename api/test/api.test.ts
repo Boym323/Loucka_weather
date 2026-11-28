@@ -360,3 +360,25 @@ test('video range parser is bounded to one safe range',async()=>{
  assert.equal(parseVideoRange('bytes=0-1,2-3',10),'invalid');
  assert.equal(parseVideoRange('bytes=0-',0),'invalid');
 });
+
+test('CHMI all-clear entries and expired warnings do not hide genuine local warnings',async t=>{
+ const {app,files}=await isolatedSourceApp(t);
+ const stamp=Date.now();
+ const iso=(offset:number)=>new Date(stamp+offset).toISOString();
+ const hazard={event:'Sněžení',severity:'Severe',headline:'Velmi rizikové sněhové jevy',
+  onset:iso(3600000),expires:iso(86400000),description:'8 až 20 cm sněhu',instruction:'Omezte cestování'};
+ const minor={...hazard,severity:'Minor',headline:'Slabé sněžení',onset:iso(-60000)};
+ const clear={...minor,headline:'Žádná výstraha před sněhem',description:'',instruction:''};
+ const expired={...hazard,onset:iso(-3600000),expires:iso(-1000)};
+ await mkdir(join(files.warningsFile,'..'),{recursive:true});
+ const snapshot={schemaVersion:'1',source:'CHMI_CAP',orp:'7209',status:'verified',checkedAt:iso(0)};
+ const publish=async(alerts:unknown)=>writeFile(files.warningsFile,JSON.stringify({...snapshot,alerts}));
+ await publish([...Array.from({length:41},()=>clear),expired,hazard,minor]);
+ const response=(await app.inject('/api/v1/alerts/local')).json();
+ assert.equal(response.status,'verified');
+ assert.deepEqual(response.alerts,[hazard,minor]);
+ await publish([clear,expired]);
+ assert.deepEqual((await app.inject('/api/v1/alerts/local')).json().alerts,[]);
+ await publish(null);
+ assert.equal((await app.inject('/api/v1/alerts/local')).json().status,'unavailable');
+});
