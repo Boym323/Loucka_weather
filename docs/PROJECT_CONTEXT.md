@@ -1,6 +1,6 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
-**28. 11. 2026 – dependency kandidát #172:** Astro 7.4.13, předchozí CI i security audit PASS; `picomatch` beze změny, #124 zůstává otevřené. Aktuální revizi a nasazení ověřovat samostatně; žádný zásah do produkce.
+**28. 11. 2026 – dependency kandidát #172:** Astro 7.4.13, předchozí CI i security audit PASS; `picomatch` 4.0.7/2.3.2 beze změny; [GHSA-fc5q-39xc-vjpf](https://github.com/advisories/GHSA-fc5q-39xc-vjpf) staženo 18. 11. 2026, audit 46132677882 PASS, #124 uzavřeno na základě stažení konkrétního advisory. Aktuální revizi a nasazení ověřovat samostatně; žádný zásah do produkce.
 
 **28. 11. 2026 – diagnostika #183:** Public smoke 46130015774 na SHA `3b22d66` potvrzuje API HTTP 503 `Unsupported archived observation` u raw teploty, nárazů a srážek; daily 200. Dřívější shodný výpadek 46048110455 vylučuje vznik závady až po #181. Kandidát klasifikuje důvody validace pevnými neosobními kategoriemi bez uvolnění QC a bez SQL změny; historicky doložené překryvy jsou hypotéza, nikoli potvrzená příčina aktuálního výpadku. CI/DEV ověřit samostatně.
 
