@@ -53,6 +53,11 @@ test('2022 extraTemp2 has unverified sensor identity; 822.4 C and soil spikes ar
   const result=publiclySafeReading(metric,value,16,'metricwx',t);
   assert.equal(result.value,null,metric);
   assert.equal(result.quality,'sensor_error',metric);
+  const forensic=originalFieldQuality({dateTime:t,interval:5,usUnits:16,[metric]:value},metric,'metricwx');
+  assert.equal(forensic.state,'SENSOR_ERROR',metric);
+  assert.equal(forensic.measurementValue,value,metric);
+  assert.equal(forensic.displayValue,null,metric);
+  assert.equal(forensic.extremaEligible,false,metric);
  }
  assert.equal(publiclySafeReading('soilTemp3',23,16,'metricwx',1782728400).value,23);
  assert.equal(publiclySafeReading('soilTemp5',18,16,'metricwx',1782728400).value,18);
