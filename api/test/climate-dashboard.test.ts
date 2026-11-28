@@ -1,6 +1,8 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {buildApp} from '../src/app.js';
+import Fastify from 'fastify';
+import {registerClimateRoutes} from '../src/climate-routes.js';
 import type {ArchiveReader,DailySummaryRow} from '../src/store.js';
 
 const clock=()=>new Date('2026-11-17T18:00:00Z');
@@ -197,4 +199,27 @@ test('ordinary climate dashboard requests do not log weather or timing without o
   else process.env.WEATHER_API_PERF_LOG=oldMode;
   await app.close();
  }
+});
+
+test('climate route registration preserves response and isolates coalesced caches per app',async t=>{
+ const a=make(),b=make();
+ const standalone=Fastify({logger:false,ajv:{customOptions:{removeAdditional:false,coerceTypes:false}}});
+ registerClimateRoutes(standalone,a.reader,clock);
+ const composed=buildApp(b.reader,clock);
+ t.after(async()=>{await standalone.close();await composed.close();});
+ const url='/api/v1/climate/dashboard'+q;
+ const [first,concurrent]=await Promise.all([standalone.inject(url),standalone.inject(url)]);
+ assert.equal(first.statusCode,200,first.body);
+ assert.equal(concurrent.body,first.body);
+ assert.equal(a.calls(),3,'parallel callers must share the same cold load');
+ assert.equal(b.calls(),0,'a different app must not share reader or cache state');
+ const other=await composed.inject(url);
+ assert.equal(other.statusCode,200,other.body);
+ assert.equal(other.body,first.body);
+ assert.equal(other.headers.etag,first.headers.etag);
+ assert.equal(other.headers['cache-control'],first.headers['cache-control']);
+ assert.equal(b.calls(),3);
+ const cached=await standalone.inject({url,headers:{'if-none-match':String(first.headers.etag)}});
+ assert.equal(cached.statusCode,304);
+ assert.equal(a.calls(),3);
 });
