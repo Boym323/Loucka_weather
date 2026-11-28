@@ -88,7 +88,7 @@ try{
   // CI-only lab observers: initialized before each navigation and read locally.
   // This code is injected by Playwright; it is NOT included in Astro bundles.
   await page.addInitScript(()=>{
-   const lab={lcpCandidateMs:null,lcpCandidateType:null,clsSessionMax:0,longTaskCount:0,longTaskDurationMs:0};
+   const lab={lcpCandidateMs:null,lcpCandidateType:null,clsSessionMax:0,layoutShiftSources:{},longTaskCount:0,longTaskDurationMs:0};
    window.__louckaVisitorLab=lab;
    try{
     new PerformanceObserver(list=>{
@@ -112,6 +112,29 @@ try{
       }
       previous=now;sessionValue+=entry.value;
       lab.clsSessionMax=Math.max(lab.clsSessionMax,sessionValue);
+      // Only predeclared component categories; never log text, IDs, selectors,
+      // measurements or user-specific DOM content. Sources are moved elements,
+      // not necessarily the cause of the movement.
+      const regions=[
+       ['calendar','[data-day-calendar]'],
+       ['monitor','[data-monitor-dashboard]'],
+       ['monitor-links','.status-explainer'],
+       ['advanced-history','[data-advanced-history]'],
+       ['rain-detail','[data-rain-detail]'],
+       ['sensor-channels','.sensor-channel-panel'],
+       ['sensor-details','.sensor-advanced-section'],
+       ['header','.site-header'],
+       ['main','main'],
+       ['footer','footer']
+      ];
+      const categories=new Set();
+      for(const source of entry.sources??[]){
+       const node=source.node;
+       if(!(node instanceof Element))continue;
+       categories.add(regions.find(([,selector])=>node.closest(selector))?.[0]??'other');
+      }
+      if(!categories.size)categories.add('unknown');
+      for(const category of categories)lab.layoutShiftSources[category]=(lab.layoutShiftSources[category]??0)+entry.value;
      }
     }).observe({type:'layout-shift',buffered:true});
    }catch{/* Unsupported entry type: leave zero. */}
@@ -787,6 +810,7 @@ try{
       lcpCandidateMs:lab?.lcpCandidateMs==null?null:round(lab.lcpCandidateMs),
       lcpCandidateType:lab?.lcpCandidateType??null,
       clsSessionMaxSoFar:lab?Math.round(lab.clsSessionMax*10000)/10000:null,
+      layoutShiftSourceScores:lab?Object.fromEntries(Object.entries(lab.layoutShiftSources??{}).map(([key,value])=>[key,Math.round(value*10000)/10000])):{},
       longTaskCount:lab?.longTaskCount??null,
       longTaskDurationMs:lab?round(lab.longTaskDurationMs):null,
       resourceBottlenecks,
@@ -921,7 +945,7 @@ await writeFile(out+'/visitor-performance.json',JSON.stringify({
  expectedDevCommit:expectedCommit||null,environment:'headless-chromium-single-visit',
  scope:'public-dev-existing-visual-smoke',notFieldWebVitals:true,noExtraRequests:true,
  incomplete:errors.length>0,
- limitations:'One lab navigation per route/viewport. LCP is an interim candidate at snapshot time, CLS is an observed session-window maximum so far, INP is not measured; resource timings can omit cache/buffered entries. Neither field Core Web Vitals, real-user p75 nor backend/SQL timings.',
+ limitations:'One lab navigation per route/viewport. LCP is an interim candidate at snapshot time, CLS is an observed session-window maximum so far; source category scores sum attributed entry values (may double count across categories and identify moved elements, not causes), INP is not measured; resource timings can omit cache/buffered entries. Neither field Core Web Vitals, real-user p75 nor backend/SQL timings.',
  samples:visitorPerformance
 },null,2)+'\n','utf8');
 console.log('VISITOR LAB TIMINGS saved:',visitorPerformance.length,'page samples');
