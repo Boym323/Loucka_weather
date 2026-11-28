@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-11-28 – Refaktoring historického grafu
+- `history-chart-model.ts` odděluje čisté převody bodů, kvalitu, HTML escaping a jednoprůchodový souhrn minim/maxim a počtů. Bez změn zdrojových hodnot; neznámá kvalita se nezobrazuje jako platná. Abortovaný požadavek nesmí přepsat CSV/tabulku/tooltip po novějším výběru; nejprve ověření signálu, potom publikace. Chybový stav vyprázdní výsledky. Přímé testy nul, NULL, nekonečných/nesprávných hodnot, 150 tis. bodů a escapingu; stávající browser regrese. CI/DEV ověřit samostatně.
+
 ## 2026-11-28 – Komponentový CSS kompasu
 - Přesun importu `wind-compass-v2.css` z BaseLayout do WindCompass.astro, bez změny pravidel CSS. Kompas se používá na přehledu, aliasu, klasickém přehledu a aktuálních údajích. Ostatní trasy nemají načítat cca 8,1 kB zdrojového CSS kompasu. Kontrola skutečně emitovaných CSSOM pravidel a tokenů na 15 trasách, stávající vizuální wind regrese zůstává. CI/DEV a velikost přenosu ověřit samostatně; bez změny dat.
 
