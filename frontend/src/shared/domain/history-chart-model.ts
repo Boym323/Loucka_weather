@@ -6,7 +6,7 @@ export function validHistoryPoint(p:HistoryPoint|undefined|null):p is HistoryPoi
   (p.quality==='measured'||p.quality==='derived'||p.quality==='reconstructed');
 }
 export function historyQualityName(quality:HistoryPoint['quality']):string{
- return {measured:'měřeno',derived:'odvozeno',reconstructed:'rekonstruováno',suspect:'podezřelé',missing:'chybí'}[quality]??'neznámá';
+ return {measured:'měřeno',derived:'odvozeno',reconstructed:'rekonstruováno',suspect:'podezřelé',missing:'chybí',sensor_error:'chyba čidla',unverified:'neověřeno'}[quality]??'neznámá';
 }
 export const escapeChartHtml=(value:string)=>value.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]??c));
 export function historyAxisPoints(points:readonly HistoryPoint[]):[number,number|null][]{

@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-11-28 – Validace aktuálních a historických odpovědí
+- #206 sloučen jako `6e95cc9` po 231/231 MariaDB a 167/167 frontend + Chromium. Aktuální a historický klient ověřuje časové značky, konečné numerické hodnoty, kvalitu včetně skutečných stavů `sensor_error`/`unverified`, provenance a revizi; odmítá neplatné nebo neodpovídající rozlišení, bez nahrazování chybějících hodnot nulami. Testy kontraktu a realistické browser fixtures. CI/DEV pending, bez zásahu do SQL/dat.
+
 ## 2026-11-28 – Integrace kalendáře a modelu grafu
 - Exact DEV #204 `d61cc68` 46167913348 (scheduled run, stabilní SHA před/po) PASS: grafy i senzory CLS 0, slow4G 3/3 medián 2320 ms. Původní push smoke byl zrušen souběžným scheduled během. #203 231/231 MariaDB a 164/164 frontend + Chromium PASS (46167869865/46167869867); #205 165/165 + Chromium PASS (46168021107). Integrované CI/DEV ověřit samostatně.
 
