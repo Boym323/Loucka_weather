@@ -95,3 +95,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   },{once:true});
  }
 </script>
+
+<style>
+ /* Avoid wrapping a loaded status next to a heading that originally fit. */
+ [data-monitor-dashboard]>.section-heading,.monitor-card .section-heading{display:grid;grid-template-columns:minmax(0,1fr);gap:7px}
+ [data-monitor-overall],[data-monitor-state]{justify-self:start;min-block-size:calc(2lh + 12px);display:flex;align-items:center;max-width:100%;box-sizing:border-box}
+ [data-monitor-checked],[data-monitor-detail]{line-height:1.45;min-block-size:2lh;overflow-wrap:anywhere}
+ @media(min-width:761px){
+  [data-monitor-dashboard]>.section-heading{grid-template-columns:minmax(0,1fr) minmax(0,17rem);align-items:center}
+  [data-monitor-overall]{justify-self:end}
+ }
+</style>
