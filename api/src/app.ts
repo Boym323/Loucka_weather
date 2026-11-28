@@ -9,7 +9,7 @@ import {isMetric,metrics} from './metrics.js';
 import {aggregationPolicy} from './aggregation.js';
 import type {Aggregation} from './aggregation.js';
 import {LiveHub,serializeSse} from './live.js';
-import {readingsFromRow,converted,outputUnit,publiclySafeReading} from './units.js';
+import {readingsFromRow,converted,outputUnit,publiclySafeReading,UnsupportedSourceError} from './units.js';
 import {hasUnverifiedLightningMapping} from './lightning-publication.js';
 import {gatewayReadings} from './gateway.js';
 import {readFile} from 'node:fs/promises';
@@ -117,17 +117,32 @@ function localDayAligned(from:number,to:number):boolean{
 function pointQuality(value:number|null):'measured'|'derived'|'missing'{
  return value===null?'missing':'derived';
 }
+// Only fixed, non-sensitive categories are exposed; never include row values,
+// timestamps, driver messages or stack traces in the public error response.
+type HistoryValidationReason='Invalid archive timestamp'|'Invalid archive interval'|
+ 'Unsupported archive units'|'Overlapping archive intervals'|'Invalid archive ordering';
+class HistoryValidationError extends Error {
+ constructor(readonly reason:HistoryValidationReason){super(reason);}
+}
+function historyValidationMessage(error:unknown,fallback:string):string{
+ if(error instanceof HistoryValidationError)return error.reason;
+ if(error instanceof UnsupportedSourceError)return 'Invalid archive measurement or conversion';
+ return fallback;
+}
 function rowIsValid(row:ArchiveRow,previousEnd:number|null):number{
- if(!Number.isSafeInteger(row.dateTime)||row.dateTime<0||!Number.isSafeInteger(row.interval)||row.interval<1||row.interval>1440||
-   (row.usUnits!==1&&row.usUnits!==16&&row.usUnits!==17))throw new Error('Invalid archive record metadata');
+ if(!Number.isSafeInteger(row.dateTime)||row.dateTime<0)throw new HistoryValidationError('Invalid archive timestamp');
+ if(!Number.isSafeInteger(row.interval)||row.interval<1||row.interval>1440)
+  throw new HistoryValidationError('Invalid archive interval');
+ if(row.usUnits!==1&&row.usUnits!==16&&row.usUnits!==17)
+  throw new HistoryValidationError('Unsupported archive units');
  const rowStart=row.dateTime-row.interval*60;
- if(previousEnd!==null&&rowStart<previousEnd)throw new Error('Overlapping archive intervals');
+ if(previousEnd!==null&&rowStart<previousEnd)throw new HistoryValidationError('Overlapping archive intervals');
  return rowStart;
 }
 function rawHistoryPoints(metric:Metric,rows:ArchiveRow[],from:number,to:number,units:OutputUnits){
  const points:any[]=[];let previous=from,valid=0,lastEnd:number|null=null;
  for(const row of rows){
-  if(row.dateTime<=previous||row.dateTime>to)throw new Error('Archive records are out of order');
+  if(row.dateTime<=previous||row.dateTime>to)throw new HistoryValidationError('Invalid archive ordering');
   const rowStart=rowIsValid(row,lastEnd);
   if(rowStart>previous)points.push({startTime:utcIso(previous),endTime:utcIso(rowStart),value:null,
    quality:'missing',source:'derived',provenance:null,sourceUsUnits:null});
@@ -992,7 +1007,7 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
       const digest=createHash('sha256').update(JSON.stringify(rows)).digest('hex').slice(0,20);
       return makeResponse('raw','sample',result.points,result.valid,digest);
      }
-    }catch{return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Unsupported archived observation',503);}
+    }catch(error){return bad(reply,req.id,'UPSTREAM_UNAVAILABLE',historyValidationMessage(error,'Unsupported archived observation'),503);}
    }else if(resolution==='raw')return bad(reply,req.id,'LIMIT_EXCEEDED','Too many archive points for requested limit',422);
   }
   const autoDailyAligned=localDayAligned(start,end);
@@ -1019,7 +1034,7 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
      const rows=reader.historyPage?await reader.historyPage(selectedMetrics,start,end,cursor,5000):
       await reader.history(metric,start,end,500001);
      for(const row of rows){
-      if(row.dateTime<=cursor||row.dateTime>end)throw new Error('Invalid archive page ordering');
+      if(row.dateTime<=cursor||row.dateTime>end)throw new HistoryValidationError('Invalid archive ordering');
       rowIsValid(row,previousEnd);
       digest.update(JSON.stringify(row)).update('\n');
       addHourlyRow(buckets,metric,aggregation,row,units,start,end);
@@ -1034,7 +1049,7 @@ export function buildApp(reader:ArchiveReader,now:()=>Date=()=>new Date(),liveHu
    }catch(error){
     const message=error instanceof Error?error.message:'';
     if(message.includes('limit exceeded'))return bad(reply,req.id,'LIMIT_EXCEEDED','Hourly archive scan exceeds its safety limit',422);
-    return bad(reply,req.id,'UPSTREAM_UNAVAILABLE','Hourly archive unavailable or invalid',503);
+    return bad(reply,req.id,'UPSTREAM_UNAVAILABLE',historyValidationMessage(error,'Hourly archive unavailable or invalid'),503);
    }
   }
   if(selectedResolution!=='daily')return bad(reply,req.id,'BAD_REQUEST','Unknown history resolution');
