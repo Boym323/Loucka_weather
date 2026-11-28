@@ -83,8 +83,8 @@ import SiteIcon from '../../shared/ui/SiteIcon.astro';
      const key=article.dataset.alertKey!;
      const details=article.querySelector<HTMLDetailsElement>('details');
      if(previous.has(key)){previous.set(key,null);continue;}
-     if(details)previous.set(key,{open:details.open,focused:details.querySelector('summary')===document.activeElement,
-      activeExtreme:article.dataset.level==='extreme'&&article.dataset.validity==='active'});
+     previous.set(key,details?{open:details.open,focused:details.querySelector('summary')===document.activeElement,
+      activeExtreme:article.dataset.level==='extreme'&&article.dataset.validity==='active'}:null);
     }
     const keyCounts=new Map<string,number>();
     for(const {alert} of alerts){const key=alertKey(alert);keyCounts.set(key,(keyCounts.get(key)??0)+1);}
