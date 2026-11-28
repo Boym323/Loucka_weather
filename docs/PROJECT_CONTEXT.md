@@ -1,5 +1,7 @@
 # Loučka Weather – kontext pro nový chat a AI agenty
 
+**28. 11. 2026 – #210 sloučen:** main `5b6c316`, kandidát `1eb14e2` frontend 169/169 + Chromium (46169328238), 12 theme repaint kontrol bez nových raw GET. Předchozí exact DEV `6e95cc9` smoke 46168969733 PASS, 3/3 LCP kandidát 2504 ms. Chrome decode+seek 46169328261 a 46170601485 PASS na `6e95cc9`; nový exact DEV 46170601488 a post-merge frontend 46170601509 vyžadují samostatné potvrzení. Produkční NO-GO: #69 provozní brány, #143 Safari/iPhone, #152 field/UX. Žádné změny produkce/DB.
+
 **28. 11. 2026 – integrace grafy/Chrome/QC:** #206 sloučen `6e95cc9`, 231/231 + 167/167; #208 Chrome H.264 decode+seek PASS na `d61cc68` (46168817839). #207 opraven test trasy, #209 guard počasí; společné CI/DEV ověřit samostatně, Safari/iPhone neověřeno.
 
 **28. 11. 2026 – grafy a motiv:** HistoryChart/RainDetail oddělují render od síťového load, přepnutí motivu nevytváří raw GET; snapshot jen v paměti instance, invalidace při novém výběru/chybě. Browser regrese 6 kombinací. CI/DEV ověřit samostatně.
